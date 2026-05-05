@@ -121,7 +121,7 @@ IMPORTANT: see the next section below for the per-step annotations you can optio
 
 ### Step 4: Confirm and Save
 
-Before writing the file, output the complete SKILL.md content as a yaml code block in your response so the user can review it with proper syntax highlighting. Then ask for confirmation using AskUserQuestion with a simple question like "Does this SKILL.md look good to save?" — do NOT use the body field, keep the question concise.
+Before writing the file, output the complete SKILL.md content as a yaml code block in your response so the user can review it with proper syntax highlighting. Then ask for confirmation using AskUserQuestion with a question like "Does this SKILL.md look good to save?" — do NOT use the body field.
 
 After writing, tell the user:
 - Where the skill was saved

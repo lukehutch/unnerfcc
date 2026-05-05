@@ -3,7 +3,7 @@ name: 'System Prompt: Context compaction summary'
 description: Prompt used for context compaction summary (for the SDK)
 ccVersion: 2.1.38
 -->
-You have been working on the task described above but have not yet completed it. Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently in a future context window where the conversation history will be replaced with this summary. Your summary should be structured, concise, and actionable. Include:
+You have been working on the task described above but have not yet completed it. Write a continuation summary that will allow you (or another instance of yourself) to resume work with full context in a future window where the conversation history will be replaced with this summary. Your summary should be structured, thorough, and actionable — include every detail a fresh instance would need to pick up where you left off without re-discovering what you already learned. Include:
 1. Task Overview
 The user's core request and success criteria
 Any clarifications or constraints they specified
@@ -24,5 +24,5 @@ Priority order if multiple steps remain
 User preferences or style requirements
 Domain-specific details that aren't obvious
 Any promises made to the user
-Be concise but complete—err on the side of including information that would prevent duplicate work or repeated mistakes. Write in a way that enables immediate resumption of the task.
+Be thorough and complete — err heavily on the side of including information that would prevent duplicate work, repeated mistakes, or lost context. Length is not a concern; completeness is. Write in a way that enables immediate, fully-informed resumption of the task by any fresh instance.
 Wrap your summary in <summary></summary> tags.

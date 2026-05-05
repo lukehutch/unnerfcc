@@ -25,7 +25,7 @@ ${PREAMBLE}
    - \`cron\`: the expression from step 1
    - \`prompt\`: the literal string \`${SCHEDULED_PROMPT}\` — ${PROMPT_DESCRIPTION}
    - \`recurring\`: \`true\`
-3. Briefly confirm: ${CONFIRMATION_MESSAGE}
+3. Confirm thoroughly: ${CONFIRMATION_MESSAGE} Cover the cadence, any rounding applied, and what to expect so the user understands exactly what's scheduled.
 4. **Then immediately run ${IMMEDIATE_RUN_REFERENCE} now**, following the instructions inlined below. Don't wait for the first cron fire.
 
 ${INLINE_TASK_INSTRUCTIONS}

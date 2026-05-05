@@ -54,4 +54,4 @@ Review the same changes for efficiency:
 
 Wait for all three agents to complete. Aggregate their findings and fix each issue directly. If a finding is a false positive or not worth addressing, note it and move on — do not argue with the finding, just skip it.
 
-When done, briefly summarize what was fixed (or confirm the code was already clean).
+When done, thoroughly summarize what was fixed, what was skipped (and why), and any noteworthy patterns or related issues the review surfaced. Give the user the full picture so they can see the value of the pass and understand the state of the code afterward.

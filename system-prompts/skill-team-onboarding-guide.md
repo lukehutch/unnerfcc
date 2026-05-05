@@ -57,7 +57,9 @@ teammate uses Claude Code for [list all the work types]. Let's get you started."
 
 Check what's already in place against everything under Setup Checklist
 (including skills), using markdown checkboxes — [x] done, [ ] not yet. Lead
-with what they already have. One sentence per item, all in one message.
+with what they already have. Give each item enough context that the teammate
+understands what the thing is and why the team uses it — a single terse line
+isn't enough for a new hire.
 
 Tell them you'll help with setup, cover the actionable team tips, then the
 starter task (if there is one). Offer to start with the first unchecked item,

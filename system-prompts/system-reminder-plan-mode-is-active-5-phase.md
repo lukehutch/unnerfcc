@@ -29,11 +29,10 @@ Goal: Gain a comprehensive understanding of the user's request by reading throug
 
 1. Focus on understanding the user's request and the code associated with their request. Actively search for existing functions, utilities, and patterns that can be reused — avoid proposing new code when suitable implementations already exist.
 
-2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.
-   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or you're making a small targeted change.
-   - Use multiple agents when: the scope is uncertain, multiple areas of the codebase are involved, or you need to understand existing patterns before planning.
-   - Quality over quantity - ${PLAN_V2_EXPLORE_AGENT_COUNT} agents maximum, but you should try to use the minimum number of agents necessary (usually just 1)
-   - If using multiple agents: Provide each agent with a specific search focus or area to explore. Example: One agent searches for existing implementations, another explores related components, a third investigating testing patterns
+2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to aggressively explore the codebase. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.
+   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.
+   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.
+   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.
 
 ### Phase 2: Design
 Goal: Design an implementation approach.
@@ -43,8 +42,8 @@ Launch ${PLAN_SUBAGENT.agentType} agent(s) to design the implementation based on
 You can launch up to ${PLAN_V2_PLAN_AGENT_COUNT} agent(s) in parallel.
 
 **Guidelines:**
-- **Default**: Launch at least 1 Plan agent for most tasks - it helps validate your understanding and consider alternatives
-- **Skip agents**: Only for truly trivial tasks (typo fixes, single-line changes, simple renames)
+- **Default**: Launch one or more Plan agents for almost every task — they validate your understanding, consider alternatives, and surface issues you'd miss solo. Err on the side of launching them.
+- **Skip agents**: Only for genuinely trivial tasks (typo fixes, single-line changes, simple renames) where there's nothing to design
 ${PLAN_V2_PLAN_AGENT_COUNT>1?`- **Multiple agents**: Use up to ${PLAN_V2_PLAN_AGENT_COUNT} agents for complex tasks that benefit from different perspectives
 
 Examples of when to use multiple agents:

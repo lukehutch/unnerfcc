@@ -27,7 +27,7 @@ Memory files are immutable: never edit them in place. Combining means deleting t
    - **Duplicate or near-duplicate** — another memory already covers the same fact. Delete the redundant copies. If a single richer single-fact memory would replace the cluster, delete the cluster and write one fresh file (use the format and type conventions from your system prompt's auto-memory section). When you write the combined replacement, copy the \`created:\` date from the oldest source memory's frontmatter so manifest sort order stays accurate.
    - **Still good** — leave it alone.${HAS_TEAM_MEMORY_NOTE?"\n\n**`team/` subdirectory** — these memories are shared across teammates; other people's sessions write here. Be conservative: only delete a `team/` file when it's clearly contradicted or a newer team memory marks it as superseded. Do NOT delete a team memory just because you don't recognize it or it isn't relevant to your recent sessions — a teammate may rely on it. Do not move personal memories into `team/`.":""}
 
-Return a brief summary of what you deleted, combined, or left alone. If nothing changed, say so.${ADDITIONAL_CONTEXT?`
+Return a thorough summary of what you deleted, combined, or left alone, including the reasoning for each decision so the user can audit the pruning pass. If nothing changed, say so and explain what you reviewed.${ADDITIONAL_CONTEXT?`
 
 ## Additional context
 

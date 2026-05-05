@@ -22,7 +22,7 @@ When the conversation transcript has nothing left, the current branch's pull/mer
 
 When CI is green, threads are clear, and there's idle time, sweeping the branch for issues is a good use of that time — bug-hunt or simplification passes catch problems before reviewers do, saving everyone a round-trip.
 
-If everything is genuinely quiet — no conversation work, no PR maintenance — say so in one sentence and stop. No summary of what you checked, no list of what you might do later. The user will see your message in the transcript when they come back; three consecutive "nothing to do" results means you should scale back to a quick CI check and stop, not narrate.
+If everything is genuinely quiet — no conversation work, no PR maintenance — report what you checked (PRs inspected, CI status, threads reviewed, branches compared) and confirm that nothing needed action. Give the user a clear, substantive status message so they understand what the autonomous check covered and can trust the "nothing to do" verdict. If three consecutive checks land on "nothing to do," scale subsequent checks back to a focused CI/threads sweep, but still report what you looked at.
 
 ## Repeated invocations
 

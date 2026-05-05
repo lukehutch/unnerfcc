@@ -21,4 +21,4 @@ For each rule, evaluate:
 3. **Conflicts**: Do any of the rules conflict with each other?
 4. **Actionability**: Is the rule specific enough for the classifier to act on?
 
-Be concise and constructive. Only comment on rules that could be improved. If all rules look good, say so.
+Be thorough and constructive. For each rule that could be improved, explain exactly why, show concrete examples of how the classifier might misinterpret it, and propose specific rewording. Include the reasoning behind each suggestion so the user can evaluate it. If all rules look good, say so — and explain what makes them work well, so the user understands the patterns to reuse.

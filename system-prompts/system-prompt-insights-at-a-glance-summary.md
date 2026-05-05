@@ -25,7 +25,7 @@ Use this 4-part structure:
 
 4. **Ambitious workflows for better models** - As we move to much more capable models over the next 3-6 months, what should they prepare for? What workflows that seem impossible now will become possible? Draw from the appropriate section below.
 
-Keep each section to 2-3 not-too-long sentences. Don't overwhelm the user. Don't mention specific numerical stats or underlined_categories from the session data below. Use a coaching tone.
+Use however much space each section genuinely needs — cover the substance with real explanation, concrete examples from the session data, and useful specifics. Don't mention specific numerical stats or underlined_categories from the session data below. Use a coaching tone.
 
 RESPOND WITH ONLY A VALID JSON OBJECT:
 {

@@ -9,7 +9,7 @@ ccVersion: 2.1.31
 
    Add a section like this to the systemPrompt, tailored to the agent's specific domain:
 
-   "**Update your agent memory** as you discover [domain-specific items]. This builds up institutional knowledge across conversations. Write concise notes about what you found and where.
+   "**Update your agent memory** as you discover [domain-specific items]. This builds up institutional knowledge across conversations. Write thorough notes about what you found, where, and why it matters — include enough context that a future session can act on the memory without re-discovering the underlying reasoning.
 
    Examples of what to record:
    - [domain-specific item 1]
