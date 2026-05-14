@@ -4,7 +4,7 @@ description: >-
   Interactive interview script that walks users through configuring a Managed
   Agent from scratch — selecting tools, skills, files, environment settings —
   and emits setup and runtime code
-ccVersion: 2.1.118
+ccVersion: 2.1.132
 -->
 # Managed Agents — Onboarding Flow
 
@@ -59,7 +59,7 @@ Three rounds. Batch the questions in each round; don't ask them one at a time.
 
 **Round B — Skills, files, and repos.** What the agent has on hand when it starts.
 
-*Skills* — two types; both work the same way — Claude auto-uses them when relevant. Max 64 per agent.
+*Skills* — two types; both work the same way — Claude auto-uses them when relevant. Max 20 per agent.
 - [ ] **Pre-built Agent Skills**: \`xlsx\`, \`docx\`, \`pptx\`, \`pdf\`. Reference by name.
 - [ ] **Custom Skills**: skills uploaded to the user's org via the Skills API. Reference by \`skill_id\` + optional \`version\`. If the skill doesn't exist yet, walk the user through \`POST /v1/skills\` + \`POST /v1/skills/{id}/versions\` (beta header \`skills-2025-10-02\`). Full detail: \`shared/managed-agents-tools.md\` → Skills + Skills API.
 

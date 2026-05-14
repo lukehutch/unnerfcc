@@ -4,7 +4,7 @@ description: >-
   Step-by-step instructions for migrating existing code to newer Claude models,
   covering breaking changes, deprecated parameters, per-SDK syntax,
   prompt-behavior shifts, and migration checklists
-ccVersion: 2.1.128
+ccVersion: 2.1.139
 -->
 # Model Migration Guide
 
@@ -489,6 +489,10 @@ If the model is now overtriggering a tool or skill, the fix is almost always to 
 | \`claude-sonnet-4-0\`            | \`claude-sonnet-4-6\`|
 
 Older aliases (\`claude-opus-4-5\`, \`claude-sonnet-4-5\`, \`claude-opus-4-1\`, etc.) are still active and can be pinned if you need time before upgrading — see \`shared/models.md\` for the full legacy list.
+
+### Claude Platform on AWS
+
+If the code uses \`AnthropicAWS\` / \`AnthropicAws\` / \`anthropicaws.NewClient\` / \`AnthropicAwsClient\` (or targets \`https://aws-external-anthropic.{region}.api.aws\`), it is running on **Claude Platform on AWS** — Anthropic-operated, same-day API parity. Model IDs are **bare first-party** strings; apply the rename table above **verbatim** and every breaking-change section in this guide unchanged. There is nothing to skip. Do **not** add an \`anthropic.\` prefix (that's Amazon Bedrock, a separate offering). See \`shared/claude-platform-on-aws.md\` for client/auth details.
 
 ---
 

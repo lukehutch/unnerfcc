@@ -3,7 +3,7 @@ name: 'Data: Live documentation sources'
 description: >-
   WebFetch URLs for fetching current Claude API and Agent SDK documentation from
   official sources
-ccVersion: 2.1.111
+ccVersion: 2.1.139
 -->
 # Live Documentation Sources
 
@@ -53,6 +53,8 @@ This file contains WebFetch URLs for fetching current information from platform.
 | Token Counting   | \`https://platform.claude.com/docs/en/build-with-claude/token-counting.md\`   | "Extract token counting API usage and examples"                                                         |
 | Rate Limits      | \`https://platform.claude.com/docs/en/api/rate-limits.md\`                    | "Extract current rate limits by tier and model"                                                         |
 | Errors           | \`https://platform.claude.com/docs/en/api/errors.md\`                         | "Extract HTTP error codes, meanings, and retry guidance"                                                |
+| Claude Platform on AWS | \`https://platform.claude.com/docs/en/build-with-claude/claude-platform-on-aws.md\` | "Extract the AnthropicAWS client per language, SigV4 auth, credential precedence, short-term API keys, workspace_id, and region requirements" |
+| Claude Platform on AWS — IAM actions | \`https://platform.claude.com/docs/en/api/claude-platform-on-aws-iam-actions.md\` | "Extract the IAM action names, resource ARNs, and policy examples required for each API capability" |
 
 ### Tools
 
@@ -95,6 +97,7 @@ Use these when a managed-agents binding, behavior, or wire-level detail isn't co
 | Permission Policies   | \`https://platform.claude.com/docs/en/managed-agents/permission-policies.md\`      | "Extract permission policy types (allow/deny/confirm) and per-tool config"                     |
 | Multi-Agent           | \`https://platform.claude.com/docs/en/managed-agents/multi-agent.md\`              | "Extract multi-agent composition patterns, sub-agent invocation, and result handoff"            |
 | Observability         | \`https://platform.claude.com/docs/en/managed-agents/observability.md\`            | "Extract logging, tracing, and usage telemetry exposed by managed agents"                       |
+| Webhooks              | \`https://platform.claude.com/docs/en/managed-agents/webhooks.md\`                 | "Extract webhook endpoint registration, HMAC signature verification, supported event types, and delivery semantics" |
 | GitHub                | \`https://platform.claude.com/docs/en/managed-agents/github.md\`                   | "Extract github_repository resource shape, multi-repo mounting, and token rotation"             |
 | MCP Connector         | \`https://platform.claude.com/docs/en/managed-agents/mcp-connector.md\`            | "Extract MCP server declaration on agents and vault-based credential injection at session"     |
 | Vaults                | \`https://platform.claude.com/docs/en/managed-agents/vaults.md\`                   | "Extract vault create, credential add/rotate, OAuth refresh shape, and archive"                 |

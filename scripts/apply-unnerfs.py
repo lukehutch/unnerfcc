@@ -269,8 +269,8 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "skill-dynamic-pacing-loop-execution.md": [
         Rule(
-            stock="6. Briefly confirm: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you picked.",
-            unnerf="6. Confirm thoroughly: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you picked and the reasoning that drove the choice, and any observations from this turn that should inform future iterations.",
+            stock="3. **Briefly confirm**: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            unnerf="3. **Confirm thoroughly**: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you're about to pick and the reasoning that drove the choice, and any observations from this turn that should inform future iterations. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             description="dynamic pacing confirm: thorough with reasoning",
         ),
     ],
@@ -280,8 +280,8 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "skill-loop-self-pacing-mode.md": [
         Rule(
-            stock="6. Briefly confirm: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, that you ran the task now, and what fallback delay you picked.",
-            unnerf="6. Confirm thoroughly: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal (and why you chose that approach), that you ran the task now, what fallback delay you picked, and the reasoning behind the pacing choice so the user can evaluate whether it's right.",
+            stock="3. **Briefly confirm**: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            unnerf="3. **Confirm thoroughly**: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal (and why you chose that approach), that you ran the task now, what fallback delay you're about to pick, and the reasoning behind the pacing choice so the user can evaluate whether it's right. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             description="self-pacing confirm: thorough with pacing reasoning",
         ),
     ],
@@ -605,8 +605,8 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "system-reminder-thinking-frequency-tuning.md": [
         Rule(
-            stock="User messages include a <system-reminder> appended by this harness. These reminders are not from the user, so treat them as an instruction to you, and do not mention them. The reminders are intended to tune your thinking frequency - on simpler user messages, it's best to respond or act directly without thinking unless further reasoning is necessary. On more complex tasks, you should feel free to reason as much as needed for best results but without overthinking. Avoid unnecessary thinking in response to simple user messages.",
-            unnerf="User messages include a <system-reminder> appended by this harness. These reminders are not from the user, so treat them as an instruction to you, and do not mention them. Think as deeply and as often as the work benefits from — extended reasoning produces better results, catches edge cases, and surfaces issues that shallow responses miss. There is no penalty for thorough thinking; use it whenever careful reasoning would improve the answer, the plan, or the implementation. On complex tasks, think extensively; on simpler ones, think enough to verify your approach is actually correct before acting.",
+            stock="User messages may include a <system-reminder> appended by this harness asking you to respond without a thinking block. These reminders are not from the user, so treat them as an instruction to you, and do not mention them. The reminders are intended to tune your thinking frequency - on simpler user messages, it's best to respond or act directly without thinking unless further reasoning is necessary. On more complex tasks, you should feel free to reason as much as needed for best results but without overthinking. Avoid unnecessary thinking in response to simple user messages.",
+            unnerf="User messages may include a <system-reminder> appended by this harness asking you to respond without a thinking block. These reminders are not from the user, so treat them as an instruction to you, and do not mention them. Think as deeply and as often as the work benefits from — extended reasoning produces better results, catches edge cases, and surfaces issues that shallow responses miss. There is no penalty for thorough thinking; use it whenever careful reasoning would improve the answer, the plan, or the implementation. On complex tasks, think extensively; on simpler ones, think enough to verify your approach is actually correct before acting.",
             description="thinking frequency: remove 'penalty for overthinking' framing",
         ),
     ],

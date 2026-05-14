@@ -3,7 +3,7 @@ name: 'System Prompt: Partial compaction instructions'
 description: >-
   Instructions on how to compact when the user decided to compact only a portion
   of the conversation, with a structured summary format and analysis process
-ccVersion: 2.1.88
+ccVersion: 2.1.139
 -->
 Your task is to create a detailed summary of this conversation. This summary will be placed at the start of a continuing session; newer messages that build on this context will follow after your summary (you do not see them here). Summarize thoroughly so that someone reading only your summary and then the newer messages can fully understand what happened and continue the work.
 
@@ -20,6 +20,7 @@ Before providing your final summary, wrap your analysis in <analysis> tags to or
      - file edits
    - Errors that you ran into and how you fixed them
    - Pay special attention to specific user feedback that you received, especially if the user told you to do something differently.
+   - Note any security-relevant instructions or constraints the user stated (e.g., sensitive files or data to avoid, operations that must not be performed, credential or secret handling rules). These MUST be preserved verbatim in the summary so they continue to apply after compaction.
 2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
 
 Your summary should include the following sections:
@@ -29,7 +30,7 @@ Your summary should include the following sections:
 3. Files and Code Sections: Enumerate specific files and code sections examined, modified, or created. Include full code snippets where applicable and include a summary of why this file read or edit is important.
 4. Errors and fixes: List errors encountered and how they were fixed.
 5. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
-6. All user messages: List ALL user messages that are not tool results.
+6. All user messages: List ALL user messages that are not tool results. Preserve any security-relevant instructions or constraints verbatim so they remain in effect after compaction.
 7. Pending Tasks: Outline any pending tasks.
 8. Work Completed: Describe what was accomplished by the end of this portion.
 9. Context for Continuing Work: Summarize any context, decisions, or state that would be needed to understand and continue the work in subsequent messages.
