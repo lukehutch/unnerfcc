@@ -14,9 +14,12 @@
 #   5. VERIFIES the un-nerf actually landed in the binary (unpack + grep) and
 #      confirms the patched binary still runs.
 #
-# WHY --patches: a bare `tweakcc --apply` also tries tweakcc's UI patches,
-# whose regexes drift behind new CC releases and abort the whole repack. We
-# apply ONLY the un-nerfed system-prompt patches by ID, sidestepping that.
+# COMPATIBILITY: applying system-prompt edits to the binary needs a tweakcc
+# whose binary-patch logic matches your CC version. On very recent CC releases
+# a bare `--apply` can abort (a failed UI patch refuses the repack) or only
+# partially match the prompts. This script does NOT pretend otherwise: it
+# verifies the un-nerf actually landed and fails loudly (leaving your binary
+# clean) when your tweakcc can't fully patch your CC version.
 #
 # USAGE
 #   ./install.sh                 # full install (interactive extraction step)
@@ -191,6 +194,26 @@ if [ "$need_extract" = 1 ]; then
     || die "extraction did not complete (no systemPromptOriginalHashes.json). Re-run after extracting in tweakcc."
 fi
 
+# Check (2): the extracted prompts must have come from THIS binary. tweakcc's
+# extraction is byte-identical to the repo's synced stock for the same version,
+# and that synced stock is itself verified against the binary — so any mismatch
+# means a stale or wrong-version extraction is shadowing the real one.
+log "Verifying extracted prompts came from your v${CC_VERSION} binary"
+ext_n=$(find "$PROMPTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+syn_n=$(find "$STOCK_SNAP" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+[ "${ext_n:-0}" -gt 0 ] || die "no extracted prompts in $PROMPTS_DIR — extraction did not run"
+emiss=0; ediff=0
+for f in "$STOCK_SNAP"/*.md; do
+  b=$(basename "$f")
+  if [ ! -f "${PROMPTS_DIR}/${b}" ]; then emiss=$((emiss + 1))
+  elif ! cmp -s "$f" "${PROMPTS_DIR}/${b}"; then ediff=$((ediff + 1)); fi
+done
+info "extracted ${ext_n} prompts (expected ${syn_n} for v${CC_VERSION})"
+if [ "$emiss" -gt 0 ] || [ "$ediff" -gt 0 ]; then
+  die "extracted prompts do NOT match v${CC_VERSION} stock (${emiss} missing, ${ediff} differing). The extraction is stale or from a different binary — wipe ~/.tweakcc/system-prompts and re-extract (old state was moved to ${stale:-~/.tweakcc/.unnerf-stale-*})."
+fi
+info "${G}verified:${N} extracted prompts match the v${CC_VERSION} binary exactly (${ext_n}/${syn_n})"
+
 log "Installing un-nerfed prompts into ${PROMPTS_DIR}"
 mkdir -p "$PROMPTS_DIR"
 # Back up whatever is there, then overwrite with the freshly un-nerfed set.
@@ -200,32 +223,62 @@ if [ -n "$(ls -A "$PROMPTS_DIR" 2>/dev/null)" ]; then
 fi
 cp -f "${REPO}/system-prompts"/*.md "$PROMPTS_DIR/"
 
+# Check (3): confirm the stock prompts were actually overwritten with un-nerfed
+# ones — every expected id must now differ from the stock snapshot.
+overlaid=0
+for id in $(printf '%s' "$UNNERFED_IDS" | tr ',' ' '); do
+  if [ -f "${PROMPTS_DIR}/${id}.md" ] && ! cmp -s "${PROMPTS_DIR}/${id}.md" "${STOCK_SNAP}/${id}.md"; then
+    overlaid=$((overlaid + 1))
+  fi
+done
+[ "$overlaid" -eq "$changed" ] \
+  || die "overlay incomplete: only ${overlaid}/${changed} prompts are un-nerfed in ${PROMPTS_DIR}"
+info "${G}verified:${N} ${overlaid}/${changed} prompts overwritten with un-nerfed versions"
+
 if [ "$PROMPTS_ONLY" = 1 ]; then
-  log "Prompts-only mode: ${PROMPTS_DIR} updated."
-  info "Apply them with:  npx ${TWEAKCC_PKG} --apply --patches \"${UNNERFED_IDS}\""
+  log "Prompts-only mode: ${PROMPTS_DIR} updated (${changed} un-nerfed)."
+  info "Apply them with:  npx ${TWEAKCC_PKG} --apply   (then verify the change took effect)"
   exit 0
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Patch the binary (system-prompt patches only) and verify
+# 6. Patch the binary (bare --apply) and verify the un-nerf actually landed
 # ---------------------------------------------------------------------------
-log "Patching the Claude Code binary (system-prompt patches only)"
-npx --yes "$TWEAKCC_PKG" --apply --patches "$UNNERFED_IDS" \
-  || die "tweakcc --apply failed. Try TWEAKCC_PKG=tweakcc-fixed@latest if upstream lags v${CC_VERSION}."
+log "Patching the Claude Code binary"
+# A bare `--apply` is what actually applies system-prompt .md edits (it patches
+# every prompt whose .md differs from the extracted original). `--apply
+# --patches <prompt-ids>` does NOT apply system-prompt edits. The catch: a bare
+# --apply also runs tweakcc's other binary patches, and on very recent CC
+# releases one of them ('patches-applied-indication') can fail and abort the
+# whole repack. There is no clean per-prompt apply that skips it, so the result
+# depends entirely on your tweakcc version matching your CC version — and the
+# verify step below, not tweakcc's exit code, is the source of truth.
+if ! npx --yes "$TWEAKCC_PKG" --apply 2>"${WORKDIR}/apply.err"; then
+  sed 's/^/      /' "${WORKDIR}/apply.err" >&2 2>/dev/null || true
+  die "tweakcc --apply aborted on CC v${CC_VERSION}. This means your tweakcc version's binary patches lag this CC release (typically a failed 'patches-applied-indication' refuses the repack). Try TWEAKCC_PKG=tweakcc-fixed@latest, or wait for a tweakcc that supports v${CC_VERSION}. Your binary is unchanged."
+fi
 
+# Check (4): confirm the un-nerf actually reached the binary. tweakcc can report
+# success while patching nothing (or only partially) when its system-prompt
+# locator lags the CC version, so verify by unpacking and counting sentinels.
 log "Verifying the un-nerf actually landed in the binary"
 VERIFY_JS="${WORKDIR}/patched.js"
 if npx --yes "$TWEAKCC_PKG" unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
-  # A sentinel phrase that exists only in the un-nerfed prompts.
-  if grep -q "senior-engineer standard" "$VERIFY_JS" 2>/dev/null \
-     || grep -q "never trade away rigor, depth, or correctness" "$VERIFY_JS" 2>/dev/null; then
-    info "${G}verified:${N} un-nerfed text is present in the patched binary"
+  hits=0
+  for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
+           "Spawn agents whenever parallel investigation" "investigate thoroughly, then be direct" \
+           "Make your review thorough and complete"; do
+    grep -qF "$s" "$VERIFY_JS" 2>/dev/null && hits=$((hits + 1))
+  done
+  if [ "$hits" -ge 4 ]; then
+    info "${G}verified:${N} un-nerf is present in the patched binary (${hits}/5 sentinels)"
+    log "${G}Done.${N} Restart any running Claude Code sessions to pick up the un-nerfed prompts."
+    info "Roll back any time with:  npx ${TWEAKCC_PKG} --restore"
+  elif [ "$hits" -ge 1 ]; then
+    die "PARTIAL apply (${hits}/5 sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Restore a clean binary: npx ${TWEAKCC_PKG} --restore"
   else
-    die "patch reported success but the un-nerf is NOT in the binary. Did the extraction baseline match this binary? Re-run a fresh extraction."
+    die "apply did NOT land (0/5 sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so nothing was changed. Restore a clean binary with: npx ${TWEAKCC_PKG} --restore"
   fi
 else
-  warn "could not unpack the patched binary to verify (continuing); confirm behavior in a session."
+  warn "patched binary could not be unpacked to verify — check behavior in a session, or restore with: npx ${TWEAKCC_PKG} --restore"
 fi
-
-log "${G}Done.${N} Restart any running Claude Code sessions to pick up the un-nerfed prompts."
-info "Roll back any time with:  npx ${TWEAKCC_PKG} --restore"

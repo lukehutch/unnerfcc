@@ -86,12 +86,8 @@ If Anthropic just shipped a new Claude Code release and tweakcc hasn't published
 
 The fast path uses [`sync-version.mjs`](./scripts/sync-version.mjs) to skip the binary-extraction step entirely. Once tweakcc has published `prompts-X.Y.Z.json` for the new release (usually within hours of a Claude Code drop), you can rebuild the whole prompts tree without touching your local Claude Code install.
 
-> [!IMPORTANT]
-> **On recent Claude Code releases, patch system prompts by id.** As of the v2.1.179 sync, upstream `tweakcc@latest` (4.0.14) extracts and `unpack`s the binary correctly, but a bare `tweakcc --apply` also runs tweakcc's *UI* patches (e.g. `patches-applied-indication`), whose regexes lag the newer minified output and make the whole repack abort. Apply **only the system-prompt patches** instead:
-> ```bash
-> npx tweakcc@latest --apply --patches "$(cd ~/.tweakcc/system-prompts && ls *.md | sed 's/\.md$//' | paste -sd,)"
-> ```
-> [`install.sh`](./install.sh) does exactly this (with only the *changed* ids) and then verifies the result. `tweakcc-fixed@latest` remains an option but targets CC through v2.1.142; see [BACKGROUND.md](BACKGROUND.md#which-fork-to-use).
+> [!WARNING]
+> **Binary patching of v2.1.179 is currently blocked in tweakcc — the repo content is unaffected.** System-prompt `.md` edits are applied by a bare `tweakcc --apply` (note: `--apply --patches "<ids>"` does **not** apply system-prompt edits — it's for tweakcc's feature/theme patches). On v2.1.179 a bare `--apply` aborts because tweakcc's always-on `patches-applied-indication` UI patch fails to match the newer build; and even when that abort is bypassed, upstream tweakcc 4.0.14's system-prompt locator matches only a handful of v2.1.179's prompts (~5/81 observed), while `tweakcc-fixed` (≤ v2.1.142) matches ~27/81. So **no released tweakcc cleanly patches a v2.1.179 binary today.** The synced + un-nerfed prompts here are correct and verified for v2.1.179; binary application works on tweakcc-supported CC versions and otherwise awaits a tweakcc update. [`install.sh`](./install.sh) runs the bare `--apply` and then verifies the un-nerf actually landed, stopping cleanly (binary untouched) if it didn't.
 
 ### Updating this repo
 

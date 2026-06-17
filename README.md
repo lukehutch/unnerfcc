@@ -28,7 +28,10 @@ You need [tweakcc](https://github.com/Piebald-AI/tweakcc) to patch these into yo
 ./install.sh                 # ./install.sh --help for options (--prompts-only, --dry-run)
 ```
 
-It applies **only the system-prompt patches** (`tweakcc --apply --patches …`), which sidesteps a real problem on recent Claude Code releases: a bare `tweakcc --apply` also runs tweakcc's *UI* patches, whose regexes lag new CC versions and abort the whole repack. One interactive step remains — tweakcc's extractor is a TUI that can't be driven headlessly — and the script walks you through it (then continues automatically).
+It does a bare `tweakcc --apply` (the only invocation that actually applies system-prompt `.md` edits) and then **verifies the un-nerf reached the binary** — failing loudly and leaving your binary clean if it didn't. One interactive step remains — tweakcc's extractor is a TUI that can't be driven headlessly — and the script walks you through it.
+
+> [!WARNING]
+> **Binary patching depends on your tweakcc supporting your exact CC version.** As of the v2.1.179 sync, no released tweakcc cleanly patches system prompts into a **v2.1.179** binary: upstream `tweakcc` (4.0.14) aborts when its `patches-applied-indication` UI patch fails to match the newer build, and even past that its system-prompt locator matches only a fraction of v2.1.179's prompts; `tweakcc-fixed` targets ≤ v2.1.142. The prompts in this repo are correct and verified for v2.1.179 and apply cleanly on tweakcc-supported CC versions — v2.1.179 binary patching awaits a tweakcc update. Until then, the `.md` set is still a complete, accurate prompt-engineering reference. `install.sh` detects this and stops cleanly rather than leaving you with a half-patched binary.
 
 ### Manual install
 
@@ -48,9 +51,11 @@ npx tweakcc@latest
 unzip -o <PATH-TO-DOWNLOADED-ZIP> -d ~/.tweakcc/system-prompts/   # Unix
 # Expand-Archive -Force <PATH-TO-DOWNLOADED-ZIP> "$HOME\.tweakcc\system-prompts" # Windows
 
-# 4. Patch the binary — apply ONLY the system-prompt patches by id, because a
-#    bare `--apply` may fail on recent CC versions (its UI patches lag upstream).
-npx tweakcc@latest --apply --patches "$(cd ~/.tweakcc/system-prompts && ls *.md | sed 's/\.md$//' | paste -sd,)"
+# 4. Patch the binary. A bare --apply is what applies system-prompt .md edits.
+#    NOTE: on very recent CC (e.g. v2.1.179) this currently aborts or only
+#    partially matches — see the warning under "Quick install" above. Always
+#    verify it took effect (unpack + grep) before trusting it.
+npx tweakcc@latest --apply
 
 # 5. Restart any running Claude Code sessions
 ```
