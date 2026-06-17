@@ -3,7 +3,7 @@
 Modified [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) system prompts that remove the "be brief, be minimal" directives and replace them with instructions to be thorough. These are the actual files I use daily. Nothing here is cleaned up for public consumption — this is the live set, including all in-progress un-nerfs.
 
 > [!NOTE]
-> Currently aligned with **Claude Code v2.1.179**.
+> Currently aligned with **Claude Code v2.1.181**.
 
 |  |  |
 |---|---|
@@ -28,10 +28,10 @@ You need [tweakcc](https://github.com/Piebald-AI/tweakcc) to patch these into yo
 ./install.sh                 # ./install.sh --help for options (--prompts-only, --dry-run)
 ```
 
-It does a bare `tweakcc --apply` (the only invocation that actually applies system-prompt `.md` edits) and then **verifies the un-nerf reached the binary** — failing loudly and leaving your binary clean if it didn't. One interactive step remains — tweakcc's extractor is a TUI that can't be driven headlessly — and the script walks you through it.
+It does a bare `tweakcc --apply` (the only invocation that actually applies system-prompt `.md` edits) and then **verifies the un-nerf reached the binary** — failing loudly and leaving your binary clean if it didn't. It runs fully non-interactively.
 
 > [!NOTE]
-> **v2.1.179 binary patching works — via tweakcc built from git, not the npm release.** The *released* `tweakcc` (4.0.14) can't fully patch a v2.1.179 binary: a failed UI patch (`patches-applied-indication`) aborts the repack, and its prompt locator misses Latin-1 characters that recent Bun builds store as `\xHH` (e.g. `·` → `\xB7`), so ~10 prompts fail to apply. tweakcc `main` already fixes the UI abort; the locator bug is a one-line fix in [`lukehutch/tweakcc@fix-latin1-xhh-locator-2.1.179`](https://github.com/lukehutch/tweakcc/tree/fix-latin1-xhh-locator-2.1.179) (tested, PR-ready). `install.sh` therefore **builds tweakcc from that git source** and applies all 79 binary-applicable un-nerfs with **0 failures** — verified on a real v2.1.179 install. Once the locator fix lands upstream, set `TWEAKCC_GIT`/`TWEAKCC_REF` to upstream `main`.
+> **v2.1.179 & v2.1.181 binary patching works — via tweakcc built from git, not the npm release.** The *released* `tweakcc` (4.0.14) can't fully patch a v2.1.179 binary: a failed UI patch (`patches-applied-indication`) aborts the repack, and its prompt locator misses Latin-1 characters that recent Bun builds store as `\xHH` (e.g. `·` → `\xB7`), so ~10 prompts fail to apply. tweakcc `main` already fixes the UI abort; the locator bug is a one-line fix in [`lukehutch/tweakcc@fix-latin1-xhh-locator-2.1.179`](https://github.com/lukehutch/tweakcc/tree/fix-latin1-xhh-locator-2.1.179) (tested, PR-ready). `install.sh` therefore **builds tweakcc from that git source** and applies all binary-applicable un-nerfs with **0 failures** — verified on real v2.1.179 and v2.1.181 installs. Once the locator fix lands upstream, set `TWEAKCC_GIT`/`TWEAKCC_REF` to upstream `main`.
 
 ### Manual install
 
@@ -125,13 +125,13 @@ system-prompts-github/
 ├── scripts/
 │   ├── sync-version.mjs          # rebuilds stock prompts for a given CC version
 │   └── apply-unnerfs.py          # re-applies all un-nerfs after a CC version bump
-└── system-prompts/               # 513 markdown files (Claude Code v2.1.179)
+└── system-prompts/               # 512 markdown files (Claude Code v2.1.181)
     ├── system-prompt-*.md        # core behavioral instructions, tone, task guidance (135)
     ├── tool-description-*.md     # tool descriptions shown to the model (130)
-    ├── system-reminder-*.md      # injected into user messages (73)
+    ├── system-reminder-*.md      # injected into user messages (77)
     ├── agent-prompt-*.md         # subagent system prompts (61)
-    ├── skill-*.md                # user-facing skill bodies (58)
-    ├── data-*.md                 # reference data blobs (50)
+    ├── skill-*.md                # user-facing skill bodies (54)
+    ├── data-*.md                 # reference data blobs (49)
     └── tool-parameter-*.md       # parameter-level tool descriptions (5)
 ```
 
@@ -141,7 +141,7 @@ Counts are approximate. The full inventory is whatever `ls system-prompts/` show
 
 ## Compatibility
 
-- **Claude Code version:** Aligned with v2.1.179. Individual prompts carry `ccVersion:` frontmatter ranging from v2.0.14 to v2.1.179. When Anthropic ships a new version, see [MAINTENANCE.md](MAINTENANCE.md) for the update workflow.
+- **Claude Code version:** Aligned with v2.1.181. Individual prompts carry `ccVersion:` frontmatter ranging from v2.0.14 to v2.1.181. When Anthropic ships a new version, see [MAINTENANCE.md](MAINTENANCE.md) for the update workflow.
 - **Model family:** Tuned for current Claude models (Opus 4.8 / Sonnet 4.6 / Haiku 4.5). Older or smaller models might over-explain simple responses with these prompts active.
 - **Over-verbosity:** This is the main failure mode to watch for. If Claude starts writing essays in response to "what time is it?", look at `system-prompt-communication-style.md` and `system-prompt-tone-concise-output-short.md` first.
 - **Token cost:** Thorough output uses more tokens. Plan accordingly.

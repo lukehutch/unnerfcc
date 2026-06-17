@@ -9,8 +9,9 @@
 #   3. Rebuilds that exact CC version's STOCK prompts with tweakcc's published
 #      data (sync-version.mjs), then replays every un-nerf onto them
 #      (apply-unnerfs.py). This adapts automatically to new CC releases.
-#   4. Seeds ~/.tweakcc from your real binary (tweakcc extraction), drops the
-#      un-nerfed prompts on top, and patches the binary with tweakcc.
+#   4. Builds tweakcc from git, stages the un-nerfed prompts into ~/.tweakcc,
+#      and patches the binary with `tweakcc --apply` (which downloads its own
+#      prompt data and self-creates a backup — no interactive extraction).
 #   5. VERIFIES the un-nerf actually landed in the binary (unpack + grep) and
 #      confirms the patched binary still runs.
 #
@@ -22,7 +23,7 @@
 # clean) when your tweakcc can't fully patch your CC version.
 #
 # USAGE
-#   ./install.sh                 # full install (interactive extraction step)
+#   ./install.sh                 # full install (non-interactive)
 #   ./install.sh --prompts-only  # only regenerate ~/.tweakcc/system-prompts
 #   ./install.sh --dry-run       # show what it would do; touch nothing
 #   ./install.sh --help
@@ -183,33 +184,19 @@ done
 info "${changed} prompts un-nerfed"
 
 # ---------------------------------------------------------------------------
-# 5. Build tweakcc from git, then seed ~/.tweakcc and stage the un-nerfed prompts
+# 5. Build tweakcc from git, then stage the un-nerfed prompts into ~/.tweakcc
 # ---------------------------------------------------------------------------
 build_tweakcc
 
-log "Seeding ~/.tweakcc from your binary"
-# tweakcc's --apply needs an extraction baseline (original hashes + prompt-data
-# cache) that maps each .md back to its string in the binary. That extraction
-# is produced by tweakcc's interactive TUI; it cannot be reliably scripted.
-need_extract=1
-if [ -f "${TWEAKCC_DIR}/systemPromptOriginalHashes.json" ] && [ -d "${TWEAKCC_DIR}/prompt-data-cache" ]; then
-  # Reuse only if a prior extraction already matches THIS CC version.
-  if grep -rqs "ccVersion: ${CC_VERSION}\b" "$PROMPTS_DIR" 2>/dev/null; then
-    need_extract=0
-    info "existing extraction matches v${CC_VERSION} — reusing it"
-  fi
-fi
-
-if [ "$need_extract" = 1 ]; then
-  warn "A one-time tweakcc extraction is required to map prompts to your binary."
-  info "tweakcc's extractor is an interactive TUI and can't be driven headlessly."
-  info "When the tweakcc menu opens, choose 'Edit system prompts' (this extracts"
-  info "them), then quit (q). This repo's prompts will be overwritten next."
-  # Move STALE extraction state aside first. An older-version ~/.tweakcc (old
-  # system-prompts, prompt-data-cache, hashes, and an old native-binary.backup)
-  # would otherwise shadow the new prompts or make `--restore` recover the wrong
-  # binary. Moving (not deleting) keeps it recoverable and avoids duplicating the
-  # ~240 MB backup. tweakcc regenerates everything cleanly for v${CC_VERSION}.
+log "Staging un-nerfed prompts into ~/.tweakcc (no interactive extraction needed)"
+# tweakcc's --apply downloads the prompt data for your CC version itself
+# (downloadStringsFile), so there is NO interactive TUI extraction step: it
+# patches each prompt whose .md in ~/.tweakcc/system-prompts differs from stock,
+# and creates its own native-binary.backup. We move any older-version ~/.tweakcc
+# state aside first — stale system-prompts / prompt-data-cache / hashes and an
+# old native-binary.backup could otherwise shadow the new prompts or make
+# `--restore` recover the wrong binary. Moving (not deleting) keeps it recoverable.
+if [ -d "${PROMPTS_DIR}" ] || [ -f "${TWEAKCC_DIR}/native-binary.backup" ]; then
   stale="${TWEAKCC_DIR}/.unnerf-stale-$(date +%s 2>/dev/null || echo prev)"
   mkdir -p "$stale"
   for f in system-prompts prompt-data-cache systemPromptOriginalHashes.json \
@@ -217,44 +204,13 @@ if [ "$need_extract" = 1 ]; then
            native-claudejs-orig.js native-claudejs-patched.js; do
     [ -e "${TWEAKCC_DIR}/${f}" ] && mv "${TWEAKCC_DIR}/${f}" "$stale/" || true
   done
-  info "moved stale extraction state -> ${stale}"
-  printf '%sPress Enter to launch tweakcc for extraction (Ctrl-C to abort)...%s' "$B" "$N"; read -r _
-  $TWEAKCC || true
-  [ -f "${TWEAKCC_DIR}/systemPromptOriginalHashes.json" ] \
-    || die "extraction did not complete (no systemPromptOriginalHashes.json). Re-run after extracting in tweakcc."
+  info "moved stale tweakcc state -> ${stale}"
 fi
-
-# Check (2): the extracted prompts must have come from THIS binary. tweakcc's
-# extraction is byte-identical to the repo's synced stock for the same version,
-# and that synced stock is itself verified against the binary — so any mismatch
-# means a stale or wrong-version extraction is shadowing the real one.
-log "Verifying extracted prompts came from your v${CC_VERSION} binary"
-ext_n=$(find "$PROMPTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
-syn_n=$(find "$STOCK_SNAP" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
-[ "${ext_n:-0}" -gt 0 ] || die "no extracted prompts in $PROMPTS_DIR — extraction did not run"
-emiss=0; ediff=0
-for f in "$STOCK_SNAP"/*.md; do
-  b=$(basename "$f")
-  if [ ! -f "${PROMPTS_DIR}/${b}" ]; then emiss=$((emiss + 1))
-  elif ! cmp -s "$f" "${PROMPTS_DIR}/${b}"; then ediff=$((ediff + 1)); fi
-done
-info "extracted ${ext_n} prompts (expected ${syn_n} for v${CC_VERSION})"
-if [ "$emiss" -gt 0 ] || [ "$ediff" -gt 0 ]; then
-  die "extracted prompts do NOT match v${CC_VERSION} stock (${emiss} missing, ${ediff} differing). The extraction is stale or from a different binary — wipe ~/.tweakcc/system-prompts and re-extract (old state was moved to ${stale:-~/.tweakcc/.unnerf-stale-*})."
-fi
-info "${G}verified:${N} extracted prompts match the v${CC_VERSION} binary exactly (${ext_n}/${syn_n})"
-
-log "Installing un-nerfed prompts into ${PROMPTS_DIR}"
 mkdir -p "$PROMPTS_DIR"
-# Back up whatever is there, then overwrite with the freshly un-nerfed set.
-if [ -n "$(ls -A "$PROMPTS_DIR" 2>/dev/null)" ]; then
-  bak="${PROMPTS_DIR}.bak.$(date +%s 2>/dev/null || echo prev)"
-  cp -a "$PROMPTS_DIR" "$bak"; info "backed up previous prompts -> $bak"
-fi
 cp -f "${REPO}/system-prompts"/*.md "$PROMPTS_DIR/"
 
-# Check (3): confirm the stock prompts were actually overwritten with un-nerfed
-# ones — every expected id must now differ from the stock snapshot.
+# Check: confirm the un-nerfed prompts are staged (each expected id differs from
+# stock).
 overlaid=0
 for id in $(printf '%s' "$UNNERFED_IDS" | tr ',' ' '); do
   if [ -f "${PROMPTS_DIR}/${id}.md" ] && ! cmp -s "${PROMPTS_DIR}/${id}.md" "${STOCK_SNAP}/${id}.md"; then
