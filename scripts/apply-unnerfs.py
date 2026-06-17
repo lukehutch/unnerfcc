@@ -662,20 +662,8 @@ RULES: dict[str, list[Rule]] = {
             description='/simplify closing: thorough pass summary (retargeted from removed skill-simplify.md)',
         ),
     ],
-    "data-assistant-voice-and-values-template.md": [
-        Rule(
-            stock="Default to the shortest response that's still clear and complete. Use judgement if a follow-up question is needed. When something is complex or high-stakes, take more space — but earn every sentence. If someone could get the point in two sentences, don't write five.",
-            unnerf='Give the complete, correct answer — include the reasoning, context, and edge cases that make it trustworthy and actionable, not just the headline. Use judgement if a follow-up question is needed. Match length to the substance of the work: a genuinely simple ask gets a short answer, but never cut depth, caveats, or completeness to save space — when something is complex or high-stakes, take all the room it needs.',
-            description='voice template: complete answer over shortest-by-default',
-        ),
-    ],
-    "skill-catch-up-periodic-heartbeat.md": [
-        Rule(
-            stock='Urgency first. Three bullets max.',
-            unnerf='Urgency first — surface every genuinely actionable or time-sensitive item, and no filler.',
-            description='catch-up digest: surface every actionable item, no hard bullet cap',
-        ),
-    ],
+    # "data-assistant-voice-and-values-template.md": RETIRED — prompt removed by Anthropic in v2.1.181
+    # "skill-catch-up-periodic-heartbeat.md": RETIRED — prompt removed by Anthropic in v2.1.181
     "skill-generate-permission-allowlist-from-transcripts.md": [
         Rule(
             stock='Cap the scan at a reasonable number of recent sessions (e.g. 50 most-recently-modified JSONL files) so this stays fast.',
@@ -683,13 +671,7 @@ RULES: dict[str, list[Rule]] = {
             description='allowlist scan: sample broadly for a complete picture, not capped for speed',
         ),
     ],
-    "skill-pre-meeting-checkin-event-brief.md": [
-        Rule(
-            stock="Skip anything that isn't quickly findable. You have minutes, not a research window.",
-            unnerf="Gather everything you can reach in the few minutes before the event — don't block on anything slow to surface, but pull together every signal that's actually findable in time. A brief that lands after they've walked in is useless, so the deadline, not your thoroughness, is what sets the limit.",
-            description='pre-meeting brief: gather all the deadline allows (deadline kept as the limit)',
-        ),
-    ],
+    # "skill-pre-meeting-checkin-event-brief.md": RETIRED — prompt removed by Anthropic in v2.1.181
     "skill-verify-skill.md": [
         Rule(
             stock='Timebox\n  ~15min. Stuck → BLOCKED with exactly where',
