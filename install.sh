@@ -9,18 +9,23 @@
 #   3. Rebuilds that exact CC version's STOCK prompts with tweakcc's published
 #      data (sync-version.mjs), then replays every un-nerf onto them
 #      (apply-unnerfs.py). This adapts automatically to new CC releases.
-#   4. Builds tweakcc from git, stages the un-nerfed prompts into ~/.tweakcc,
-#      and patches the binary with `tweakcc --apply` (which downloads its own
-#      prompt data and self-creates a backup — no interactive extraction).
+#   4. Stages the un-nerfed prompts into ~/.tweakcc and patches the binary with
+#      a `tweakcc --apply` (which downloads its own prompt data and self-creates
+#      a backup — no interactive extraction). By default tweakcc is BUILT FROM
+#      upstream main (it tracks new CC releases fastest); set TWEAKCC_VERSION to
+#      use a released tweakcc via npx instead.
 #   5. VERIFIES the un-nerf actually landed in the binary (unpack + grep) and
 #      confirms the patched binary still runs.
 #
-# COMPATIBILITY: applying system-prompt edits to the binary needs a tweakcc
-# whose binary-patch logic matches your CC version. On very recent CC releases
-# a bare `--apply` can abort (a failed UI patch refuses the repack) or only
-# partially match the prompts. This script does NOT pretend otherwise: it
-# verifies the un-nerf actually landed and fails loudly (leaving your binary
-# clean) when your tweakcc can't fully patch your CC version.
+# COMPATIBILITY: applying system-prompt edits to the binary needs a tweakcc whose
+# binary-patch logic matches your CC version. tweakcc's npm releases can lag a
+# brand-new CC build (which may need a fresh prompt-locator/repack fix), so this
+# script BUILDS tweakcc from upstream main by default — main carries those fixes
+# soonest (e.g. the Latin-1 \xHH locator fix, PR #808). If even main can't fully
+# patch your CC version yet, a bare `--apply` may abort or only partially match;
+# this script does NOT pretend otherwise — it verifies the un-nerf actually landed
+# and fails loudly (leaving your binary clean) when it can't. Set
+# TWEAKCC_VERSION=latest to use the released tweakcc via npx instead of building.
 #
 # USAGE
 #   ./install.sh                 # full install (non-interactive)
@@ -29,22 +34,25 @@
 #   ./install.sh --help
 #
 # ENV OVERRIDES
-#   UNNERF_REPO   git URL of the un-nerf repo   (default: upstream project)
-#   UNNERF_REF    branch/tag/commit to fetch    (default: master)
-#   TWEAKCC_GIT   git URL of tweakcc to BUILD   (default: the fork carrying the
-#                 v2.1.179 Latin-1 \xHH locator fix). We build tweakcc from git,
-#                 not the npm release, because the released tweakcc can't fully
-#                 patch recent Claude Code builds (see README/BACKGROUND).
-#   TWEAKCC_REF   branch/tag/commit of tweakcc  (default: the fix branch)
-#   CC_BIN        path to the Claude Code native binary (default: auto-detect)
+#   UNNERF_REPO     git URL of the un-nerf repo (default: upstream project)
+#   UNNERF_REF      branch/tag/commit to fetch  (default: master)
+#   TWEAKCC_GIT     git URL of tweakcc to BUILD FROM SOURCE
+#                   (default: https://github.com/Piebald-AI/tweakcc.git — upstream)
+#   TWEAKCC_REF     branch/tag/commit of tweakcc to build
+#                   (default: main — tracks new CC releases fastest)
+#   TWEAKCC_VERSION if set (e.g. 'latest' or '4.1.1'), use the RELEASED tweakcc
+#                   via npx instead of building from git. Lighter, but can lag a
+#                   brand-new CC release (see README/BACKGROUND).
+#   CC_BIN          path to the Claude Code native binary (default: auto-detect)
 #
 set -Eeuo pipefail
 
 UNNERF_REPO="${UNNERF_REPO:-https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed.git}"
 UNNERF_REF="${UNNERF_REF:-master}"
-TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/lukehutch/tweakcc.git}"
-TWEAKCC_REF="${TWEAKCC_REF:-fix-latin1-xhh-locator-2.1.179}"
-TWEAKCC=""   # set to "node <dist>/index.mjs" by build_tweakcc
+TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/Piebald-AI/tweakcc.git}"  # tweakcc source to BUILD FROM (default: upstream)
+TWEAKCC_REF="${TWEAKCC_REF:-main}"             # branch/tag/commit to build (default: main; tracks new CC releases fastest)
+TWEAKCC_VERSION="${TWEAKCC_VERSION:-}"         # set (e.g. 'latest') to use a RELEASED tweakcc via npx instead of building from git
+TWEAKCC=""   # set by setup_tweakcc ("node <dist>/index.mjs", or "npx tweakcc@<ver>")
 TWEAKCC_DIR="${HOME}/.tweakcc"
 PROMPTS_DIR="${TWEAKCC_DIR}/system-prompts"
 
@@ -68,11 +76,31 @@ trap 'die "failed at line $LINENO (exit $?)"' ERR
 
 usage() { sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
 
-# Build tweakcc from git and set $TWEAKCC to a runnable command. We build from
-# source (not `npx tweakcc@latest`) because the released tweakcc lags recent
-# Claude Code builds: on v2.1.179 it can't fully patch system prompts (a failed
-# UI patch aborts the repack, and its locator misses Latin-1 \xHH escapes). The
-# default fork carries those fixes.
+# Pick the tweakcc to use and set $TWEAKCC to a runnable command. Default: BUILD
+# from upstream tweakcc main — main tracks new Claude Code releases faster than
+# npm releases do (a brand-new CC build often needs a prompt-locator/repack fix
+# that lands on main before the next tweakcc release is cut). Opt out by setting
+# TWEAKCC_VERSION (e.g. 'latest') to use a released tweakcc via npx instead.
+setup_tweakcc() {
+  if [ -n "$TWEAKCC_VERSION" ]; then
+    log "Using the released tweakcc (npx tweakcc@${TWEAKCC_VERSION})"
+    local resolved
+    resolved="$(npm view "tweakcc@${TWEAKCC_VERSION}" version 2>/dev/null | tail -1)"
+    [ -n "$resolved" ] || die "could not resolve 'tweakcc@${TWEAKCC_VERSION}' from npm — check your network, or unset TWEAKCC_VERSION to build from git."
+    TWEAKCC="npx --yes tweakcc@${resolved}"
+    # Warm the npx cache once (and fail early if it can't run) so the later
+    # --apply / unpack calls are fast and don't re-hit the registry.
+    $TWEAKCC --version >/dev/null 2>&1 \
+      || die "'npx tweakcc@${resolved}' could not run — check your network/npm, or unset TWEAKCC_VERSION to build from git."
+    info "tweakcc ${resolved} (released via npx)"
+    return
+  fi
+  build_tweakcc
+}
+
+# Build tweakcc from git — the default path. Clones TWEAKCC_GIT @ TWEAKCC_REF
+# (default: upstream main) and builds it, so the binary patcher matches the
+# newest CC release that main supports.
 build_tweakcc() {
   log "Building tweakcc from git (${TWEAKCC_GIT} @ ${TWEAKCC_REF})"
   local dir="${WORKDIR}/tweakcc"
@@ -184,9 +212,9 @@ done
 info "${changed} prompts un-nerfed"
 
 # ---------------------------------------------------------------------------
-# 5. Build tweakcc from git, then stage the un-nerfed prompts into ~/.tweakcc
+# 5. Set up tweakcc (built from upstream main by default), then stage the un-nerfed prompts
 # ---------------------------------------------------------------------------
-build_tweakcc
+setup_tweakcc
 
 log "Staging un-nerfed prompts into ~/.tweakcc (no interactive extraction needed)"
 # tweakcc's --apply downloads the prompt data for your CC version itself
@@ -223,8 +251,8 @@ info "${G}verified:${N} ${overlaid}/${changed} prompts overwritten with un-nerfe
 
 if [ "$PROMPTS_ONLY" = 1 ]; then
   log "Prompts-only mode: ${PROMPTS_DIR} updated (${changed} un-nerfed)."
-  info "Apply them by running this script without --prompts-only, or build tweakcc"
-  info "from git (${TWEAKCC_GIT} @ ${TWEAKCC_REF}) and run its '--apply', then verify."
+  info "Apply them by running this script without --prompts-only, or run"
+  info "'npx tweakcc@latest --apply' yourself, then verify."
   exit 0
 fi
 
@@ -234,15 +262,15 @@ fi
 log "Patching the Claude Code binary"
 # A bare `--apply` is what actually applies system-prompt .md edits (it patches
 # every prompt whose .md differs from the extracted original). `--apply
-# --patches <prompt-ids>` does NOT apply system-prompt edits. The catch: a bare
-# --apply also runs tweakcc's other binary patches, and on very recent CC
-# releases one of them ('patches-applied-indication') can fail and abort the
-# whole repack. There is no clean per-prompt apply that skips it, so the result
-# depends entirely on your tweakcc version matching your CC version — and the
-# verify step below, not tweakcc's exit code, is the source of truth.
+# --patches <prompt-ids>` does NOT apply system-prompt edits. A bare --apply also
+# runs tweakcc's other binary patches; if your tweakcc is older than your CC
+# build one of them ('patches-applied-indication') can fail (older tweakcc then
+# aborted the whole repack — fixed in 4.1.1). Either way the result depends on
+# your tweakcc version matching your CC version, so the verify step below, not
+# tweakcc's exit code, is the source of truth.
 if ! $TWEAKCC --apply 2>"${WORKDIR}/apply.err"; then
   sed 's/^/      /' "${WORKDIR}/apply.err" >&2 2>/dev/null || true
-  die "tweakcc --apply aborted on CC v${CC_VERSION}. The git tweakcc we built (${TWEAKCC_REF}) may still lag this CC release. Check the error above; you may need a newer tweakcc branch (set TWEAKCC_REF). Your binary is unchanged."
+  die "tweakcc --apply aborted on CC v${CC_VERSION} — your tweakcc may lag this CC release. Check the error above; rebuild from a newer TWEAKCC_REF (you're on '${TWEAKCC_REF}', default 'main') or pin a released TWEAKCC_VERSION. Your binary is unchanged."
 fi
 
 # Check (4): confirm the un-nerf actually reached the binary. tweakcc can report

@@ -87,7 +87,7 @@ If Anthropic just shipped a new Claude Code release and tweakcc hasn't published
 The fast path uses [`sync-version.mjs`](./scripts/sync-version.mjs) to skip the binary-extraction step entirely. Once tweakcc has published `prompts-X.Y.Z.json` for the new release (usually within hours of a Claude Code drop), you can rebuild the whole prompts tree without touching your local Claude Code install.
 
 > [!IMPORTANT]
-> **Apply with tweakcc built from git, not the npm release.** System-prompt `.md` edits are applied by a bare `tweakcc --apply` (`--apply --patches "<ids>"` does **not** apply them — it's for tweakcc's feature/theme patches). The *released* tweakcc (4.0.14) can't fully patch v2.1.179: a bare `--apply` aborts on the always-on `patches-applied-indication` UI patch, and its system-prompt locator misses Latin-1 chars stored as `\xHH` (e.g. `·` → `\xB7`). tweakcc `main` fixes the UI abort; the locator bug is fixed in [`lukehutch/tweakcc@fix-latin1-xhh-locator-2.1.179`](https://github.com/lukehutch/tweakcc/tree/fix-latin1-xhh-locator-2.1.179). With that build, `--apply` lands **all** binary-applicable un-nerfs (0 could-not-find, verified on real v2.1.179 and v2.1.181 binaries). [`install.sh`](./install.sh) builds tweakcc from git, applies, then verifies the un-nerf actually landed — stopping cleanly (binary untouched) if it didn't.
+> **Apply with tweakcc built from upstream `main` (or a release ≥ 4.1.1).** System-prompt `.md` edits are applied by a bare `tweakcc --apply` (`--apply --patches "<ids>"` does **not** apply them — it's for tweakcc's feature/theme patches). Earlier releases (4.0.14) couldn't fully patch v2.1.179/v2.1.181: a bare `--apply` aborted on the always-on `patches-applied-indication` UI patch, and its system-prompt locator missed Latin-1 chars stored as `\xHH` (e.g. `·` → `\xB7`). Both are fixed upstream — the UI abort in tweakcc `main`, the locator in [Piebald-AI/tweakcc#808](https://github.com/Piebald-AI/tweakcc/pull/808) — merged and released in tweakcc 4.1.1. With those fixes, `--apply` lands **all** binary-applicable un-nerfs (0 could-not-find, verified on real v2.1.179 and v2.1.181 binaries). [`install.sh`](./install.sh) **builds tweakcc from upstream `main`** (so the patcher tracks new CC releases faster than the npm release does; set `TWEAKCC_VERSION=latest` to use a release via `npx` instead), applies, then verifies the un-nerf actually landed — stopping cleanly (binary untouched) if it didn't.
 
 ### Updating this repo
 
@@ -112,7 +112,7 @@ That's everything needed to keep this repo current. The remaining steps are for 
    cp system-prompts/*.md ~/.tweakcc/system-prompts/
    ```
 
-8. **Patch the binary.** `npx tweakcc-fixed@latest --apply`.
+8. **Patch the binary.** `npx tweakcc@latest --apply` (released tweakcc ≥ 4.1.1 works on current CC; to track an even fresher CC release, build from `main` or just run [`install.sh`](./install.sh)).
 
 9. **Restart Claude Code** and verify a representative un-nerfed prompt actually made it in by triggering the relevant behavior.
 
@@ -127,7 +127,7 @@ If `sync-version.mjs` exits 1 with a 404 because tweakcc lags behind a fresh Cla
    # Remove-Item -Recurse -Force "$HOME\.tweakcc\system-prompts"  # Windows
    ```
    Leave the rest of `~/.tweakcc/` alone. `config.json`, hash files, and `native-binary.backup` need to survive.
-3. **Re-extract with tweakcc.** `npx tweakcc-fixed@latest`. It reads the new binary and writes fresh stock `.md` files with no conflicts.
+3. **Re-extract with tweakcc.** `npx tweakcc@latest`. It reads the new binary and writes fresh stock `.md` files with no conflicts.
 4. **Copy the fresh stock into this repo:**
    ```bash
    cp ~/.tweakcc/system-prompts/*.md system-prompts/
