@@ -282,7 +282,7 @@ if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
   hits=0
   for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
            "Spawn agents whenever parallel investigation" "investigate thoroughly, then be direct" \
-           "Make your review thorough and complete"; do
+           "thorough, clear, and rich with explanation"; do
     grep -qF "$s" "$VERIFY_JS" 2>/dev/null && hits=$((hits + 1))
   done
   if [ "$hits" -ge 4 ]; then
