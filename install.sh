@@ -4,8 +4,9 @@
 #
 # WHAT IT DOES
 #   1. Detects your installed Claude Code version and locates its binary.
-#   2. Downloads the LATEST un-nerf scripts + rules straight from git (so you
-#      always patch with the most recent rule set, not a pinned release zip).
+#   2. Fetches the un-nerf scripts + rules from the repo this script was run from
+#      (so a clone installs its own rules), or the upstream project if install.sh
+#      isn't inside a git checkout. Override with UNNERF_REPO / UNNERF_REF.
 #   3. Rebuilds that exact CC version's STOCK prompts with tweakcc's published
 #      data (sync-version.mjs), then replays every un-nerf onto them
 #      (apply-unnerfs.py). This adapts automatically to new CC releases.
@@ -34,8 +35,10 @@
 #   ./install.sh --help
 #
 # ENV OVERRIDES
-#   UNNERF_REPO     git URL of the un-nerf repo (default: upstream project)
-#   UNNERF_REF      branch/tag/commit to fetch  (default: master)
+#   UNNERF_REPO     git URL or local path of the un-nerf repo
+#                   (default: the repo install.sh was run from; else upstream)
+#   UNNERF_REF      branch/tag/commit to fetch
+#                   (default: the current branch of that repo; else master)
 #   TWEAKCC_GIT     git URL of tweakcc to BUILD FROM SOURCE
 #                   (default: https://github.com/Piebald-AI/tweakcc.git — upstream)
 #   TWEAKCC_REF     branch/tag/commit of tweakcc to build
@@ -47,8 +50,19 @@
 #
 set -Eeuo pipefail
 
-UNNERF_REPO="${UNNERF_REPO:-https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed.git}"
-UNNERF_REF="${UNNERF_REF:-master}"
+# Default the rule source to THE REPO THIS SCRIPT WAS RUN FROM, so `./install.sh`
+# from a clone installs that clone's rules (a fork installs the fork's; a merged
+# upstream installs upstream's). Falls back to the upstream project when install.sh
+# isn't inside a git checkout (e.g. piped from curl). Explicit UNNERF_REPO/UNNERF_REF
+# still override. NOTE: a local clone is cloned at its committed HEAD — commit local
+# rule changes (or set UNNERF_REPO) before installing; uncommitted edits won't apply.
+_self="${BASH_SOURCE[0]:-$0}"
+_self_dir="$(cd "$(dirname "$_self")" 2>/dev/null && pwd || true)"
+_self_repo="$(git -C "${_self_dir:-.}" rev-parse --show-toplevel 2>/dev/null || true)"
+_self_ref="$(git -C "${_self_dir:-.}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+if [ "$_self_ref" = "HEAD" ]; then _self_ref=""; fi   # detached HEAD: no usable branch name
+UNNERF_REPO="${UNNERF_REPO:-${_self_repo:-https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed.git}}"
+UNNERF_REF="${UNNERF_REF:-${_self_ref:-master}}"
 TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/Piebald-AI/tweakcc.git}"  # tweakcc source to BUILD FROM (default: upstream)
 TWEAKCC_REF="${TWEAKCC_REF:-main}"             # branch/tag/commit to build (default: main; tracks new CC releases fastest)
 TWEAKCC_VERSION="${TWEAKCC_VERSION:-}"         # set (e.g. 'latest') to use a RELEASED tweakcc via npx instead of building from git
