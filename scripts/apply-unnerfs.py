@@ -187,17 +187,6 @@ RULES: dict[str, list[Rule]] = {
     ],
 
     # -------------------------------------------------------------------------
-    # agent-prompt-dream-memory-pruning.md — thorough pruning summary
-    # -------------------------------------------------------------------------
-    "agent-prompt-dream-memory-pruning.md": [
-        Rule(
-            stock="Return a brief summary of what you deleted, combined, or left alone. If nothing changed, say so.",
-            unnerf="Return a thorough summary of what you deleted, combined, or left alone, including the reasoning for each decision so the user can audit the pruning pass. If nothing changed, say so and explain what you reviewed.",
-            description="pruning summary: thorough with reasoning for audit",
-        ),
-    ],
-
-    # -------------------------------------------------------------------------
     # agent-prompt-explore.md — biggest un-nerf: exhaustive exploration
     # -------------------------------------------------------------------------
     "agent-prompt-explore.md": [
