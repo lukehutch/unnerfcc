@@ -97,6 +97,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 ## Credits & license
 
 - **[tweakcc](https://github.com/Piebald-AI/tweakcc)** by Piebald AI — the tool that makes this possible.
+- **[tweakcc-system-prompts-unnerfed](https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed)** by BenIsLegit — the upstream project this repo was forked from, and the inspiration for it.
 - **[roman01la's gist](https://gist.github.com/roman01la/483d1db15043018096ac3babf5688881)** — the original thesis and first 11 patches, translated into tweakcc format ([BACKGROUND.md](BACKGROUND.md#the-original-gist)).
 - **Anthropic** — for Claude Code, and for not going out of their way to stop community patching.
 
