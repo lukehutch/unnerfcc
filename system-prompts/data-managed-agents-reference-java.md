@@ -3,7 +3,7 @@ name: 'Data: Managed Agents reference — Java'
 description: >-
   Reference guide for using the Anthropic Java SDK to create and manage agents,
   environments, and sessions
-ccVersion: 2.1.182
+ccVersion: 2.1.198
 -->
 # Managed Agents — Java
 
@@ -82,6 +82,7 @@ var session = client.beta().sessions().create(SessionCreateParams.builder()
     .title(\"Quickstart session\")
     .build());
 System.out.println(\"Session ID: \" + session.id());
+System.out.println(\"Trace: https://platform.claude.com/workspaces/default/sessions/\" + session.id());
 ```
 
 ### Updating an Agent

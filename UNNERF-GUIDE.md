@@ -398,24 +398,44 @@ tweakcc won't overwrite an *edited* `.md`, so a clean extraction needs the
 
 ---
 
-## Part 9 — Current state (v2.1.196)
+## Part 9 — Current state (v2.1.198)
 
 We track **only the latest** Claude Code version whose prompt JSON tweakcc has
 published. Replace this snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.196** — the newest tweakcc has prompt data for.
-  A stopgap: the latest CC *release* is v2.1.197, but `prompts-2.1.197.json` isn't
-  published yet (publish lag, Part 8), so re-sync once it lands.
-- **Scale:** **81 un-nerf rules across 62 files**, 526 prompts, `--check` clean.
-- **Last sync (to v2.1.196):** manifest delta vs the prior sync — **14 changed, 7
-  added, 0 removed**. All 21 changed+added were reviewed and **kept** (auth-gateway `data-*`
-  blobs, structured-output tool descriptions, a BLOCK/ALLOW security classifier,
-  reference/sample-prompt refreshes — no new bucket-2/3 nerf). Sibling audit: **0
-  un-ruled siblings**.
-- **Two rules retired**, each an instance of a Part-6 drift row worth remembering:
-  `coordinator-mode-orchestration` — the launch-note phrase was moved into a
-  `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}` variable, unreachable by the `.md`
-  patcher; and `async-agent-launched` — the clause was deleted outright.
-- **Binary check:** not run this sync (the sync machine's installed binary was
-  older than the target). On the next sync, or once the machine is on the target
-  version, run the Part-7 `unpack`+fingerprint before trusting an `--apply`.
+- **Version:** built from **v2.1.198** — the latest CC release, and the newest
+  tweakcc has prompt data for. (The prior sync stopped at v2.1.196 as a stopgap
+  while v2.1.197's JSON lagged; v2.1.197 and v2.1.198 have since published, so this
+  sync jumped straight to the latest.)
+- **Scale:** **80 un-nerf rules across 62 files**, 540 prompts, `--check` clean.
+- **Last sync (v2.1.196 → v2.1.198):** manifest delta — **36 changed, 22 added, 8
+  removed** (482 unchanged; 526 → 540 prompts). Of the 22 added, **21 kept** and 1
+  received the retargeted design flip (below). Kept covers the 9 new `data-*` blobs
+  (7 data-visualization + plan-artifact template + diff-dialog schema), 7 new skills,
+  and the worktree-shipping / shared-git-stash / code-review-artifact-publishing /
+  project-skill-upkeep system-prompts — their only brevity phrases are
+  structured-output or anti-padding formatting. The changed set is dominated by
+  `data-managed-agents-*` API-reference refreshes (all `data-*` = keep) and the
+  security-monitor prompts (safety content = keep). No new bucket-2/3 nerf.
+- **One rule retired, one retargeted** — two different Part-6 drift rows:
+  - **Retired** `system-prompt-agent-memory-instructions` — Anthropic removed the
+    prompt outright; its "Write concise notes" flip is gone tree-wide (removed, not
+    relocated → nothing to retarget).
+  - **Retargeted** the Phase-2 design flip ("err on launching Plan agents").
+    Anthropic split the single `system-reminder-plan-mode-is-active-5-phase` prompt
+    into per-phase prompts; the design guidance now lives in the new standalone
+    `system-reminder-plan-mode-phase-2-design`, where it is **literal static
+    content** — so the `.md` patcher can still reach it (a retarget, not a retire).
+    Contrast the v2.1.196 coordinator case, where the phrase moved into an
+    *unreachable* `${VARIABLE}` value and had to be retired. The Phase-1 exploration
+    flip stays in the (now Phase-1-only) 5-phase prompt.
+- **Sibling audit (Part 6):** **0 un-ruled siblings** — every cross-file `stock`
+  match is flipped (or transformed by the sibling's own rule) in both files, except
+  the intentional `skill-model-migration-guide` keep (the "give a recommendation,
+  not an exhaustive survey" line sits inside a sample prompt quoted for users —
+  example content, not a directive to Claude).
+- **Binary check (Part 7):** verified against the **installed v2.1.198 binary**
+  (`tweakcc unpack` + fingerprint): **all 540 prompts byte-present** — 529 matched
+  on a ≥20-char literal run, the other 11 are `${interpolation}`-dominated
+  micro-prompts confirmed via their shorter literal segments. **Zero mismatches**:
+  the JSON-derived stock is byte-identical to what's actually running.

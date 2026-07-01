@@ -331,15 +331,14 @@ RULES: dict[str, list[Rule]] = {
     ],
 
     # -------------------------------------------------------------------------
-    # system-prompt-agent-memory-instructions.md — thorough memory notes
+    # system-prompt-agent-memory-instructions.md: RETIRED in the v2.1.198 sync.
+    # Anthropic removed this prompt outright (it is in the manifest REMOVED list;
+    # the whole .md is gone). The passage this rule flipped — "**Update your agent
+    # memory**... Write concise notes about what you found and where." — is gone
+    # tree-wide (grep-verified: zero hits for "Update your agent memory" or "Write
+    # concise notes about what you found" in any extracted .md). Removed, not
+    # relocated — nothing to retarget. Retired.
     # -------------------------------------------------------------------------
-    "system-prompt-agent-memory-instructions.md": [
-        Rule(
-            stock="\"**Update your agent memory** as you discover [domain-specific items]. This builds up institutional knowledge across conversations. Write concise notes about what you found and where.",
-            unnerf="\"**Update your agent memory** as you discover [domain-specific items]. This builds up institutional knowledge across conversations. Write thorough notes about what you found, where, and why it matters — include enough context that a future session can act on the memory without re-discovering the underlying reasoning.",
-            description="agent memory: thorough notes with why-it-matters context",
-        ),
-    ],
 
     # -------------------------------------------------------------------------
     # system-prompt-agent-thread-notes.md — include code snippets generously
@@ -562,6 +561,13 @@ RULES: dict[str, list[Rule]] = {
 
     # -------------------------------------------------------------------------
     # system-reminder-plan-mode-is-active-5-phase.md — multi-agent default
+    # (Phase-1 exploration only. In v2.1.198 Anthropic split the single 5-phase
+    # reminder into per-phase prompts; this .md now carries just Phase 1, so only
+    # the exploration flip lives here. The Phase-2 "Design" flip was RETARGETED to
+    # system-reminder-plan-mode-phase-2-design.md below — not retired, because the
+    # design text is literal static content in that new standalone prompt and thus
+    # reachable by the .md patcher, unlike the v2.1.196 coordinator case where the
+    # phrase moved into an unreachable ${VARIABLE} value.)
     # -------------------------------------------------------------------------
     "system-reminder-plan-mode-is-active-5-phase.md": [
         Rule(
@@ -569,10 +575,20 @@ RULES: dict[str, list[Rule]] = {
             unnerf="2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to aggressively explore the codebase. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.\n   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.\n   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.\n   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.",
             description="plan-mode 5-phase explore: aggressive, multi-agent default",
         ),
+    ],
+
+    # -------------------------------------------------------------------------
+    # system-reminder-plan-mode-phase-2-design.md — err on launching Plan agents
+    # (New standalone prompt in v2.1.198, carrying the Phase-2 "Design" guidance
+    # that used to live in system-reminder-plan-mode-is-active-5-phase.md. The
+    # stock text is byte-identical across the split, so this is a straight
+    # retarget of the former "5-phase design" rule.)
+    # -------------------------------------------------------------------------
+    "system-reminder-plan-mode-phase-2-design.md": [
         Rule(
             stock="- **Default**: Launch at least 1 Plan agent for most tasks - it helps validate your understanding and consider alternatives\n- **Skip agents**: Only for truly trivial tasks (typo fixes, single-line changes, simple renames)",
             unnerf="- **Default**: Launch one or more Plan agents for almost every task — they validate your understanding, consider alternatives, and surface issues you'd miss solo. Err on the side of launching them.\n- **Skip agents**: Only for genuinely trivial tasks (typo fixes, single-line changes, simple renames) where there's nothing to design",
-            description="plan-mode 5-phase design: err on launching agents",
+            description="plan-mode phase-2 design: err on launching agents",
         ),
     ],
 
