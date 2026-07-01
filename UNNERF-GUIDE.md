@@ -325,6 +325,22 @@ grep -c "introduce abstractions beyond what the task requires" /tmp/cc.js
 on a no-op/partial apply** — never trust tweakcc's "applied successfully" message
 alone; it can report success while patching nothing.
 
+**Two benign-noise traps when re-applying** (both look like failures but aren't):
+
+- **"Could not find system prompt …" ×dozens** — you ran `tweakcc --apply` against
+  an **already-un-nerfed** binary, so tweakcc hunts for the *stock* text that the
+  prior patch already replaced and can't find it. The un-nerf is fine; the apply is
+  just a redundant no-op. `install.sh` avoids this by reinstalling a clean **stock**
+  binary before every re-apply (it detects a prior un-nerf via [[the sentinels]] and
+  `npm install -g @anthropic-ai/claude-code@<ver>` overwrites the patched binary).
+  Proof: from a pristine binary the flood is 0 warnings; from a patched one it's ~62.
+- **"Customizations applied with some failures / open an issue"** — a bare `--apply`
+  also runs tweakcc's *other* feature patches from your `~/.tweakcc/config.json`
+  (Opusplan, session memory, model customizations, …). On a very fresh CC build some
+  of those can't be located. That is **tweakcc's** to fix and is unrelated to the
+  un-nerf — tweakcc itself prints "these do not affect your system prompt patches."
+  `install.sh` verifies the un-nerf independently (sentinels) and says so.
+
 ---
 
 ## Part 8 — tweakcc operational reference

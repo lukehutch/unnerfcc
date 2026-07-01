@@ -91,6 +91,20 @@ TWEAKCC=""   # set by setup_tweakcc ("node <dist>/index.mjs", or "npx tweakcc@<v
 TWEAKCC_DIR="${HOME}/.tweakcc"
 PROMPTS_DIR="${TWEAKCC_DIR}/system-prompts"
 
+# Distinctive phrases that appear ONLY in the un-nerfed prompts, never in stock.
+# Used twice: (1) to detect an already-patched binary BEFORE applying, so we can
+# reset it to stock first (cc_is_unnerfed / step 3b) — otherwise tweakcc --apply
+# searches for stock text the prior patch already replaced and floods dozens of
+# benign "Could not find system prompt ..." warnings; and (2) to VERIFY the
+# un-nerf actually landed AFTER applying (step 6).
+UNNERF_SENTINELS=(
+  "senior-engineer standard"
+  "never trade away rigor, depth, or correctness"
+  "Spawn agents whenever parallel investigation"
+  "investigate thoroughly, then be direct"
+  "thorough, clear, and rich with explanation"
+)
+
 DRY_RUN=0
 PROMPTS_ONLY=0
 WORKDIR=""
@@ -217,6 +231,21 @@ cc_install_npm() {
   info "installing @anthropic-ai/claude-code@${version} via npm"
   npm install -g "@anthropic-ai/claude-code@${version}" >"$logf" 2>&1 </dev/null \
     || { sed 's/^/      /' "$logf" >&2 2>/dev/null || true; die "npm could not install @anthropic-ai/claude-code@${version} (a global npm install may need sudo). Fix the error above, install it yourself, or set CC_PIN=0."; }
+}
+
+# True (exit 0) if the Claude Code binary already contains un-nerf text — i.e. a
+# prior run already patched it. Re-running `tweakcc --apply` on an already-un-nerfed
+# binary makes tweakcc hunt for the STOCK prompt text (which the earlier patch
+# replaced) and print dozens of benign but alarming "Could not find system prompt
+# ..." warnings, so we detect this and reset to a clean stock binary first. grep -a
+# treats the (binary) file as text; -F matches the sentinel literally.
+cc_is_unnerfed() {
+  local bin="$1" s
+  [ -f "$bin" ] || return 1
+  for s in "${UNNERF_SENTINELS[@]}"; do
+    grep -qaF -- "$s" "$bin" 2>/dev/null && return 0
+  done
+  return 1
 }
 
 # Persist DISABLE_AUTOUPDATER=1 into ~/.claude/settings.json so the un-nerf patched
@@ -356,7 +385,29 @@ if [ "$CC_PIN" = 1 ]; then
   fi
 
   if [ "$CC_INSTALLED" = "$CC_VERSION" ]; then
-    info "Claude Code is already at the supported v${CC_VERSION} — leaving it as is"
+    # Right version already installed. But if a PRIOR run already un-nerfed the
+    # binary, re-running `tweakcc --apply` would search for the STOCK prompt text
+    # (which that prior patch already replaced) and print dozens of benign but
+    # scary "Could not find system prompt ..." warnings. Reset to a clean stock
+    # binary first (a plain npm reinstall overwrites the patched one in place) so
+    # the apply starts from stock and stays quiet. If it's already stock, leave it.
+    if cc_is_unnerfed "$CC_BIN"; then
+      if [ "$DRY_RUN" = 1 ]; then
+        info "[dry-run] binary is already un-nerfed — would reinstall stock v${CC_VERSION} via npm to re-patch from a clean base"
+      else
+        log "Claude Code is at v${CC_VERSION} but its binary is already un-nerfed — reinstalling clean stock v${CC_VERSION} before re-patching"
+        cc_install_npm "$CC_VERSION"
+        hash -r 2>/dev/null || true   # drop any cached `claude` path from before the reinstall
+        if [ "$CC_BIN_USER" = 0 ]; then
+          cc_link="$(command -v claude)"
+          CC_BIN="$(readlink -f "$cc_link" 2>/dev/null || realpath "$cc_link" 2>/dev/null || echo "$cc_link")"
+          [ -f "$CC_BIN" ] || die "after stock reinstall, the Claude Code binary was not found at: $CC_BIN"
+        fi
+        info "reset to a clean stock binary (${CC_BIN})"
+      fi
+    else
+      info "Claude Code is already at the supported v${CC_VERSION} (stock binary) — leaving it as is"
+    fi
   elif [ "$DRY_RUN" = 1 ]; then
     info "[dry-run] would uninstall every Claude Code install (npm global / ~/.claude/local / ~/.local native) and install v${CC_VERSION} via npm"
   else
@@ -376,6 +427,9 @@ if [ "$CC_PIN" = 1 ]; then
   fi
 else
   info "CC_PIN=0: building for the installed Claude Code v${CC_INSTALLED} (rules may not apply cleanly if it differs from the supported version)"
+  if cc_is_unnerfed "$CC_BIN"; then
+    warn "the installed binary is already un-nerfed, and CC_PIN=0 means we won't reinstall it — so tweakcc --apply will print benign 'Could not find system prompt' warnings (it re-searches for stock text the prior patch already replaced). The verify step below is the source of truth; to silence the noise, reinstall stock first: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -479,8 +533,10 @@ log "Patching the Claude Code binary"
 # build one of them ('patches-applied-indication') can fail (older tweakcc then
 # aborted the whole repack — fixed in 4.1.1). Either way the result depends on
 # your tweakcc version matching your CC version, so the verify step below, not
-# tweakcc's exit code, is the source of truth.
-if ! $TWEAKCC --apply 2>"${WORKDIR}/apply.err"; then
+# tweakcc's exit code, is the source of truth. Capture stdout (via tee, so it also
+# streams live) so we can later tell an unrelated FEATURE-patch failure apart from
+# the un-nerf, which we verify independently.
+if ! $TWEAKCC --apply 2>"${WORKDIR}/apply.err" | tee "${WORKDIR}/apply.out"; then
   sed 's/^/      /' "${WORKDIR}/apply.err" >&2 2>/dev/null || true
   die "tweakcc --apply aborted on CC v${CC_VERSION} — your tweakcc may lag this CC release. Check the error above; rebuild from a newer TWEAKCC_REF (you're on '${TWEAKCC_REF}', default 'main') or pin a released TWEAKCC_VERSION. Your binary is unchanged."
 fi
@@ -492,13 +548,19 @@ log "Verifying the un-nerf actually landed in the binary"
 VERIFY_JS="${WORKDIR}/patched.js"
 if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
   hits=0
-  for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
-           "Spawn agents whenever parallel investigation" "investigate thoroughly, then be direct" \
-           "thorough, clear, and rich with explanation"; do
-    grep -qF "$s" "$VERIFY_JS" 2>/dev/null && hits=$((hits + 1))
+  for s in "${UNNERF_SENTINELS[@]}"; do
+    grep -qF -- "$s" "$VERIFY_JS" 2>/dev/null && hits=$((hits + 1))
   done
   if [ "$hits" -ge 4 ]; then
-    info "${G}verified:${N} un-nerf is present in the patched binary (${hits}/5 sentinels)"
+    info "${G}verified:${N} un-nerf is present in the patched binary (${hits}/${#UNNERF_SENTINELS[@]} sentinels)"
+    # A bare --apply also runs tweakcc's OTHER (non-un-nerf) feature patches from
+    # your ~/.tweakcc/config.json. On a very recent CC build some of those can't be
+    # located, and tweakcc prints "applied with some failures / open an issue" — a
+    # tweakcc-side limitation unrelated to the un-nerf we just verified. Say so, so a
+    # successful install doesn't read as a failed one.
+    if grep -q 'some failures' "${WORKDIR}/apply.out" 2>/dev/null; then
+      info "note: tweakcc also reported failures applying some of its OWN unrelated feature patches (not system prompts) to CC v${CC_VERSION} — a tweakcc limitation on this CC build that does NOT affect the un-nerf verified above (report at https://github.com/Piebald-AI/tweakcc/issues if you rely on those features)."
+    fi
     # The un-nerf landed — ensure CC's auto-updater is off so a background update
     # can't replace this binary and silently revert it. Idempotent: only writes (and
     # prints the reason) when DISABLE_AUTOUPDATER isn't already set.
@@ -511,9 +573,9 @@ if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
     log "${G}Done.${N} Restart any running Claude Code sessions to pick up the un-nerfed prompts."
     info "Roll back by reinstalling Claude Code:  npm install -g @anthropic-ai/claude-code@${CC_VERSION}  (no local backup is kept)"
   elif [ "$hits" -ge 1 ]; then
-    die "PARTIAL apply (${hits}/5 sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+    die "PARTIAL apply (${hits}/${#UNNERF_SENTINELS[@]} sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   else
-    die "apply did NOT land (0/5 sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so the un-nerf was not applied. Reinstall a clean binary if needed: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+    die "apply did NOT land (0/${#UNNERF_SENTINELS[@]} sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so the un-nerf was not applied. Reinstall a clean binary if needed: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   fi
 else
   warn "patched binary could not be unpacked to verify — check behavior in a session, or reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
