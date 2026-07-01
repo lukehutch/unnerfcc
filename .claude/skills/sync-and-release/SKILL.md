@@ -54,7 +54,7 @@ These override default behavior — violating any of them breaks the repo's conv
 
 - **NEVER** `git add -A` / `git add .` — stage files by name only.
 - **NEVER** `git commit --amend` — use `git reset --soft HEAD~1` + re-commit.
-- **NEVER** force-push to origin/master or to any shared tag.
+- **NEVER** force-push to origin/main or to any shared tag.
 - **NEVER** skip git hooks (`--no-verify`, `--no-gpg-sign`) — if a hook fails, fix the cause.
 - **NEVER** include Claude (or yourself) as a commit co-author.
 - **ALWAYS** write multi-paragraph commit / tag / release messages to a temp file and pass
@@ -319,13 +319,13 @@ If the user hasn't explicitly authorized pushes this session, confirm once here 
 running. After confirmation:
 
 ```bash
-git push origin master
+git push origin main
 ```
 
 Verify the push landed:
 
 ```bash
-git fetch origin && git rev-list --left-right --count origin/master...HEAD
+git fetch origin && git rev-list --left-right --count origin/main...HEAD
 # Expect: 0<TAB>0
 ```
 

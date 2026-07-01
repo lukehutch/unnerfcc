@@ -44,7 +44,7 @@
 #   UNNERF_REPO     git URL or local path of the un-nerf repo
 #                   (default: the repo install.sh was run from; else upstream)
 #   UNNERF_REF      branch/tag/commit to fetch
-#                   (default: the current branch of that repo; else master)
+#                   (default: the current branch of that repo; else main)
 #   TWEAKCC_GIT     git URL of tweakcc to BUILD FROM SOURCE
 #                   (default: https://github.com/Piebald-AI/tweakcc.git — upstream)
 #   TWEAKCC_REF     branch/tag/commit of tweakcc to build
@@ -75,7 +75,7 @@ _self_repo="$(git -C "${_self_dir:-.}" rev-parse --show-toplevel 2>/dev/null || 
 _self_ref="$(git -C "${_self_dir:-.}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 if [ "$_self_ref" = "HEAD" ]; then _self_ref=""; fi   # detached HEAD: no usable branch name
 UNNERF_REPO="${UNNERF_REPO:-${_self_repo:-https://github.com/lukehutch/unnerfcc.git}}"
-UNNERF_REF="${UNNERF_REF:-${_self_ref:-master}}"
+UNNERF_REF="${UNNERF_REF:-${_self_ref:-main}}"
 TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/Piebald-AI/tweakcc.git}"  # tweakcc source to BUILD FROM (default: upstream)
 TWEAKCC_REF="${TWEAKCC_REF:-main}"             # branch/tag/commit to build (default: main; tracks new CC releases fastest)
 TWEAKCC_VERSION="${TWEAKCC_VERSION:-}"         # set (e.g. 'latest') to use a RELEASED tweakcc via npx instead of building from git
