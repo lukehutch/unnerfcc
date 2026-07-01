@@ -15,10 +15,12 @@
 #      data (sync-version.mjs), then replays every un-nerf onto them
 #      (apply-unnerfs.py). This adapts automatically to new CC releases.
 #   4. Stages the un-nerfed prompts into ~/.tweakcc and patches the binary with
-#      a `tweakcc --apply` (which downloads its own prompt data and self-creates
-#      a backup — no interactive extraction). By default tweakcc is BUILT FROM
-#      upstream main (it tracks new CC releases fastest); set TWEAKCC_VERSION to
-#      use a released tweakcc via npx instead.
+#      a `tweakcc --apply` (downloads its own prompt data; no interactive
+#      extraction). The ~400 MB backup tweakcc makes is deleted afterward —
+#      stock is always re-extractable, so rollback is by reinstalling Claude
+#      Code, not `--restore`. By default tweakcc is BUILT FROM upstream main (it
+#      tracks new CC releases fastest); set TWEAKCC_VERSION to use a released
+#      tweakcc via npx instead.
 #   5. VERIFIES the un-nerf actually landed in the binary (unpack + grep) and
 #      confirms the patched binary still runs.
 #
@@ -26,7 +28,7 @@
 # binary-patch logic matches your CC version. tweakcc's npm releases can lag a
 # brand-new CC build (which may need a fresh prompt-locator/repack fix), so this
 # script BUILDS tweakcc from upstream main by default — main carries those fixes
-# soonest (e.g. the Latin-1 \xHH locator fix, PR #808). If even main can't fully
+# soonest (locator/repack fixes for fresh CC builds). If even main can't fully
 # patch your CC version yet, a bare `--apply` may abort or only partially match;
 # this script does NOT pretend otherwise — it verifies the un-nerf actually landed
 # and fails loudly (leaving your binary clean) when it can't. Set
@@ -62,9 +64,9 @@
 set -Eeuo pipefail
 
 # Default the rule source to THE REPO THIS SCRIPT WAS RUN FROM, so `./install.sh`
-# from a clone installs that clone's rules (a fork installs the fork's; a merged
-# upstream installs upstream's). Falls back to the upstream project when install.sh
-# isn't inside a git checkout (e.g. piped from curl). Explicit UNNERF_REPO/UNNERF_REF
+# from a clone installs that clone's rules. Falls back to this project's canonical
+# repo (github.com/lukehutch/unnerfcc) when install.sh isn't inside a git checkout
+# (e.g. piped from curl). Explicit UNNERF_REPO/UNNERF_REF
 # still override. NOTE: a local clone is cloned at its committed HEAD — commit local
 # rule changes (or set UNNERF_REPO) before installing; uncommitted edits won't apply.
 _self="${BASH_SOURCE[0]:-$0}"
@@ -72,7 +74,7 @@ _self_dir="$(cd "$(dirname "$_self")" 2>/dev/null && pwd || true)"
 _self_repo="$(git -C "${_self_dir:-.}" rev-parse --show-toplevel 2>/dev/null || true)"
 _self_ref="$(git -C "${_self_dir:-.}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
 if [ "$_self_ref" = "HEAD" ]; then _self_ref=""; fi   # detached HEAD: no usable branch name
-UNNERF_REPO="${UNNERF_REPO:-${_self_repo:-https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed.git}}"
+UNNERF_REPO="${UNNERF_REPO:-${_self_repo:-https://github.com/lukehutch/unnerfcc.git}}"
 UNNERF_REF="${UNNERF_REF:-${_self_ref:-master}}"
 TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/Piebald-AI/tweakcc.git}"  # tweakcc source to BUILD FROM (default: upstream)
 TWEAKCC_REF="${TWEAKCC_REF:-main}"             # branch/tag/commit to build (default: main; tracks new CC releases fastest)
@@ -426,20 +428,23 @@ setup_tweakcc
 log "Staging un-nerfed prompts into ~/.tweakcc (no interactive extraction needed)"
 # tweakcc's --apply downloads the prompt data for your CC version itself
 # (downloadStringsFile), so there is NO interactive TUI extraction step: it
-# patches each prompt whose .md in ~/.tweakcc/system-prompts differs from stock,
-# and creates its own native-binary.backup. We move any older-version ~/.tweakcc
-# state aside first — stale system-prompts / prompt-data-cache / hashes and an
-# old native-binary.backup could otherwise shadow the new prompts or make
-# `--restore` recover the wrong binary. Moving (not deleting) keeps it recoverable.
-if [ -d "${PROMPTS_DIR}" ] || [ -f "${TWEAKCC_DIR}/native-binary.backup" ]; then
-  stale="${TWEAKCC_DIR}/.unnerf-stale-$(date +%s 2>/dev/null || echo prev)"
-  mkdir -p "$stale"
+# patches each prompt whose .md in ~/.tweakcc/system-prompts differs from stock.
+# We DELETE any older-version ~/.tweakcc state first: stale system-prompts /
+# prompt-data-cache / hashes can shadow the new prompts, and we deliberately do
+# NOT keep the ~400 MB native-binary.backup or the ~17 MB native-claudejs dumps.
+# Stock prompts are re-extracted from the binary on every run and CC_PIN can
+# reinstall the exact CC version, so rollback never needs a local backup —
+# reinstalling Claude Code restores a clean binary. (Older versions of this
+# script MOVED this state into .unnerf-stale-* dirs, each carrying a ~400 MB
+# backup; sweep those away too.)
+if [ -d "${TWEAKCC_DIR}" ]; then
   for f in system-prompts prompt-data-cache systemPromptOriginalHashes.json \
            systemPromptAppliedHashes.json native-binary.backup \
            native-claudejs-orig.js native-claudejs-patched.js; do
-    [ -e "${TWEAKCC_DIR}/${f}" ] && mv "${TWEAKCC_DIR}/${f}" "$stale/" || true
+    rm -rf "${TWEAKCC_DIR:?}/${f}"
   done
-  info "moved stale tweakcc state -> ${stale}"
+  rm -rf "${TWEAKCC_DIR:?}"/.unnerf-stale-* 2>/dev/null || true
+  info "cleared stale tweakcc state (no backups kept)"
 fi
 mkdir -p "$PROMPTS_DIR"
 cp -f "${REPO}/system-prompts"/*.md "$PROMPTS_DIR/"
@@ -498,13 +503,18 @@ if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
     # can't replace this binary and silently revert it. Idempotent: only writes (and
     # prints the reason) when DISABLE_AUTOUPDATER isn't already set.
     cc_persist_disable_autoupdate
+    # Don't keep the ~400 MB backup tweakcc created during --apply (nor the
+    # native-claudejs dumps): stock is re-extractable and rollback is a reinstall.
+    rm -f "${TWEAKCC_DIR}/native-binary.backup" \
+          "${TWEAKCC_DIR}/native-claudejs-orig.js" \
+          "${TWEAKCC_DIR}/native-claudejs-patched.js"
     log "${G}Done.${N} Restart any running Claude Code sessions to pick up the un-nerfed prompts."
-    info "Roll back any time with:  npx tweakcc@latest --restore"
+    info "Roll back by reinstalling Claude Code:  npm install -g @anthropic-ai/claude-code@${CC_VERSION}  (no local backup is kept)"
   elif [ "$hits" -ge 1 ]; then
-    die "PARTIAL apply (${hits}/5 sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Restore a clean binary: npx tweakcc@latest --restore"
+    die "PARTIAL apply (${hits}/5 sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   else
-    die "apply did NOT land (0/5 sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so nothing was changed. Restore a clean binary with: npx tweakcc@latest --restore"
+    die "apply did NOT land (0/5 sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so the un-nerf was not applied. Reinstall a clean binary if needed: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   fi
 else
-  warn "patched binary could not be unpacked to verify — check behavior in a session, or restore with: npx tweakcc@latest --restore"
+  warn "patched binary could not be unpacked to verify — check behavior in a session, or reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
 fi

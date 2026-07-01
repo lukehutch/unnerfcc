@@ -6,55 +6,35 @@ Where these un-nerfed prompts came from and how tweakcc works.
 
 ## What is tweakcc?
 
-[tweakcc](https://github.com/Piebald-AI/tweakcc) is a community tool that makes Claude Code's system prompts editable. Since v2.1.113, Claude Code ships as a compiled Bun native binary with its prompts baked in as string literals. You can't just open a config file and change them.
+[tweakcc](https://github.com/Piebald-AI/tweakcc) is a community tool that makes Claude Code's system prompts editable. Claude Code ships as a compiled Bun native binary with its prompts baked in as string literals — you can't just open a config file and change them.
 
 tweakcc handles that. When you run it, it:
 
 1. Finds the Claude Code binary on disk.
 2. Extracts every system prompt, tool description, agent prompt, skill body, and reference blob into `.md` files under `~/.tweakcc/system-prompts/` (Windows: `C:\Users\<you>\.tweakcc\system-prompts\`).
 3. Records a hash of each original prompt in `systemPromptOriginalHashes.json`.
-4. On demand, recompiles the binary with your edited `.md` content substituted in, and records applied hashes in `systemPromptAppliedHashes.json`.
-5. Keeps a backup of the original binary (~234 MB) so you can always roll back.
+4. On a bare `--apply`, recompiles the binary with your edited `.md` content substituted in, and records applied hashes in `systemPromptAppliedHashes.json`.
+5. Can keep a backup of the original binary (~400 MB) for `tweakcc --restore`. (This repo's [`install.sh`](./install.sh) **deletes** that backup after patching — it's large and stock is always re-extractable, so rollback here is a Claude Code reinstall, not `--restore`.)
 
-Edit any prompt in a text editor, run tweakcc, and Claude Code uses your version from that point on. That folder is exactly what this repository mirrors.
+Edit any prompt in a text editor, run `tweakcc --apply`, and Claude Code uses your version from that point on. That folder is exactly what this repository mirrors.
 
-### Why tweakcc and not the gist's patcher?
+**Which build to use:** upstream [Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc) — `main`, or a release ≥ 4.1.1. [`install.sh`](./install.sh) builds from `main` because tweakcc's npm releases can lag a fresh Claude Code build by hours-to-days, and `main` carries the prompt-locator and repack fixes soonest (set `TWEAKCC_VERSION=latest` to use a released tweakcc via `npx` instead). A **bare** `tweakcc --apply` is the only invocation that applies system-prompt `.md` edits — `--apply --patches "<ids>"` targets feature/theme patches, not prompts. Full command reference: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 8.
 
-The script in [roman01la's gist](#the-original-gist) predates the native-binary era. It worked by installing Claude Code from npm (which shipped plain JavaScript), running `sed`-style replacements against `cli.js`, and repointing the `claude` symlink. As of v2.1.113, Anthropic moved to a compiled Bun binary with bytecode integrity checks, and that approach stopped working.
+### Why tweakcc and not a text patcher?
 
-tweakcc is the modern equivalent: same philosophy (edit the prompts), different mechanism (binary patching with hash verification and rollback).
-
----
-
-## Which fork to use
-
-> [!NOTE]
-> **Updated for the v2.1.179 & v2.1.181 sync — binary patching works.** Upstream [Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc) `extract`s / `unpack`s / `repack`s these binaries correctly. Earlier releases (4.0.14) couldn't fully _apply_ system-prompt edits: a bare `tweakcc --apply` (the only invocation that applies `.md` edits) aborted on the always-on `patches-applied-indication` UI patch, **and** its locator missed Latin-1 chars that recent Bun builds store as `\xHH` (e.g. `·` → `\xB7`), so ~10 prompts couldn't be found. Both are now fixed upstream — the UI abort in tweakcc `main`, and the locator via [Piebald-AI/tweakcc#808](https://github.com/Piebald-AI/tweakcc/pull/808) (`escapeNonAsciiForRegex` now also emits the `\xHH` alternative for U+0080–U+00FF, with regression tests), merged and released in tweakcc 4.1.1. With those fixes, `--apply` lands **all** binary-applicable un-nerfs (0 could-not-find, verified on real v2.1.179 and v2.1.181 installs). [`install.sh`](./install.sh) **builds tweakcc from upstream `main`** rather than using the npm release, because tweakcc's releases can lag a brand-new Claude Code build by hours-to-days and `main` carries the needed prompt-locator/repack fix soonest (set `TWEAKCC_VERSION=latest` to use a released tweakcc via `npx` instead — lighter, but it can lag a fresh CC release). (`--apply --patches "<ids>"` is **not** a workaround: it targets feature/theme patches, not system-prompt edits.)
-
-The history below is kept for context.
-
-Historically, upstream [Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc) lagged at Claude Code v2.1.113 (release `4.0.11`, commit `2e1d03e`), and running it against v2.1.114+ failed because several patch regexes didn't match the newer minified output.
-
-[**BenIsLegit/tweakcc-fixed**](https://github.com/BenIsLegit/tweakcc-fixed) was the stopgap — published as [`tweakcc-fixed`](https://www.npmjs.com/package/tweakcc-fixed) on npm. It bundles upstream PRs (#601 WASMagic import guard, #646 React Compiler output support, #655 Bun bytecode fallback + `clearBytecode`, #664 `\"` handling) plus additional fixes (scoped backslash-doubling, `verbose:X` destructure guard, adapted minified-shape regexes, and a batch of `userMessageDisplay` theme/layout fixes). It targets Claude Code through **v2.1.142** — where its bare `--apply` does cleanly patch system prompts. On v2.1.179 it only partially matched the prompt set, which is exactly what the v2.1.179/v2.1.181 work and upstream PR #808 resolved — so this `tweakcc-fixed` stopgap is no longer needed: upstream tweakcc `main` (and release ≥ 4.1.1) now patch these binaries directly (see the note above).
-
-```bash
-npx tweakcc-fixed@latest            # interactive UI
-npx tweakcc-fixed@latest --apply    # apply customizations
-```
-
-Always use `@latest` because the fork updates frequently. The `~/.tweakcc/` layout and config format are identical between the two, so switching back to upstream later is painless.
+An earlier approach ([roman01la's gist](#the-original-gist)) installed Claude Code from npm — back when it shipped as plain JavaScript — ran `sed`-style replacements against `cli.js`, and repointed the `claude` symlink. Once Claude Code moved to a compiled Bun binary with bytecode integrity checks, that stopped working. tweakcc is the modern equivalent: same philosophy (edit the prompts), different mechanism (binary patching with hash verification and rollback).
 
 ---
 
 ## Where the edits came from
 
-The un-nerfs in this repo have two origins, layered in order.
+The un-nerfs have two origins, layered in order.
 
 ### The original gist
 
-[roman01la's patch-claude-code.sh](https://gist.github.com/roman01la/483d1db15043018096ac3babf5688881) is a bash script that applied 11 string replacements to Claude Code's old `cli.js` distribution. Each one flipped a "be brief" instruction into a "be thorough" instruction. The gist author observed that stock Claude Code has roughly a 5:1 ratio of brevity directives to thoroughness directives, and that imbalance was causing the model to cut corners on actual work.
+[roman01la's patch-claude-code.sh](https://gist.github.com/roman01la/483d1db15043018096ac3babf5688881) is a bash script that applied 11 string replacements to Claude Code's old `cli.js` distribution. Each flipped a "be brief" instruction into a "be thorough" one. The gist author observed that stock Claude Code carries roughly a 5:1 ratio of brevity directives to thoroughness directives, and that imbalance was making the model cut corners on real work.
 
-I didn't run the script (it targets a distribution format that no longer exists). But the patches served as a template. I translated the 11 edits into tweakcc `.md` format by hand, and that became the starting point for this repo.
+I didn't run the script (it targets a distribution format that no longer exists), but the patches served as a template — I translated the 11 edits into tweakcc `.md` format by hand, and that became the starting point for this repo.
 
 **The gist's 11 patches:**
 
@@ -72,7 +52,7 @@ I didn't run the script (it targets a distribution format that no longer exists)
 | 10 | "one-line docstrings max" | removed; meaningful docs allowed |
 | 11 | "2-sentence end-of-turn summary" cap | removed; scale to the work |
 
-**A/B evidence from the gist author:** porting Box2D (~30k lines of C) to JavaScript. Unpatched Claude Code produced 1,419 lines with an O(n^2) broad phase and no sub-stepping. Patched Claude Code produced 1,885 lines (+33%) with a dynamic AABB tree, 4-level sub-stepping, and soft contact constraints. The patched run produced an actual physics engine port. The unpatched run produced a toy.
+**A/B evidence from the gist author:** porting Box2D (~30k lines of C) to JavaScript. Unpatched Claude Code produced 1,419 lines with an O(n²) broad phase and no sub-stepping; patched Claude Code produced 1,885 lines (+33%) with a dynamic AABB tree, 4-level sub-stepping, and soft contact constraints — an actual physics-engine port versus a toy.
 
 The six files that carry the gist's DNA directly:
 
@@ -83,39 +63,35 @@ The six files that carry the gist's DNA directly:
 - `agent-prompt-explore.md`
 - `agent-prompt-general-purpose.md`
 
-### My extensions
+### The extensions
 
-Starting from those six files, I extended the same thesis across the full prompt set. Whenever Claude Code was reflexively terse in a way that hurt output quality ("here's the fix, no explanation"), I traced the behavior to the prompt causing it, edited that prompt, and committed. The local git history at `~/.tweakcc/system-prompts/` documents every change.
+Starting from those six, the same thesis was extended across the full prompt set. Whenever Claude Code was reflexively terse in a way that hurt output quality ("here's the fix, no explanation"), the behavior was traced to the prompt causing it, that prompt edited, and the change committed. The major areas beyond the gist:
 
-The major areas beyond the gist:
+- Mid-turn updates and end-of-turn summaries scale with the work — no hard 2-sentence cap.
+- Code comments and docstrings are allowed to be meaningful.
+- Core communication-style prompts favor depth over token minimization.
+- Subagent and explore prompts demand thorough reports with file paths, code excerpts, and reasoning.
+- Caps on subagent usage removed ("use the minimum number of subagents," "not excessively").
+- Tool-usage, compaction, loop-check, thread-notes, PR-review, memory, learning-insights, and cron/onboarding prompts produce full-context output instead of one-liners.
 
-- Mid-turn updates can use whatever space they need
-- End-of-turn summaries scale with the work, no hard 2-sentence cap
-- Code comments and docstrings are allowed to be meaningful
-- Core communication-style and thinking-frequency prompts favor depth over token minimization
-- Subagent and explore prompts demand thorough reports with file paths, code excerpts, and reasoning
-- Tool-usage, compaction, loop-check, and thread-notes prompts produce full-context summaries
-- Removed caps on subagent usage ("use the minimum number of subagents," "not excessively")
-- PR-review, dream/memory, learning-insights, and batch-recipe prompts ask for thorough output
-- Loop/cron confirmations and onboarding walkthroughs give full context instead of one-liners
+The complete, current inventory of active un-nerfs is `scripts/apply-unnerfs.py`; the keep/flip rationale behind each is [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 1.
 
 ---
 
-## How the repo was built
+## How the repo is built and kept current
 
-1. **tweakcc extraction.** Ran tweakcc against Claude Code v2.1.113. Got 271 stock `.md` files.
-2. **Gist translation.** Hand-translated the gist's 11 patches into tweakcc `.md` edits. Six files changed.
-3. **Iterative un-nerfing.** Extended the thesis to more prompts over time, committing each change.
-4. **Mirror copy.** Copied everything from `~/.tweakcc/system-prompts/` into this public repo. The public mirror has its own git history, separate from the private working repo.
-5. **Re-apply script.** Added [`scripts/apply-unnerfs.py`](./scripts/apply-unnerfs.py) so future Claude Code bumps don't require hand-reverting every file. See [MAINTENANCE.md](MAINTENANCE.md).
+Two scripts do the work, so a Claude Code version bump never requires hand-reverting files:
 
-The repo is kept in sync with newer releases via that script.
+1. **Extract stock.** `scripts/sync-version.mjs` rebuilds the full stock `.md` set from tweakcc's published prompt data for the target version — byte-identical to a tweakcc extraction.
+2. **Replay un-nerfs.** `scripts/apply-unnerfs.py` re-applies every un-nerf on top of that fresh stock.
+3. **Detect drift.** `system-prompt-checksums.json` fingerprints the *stock* prompts, so each bump reports exactly what Anthropic changed, added, or removed — uncoloured by the un-nerfs.
 
-**Files deliberately excluded:**
+The end-to-end playbook is [UNNERF-GUIDE.md](UNNERF-GUIDE.md); per-script flags are in [MAINTENANCE.md](MAINTENANCE.md).
 
-- `native-binary.backup` (234 MB; not mine to redistribute)
-- `native-claudejs-orig.js` / `native-claudejs-patched.js` (12 MB each; same reason)
-- `systemPromptOriginalHashes.json` / `systemPromptAppliedHashes.json` (machine-specific)
-- `config.json`, `prompt-data-cache/`, `.claude/`, `.serena/` (local state)
+**Files deliberately excluded** (tweakcc regenerates them per-install; machine-specific or too large to redistribute):
+
+- `native-binary.backup` (~400 MB) and `native-claudejs-{orig,patched}.js` — not mine to redistribute (and `install.sh` deletes them from `~/.tweakcc` too; see above).
+- `systemPromptOriginalHashes.json` / `systemPromptAppliedHashes.json` — machine-specific.
+- `config.json`, `prompt-data-cache/`, and other local state.
 
 Run tweakcc yourself and these get generated for your install.

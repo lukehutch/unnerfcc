@@ -129,8 +129,8 @@ rules retired (removed prompts) or added (new nerfs), and any FAILs you resolved
 
 ## Part 3 — Reading the prompts (where stock text comes from)
 
-Claude Code (since v2.1.113) ships as a compiled Bun **native binary** with its
-prompts baked in as string literals. There are two ways to get the stock text:
+Claude Code ships as a compiled Bun **native binary** with its prompts baked in
+as string literals. There are two ways to get the stock text:
 
 ### A. tweakcc's published JSON (the normal source)
 
@@ -164,7 +164,7 @@ stores non-ASCII as escapes — em-dash `—` → `—`, and **Latin-1 U+0080–
 containing those will miss. To match reliably, search on the longest **pure-ASCII
 run** of a piece (no `` ` `` `"` `\` newline), or build an escape-aware regex
 (`for each char>127: (literal|\uXXXX|\xHH)`; newlines as `(\n|literal)`). This
-`\xHH` case is the exact bug that broke ~10 prompts before tweakcc PR #808.
+`\xHH` case will silently swallow any prompt whose only distinctive text contains one.
 
 ---
 
@@ -276,6 +276,7 @@ FAILs).
 |---|---|
 | Upstream **reworded** the passage | Update the rule's `stock` to the new wording (the `unnerf` usually stands). |
 | Upstream **removed** the passage/prompt | **Retire** the rule (delete it; note in commit). |
+| Upstream moved the passage into a `${VARIABLE}` | **Retire** — the variable's value isn't in any extracted `.md`, so tweakcc's patcher (it replaces static `pieces` and treats `${VARS}` as wildcards) can't reach it. |
 | Upstream **replaced** brevity with neutral/pro-thorough text | Retire the rule — the nerf is gone. |
 | A prompt was **renamed** | **Retarget**: move the rule to the new filename key (e.g. `skill-simplify.md` → `agent-prompt-simplify-slash-command.md`). |
 
@@ -285,8 +286,10 @@ eyeball this — run the **exhaustive sibling audit**: import `RULES`, and for e
 rule grep its `stock` across every stock `.md`; any match in a file that *isn't*
 the rule's own key is an un-ruled sibling to flip (unless the match is
 example/reference content — e.g. a sample prompt quoted inside a guide, which
-stays). This session's audit closed one such gap (`async-agent-launched`) and
-confirmed one intentional keep (`skill-model-migration-guide`); see Part 9.
+stays). The current audit finds **0 un-ruled siblings**: every cross-file `stock` match
+is already ruled in both files, except the intentional `skill-model-migration-guide`
+keep — that phrase sits inside a sample prompt quoted for users (example content,
+not a directive to Claude). See Part 9.
 
 ---
 
@@ -359,23 +362,25 @@ missing (404):
   (`install.sh` does this by default); `main` carries prompt-locator/repack fixes
   before they're cut into an npm release.
 
-### `~/.tweakcc/` layout — preserve vs move-aside
+### `~/.tweakcc/` layout — what to clear
 
 `config.json` (settings + `ccVersion`), `system-prompts/*.md`,
 `prompt-data-cache/prompts-X.Y.Z.json`, `systemPromptOriginalHashes.json`,
-`systemPromptAppliedHashes.json`, `native-binary.backup` (~230 MB, used by
-`--restore`), `native-claudejs-{orig,patched}.js`.
+`systemPromptAppliedHashes.json`, `native-binary.backup` (~400 MB), and
+`native-claudejs-{orig,patched}.js`.
 
-A **stale** older-version state shadows new prompts and can make `--restore`
-recover the wrong binary. When re-extracting fresh, **preserve `config.json`;
-move the rest aside** (don't delete — the backup is huge and you may need it):
+A **stale** older-version state shadows new prompts. `install.sh` clears it for
+you before staging — preserving `config.json` and **deleting** the rest,
+including the ~400 MB `native-binary.backup` and the `native-claudejs` dumps.
+This project keeps **no backups**: stock is always re-extractable and rollback is
+a Claude Code reinstall, not `--restore`. By hand:
 
 ```bash
-cd ~/.tweakcc && stale=".unnerf-stale-$(date +%s)" && mkdir -p "$stale"
+cd ~/.tweakcc || exit
 for f in system-prompts prompt-data-cache systemPromptOriginalHashes.json \
          systemPromptAppliedHashes.json native-binary.backup \
-         native-claudejs-orig.js native-claudejs-patched.js; do
-  [ -e "$f" ] && mv "$f" "$stale/"
+         native-claudejs-orig.js native-claudejs-patched.js .unnerf-stale-*; do
+  rm -rf "$f"
 done
 ```
 
@@ -385,76 +390,32 @@ tweakcc won't overwrite an *edited* `.md`, so a clean extraction needs the
 ### Dead ends (don't repeat)
 
 - `--apply --patches <ids>` to apply prompts → applies nothing.
-- Stock tweakcc 4.0.14 on a fresh CC → repack abort on `patches-applied-indication`
-  + Latin-1 `\xHH` locator misses (~10 prompts). Fixed in `main` / ≥ 4.1.1 (PR #808).
 - `adhoc-patch` for bulk prompt edits → matches raw bytes only, breaks on any
   escaped char.
 - Trusting tweakcc's "applied" message → always `unpack`+grep to verify.
+- A tweakcc older than `main` / 4.1.1 → mis-locates Latin-1 prompts and aborts
+  the repack on a fresh CC build. Use `main` (what `install.sh` builds) or ≥ 4.1.1.
 
 ---
 
-## Part 9 — Worked example: the latest sync (v2.1.196)
+## Part 9 — Current state (v2.1.196)
 
-We track **only the latest** Claude Code version. This section is the most recent
-sync, kept as a concrete template — when you re-run the workflow against a newer
-release, **replace this section** with that sync's numbers rather than appending a
-history.
+We track **only the latest** Claude Code version whose prompt JSON tweakcc has
+published. Replace this snapshot each sync rather than appending history.
 
-- **Situation (a publish-lag stopgap — Part 8):** repo aligned to v2.1.191. The
-  latest Claude Code release is **v2.1.197**, but tweakcc had published prompt data
-  only through **v2.1.196** (`prompts-2.1.197.json` = 404). Per Part 8 the move is
-  to sync to the newest *published* version and treat it as interim: ran the Part-2
-  happy path targeting **2.1.196** (jumping over 192–195 in one hop), **to be
-  re-synced to 2.1.197 once its JSON publishes**. No binary fingerprint (Part 7)
-  was run — the binary installed on the sync machine was still v2.1.191, older than
-  both the sync target and the latest release; alignment is to the published JSON,
-  which `sync-version.mjs` reconstructs byte-identically to a tweakcc extraction.
-- **Manifest delta:** `sync-version.mjs 2.1.196 --download` reported **14 changed,
-  7 added, 0 removed** (505 unchanged); 519 → 526 prompts. Added = 3 auth-gateway
-  `data-*` pages (gateway protocol, landing page, device-code entry), 3 tool
-  descriptions (`invoke-skill`, `report-code-review-findings`,
-  `background-monitor` ws-source), and 1 structured-JSON agent prompt
-  (`fleet-agent-suggestion` scope personalization).
-- **Rule drift:** `apply-unnerfs.py` → **2 FAILs, 0 missing** — both FAILs were the
-  *same* retired launch-note phrase (`briefly tell the user what you launched and
-  end your response.`) in its two sibling files. The other 12 changed files carried
-  no rule.
-- **Two retirements (structural, not reword) — the crux of this sync:**
-  - `system-prompt-coordinator-mode-orchestration`: Anthropic **variable-ized** the
-    launch note. Line 44 went from "…briefly tell the user what you launched and end
-    your response." to "…`${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}` and end your
-    response." The brevity directive now lives inside a runtime variable whose value
-    is **not** in any extracted `.md`, so the tweakcc `.md`-patch mechanism (static
-    `pieces` replaced; `${VARS}` are wildcards) can't reach it. Retired — the
-    surviving static text ("and end your response" = functional stop; "Never
-    fabricate…results" = correctness guard) carries no nerf.
-  - `system-reminder-async-agent-launched`: Anthropic **deleted** the clause (in
-    v2.1.193). The reminder lost "Work on non-overlapping tasks, or briefly tell the
-    user what you launched and end your response." and now ends at "…topics it is
-    using." — a pure anti-duplication + don't-read-the-JSONL-transcript warning.
-    Retired.
-  - Net: **81 rules** (−2 retired, +0 added) across **62 files**, `--check` clean.
-    Note the general lesson: a nerf can leave the patchable surface by being moved
-    into a `${VARIABLE}` (unreachable) as well as by being deleted — both are
-    retire, not retarget, unless the phrase resurfaces as static text elsewhere.
-- **Review of the delta:** grep-triage + read of all 21 changed+added files
-  resolved to **keep** across the board — no new bucket-2/3 nerf. Notables: the 3
-  gateway pages + `data-managed-agents-endpoint-reference` are `data-*` reference
-  blobs (keep); `report-code-review-findings` reports **all** verified findings with
-  no count cap (structured output, keep); `security-monitor…second-part` is a
-  BLOCK/ALLOW classifier (Part-1 rule #3 — never weaken, keep); the model-migration
-  guide, current-models, and LLM-apps skill are reference/sample-prompt content
-  (keep); the context-tip selector (1–2-sentence tip), `/review` 2–3-sentence
-  overview, artifact one-sentence title, and `fleet-agent-suggestion` 3-string JSON
-  are structured-output caps (keep).
-- **Exhaustive sibling audit (Part 6):** all 81 rules' stock present in their own
-  stock file; **0 un-ruled siblings**. Every cross-file stock match is already
-  ruled in both files (the remote-plan/remote-planning pair, general-task ↔
-  general-purpose, the two subagent-example files, bash-git-commit ↔ quick-pr) or is
-  the intentional `skill-model-migration-guide` keep (the "recommendation, not an
-  exhaustive survey" sentence, still inside a quoted sample prompt in v2.1.196).
-- **Binary check:** **skipped** this sync (installed binary v2.1.191 ≠ sync target
-  v2.1.196 ≠ latest v2.1.197). On the re-sync to 2.1.197 — or if the machine
-  upgrades to 2.1.197 first — run the Part-7 `unpack`+fingerprint against the real
-  binary to confirm JSON-derived stock == running binary before trusting an
-  `--apply`, and to catch any prompt that changed between 196 and 197.
+- **Version:** built from **v2.1.196** — the newest tweakcc has prompt data for.
+  A stopgap: the latest CC *release* is v2.1.197, but `prompts-2.1.197.json` isn't
+  published yet (publish lag, Part 8), so re-sync once it lands.
+- **Scale:** **81 un-nerf rules across 62 files**, 526 prompts, `--check` clean.
+- **Last sync (to v2.1.196):** manifest delta vs the prior sync — **14 changed, 7
+  added, 0 removed**. All 21 changed+added were reviewed and **kept** (auth-gateway `data-*`
+  blobs, structured-output tool descriptions, a BLOCK/ALLOW security classifier,
+  reference/sample-prompt refreshes — no new bucket-2/3 nerf). Sibling audit: **0
+  un-ruled siblings**.
+- **Two rules retired**, each an instance of a Part-6 drift row worth remembering:
+  `coordinator-mode-orchestration` — the launch-note phrase was moved into a
+  `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}` variable, unreachable by the `.md`
+  patcher; and `async-agent-launched` — the clause was deleted outright.
+- **Binary check:** not run this sync (the sync machine's installed binary was
+  older than the target). On the next sync, or once the machine is on the target
+  version, run the Part-7 `unpack`+fingerprint before trusting an `--apply`.

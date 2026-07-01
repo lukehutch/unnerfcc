@@ -1,211 +1,100 @@
-# Maintenance
+# Maintenance — script reference
 
-How to keep these un-nerfed prompts current when Anthropic ships a new Claude Code release.
+Flag-level reference for the scripts in `scripts/`. The end-to-end upgrade
+playbook — objectives, the keep/flip decision procedure, the review method, and
+binary verification — lives in **[UNNERF-GUIDE.md](UNNERF-GUIDE.md)**. Start
+there; this file is just the knobs.
 
-> [!IMPORTANT]
-> **The authoritative upgrade playbook is now [UNNERF-GUIDE.md](UNNERF-GUIDE.md)** —
-> it covers the project's objectives, the keep/flip decision procedure, the MD5
-> change-detection manifest, the review method, rule updates, and binary
-> verification, end to end. This file is the per-script flag reference behind it.
+Two scripts do the work of a version bump:
 
-## Quick version
+- **`sync-version.mjs`** rebuilds `system-prompts/` as fresh STOCK for a given Claude Code version and diffs it against the checksum manifest.
+- **`apply-unnerfs.py`** replays every un-nerf onto that stock.
 
-Every Claude Code update can change the wording of any system prompt. When that happens, run [`sync-version.mjs`](./scripts/sync-version.mjs) to rebuild `system-prompts/` from tweakcc's published JSON for the new version, then run [`apply-unnerfs.py`](./scripts/apply-unnerfs.py) to replay the un-nerfs against the new text. Together the two scripts handle most of the refresh automatically. You only step in when upstream changed the exact wording that a rule targets.
-
----
-
-## The apply-unnerfs.py script
-
-Located at [`scripts/apply-unnerfs.py`](./scripts/apply-unnerfs.py). Stdlib-only Python, no pip install. Safe to run repeatedly.
-
-The script reads every `.md` file in `system-prompts/`, matches each against a table of `(stock_text, unnerf_text)` rules, and does string replacement. For each rule, one of four things happens:
-
-| Result | Meaning |
-|---|---|
-| **APPLIED** | Found the stock text, replaced it with the un-nerfed version. File rewritten. |
-| **SKIPPED** | Un-nerfed text already present. Nothing to do. |
-| **NORMALIZED** | No content change needed, but CRLF line endings were fixed to LF. |
-| **FAIL** | Neither stock nor un-nerfed text found. Upstream drifted. Needs your attention. |
-
-It also normalizes any accidental CRLF line endings back to LF.
-
-### Flags
-
-| Flag | What it does |
-|---|---|
-| *(none)* | Apply all rules to `./system-prompts/`. Writes to disk. |
-| `--dry-run` | Report what would change without writing anything. |
-| `--check` | Like `--dry-run`, but exits 1 if any rule would apply or fail. Good for CI. |
-| `--only FILE` | Restrict to one filename (just the name, no path prefix). |
-| `--verbose` | Show context on SKIPPED entries too. |
-| `--dir PATH` | Target a different prompts directory. |
+Together they handle most of a refresh automatically; you only step in when upstream reworded the exact text a rule targets (UNNERF-GUIDE Part 6).
 
 ---
 
-## The sync-version.mjs script
+## `sync-version.mjs`
 
-Located at [`scripts/sync-version.mjs`](./scripts/sync-version.mjs). Node.js ES module, pinned to `gray-matter@4.0.3` — the exact dependency tweakcc itself uses. Takes a Claude Code version and rebuilds every `.md` in `system-prompts/` from the matching `prompts-X.Y.Z.json` that tweakcc publishes alongside its own releases.
+Node ES module, pinned to `gray-matter@4.0.3` — the exact dependency tweakcc uses — so its output is byte-identical to a tweakcc extraction. Rebuilds every `.md` in `system-prompts/` from the `prompts-X.Y.Z.json` that tweakcc publishes for that version. On every run it also diffs the fresh stock against `system-prompt-checksums.json`, prints what Anthropic CHANGED / ADDED / REMOVED, and rewrites the manifest.
 
-The output is **byte-identical** to what tweakcc's extractor would produce against a freshly installed Claude Code binary at that version — because the script calls the same `matter.stringify()` with the same options as tweakcc's [`generateMarkdownFromPrompt`](https://github.com/Piebald-AI/tweakcc/blob/main/src/systemPromptSync.ts). Verified by diffing 294/294 files against a fresh `~/.tweakcc/system-prompts/` extraction on v2.1.142, and re-confirmed on the v2.1.179 sync by checking the reconstructed prompt text against the string literals in the actual installed binary (`tweakcc unpack` → grep): every distinctive line was present, the only "misses" being lines whose sole non-ASCII char (an emoji or `×`) is stored `\u`-escaped in the binary.
-
-### One-time setup
+**One-time setup** (installs the pinned dep into `scripts/node_modules/`; lockfile is checked in, so it's reproducible and idempotent):
 
 ```bash
-cd scripts
-npm install --ignore-scripts --save-exact
+cd scripts && npm install --ignore-scripts --save-exact && cd ..
 ```
 
-That installs `gray-matter@4.0.3` (and its transitive deps) into `scripts/node_modules/`. The lockfile is checked in, so the install is reproducible. Re-running is idempotent and safe.
-
-### Usage
+**Usage:**
 
 ```bash
-node scripts/sync-version.mjs 2.1.140              # most common — local clone first, GitHub fallback
-node scripts/sync-version.mjs                      # prompts interactively for version
-node scripts/sync-version.mjs 2.1.140 --dry-run    # preview without writing
-node scripts/sync-version.mjs 2.1.140 --download   # skip local clone, always fetch from GitHub
+node scripts/sync-version.mjs X.Y.Z --download          # rebuild stock from tweakcc's published JSON
+node scripts/sync-version.mjs                            # prompt interactively for the version
+node scripts/sync-version.mjs X.Y.Z --download --dry-run # preview, write nothing
 ```
-
-### Flags
 
 | Flag | What it does |
 |---|---|
 | *(none)* | Wipe `./system-prompts/*.md` and rewrite from the JSON for the given version. |
-| `--tweakcc-dir PATH` | Override the local tweakcc clone path. Default: `G:/Cathedral/repos_external/tweakcc`. |
-| `--target PATH` | Override the output directory. Default: `./system-prompts/`. |
-| `--download` | Skip the local-clone check and always fetch from GitHub. |
-| `--dry-run` | Report what would change without writing. |
-| `--no-clear` | Don't delete existing `.md` files before writing. |
+| `--download` | Skip the local-clone check; always fetch the JSON from GitHub. **Use this** unless you keep a local tweakcc clone. |
+| `--tweakcc-dir PATH` | Local tweakcc clone to read the JSON from. The built-in default is a maintainer-specific path; pass `--download` to ignore it. |
+| `--target PATH` | Output directory (default `./system-prompts/`). |
+| `--manifest PATH` | Stock-checksum manifest to diff against and update (default `system-prompt-checksums.json`). |
+| `--dry-run` | Report what would change (including the stock diff) without writing. |
+| `--no-clear` | Don't delete existing `.md` before writing. |
+| `--no-manifest` | Don't read or write the checksum manifest. |
 | `-h`, `--help` | Show usage. |
 
-### Where the prompts come from
-
-The script reads `data/prompts/prompts-{version}.json` from your local tweakcc clone first (default path: `G:/Cathedral/repos_external/tweakcc`), and falls back to fetching it from `https://raw.githubusercontent.com/Piebald-AI/tweakcc/refs/heads/main/data/prompts/` when the local file is missing. The JSON itself is tweakcc's pre-extracted form of the prompts; Piebald-AI regenerates it whenever they cut a tweakcc release that supports a new Claude Code version.
-
-### Why a JSON, and not just the binary?
-
-A fair question, since `tweakcc unpack <out.js> <binary>` *can* read the binary with no JSON at all (it's how we verify a sync against the installed build). The catch is **what the binary does and doesn't contain.** Since v2.1.113 Claude Code ships as a compiled Bun binary with the prompts baked in as minified template literals. Grep the unpacked JS and the prompt **body text is right there, verbatim** — but nothing else is:
-
-- **No catalog — which strings are prompts.** The ~17 MB of unpacked JS holds thousands of string literals, and nothing marks which ones are system prompts vs. error messages, log lines, or UI copy. Anthropic doesn't tag them. `prompts-X.Y.Z.json` is the curated list of *which* literals are the ~527 prompts.
-- **No names or descriptions.** The frontmatter `name:` (`System Prompt: Tone and style…`) and `description:` are tweakcc's editorial labels — they live **only** in the JSON, not in the binary. (Confirm it yourself: grep the unpacked JS for any prompt's `name`/`description` from the JSON → absent; grep for its body text → present.) Without them you get anonymous text blobs, not the named `.md` files this repo is organized around.
-- **No interpolation structure, and no stable patch anchor.** In the binary a prompt is a template literal like `` `…text ${Q5} more text…` `` where `Q5` is a minified identifier — meaningless, and it *changes on every build*. The JSON's `pieces[]` + `identifierMap` record the static text segments and map each `${…}` to a stable, human-readable variable name. This is also how tweakcc *locates* a prompt in order to patch it: `buildSearchRegexFromPieces` turns the static `pieces` into a regex (variables as wildcards) and matches it against the minified JS. The static text is stable across builds; the minified identifiers are not — so **without `pieces` there is no reliable locator, and nothing to patch against.**
-
-So the JSON is the per-version **catalog + template** that Piebald-AI curates and publishes alongside each tweakcc release. The prompt *text* is recoverable from the binary — that's enough to **verify** whether a known prompt is still present (which is exactly what the [checksum manifest](UNNERF-GUIDE.md#part-7--verifying-against-the-installed-binary) cross-check does) — but reconstructing the catalog, the names/descriptions, and the exact `pieces` structure for a brand-new version is the work that gets published per release. That publication lags fresh releases and skips some patch versions (see below).
-
-### When NOT to use it
-
-If Anthropic just shipped a new Claude Code release and tweakcc hasn't published the matching `prompts-X.Y.Z.json` yet, the script will exit 1 with a 404 from GitHub. tweakcc typically lags a few hours behind a CC release. When this happens, use the binary-extraction fallback at the bottom of the next section.
+The printed CHANGED/ADDED/REMOVED diff — not `git diff` on the un-nerfed tree — is your clean "what changed upstream" worklist (`git diff` mixes upstream changes with your un-nerf reverts; the manifest diff doesn't). If tweakcc hasn't published the JSON for your version yet, the script exits with a 404 — see UNNERF-GUIDE Part 8.
 
 ---
 
-## Full workflow after a Claude Code bump
+## `apply-unnerfs.py`
 
-The fast path uses [`sync-version.mjs`](./scripts/sync-version.mjs) to skip the binary-extraction step entirely. Once tweakcc has published `prompts-X.Y.Z.json` for the new release (usually within hours of a Claude Code drop), you can rebuild the whole prompts tree without touching your local Claude Code install.
+Stdlib-only Python, no pip install, safe to run repeatedly. Reads every `.md` in `system-prompts/`, matches each against the `(stock, unnerf)` rules in `RULES`, and does string replacement. Per rule:
 
-> [!IMPORTANT]
-> **Apply with tweakcc built from upstream `main` (or a release ≥ 4.1.1).** System-prompt `.md` edits are applied by a bare `tweakcc --apply` (`--apply --patches "<ids>"` does **not** apply them — it's for tweakcc's feature/theme patches). Earlier releases (4.0.14) couldn't fully patch v2.1.179/v2.1.181: a bare `--apply` aborted on the always-on `patches-applied-indication` UI patch, and its system-prompt locator missed Latin-1 chars stored as `\xHH` (e.g. `·` → `\xB7`). Both are fixed upstream — the UI abort in tweakcc `main`, the locator in [Piebald-AI/tweakcc#808](https://github.com/Piebald-AI/tweakcc/pull/808) — merged and released in tweakcc 4.1.1. With those fixes, `--apply` lands **all** binary-applicable un-nerfs (0 could-not-find, verified on real v2.1.179 and v2.1.181 binaries). [`install.sh`](./install.sh) **builds tweakcc from upstream `main`** (so the patcher tracks new CC releases faster than the npm release does; set `TWEAKCC_VERSION=latest` to use a release via `npx` instead), applies, then verifies the un-nerf actually landed — stopping cleanly (binary untouched) if it didn't.
+| Result | Meaning |
+|---|---|
+| **APPLIED** | Found stock text, replaced it with the un-nerf. |
+| **SKIPPED** | Un-nerf already present — nothing to do. |
+| **NORMALIZED** | No content change, but CRLF line endings fixed to LF. |
+| **FAIL** | Neither stock nor un-nerf found — upstream drifted. Needs attention. |
 
-### Updating this repo
+| Flag | What it does |
+|---|---|
+| *(none)* | Apply all rules to `./system-prompts/`, writing to disk. |
+| `--dry-run` | Report what would change without writing. |
+| `--check` | Like `--dry-run`, but exit 1 if any rule would apply or fail. CI gate. |
+| `--only FILE` | Restrict to one filename (no path prefix). |
+| `--verbose` | Show context on SKIPPED entries too. |
+| `--dir PATH` | Target a different prompts directory. |
 
-1. **Sync the stock prompts.** `node scripts/sync-version.mjs X.Y.Z`. This wipes `./system-prompts/` and rewrites every `.md` from tweakcc's `prompts-X.Y.Z.json`. The script tries your local tweakcc clone first (default `G:/Cathedral/repos_external/tweakcc`), falling back to GitHub. **It also diffs the freshly-built stock against `system-prompt-checksums.json` (the MD5 manifest from the previous sync) and prints exactly which prompts Anthropic CHANGED / ADDED / REMOVED, then rewrites the manifest.** That printed diff — not `git diff` on the un-nerfed tree — is your clean "what changed upstream" worklist (`git diff` mixes upstream changes with your un-nerf reverts; the manifest doesn't).
+Run it, fix any FAIL, and re-run until the report is all APPLIED/SKIP/NORMALIZED — then gate with `--check` (exit 0). A FAIL quotes both the stock text it looked for and the un-nerf it expected, so you know exactly what to find; resolve it with the drift table in UNNERF-GUIDE Part 6. To add a new un-nerf, add a `Rule(stock, unnerf, description)` to `RULES` (byte-exact `stock`, preferably a short unique substring) — full recipe in UNNERF-GUIDE Part 6.
 
-2. **Run the re-apply script.** `python scripts/apply-unnerfs.py`. Read the report.
-
-3. **Fix any FAILs.** Open each failed file, find the passage the rule targets (the report quotes the first 200 chars as a search term), and compare the new upstream wording against the old. Usually the drift is cosmetic and you just need to update `stock` in the rule to match the new wording byte-exactly. If upstream removed the passage entirely, delete the rule and note it in the commit.
-
-4. **Re-run until clean.** Keep running `apply-unnerfs.py` until the report shows only APPLIED, SKIPPED, and NORMALIZED. No FAILs.
-
-5. **Review CHANGED and ADDED prompts.** Work from the manifest diff printed in step 1 (it's the clean list). For each ADDED prompt and each CHANGED prompt without a rule, read it and decide if it introduces a brevity nerf worth flipping — most new `data-*` blobs and structured JSON generators with word caps should stay stock. Use the keep/flip decision procedure in [UNNERF-GUIDE.md](UNNERF-GUIDE.md#part-1--the-objective). For a periodic full sweep (catching nerfs missed in earlier versions), use the grep-triage in the guide's Part 5.
-
-6. **Commit.** The updated `.md` files and any `apply-unnerfs.py` rule changes together, while the diff is still small and the context is fresh.
-
-That's everything needed to keep this repo current. The remaining steps are for users who also want to patch their **local** Claude Code binary so it actually uses the un-nerfed prompts.
-
-### Applying the un-nerfs to your local Claude Code
-
-7. **Copy to tweakcc.** From the repo root:
-   ```bash
-   cp system-prompts/*.md ~/.tweakcc/system-prompts/
-   ```
-
-8. **Patch the binary.** `npx tweakcc@latest --apply` (released tweakcc ≥ 4.1.1 works on current CC; to track an even fresher CC release, build from `main` or just run [`install.sh`](./install.sh)).
-
-9. **Restart Claude Code** and verify a representative un-nerfed prompt actually made it in by triggering the relevant behavior.
-
-### Fallback: when tweakcc hasn't published yet
-
-If `sync-version.mjs` exits 1 with a 404 because tweakcc lags behind a fresh Claude Code release, do the binary-extraction loop manually. tweakcc won't overwrite files you've edited, so the cleanest approach is wiping its local prompts directory and getting a clean stock extraction from the new binary:
-
-1. **Update Claude Code** the normal way (installer, npm upgrade, whatever).
-2. **Wipe `~/.tweakcc/system-prompts/`.**
-   ```bash
-   rm -rf ~/.tweakcc/system-prompts          # Unix
-   # Remove-Item -Recurse -Force "$HOME\.tweakcc\system-prompts"  # Windows
-   ```
-   Leave the rest of `~/.tweakcc/` alone. `config.json`, hash files, and `native-binary.backup` need to survive.
-3. **Re-extract with tweakcc.** `npx tweakcc@latest`. It reads the new binary and writes fresh stock `.md` files with no conflicts.
-4. **Copy the fresh stock into this repo:**
-   ```bash
-   cp ~/.tweakcc/system-prompts/*.md system-prompts/
-   ```
-
-Then resume from step 2 ("Run the re-apply script") above.
-
----
-
-## Adding a new un-nerf
-
-1. Read the `.md` file you want to change. Find the passage to flip.
-
-2. Open [`scripts/apply-unnerfs.py`](./scripts/apply-unnerfs.py) and add a `Rule(stock=..., unnerf=..., description=...)` entry under the matching filename key in `RULES`. Create the key if the file is new.
-   - `stock` must match what's in the file byte-exactly, including trailing whitespace and any template literals like `${VAR}`.
-   - `unnerf` is the replacement. Write it in the same thorough-over-brief voice as the rest.
-   - `description` is a short scannable label (e.g. `"tone body: flip 'short and concise' to 'thorough'"`).
-
-3. Preview: `python scripts/apply-unnerfs.py --dry-run --only <filename>`
-
-4. Apply: run without `--dry-run` once you're happy with the preview.
-
-5. Verify: `git diff` should show only the replacement you expected.
-
-6. Confirm idempotent: `python scripts/apply-unnerfs.py --check`
-
-7. Commit the script change and the un-nerfed `.md` together.
-
----
-
-## Understanding FAIL reports
-
-A FAIL in the report looks like this:
-
-```
-system-prompts/some-file.md
-  [FAIL    ] <rule description>
-             Expected stock text (first 200 chars):
-               'Briefly explain what ...'
-             Expected un-nerf text (first 200 chars, for reference):
-               'Explain thoroughly what ...'
-             Neither was found in the file.
-             Action: open the file and locate the passage.
-```
-
-The two quoted excerpts tell you both what you're looking for (the pre-drift stock) and what the result should be (the target un-nerf). The file path tells you exactly where to go.
-
-Three common causes:
-
-- **Upstream reworded the passage.** Anthropic tweaked the phrasing in a new release. Find the new wording in the file, update `stock` in the rule to match. The `unnerf` usually doesn't need to change unless the new wording is structurally different.
-- **Upstream removed the passage.** The nerfed directive got deleted from the prompt. Delete the rule and note it in your commit.
-- **Upstream replaced it with something neutral.** The brevity directive got swapped for a neutral or pro-thoroughness one. Delete the rule. The un-nerf isn't needed anymore.
-
----
-
-## CI / pre-commit (optional)
-
-`--check` exits 1 when anything would change, so you can wire it into a pre-commit hook:
+**CI / pre-commit:**
 
 ```bash
-python scripts/apply-unnerfs.py --check || {
-  echo "Un-nerfs not fully applied. Run: python scripts/apply-unnerfs.py"
+python3 scripts/apply-unnerfs.py --check || {
+  echo "Un-nerfs not fully applied. Run: python3 scripts/apply-unnerfs.py"
   exit 1
 }
 ```
+
+---
+
+## `prompt-checksums.mjs`
+
+The MD5-manifest tool `sync-version.mjs` uses internally, also runnable standalone against a **stock** tree (a tweakcc extraction or a `sync-version.mjs --target` output — never the un-nerfed `system-prompts/`):
+
+```bash
+node scripts/prompt-checksums.mjs --dir <stock-dir>                              # diff against the manifest (read-only)
+node scripts/prompt-checksums.mjs --dir <stock-dir> --check                      # CI gate: exit 1 on drift
+node scripts/prompt-checksums.mjs --dir <stock-dir> --ccVersion X.Y.Z --write    # (re)write the manifest
+```
+
+What the manifest is and why it fingerprints *stock* (not the un-nerfed files): UNNERF-GUIDE Part 4.
+
+---
+
+## Why a JSON, and not just the binary?
+
+`sync-version.mjs` reads tweakcc's `prompts-X.Y.Z.json` rather than the installed binary because the binary holds the prompt *body text* but nothing else: no catalog of *which* string literals are prompts (the ~526 are buried among thousands), no `name`/`description` (tweakcc's editorial labels live only in the JSON), and no `pieces[]` / `identifierMap` — the interpolation structure tweakcc needs to *locate and patch* each prompt. The binary is enough to **verify** a known prompt is still present (UNNERF-GUIDE Part 7), but reconstructing the named `.md` set for a new version is the work tweakcc publishes per release. Mechanics: UNNERF-GUIDE Part 3.

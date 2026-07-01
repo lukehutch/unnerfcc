@@ -15,6 +15,9 @@ This is the live set I run daily — not cleaned up for public consumption, in-p
 
 You need [tweakcc](https://github.com/Piebald-AI/tweakcc) to patch these into your Claude Code binary.
 
+> [!IMPORTANT]
+> unnerfcc **owns** `~/.tweakcc/system-prompts/` — every run overwrites it with the un-nerfed set, so you can't also keep your own manual tweakcc prompt edits there (they'd be clobbered). Fold any edits you care about into the un-nerf rules (`scripts/apply-unnerfs.py`) instead. And `install.sh` keeps **no** binary backup — it's ~400 MB and stock is always re-extractable from the binary — so to roll back you reinstall Claude Code: `npm install -g @anthropic-ai/claude-code@<version>`.
+
 **Quick (recommended).** [`install.sh`](install.sh) detects your CC version, rebuilds that version's stock prompts, replays every un-nerf, patches the binary, and **verifies the change actually landed** — failing loudly and leaving your binary clean if it didn't:
 
 ```bash
@@ -88,7 +91,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 
 ## Compatibility
 
-- **Claude Code:** built from v2.1.196 (stopgap toward v2.1.197). Per-prompt `ccVersion:` frontmatter spans v2.0.14–v2.1.196. Upgrade playbook: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+- **Claude Code:** built from v2.1.196 (stopgap toward v2.1.197). Per-prompt `ccVersion:` frontmatter records when each prompt last changed. Upgrade playbook: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
 - **Models:** tuned for current Claude (Opus 4.8 / Sonnet 4.6 / Haiku 4.5). Older or smaller models may over-explain trivial asks.
 - **Watch for over-verbosity** — the main failure mode. If Claude writes essays for "what time is it?", start with `system-prompt-communication-style.md` and `system-prompt-tone-concise-output-short.md`. Thorough output also costs more tokens; plan accordingly.
 
@@ -103,4 +106,4 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 
 Prompt text in `system-prompts/*.md` is Anthropic's copyright, extracted by tweakcc and modified; redistributed as a modified subset on a fair-use / research basis. The docs and repo organization are **CC0 / public domain**.
 
-These change Claude Code's behavior in ways that may not suit your workflow — test in a throwaway session first, and keep the tweakcc binary backup so you can roll back. Something misbehaving? Open an issue or PR.
+These change Claude Code's behavior in ways that may not suit your workflow — test in a throwaway session first. To roll back, reinstall Claude Code (no binary backup is kept — see the note under [Install](#install)). Something misbehaving? Open an issue or PR.
