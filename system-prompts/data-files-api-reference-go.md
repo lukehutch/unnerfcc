@@ -1,9 +1,7 @@
 <!--
 name: 'Data: Files API reference — Go'
-description: >-
-  Go Files API reference including file upload, listing, deletion, and usage in
-  messages
-ccVersion: 2.1.182
+description: Files API reference doc (Go bindings).
+ccVersion: 2.1.183
 -->
 # Files API — Go
 

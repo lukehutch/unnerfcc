@@ -3,7 +3,7 @@ name: 'System Reminder: MCP output truncation warning'
 description: >-
   Warns that MCP tool output exceeded the token limit and advises pagination,
   filtering, or noting incomplete results
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - MAX_MCP_OUTPUT_TOKENS_FN
 -->

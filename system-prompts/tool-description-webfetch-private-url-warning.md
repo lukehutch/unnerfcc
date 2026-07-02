@@ -1,9 +1,10 @@
 <!--
 name: 'Tool Description: WebFetch private URL warning'
 description: >-
-  Warns that WebFetch fails for authenticated or private URLs and includes the
-  standard WebFetch usage notes
-ccVersion: 2.1.176
+  WebFetch usage warning — the tool fails on authenticated or private URLs;
+  check whether the URL points to an authenticated service and prefer a
+  specialized MCP tool, with the claude.ai artifact-URL exception
+ccVersion: 2.1.177
 variables:
   - IS_ARTIFACT_TOOL_ENABLED
   - WEBFETCH_TOOL_DESCRIPTION_BLOCK

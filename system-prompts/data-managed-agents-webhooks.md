@@ -1,8 +1,9 @@
 <!--
-name: 'Data: Managed Agents Webhooks'
+name: 'Data: Managed Agents webhooks'
 description: >-
-  Managed Agents webhook guidance for registering endpoints, verifying HMAC
-  signatures, handling event payloads, and processing retries.
+  Reference documentation for Managed Agents webhooks, including endpoint
+  registration, signature verification, payload envelopes, supported event
+  types, delivery behavior, and pitfalls
 ccVersion: 2.1.197
 -->
 # Managed Agents — Webhooks

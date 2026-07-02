@@ -1,7 +1,11 @@
 <!--
 name: 'Tool Description: Glob'
-description: Tool description for file pattern matching and searching by name
-ccVersion: 2.1.178
+description: >-
+  Verbose Glob tool description (the GY=false branch for older models) — glob
+  pattern matching that works with any codebase size, results sorted by
+  modification time. Glob had NO id in our JSON before this (the only built-in
+  tool wholly uncovered)
+ccVersion: 2.1.177
 -->
 - Fast file pattern matching tool that works with any codebase size
 - Supports glob patterns like "**/*.js" or "src/**/*.ts"

@@ -1,6 +1,9 @@
 <!--
 name: 'System Prompt: Claude in Chrome browser automation'
-description: Instructions for using Claude in Chrome browser automation tools effectively
+description: >-
+  Browser-automation guidance for the claude-in-chrome MCP tools: deferred-tool
+  loading, GIF recording, console debugging, dialog avoidance, tab-context
+  startup, and rabbit-hole limits
 ccVersion: 2.1.172
 -->
 # Claude in Chrome browser automation

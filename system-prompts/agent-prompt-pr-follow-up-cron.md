@@ -3,7 +3,7 @@ name: 'Agent Prompt: PR follow-up cron'
 description: >-
   Cron prompt for checking a pull request created in the session and fixing
   failures, comments, or conflicts
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - PR_INSTRUCTIONS_PREFIX
   - PR_GENERATED_WITH_CLAUDE_CODE

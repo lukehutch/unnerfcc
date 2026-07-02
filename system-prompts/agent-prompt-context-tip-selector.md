@@ -3,7 +3,7 @@ name: 'Agent Prompt: Context tip selector'
 description: >-
   Selects whether to show a brief Claude Code feature tip by matching the recent
   transcript and session metadata against eligible context-tip situations
-ccVersion: 2.1.198
+ccVersion: null
 variables:
   - FORMAT_CONTEXT_TIP_SITUATIONS_FN
   - CONTEXT_TIP_FEATURES

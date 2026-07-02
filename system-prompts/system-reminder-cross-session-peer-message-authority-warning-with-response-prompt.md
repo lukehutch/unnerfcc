@@ -3,9 +3,8 @@ name: >-
   System Reminder: Cross-session peer message authority warning with response
   prompt
 description: >-
-  Authority-warning note appended to a relayed peer message that also tells
-  Claude to decide whether and how to reply via SendMessage after finishing its
-  current task
+  Cross-session peer-message authority-warning wrapper that also prompts the
+  agent to decide whether/how to reply via SendMessage after finishing its task.
 ccVersion: 2.1.181
 -->
 

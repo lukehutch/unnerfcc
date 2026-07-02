@@ -3,7 +3,7 @@ name: 'Agent Prompt: Security monitor edit-removal guidance'
 description: >-
   Explains how the security monitor should evaluate Edit and NotebookEdit
   removals, truncated deletions, missing outcomes, and replace-all edits
-ccVersion: 2.1.186
+ccVersion: 2.1.187
 variables:
   - HAS_EDIT_REMOVAL_TRUNCATION_CAP
 -->

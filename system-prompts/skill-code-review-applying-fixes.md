@@ -1,0 +1,18 @@
+<!--
+name: 'Skill: Code Review (--fix applying fixes)'
+description: >-
+  Appended to the code-review prompt when --fix is passed; instructs applying
+  each finding to the working tree, skipping behavior-changing or out-of-scope
+  fixes
+ccVersion: 2.1.152
+-->
+
+
+## Applying fixes (--fix)
+
+The \`--fix\` flag was passed. After producing the findings list, apply the
+findings to the working tree instead of stopping at the report: fix each one
+directly — correctness bugs and reuse/simplification/efficiency cleanups alike.
+Skip any finding whose fix would change intended behavior, require changes well
+outside the reviewed diff, or that you judge to be a false positive — note the
+skip rather than arguing with it. Finish with a thorough account of what was fixed and why, and what was skipped with the specific reason for each skip.

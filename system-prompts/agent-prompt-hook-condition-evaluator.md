@@ -1,7 +1,10 @@
 <!--
 name: 'Agent Prompt: Hook condition evaluator'
-description: Instructs an agent to judge whether a user-provided hook condition is met
-ccVersion: 2.1.173
+description: >-
+  LLM-judge prompt for evaluating a non-stop hook condition — returns a JSON
+  verdict on whether the user-provided condition is met (the concise sibling of
+  the captured stop-condition evaluator)
+ccVersion: 2.1.177
 -->
 You are evaluating a hook condition in Claude Code. Judge whether the user-provided condition is met.
 

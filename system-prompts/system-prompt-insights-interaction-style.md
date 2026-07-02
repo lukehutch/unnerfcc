@@ -1,7 +1,7 @@
 <!--
 name: 'System Prompt: Insights interaction style'
 description: Analyzes Claude Code usage data to describe the user's interaction style
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 -->
 Analyze this Claude Code usage data and describe the user's interaction style.
 

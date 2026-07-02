@@ -6,22 +6,25 @@ description: End-to-end workflow to publish a new release after a Claude Code up
 # Sync prompts to a new Claude Code version and cut a release
 
 This skill automates the post-upstream-bump release workflow documented in
-[README.md § Standard workflow after a Claude Code bump](../../../README.md#standard-workflow-after-a-claude-code-bump).
+[UNNERF-GUIDE.md Part 2](../../../UNNERF-GUIDE.md) (the upgrade happy path).
 
 ## Preconditions (DO NOT bypass — check them before anything else)
 
 1. **Working directory is the repo root.** Verify with `git remote -v` — it must point at
-   `github.com/BenIsLegit/tweakcc-system-prompts-unnerfed`. If not, stop.
+   `github.com/lukehutch/unnerfcc`. If not, stop.
 2. **Fresh stock has already been copied in.** `git status --short` must show a mix of
-   `M` / `D` / `??` entries under `system-prompts/`. If the working tree is clean, the user
-   hasn't done the wipe-and-regen step yet — tell them to follow README steps 1–4 first
-   (`rm -rf ~/.tweakcc/system-prompts`, run `npx tweakcc-fixed@latest`, `cp ~/.tweakcc/system-prompts/*.md system-prompts/`).
+   `M` / `D` / `??` entries under `system-prompts/` (plus a modified
+   `system-prompt-checksums.json`). If the working tree is clean, the regen step hasn't
+   run yet — run `node scripts/sync-version.mjs X.Y.Z --download` (rebuilds stock from
+   skrabe/tweakcc-fixed's published JSON and prints the CHANGED/ADDED/REMOVED worklist),
+   or tell the user to (UNNERF-GUIDE Part 2).
 3. **The user has authorized pushes and publishing.** This skill pushes commits, pushes
    tags, and publishes a GitHub release with a zip asset — all visible to others. If the
    user hasn't explicitly authorized these actions for this session, confirm once at the
    top before starting Phase 5.
-4. **Do NOT run tweakcc itself.** The user runs tweakcc by hand against their local CC
-   binary. This skill never touches `~/.tweakcc/` or the installed `claude` binary.
+4. **Do NOT run tweakcc-fixed itself.** The user runs tweakcc-fixed (or `install.sh`) by
+   hand against their local CC binary. This skill never touches `~/.tweakcc/` or the
+   installed `claude` binary.
 
 ## Required reading
 
@@ -154,7 +157,7 @@ Caused by upstream deleting a file that a rule referenced.
 
 1. Cross-check `git status --short` for a `D` entry matching the missing filename.
 2. If confirmed deleted: open `apply-unnerfs.py`, remove the corresponding
-   `"system-prompts/<filename>.md": [...]` entry from `RULES`. Note the removal in the
+   `"<filename>.md": [...]` entry from `RULES` (keys are bare filenames). Note the removal in the
    sync commit body (the total rule count drops).
 3. If NOT in `D` status: something else is wrong (stock copy-in incomplete?). Ask the user.
 
@@ -206,7 +209,7 @@ analysis that appears in both the commit body and the release body.
 
 ```python
 # In scripts/apply-unnerfs.py, inside the RULES dict:
-"system-prompts/<filename>.md": [
+"<filename>.md": [    # bare filename — RULES keys carry no directory prefix
     Rule(
         stock="<exact text from new upstream, byte-exact>",
         unnerf="<thorough-over-brief replacement>",
@@ -435,14 +438,14 @@ Un-nerfed Claude Code **v<VERSION>** system prompts — current latest.
 
 - **Zip contents:** <FILE_COUNT> `.md` files at the zip root, ~<SIZE_KB> KB compressed.
 - **Drop-in for:** `~/.tweakcc/system-prompts/`.
-- **Full context:** [README at this tag](https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed/blob/v<VERSION>-<N>/README.md) — un-nerf thesis, before/after examples, install steps, post-bump re-apply workflow.
-- **Install note:** requires [`tweakcc-fixed`](https://github.com/BenIsLegit/tweakcc-fixed) until upstream tweakcc catches up to Claude Code builds newer than v2.1.113.
+- **Full context:** [README at this tag](https://github.com/lukehutch/unnerfcc/blob/v<VERSION>-<N>/README.md) — un-nerf thesis, before/after examples, install steps, post-bump re-apply workflow.
+- **Install note:** apply with [`skrabe/tweakcc-fixed`](https://github.com/skrabe/tweakcc-fixed) (npm `tweakcc-fixed` ≥ 2.0.0, or built from `main` — what `install.sh` does).
 
-## Changes since [`<PREV_TAG>`](https://github.com/BenIsLegit/tweakcc-system-prompts-unnerfed/releases/tag/<PREV_TAG>)
+## Changes since [`<PREV_TAG>`](https://github.com/lukehutch/unnerfcc/releases/tag/<PREV_TAG>)
 
 ### Upstream (from Anthropic — Claude Code v<PREV_VERSION> → v<VERSION>)
 
-These changes came from Anthropic's v<VERSION> build itself. This repo did **not** author any of them — they flow through verbatim from the stock `tweakcc` extraction, before any un-nerfing is applied.
+These changes came from Anthropic's v<VERSION> build itself. This repo did **not** author any of them — they flow through verbatim from the stock `tweakcc-fixed` extraction, before any un-nerfing is applied.
 
 - **+N file(s):** <new filename> — <one-sentence description of what the prompt does>
 - **−N file(s):** <deleted filename> — removed entirely.

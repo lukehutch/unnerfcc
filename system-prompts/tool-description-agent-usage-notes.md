@@ -1,9 +1,10 @@
 <!--
-name: 'Tool Description: Agent (usage notes)'
+name: 'Tool Description: Agent usage notes'
 description: >-
-  Usage notes and instructions for the Task/Agent tool, including guidance on
-  launching subagents, background execution, resumption, and worktree isolation
-ccVersion: 2.1.198
+  Agent tool usage notes — always include a short description, the agent returns
+  a single result not visible to the user, and guidance on stateless invocation
+  and trusting agent output
+ccVersion: null
 variables:
   - TOOL_BASE_DESCRIPTION
   - TOOL_PARAMETERS_DESCRIPTION

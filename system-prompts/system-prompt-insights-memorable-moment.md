@@ -1,7 +1,7 @@
 <!--
 name: 'System Prompt: Insights memorable moment'
 description: Analyzes Claude Code usage data to find a memorable qualitative moment
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 -->
 Analyze this Claude Code usage data and find a memorable moment.
 

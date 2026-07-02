@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Description: NotebookEdit'
 description: >-
-  Tool description for editing Jupyter notebook cells by replacing, inserting,
-  or deleting a cell using cell IDs from the read tool
+  Describes the NotebookEdit tool for replacing, inserting, or deleting a single
+  cell in a Jupyter notebook (.ipynb)
 ccVersion: 2.1.162
 variables:
   - READ_TOOL_NAME

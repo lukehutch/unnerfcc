@@ -1,8 +1,8 @@
 <!--
 name: 'System Reminder: Cross-session peer message authority warning note'
 description: >-
-  Authority-warning note appended to a relayed peer message, without a response
-  prompt
+  Wrapper note appended to a cross-session peer message warning the receiving
+  Claude not to treat a peer as user authority (permission laundering).
 ccVersion: 2.1.181
 -->
 

@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Code Review (Phase 2 — verify, recall-biased)'
 description: >-
-  Recall-tier verification step: one verifier per candidate finding, biased
-  toward keeping anything plausible
-ccVersion: 2.1.173
+  Phase 2 of the code-review skill for recall tiers — one verifier per
+  candidate, recall-biased keep rule
+ccVersion: 2.1.160
 variables:
   - AGENT_TOOL_NAME
   - RECALL_BIASED_RUBRIC

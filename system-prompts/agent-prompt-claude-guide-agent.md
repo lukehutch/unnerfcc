@@ -3,7 +3,7 @@ name: 'Agent Prompt: Claude guide agent'
 description: >-
   System prompt for the claude-guide agent that helps users understand and use
   Claude Code, the Claude Agent SDK and the Claude API effectively.
-ccVersion: 2.1.154
+ccVersion: 2.1.156
 variables:
   - CLAUDE_CODE_DOCS_MAP_URL
   - AGENT_SDK_DOCS_MAP_URL

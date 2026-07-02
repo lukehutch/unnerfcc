@@ -1,8 +1,9 @@
 <!--
-name: 'Skill: Run skill generator'
+name: 'Skill: run-skill-generator'
 description: >-
-  Skill for authoring or improving a project-specific run skill that documents
-  verified build, launch, runtime driving, and troubleshooting steps
+  Bundled /run-skill-generator skill (user-invocable only) — authors or improves
+  a project's run-<unit> skill telling agents how to build, launch, and drive
+  the app from a clean environment
 ccVersion: 2.1.145
 -->
 ---

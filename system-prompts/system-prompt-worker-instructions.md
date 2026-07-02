@@ -1,7 +1,9 @@
 <!--
 name: 'System Prompt: Worker instructions'
-description: Instructions for workers to follow when implementing a change
-ccVersion: 2.1.147
+description: >-
+  Post-implementation checklist injected for worker/subagent turns — run the
+  code-review skill, run unit tests, test end-to-end
+ccVersion: 2.1.148
 variables:
   - SKILL_TOOL_NAME
 -->

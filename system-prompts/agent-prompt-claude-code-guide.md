@@ -1,7 +1,7 @@
 <!--
-name: 'Agent Prompt: Claude Code guide'
+name: 'Agent Prompt: claude-code-guide'
 description: Subagent that answers Claude Code feature/SDK/API questions
-ccVersion: 2.1.173
+ccVersion: 2.1.141
 variables:
   - SEND_MESSAGE_TOOL_NAME
 -->

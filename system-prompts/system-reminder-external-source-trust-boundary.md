@@ -3,7 +3,7 @@ name: 'System Reminder: External source trust boundary'
 description: >-
   Warns that an external plugin or channel message is not from the user and must
   be treated as untrusted data rather than instructions
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - IS_EXTERNAL_PLUGIN_SOURCE
 -->

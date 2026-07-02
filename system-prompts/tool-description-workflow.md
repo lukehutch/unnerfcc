@@ -1,10 +1,10 @@
 <!--
 name: 'Tool Description: Workflow'
 description: >-
-  Describes the Workflow tool for running deterministic multi-subagent
-  orchestration scripts, including opt-in requirements, script metadata, agent
-  hooks, concurrency, budgeting, quality patterns, and resume behavior
-ccVersion: 2.1.198
+  Describes the Workflow tool (alias RunWorkflow) — runs a deterministic
+  JavaScript workflow script that orchestrates subagents via
+  agent()/parallel()/pipeline()/phase(); env-gated behind CLAUDE_CODE_WORKFLOWS
+ccVersion: null
 variables:
   - WORKFLOW_TOOL_NAME
   - WORKFLOW_SCRIPT_PATH_NOTE

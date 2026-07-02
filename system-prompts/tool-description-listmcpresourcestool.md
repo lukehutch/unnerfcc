@@ -3,7 +3,7 @@ name: 'Tool Description: ListMcpResourcesTool'
 description: >-
   Tool description for listing available MCP resources from all configured
   servers or a specific server
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 -->
 
 Lists available resources from configured MCP servers.

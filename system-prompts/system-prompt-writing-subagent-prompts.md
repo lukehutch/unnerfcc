@@ -1,9 +1,10 @@
 <!--
 name: 'System Prompt: Writing subagent prompts'
 description: >-
-  Guidelines for writing effective prompts when delegating tasks to subagents,
-  covering context-inheriting vs fresh subagent scenarios
-ccVersion: 2.1.176
+  How to brief a spawned agent like a smart colleague with zero context: explain
+  the goal, what has been ruled out, and enough surrounding context that the
+  agent can make judgment calls
+ccVersion: 2.1.177
 variables:
   - HAS_SUBAGENT_TYPE
 -->

@@ -1,9 +1,7 @@
 <!--
 name: 'System Prompt: Autonomous loop tick (dynamic pacing)'
-description: >-
-  Autonomous loop tick injection for dynamic self-paced autonomous checks
-  scheduled with ScheduleWakeup
-ccVersion: 2.1.173
+description: Autonomous loop tick injection (dynamic pacing variant)
+ccVersion: 2.1.141
 variables:
   - SCHEDULE_WAKEUP_TOOL_NAME
   - AUTONOMOUS_LOOP_DYNAMIC_SENTINEL

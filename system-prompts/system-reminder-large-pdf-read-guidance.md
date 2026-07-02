@@ -3,7 +3,7 @@ name: 'System Reminder: Large PDF read guidance'
 description: >-
   Warns that a PDF is too large to read at once and requires reading specific
   page ranges
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - PDF_FILE_REFERENCE
   - FORMAT_FILE_SIZE_FN

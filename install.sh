@@ -4,35 +4,42 @@
 #
 # WHAT IT DOES
 #   1. Detects your Claude Code, locates its binary, and pins CC to the exact
-#      version the rules support — min(tweakcc's newest published prompts, this
+#      version the rules support — min(tweakcc-fixed's newest published prompts, this
 #      repo's ccVersion) — by uninstalling any existing install(s) and installing
 #      that version, then disabling CC's auto-updater (DISABLE_AUTOUPDATER) so the
 #      pin/patch aren't reverted on the next launch. CC_PIN=0 skips all of this.
 #   2. Fetches the un-nerf scripts + rules from the repo this script was run from
 #      (so a clone installs its own rules), or the upstream project if install.sh
 #      isn't inside a git checkout. Override with UNNERF_REPO / UNNERF_REF.
-#   3. Rebuilds that exact CC version's STOCK prompts with tweakcc's published
-#      data (sync-version.mjs), then replays every un-nerf onto them
+#   3. Rebuilds that exact CC version's STOCK prompts with tweakcc-fixed's
+#      published data (sync-version.mjs), then replays every un-nerf onto them
 #      (apply-unnerfs.py). This adapts automatically to new CC releases.
 #   4. Stages the un-nerfed prompts into ~/.tweakcc and patches the binary with
-#      a `tweakcc --apply` (downloads its own prompt data; no interactive
-#      extraction). The ~400 MB backup tweakcc makes is deleted afterward —
+#      a `tweakcc-fixed --apply` (downloads its own prompt data; no interactive
+#      extraction). The ~400 MB backup tweakcc-fixed makes is deleted afterward —
 #      stock is always re-extractable, so rollback is by reinstalling Claude
-#      Code, not `--restore`. By default tweakcc is BUILT FROM upstream main (it
+#      Code, not `--restore`. By default tweakcc-fixed is BUILT FROM its main (it
 #      tracks new CC releases fastest); set TWEAKCC_VERSION to use a released
-#      tweakcc via npx instead.
+#      tweakcc-fixed via npx instead.
+#      NOTE: tweakcc-fixed ships extra binary patches of its own, some ON BY
+#      DEFAULT, and two of those change model-facing behavior beyond prompts
+#      (dream-mode memory consolidation; CLAUDE.md-once-per-conversation). This
+#      script keeps unnerfcc's prompts-only promise by seeding those two flags
+#      to false in ~/.tweakcc/config.json — only when you haven't already set
+#      them yourself (an explicit user choice is never overridden).
 #   5. VERIFIES the un-nerf actually landed in the binary (unpack + grep) and
 #      confirms the patched binary still runs.
 #
-# COMPATIBILITY: applying system-prompt edits to the binary needs a tweakcc whose
-# binary-patch logic matches your CC version. tweakcc's npm releases can lag a
+# COMPATIBILITY: applying system-prompt edits to the binary needs a tweakcc-fixed
+# whose binary-patch logic matches your CC version. Its npm releases can lag a
 # brand-new CC build (which may need a fresh prompt-locator/repack fix), so this
-# script BUILDS tweakcc from upstream main by default — main carries those fixes
+# script BUILDS tweakcc-fixed from its main by default — main carries those fixes
 # soonest (locator/repack fixes for fresh CC builds). If even main can't fully
 # patch your CC version yet, a bare `--apply` may abort or only partially match;
 # this script does NOT pretend otherwise — it verifies the un-nerf actually landed
 # and fails loudly (leaving your binary clean) when it can't. Set
-# TWEAKCC_VERSION=latest to use the released tweakcc via npx instead of building.
+# TWEAKCC_VERSION=latest to use the released tweakcc-fixed via npx instead of
+# building.
 #
 # USAGE
 #   ./install.sh                 # full install (non-interactive)
@@ -45,16 +52,16 @@
 #                   (default: the repo install.sh was run from; else upstream)
 #   UNNERF_REF      branch/tag/commit to fetch
 #                   (default: the current branch of that repo; else main)
-#   TWEAKCC_GIT     git URL of tweakcc to BUILD FROM SOURCE
-#                   (default: https://github.com/Piebald-AI/tweakcc.git — upstream)
-#   TWEAKCC_REF     branch/tag/commit of tweakcc to build
+#   TWEAKCC_GIT     git URL of tweakcc-fixed to BUILD FROM SOURCE
+#                   (default: https://github.com/skrabe/tweakcc-fixed.git)
+#   TWEAKCC_REF     branch/tag/commit of tweakcc-fixed to build
 #                   (default: main — tracks new CC releases fastest)
-#   TWEAKCC_VERSION if set (e.g. 'latest' or '4.1.1'), use the RELEASED tweakcc
-#                   via npx instead of building from git. Lighter, but can lag a
-#                   brand-new CC release (see README/BACKGROUND).
+#   TWEAKCC_VERSION if set (e.g. 'latest' or '2.0.0'), use the RELEASED
+#                   tweakcc-fixed via npx instead of building from git. Lighter,
+#                   but can lag a brand-new CC release (see README/BACKGROUND).
 #   CC_BIN          path to the Claude Code native binary (default: auto-detect)
 #   CC_PIN          1 (default): install the exact Claude Code version the rules
-#                   support — min(tweakcc's newest prompts, this repo's ccVersion).
+#                   support — min(tweakcc-fixed's newest prompts, this repo's ccVersion).
 #                   If a different version is installed, ALL existing installs (npm
 #                   global, ~/.claude/local, ~/.local native) are removed first, and
 #                   CC's auto-updater is disabled (DISABLE_AUTOUPDATER=1 in
@@ -76,24 +83,24 @@ _self_ref="$(git -C "${_self_dir:-.}" rev-parse --abbrev-ref HEAD 2>/dev/null ||
 if [ "$_self_ref" = "HEAD" ]; then _self_ref=""; fi   # detached HEAD: no usable branch name
 UNNERF_REPO="${UNNERF_REPO:-${_self_repo:-https://github.com/lukehutch/unnerfcc.git}}"
 UNNERF_REF="${UNNERF_REF:-${_self_ref:-main}}"
-TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/Piebald-AI/tweakcc.git}"  # tweakcc source to BUILD FROM (default: upstream)
+TWEAKCC_GIT="${TWEAKCC_GIT:-https://github.com/skrabe/tweakcc-fixed.git}"  # tweakcc-fixed source to BUILD FROM
 TWEAKCC_REF="${TWEAKCC_REF:-main}"             # branch/tag/commit to build (default: main; tracks new CC releases fastest)
-TWEAKCC_VERSION="${TWEAKCC_VERSION:-}"         # set (e.g. 'latest') to use a RELEASED tweakcc via npx instead of building from git
+TWEAKCC_VERSION="${TWEAKCC_VERSION:-}"         # set (e.g. 'latest') to use a RELEASED tweakcc-fixed via npx instead of building from git
 CC_PIN="${CC_PIN:-1}"                          # 1: pin Claude Code to the exact version the rules support (uninstall existing installs, install target, disable auto-update); 0: build for the installed version as-is
 # Turn CC's auto-updater OFF for everything this script invokes. `claude` (the
-# version checks below) and tweakcc both shell out to claude, and CC's runtime
+# version checks below) and tweakcc-fixed both shell out to claude, and CC's runtime
 # updater would otherwise npm-update the global install to the LATEST version
 # mid-run — replacing the version we pin and reverting the un-nerf. When CC_PIN=1
 # this is also persisted to ~/.claude/settings.json (step 3b) so the pin survives
 # later launches; without it the next `claude` start re-updates and un-does both.
 export DISABLE_AUTOUPDATER=1
-TWEAKCC=""   # set by setup_tweakcc ("node <dist>/index.mjs", or "npx tweakcc@<ver>")
+TWEAKCC=""   # set by setup_tweakcc ("node <dist>/index.mjs", or "npx tweakcc-fixed@<ver>")
 TWEAKCC_DIR="${HOME}/.tweakcc"
 PROMPTS_DIR="${TWEAKCC_DIR}/system-prompts"
 
 # Distinctive phrases that appear ONLY in the un-nerfed prompts, never in stock.
 # Used twice: (1) to detect an already-patched binary BEFORE applying, so we can
-# reset it to stock first (cc_is_unnerfed / step 3b) — otherwise tweakcc --apply
+# reset it to stock first (cc_is_unnerfed / step 3b) — otherwise tweakcc-fixed --apply
 # searches for stock text the prior patch already replaced and floods dozens of
 # benign "Could not find system prompt ..." warnings; and (2) to VERIFY the
 # un-nerf actually landed AFTER applying (step 6).
@@ -125,37 +132,40 @@ trap 'die "failed at line $LINENO (exit $?)"' ERR
 
 usage() { sed -n '2,/^set /{ /^set /q; p; }' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
 
-# Pick the tweakcc to use and set $TWEAKCC to a runnable command. Default: BUILD
-# from upstream tweakcc main — main tracks new Claude Code releases faster than
-# npm releases do (a brand-new CC build often needs a prompt-locator/repack fix
-# that lands on main before the next tweakcc release is cut). Opt out by setting
-# TWEAKCC_VERSION (e.g. 'latest') to use a released tweakcc via npx instead.
+# Pick the tweakcc-fixed to use and set $TWEAKCC to a runnable command. Default:
+# BUILD from tweakcc-fixed main — main tracks new Claude Code releases faster
+# than npm releases do (a brand-new CC build often needs a prompt-locator/repack
+# fix that lands on main before the next release is cut). Opt out by setting
+# TWEAKCC_VERSION (e.g. 'latest') to use a released tweakcc-fixed via npx instead.
 setup_tweakcc() {
   if [ -n "$TWEAKCC_VERSION" ]; then
-    log "Using the released tweakcc (npx tweakcc@${TWEAKCC_VERSION})"
+    log "Using the released tweakcc-fixed (npx tweakcc-fixed@${TWEAKCC_VERSION})"
     local resolved
-    resolved="$(npm view "tweakcc@${TWEAKCC_VERSION}" version 2>/dev/null | tail -1)"
-    [ -n "$resolved" ] || die "could not resolve 'tweakcc@${TWEAKCC_VERSION}' from npm — check your network, or unset TWEAKCC_VERSION to build from git."
-    TWEAKCC="npx --yes tweakcc@${resolved}"
+    resolved="$(npm view "tweakcc-fixed@${TWEAKCC_VERSION}" version 2>/dev/null | tail -1)"
+    [ -n "$resolved" ] || die "could not resolve 'tweakcc-fixed@${TWEAKCC_VERSION}' from npm — check your network, or unset TWEAKCC_VERSION to build from git."
+    case "$resolved" in
+      0.*|1.*) die "tweakcc-fixed@${resolved} predates the skrabe fork (npm versions <= 1.0.5 are an unmaintained earlier fork). Use 2.0.0 or newer." ;;
+    esac
+    TWEAKCC="npx --yes tweakcc-fixed@${resolved}"
     # Warm the npx cache once (and fail early if it can't run) so the later
     # --apply / unpack calls are fast and don't re-hit the registry.
     $TWEAKCC --version >/dev/null 2>&1 \
-      || die "'npx tweakcc@${resolved}' could not run — check your network/npm, or unset TWEAKCC_VERSION to build from git."
-    info "tweakcc ${resolved} (released via npx)"
+      || die "'npx tweakcc-fixed@${resolved}' could not run — check your network/npm, or unset TWEAKCC_VERSION to build from git."
+    info "tweakcc-fixed ${resolved} (released via npx)"
     return
   fi
   build_tweakcc
 }
 
-# Build tweakcc from git — the default path. Clones TWEAKCC_GIT @ TWEAKCC_REF
-# (default: upstream main) and builds it, so the binary patcher matches the
-# newest CC release that main supports.
+# Build tweakcc-fixed from git — the default path. Clones TWEAKCC_GIT @
+# TWEAKCC_REF (default: skrabe/tweakcc-fixed main) and builds it, so the binary
+# patcher matches the newest CC release that main supports.
 build_tweakcc() {
-  log "Building tweakcc from git (${TWEAKCC_GIT} @ ${TWEAKCC_REF})"
+  log "Building tweakcc-fixed from git (${TWEAKCC_GIT} @ ${TWEAKCC_REF})"
   local dir="${WORKDIR}/tweakcc"
   git clone --quiet --depth 1 --branch "$TWEAKCC_REF" "$TWEAKCC_GIT" "$dir" 2>/dev/null \
     || git clone --quiet --depth 1 "$TWEAKCC_GIT" "$dir" \
-    || die "could not clone tweakcc from $TWEAKCC_GIT @ $TWEAKCC_REF"
+    || die "could not clone tweakcc-fixed from $TWEAKCC_GIT @ $TWEAKCC_REF"
   # Corepack-managed pnpm (including the `corepack enable pnpm` fallback below)
   # asks "Corepack is about to download <pnpm>... [Y/n]" the first time it has to
   # fetch a pnpm build. That prompt is written to stderr, which the pnpm commands
@@ -165,28 +175,28 @@ build_tweakcc() {
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
   if ! command -v pnpm >/dev/null 2>&1; then
     corepack enable pnpm >/dev/null 2>&1 || npm i -g pnpm >/dev/null 2>&1 \
-      || die "tweakcc builds with pnpm; install pnpm (npm i -g pnpm) and retry"
+      || die "tweakcc-fixed builds with pnpm; install pnpm (npm i -g pnpm) and retry"
   fi
   # </dev/null: belt-and-suspenders so that if any pnpm step still tries to read
   # from the terminal it fails fast instead of hanging behind the redirects above.
   ( cd "$dir" && pnpm install --silent --prefer-offline >/dev/null 2>&1 \
       && pnpm build:dev >/dev/null 2>&1 ) </dev/null \
-    || die "tweakcc build failed under $dir — run 'pnpm install && pnpm build:dev' there to see why"
-  [ -f "${dir}/dist/index.mjs" ] || die "tweakcc build produced no dist/index.mjs"
+    || die "tweakcc-fixed build failed under $dir — run 'pnpm install && pnpm build:dev' there to see why"
+  [ -f "${dir}/dist/index.mjs" ] || die "tweakcc-fixed build produced no dist/index.mjs"
   TWEAKCC="node ${dir}/dist/index.mjs"
   info "tweakcc built: $($TWEAKCC --version 2>/dev/null | head -1)"
 }
 
 # Lower of two X.Y.Z versions (numeric per component). Used to pick the CC
-# version that both this repo's rules and tweakcc's prompt data support.
+# version that both this repo's rules and tweakcc-fixed's prompt data support.
 ver_min() { printf '%s\n%s\n' "$1" "$2" | sort -t. -k1,1n -k2,2n -k3,3n | head -1; }
 
-# Highest Claude Code version tweakcc has prompt data for on main, i.e.
+# Highest Claude Code version tweakcc-fixed has prompt data for on main, i.e.
 # max(data/prompts/prompts-*.json). Echoes X.Y.Z, or nothing if the listing
 # can't be fetched (offline / API rate-limited) — the caller then falls back.
 tweakcc_latest_prompt_version() {
   curl -fsSL -H 'Accept: application/vnd.github+json' \
-    "https://api.github.com/repos/Piebald-AI/tweakcc/contents/data/prompts?ref=main" 2>/dev/null \
+    "https://api.github.com/repos/skrabe/tweakcc-fixed/contents/data/prompts?ref=main" 2>/dev/null \
     | grep -oE 'prompts-[0-9]+\.[0-9]+\.[0-9]+\.json' \
     | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' \
     | sort -t. -k1,1n -k2,2n -k3,3n -u | tail -1
@@ -234,8 +244,8 @@ cc_install_npm() {
 }
 
 # True (exit 0) if the Claude Code binary already contains un-nerf text — i.e. a
-# prior run already patched it. Re-running `tweakcc --apply` on an already-un-nerfed
-# binary makes tweakcc hunt for the STOCK prompt text (which the earlier patch
+# prior run already patched it. Re-running `tweakcc-fixed --apply` on an already-un-nerfed
+# binary makes tweakcc-fixed hunt for the STOCK prompt text (which the earlier patch
 # replaced) and print dozens of benign but alarming "Could not find system prompt
 # ..." warnings, so we detect this and reset to a clean stock binary first. grep -a
 # treats the (binary) file as text; -F matches the sentinel literally.
@@ -274,6 +284,43 @@ cc_persist_disable_autoupdate() {
        info "  note: CC will no longer self-update. After any deliberate CC upgrade, re-run this script — each new version's changed prompts must be re-un-nerfed." ;;
     2) info "CC auto-update already disabled in ${settings} (DISABLE_AUTOUPDATER=1)" ;;
     *) warn "could not update ${settings} — add '\"env\": { \"DISABLE_AUTOUPDATER\": \"1\" }' yourself, or CC will auto-update and revert the un-nerf" ;;
+  esac
+}
+
+# Keep unnerfcc prompts-only under tweakcc-fixed. A bare `tweakcc-fixed --apply`
+# also runs the fork's own binary patches, and two of the DEFAULT-ON ones change
+# model-facing behavior beyond prompts: 'dream-mode' (memory consolidation +
+# /dream) and 'claudemd-context-once-per-conversation' (rewrites how CLAUDE.md
+# reaches the model). Missing config keys deep-merge to the fork's defaults
+# (true), so we seed them to false in ~/.tweakcc/config.json — but ONLY when the
+# key is absent: a value the user set themselves (either way) is never touched.
+# Purely cosmetic/UI default-on patches are left alone. Exit codes from the node
+# helper: 0 wrote, 2 nothing to do (both keys already set), 3 failed.
+seed_prompts_only_config() {
+  local cfg="${TWEAKCC_DIR}/config.json" rc
+  mkdir -p "$TWEAKCC_DIR"
+  if node -e '
+      const fs = require("fs"), p = process.argv[1];
+      let raw = null;
+      try { raw = fs.readFileSync(p, "utf8"); } catch (e) { if (e.code !== "ENOENT") process.exit(3); }
+      let j = {};
+      if (raw && raw.trim()) { try { j = JSON.parse(raw); } catch (e) { process.exit(3); } }
+      if (typeof j !== "object" || j === null || Array.isArray(j)) process.exit(3);
+      j.settings = j.settings || {};
+      j.settings.misc = j.settings.misc || {};
+      const m = j.settings.misc;
+      let wrote = false;
+      for (const k of ["enableDreamMode", "claudemdContextOncePerConversation"]) {
+        if (!(k in m)) { m[k] = false; wrote = true; }
+      }
+      if (!wrote) process.exit(2);
+      fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
+    ' "$cfg"; then rc=0; else rc=$?; fi
+  case "${rc:-0}" in
+    0) info "seeded ${cfg}: disabled tweakcc-fixed's default-on model-facing patches (dream-mode, CLAUDE.md-once-per-conversation) — unnerfcc changes prompts only"
+       info "  (only keys you had not set yourself were written; re-enable them in the tweakcc-fixed TUI if you want those features)" ;;
+    2) info "tweakcc-fixed model-facing patch flags already set in ${cfg} — leaving your choices as-is" ;;
+    *) warn "could not update ${cfg} — tweakcc-fixed's default-on dream-mode and CLAUDE.md-once-per-conversation patches will ALSO apply (they change model-facing behavior beyond the un-nerfed prompts)" ;;
   esac
 }
 
@@ -358,11 +405,11 @@ fi
 # 3b. Pin Claude Code to the exact version the un-nerf rules support
 # ---------------------------------------------------------------------------
 # This repo's rules are written against the STOCK prompt text of ONE specific CC
-# version (system-prompt-checksums.json -> ccVersion), and tweakcc can only
+# version (system-prompt-checksums.json -> ccVersion), and tweakcc-fixed can only
 # extract/patch versions it has prompt data for. The newest version BOTH support
-# is min(tweakcc's latest published prompts, this repo's ccVersion). Un-nerfing
+# is min(tweakcc-fixed's latest published prompts, this repo's ccVersion). Un-nerfing
 # any other CC version risks rules whose stock text drifted (so they silently
-# stop applying) or a binary tweakcc can't patch — so install exactly that
+# stop applying) or a binary tweakcc-fixed cannot patch — so install exactly that
 # version: if a different one is installed, uninstall every existing Claude Code
 # (npm global and/or native/local) and install the target. CC_PIN=0 skips this
 # and builds for whatever CC is installed.
@@ -374,19 +421,19 @@ if [ "$CC_PIN" = 1 ]; then
   [ -f "${repo_root}/system-prompt-checksums.json" ] || repo_root="${_self_repo:-}"
   repo_ver="$(grep -m1 '"ccVersion"' "${repo_root}/system-prompt-checksums.json" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
   [ -n "$repo_ver" ] || die "could not read ccVersion from system-prompt-checksums.json — cannot determine the supported CC version"
-  # Source A: the newest version tweakcc has prompt data for (max prompts-*.json).
+  # Source A: the newest version tweakcc-fixed has prompt data for (max prompts-*.json).
   tw_ver="$(tweakcc_latest_prompt_version || true)"
   if [ -n "$tw_ver" ]; then
     CC_VERSION="$(ver_min "$tw_ver" "$repo_ver")"
-    info "tweakcc newest prompts v${tw_ver} | this repo v${repo_ver} -> target v${CC_VERSION}"
+    info "tweakcc-fixed newest prompts v${tw_ver} | this repo v${repo_ver} -> target v${CC_VERSION}"
   else
     CC_VERSION="$repo_ver"
-    warn "could not list tweakcc's prompt versions via the GitHub API; targeting this repo's v${repo_ver} (sync-version.mjs will confirm tweakcc has prompts for it)"
+    warn "could not list tweakcc-fixed's prompt versions via the GitHub API; targeting this repo's v${repo_ver} (sync-version.mjs will confirm tweakcc-fixed has prompts for it)"
   fi
 
   if [ "$CC_INSTALLED" = "$CC_VERSION" ]; then
     # Right version already installed. But if a PRIOR run already un-nerfed the
-    # binary, re-running `tweakcc --apply` would search for the STOCK prompt text
+    # binary, re-running `tweakcc-fixed --apply` would search for the STOCK prompt text
     # (which that prior patch already replaced) and print dozens of benign but
     # scary "Could not find system prompt ..." warnings. Reset to a clean stock
     # binary first (a plain npm reinstall overwrites the patched one in place) so
@@ -428,7 +475,7 @@ if [ "$CC_PIN" = 1 ]; then
 else
   info "CC_PIN=0: building for the installed Claude Code v${CC_INSTALLED} (rules may not apply cleanly if it differs from the supported version)"
   if cc_is_unnerfed "$CC_BIN"; then
-    warn "the installed binary is already un-nerfed, and CC_PIN=0 means we won't reinstall it — so tweakcc --apply will print benign 'Could not find system prompt' warnings (it re-searches for stock text the prior patch already replaced). The verify step below is the source of truth; to silence the noise, reinstall stock first: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+    warn "the installed binary is already un-nerfed, and CC_PIN=0 means we won't reinstall it — so tweakcc-fixed --apply will print benign 'Could not find system prompt' warnings (it re-searches for stock text the prior patch already replaced). The verify step below is the source of truth; to silence the noise, reinstall stock first: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   fi
 fi
 
@@ -438,7 +485,7 @@ fi
 log "Building un-nerfed prompts for v${CC_VERSION}"
 if [ "$DRY_RUN" = 1 ]; then
   info "[dry-run] would: npm install (gray-matter), sync-version.mjs ${CC_VERSION} --download, apply-unnerfs.py,"
-  info "[dry-run]        tweakcc --apply (patch the binary), then set DISABLE_AUTOUPDATER=1 in ${HOME}/.claude/settings.json"
+  info "[dry-run]        tweakcc-fixed --apply (patch the binary), then set DISABLE_AUTOUPDATER=1 in ${HOME}/.claude/settings.json"
   log "Dry run complete — no changes made."
   exit 0
 fi
@@ -448,7 +495,7 @@ fi
 
 # Stock baseline -> snapshot -> un-nerf in place; the diff gives the patched IDs.
 node "${REPO}/scripts/sync-version.mjs" "$CC_VERSION" --download >/dev/null \
-  || die "sync-version.mjs could not fetch prompts for v${CC_VERSION} (tweakcc may not have published them yet)"
+  || die "sync-version.mjs could not fetch prompts for v${CC_VERSION} (tweakcc-fixed may not have published them yet)"
 STOCK_SNAP="${WORKDIR}/stock"
 cp -a "${REPO}/system-prompts" "$STOCK_SNAP"
 APPLY_LOG="${WORKDIR}/apply-unnerfs.log"
@@ -475,12 +522,12 @@ done
 info "${changed} prompts un-nerfed"
 
 # ---------------------------------------------------------------------------
-# 5. Set up tweakcc (built from upstream main by default), then stage the un-nerfed prompts
+# 5. Set up tweakcc-fixed (built from its main by default), then stage the un-nerfed prompts
 # ---------------------------------------------------------------------------
 setup_tweakcc
 
 log "Staging un-nerfed prompts into ~/.tweakcc (no interactive extraction needed)"
-# tweakcc's --apply downloads the prompt data for your CC version itself
+# tweakcc-fixed's --apply downloads the prompt data for your CC version itself
 # (downloadStringsFile), so there is NO interactive TUI extraction step: it
 # patches each prompt whose .md in ~/.tweakcc/system-prompts differs from stock.
 # We DELETE any older-version ~/.tweakcc state first: stale system-prompts /
@@ -518,7 +565,7 @@ info "${G}verified:${N} ${overlaid}/${changed} prompts overwritten with un-nerfe
 if [ "$PROMPTS_ONLY" = 1 ]; then
   log "Prompts-only mode: ${PROMPTS_DIR} updated (${changed} un-nerfed)."
   info "Apply them by running this script without --prompts-only, or run"
-  info "'npx tweakcc@latest --apply' yourself, then verify."
+  info "'npx -y tweakcc-fixed@latest --apply' yourself, then verify."
   exit 0
 fi
 
@@ -526,14 +573,15 @@ fi
 # 6. Patch the binary (bare --apply) and verify the un-nerf actually landed
 # ---------------------------------------------------------------------------
 log "Patching the Claude Code binary"
+seed_prompts_only_config
 # A bare `--apply` is what actually applies system-prompt .md edits (it patches
 # every prompt whose .md differs from the extracted original). `--apply
 # --patches <prompt-ids>` does NOT apply system-prompt edits. A bare --apply also
-# runs tweakcc's other binary patches; if your tweakcc is older than your CC
+# runs tweakcc-fixed's other binary patches; if your tweakcc-fixed is older than your CC
 # build one of them ('patches-applied-indication') can fail (older tweakcc then
 # aborted the whole repack — fixed in 4.1.1). Either way the result depends on
-# your tweakcc version matching your CC version, so the verify step below, not
-# tweakcc's exit code, is the source of truth. Capture stdout (via tee, so it also
+# your tweakcc-fixed version matching your CC version, so the verify step below, not
+# tweakcc-fixed's exit code, is the source of truth. Capture stdout (via tee, so it also
 # streams live) so we can later tell an unrelated FEATURE-patch failure apart from
 # the un-nerf, which we verify independently.
 if ! $TWEAKCC --apply 2>"${WORKDIR}/apply.err" | tee "${WORKDIR}/apply.out"; then
@@ -541,7 +589,7 @@ if ! $TWEAKCC --apply 2>"${WORKDIR}/apply.err" | tee "${WORKDIR}/apply.out"; the
   die "tweakcc --apply aborted on CC v${CC_VERSION} — your tweakcc may lag this CC release. Check the error above; rebuild from a newer TWEAKCC_REF (you're on '${TWEAKCC_REF}', default 'main') or pin a released TWEAKCC_VERSION. Your binary is unchanged."
 fi
 
-# Check (4): confirm the un-nerf actually reached the binary. tweakcc can report
+# Check (4): confirm the un-nerf actually reached the binary. tweakcc-fixed can report
 # success while patching nothing (or only partially) when its system-prompt
 # locator lags the CC version, so verify by unpacking and counting sentinels.
 log "Verifying the un-nerf actually landed in the binary"
@@ -553,19 +601,19 @@ if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
   done
   if [ "$hits" -ge 4 ]; then
     info "${G}verified:${N} un-nerf is present in the patched binary (${hits}/${#UNNERF_SENTINELS[@]} sentinels)"
-    # A bare --apply also runs tweakcc's OTHER (non-un-nerf) feature patches from
+    # A bare --apply also runs tweakcc-fixed's OTHER (non-un-nerf) feature patches from
     # your ~/.tweakcc/config.json. On a very recent CC build some of those can't be
-    # located, and tweakcc prints "applied with some failures / open an issue" — a
-    # tweakcc-side limitation unrelated to the un-nerf we just verified. Say so, so a
+    # located, and tweakcc-fixed prints "applied with some failures / open an issue" — a
+    # tweakcc-fixed-side limitation unrelated to the un-nerf we just verified. Say so, so a
     # successful install doesn't read as a failed one.
     if grep -q 'some failures' "${WORKDIR}/apply.out" 2>/dev/null; then
-      info "note: tweakcc also reported failures applying some of its OWN unrelated feature patches (not system prompts) to CC v${CC_VERSION} — a tweakcc limitation on this CC build that does NOT affect the un-nerf verified above (report at https://github.com/Piebald-AI/tweakcc/issues if you rely on those features)."
+      info "note: tweakcc-fixed also reported failures applying some of its OWN unrelated feature patches (not system prompts) to CC v${CC_VERSION} — a tweakcc-fixed limitation on this CC build that does NOT affect the un-nerf verified above (report at https://github.com/skrabe/tweakcc-fixed/issues if you rely on those features)."
     fi
     # The un-nerf landed — ensure CC's auto-updater is off so a background update
     # can't replace this binary and silently revert it. Idempotent: only writes (and
     # prints the reason) when DISABLE_AUTOUPDATER isn't already set.
     cc_persist_disable_autoupdate
-    # Don't keep the ~400 MB backup tweakcc created during --apply (nor the
+    # Don't keep the ~400 MB backup tweakcc-fixed created during --apply (nor the
     # native-claudejs dumps): stock is re-extractable and rollback is a reinstall.
     rm -f "${TWEAKCC_DIR}/native-binary.backup" \
           "${TWEAKCC_DIR}/native-claudejs-orig.js" \
@@ -573,9 +621,9 @@ if $TWEAKCC unpack "$VERIFY_JS" "$CC_BIN" >/dev/null 2>&1; then
     log "${G}Done.${N} Restart any running Claude Code sessions to pick up the un-nerfed prompts."
     info "Roll back by reinstalling Claude Code:  npm install -g @anthropic-ai/claude-code@${CC_VERSION}  (no local backup is kept)"
   elif [ "$hits" -ge 1 ]; then
-    die "PARTIAL apply (${hits}/${#UNNERF_SENTINELS[@]} sentinels). Your tweakcc version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+    die "PARTIAL apply (${hits}/${#UNNERF_SENTINELS[@]} sentinels). Your tweakcc-fixed version can only partially patch system prompts into CC v${CC_VERSION} (a known gap on very recent CC). Reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   else
-    die "apply did NOT land (0/${#UNNERF_SENTINELS[@]} sentinels) even though tweakcc reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so the un-nerf was not applied. Reinstall a clean binary if needed: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
+    die "apply did NOT land (0/${#UNNERF_SENTINELS[@]} sentinels) even though tweakcc-fixed reported success — its system-prompt patcher does not support CC v${CC_VERSION} yet, so the un-nerf was not applied. Reinstall a clean binary if needed: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"
   fi
 else
   warn "patched binary could not be unpacked to verify — check behavior in a session, or reinstall a clean binary: npm install -g @anthropic-ai/claude-code@${CC_VERSION}"

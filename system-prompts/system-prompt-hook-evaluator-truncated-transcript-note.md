@@ -3,7 +3,7 @@ name: 'System Prompt: Hook evaluator truncated transcript note'
 description: >-
   Tells the hook condition evaluator that earlier conversation was omitted and
   how to handle insufficient evidence
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - OMITTED_MESSAGE_COUNT
 -->

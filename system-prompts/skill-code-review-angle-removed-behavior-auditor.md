@@ -1,9 +1,10 @@
 <!--
 name: 'Skill: Code Review (Angle B — removed-behavior auditor)'
 description: >-
-  Code-review finder angle that, for each deleted or rewritten line, names the
-  behavior it guaranteed and confirms the new code still guarantees it
-ccVersion: 2.1.173
+  The removed-behavior finder angle of the code-review skill — for every
+  deleted/replaced line, name the invariant it enforced and check it is
+  re-established
+ccVersion: 2.1.160
 -->
 ### Angle B — removed-behavior auditor
 

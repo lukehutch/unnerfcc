@@ -1,9 +1,10 @@
 <!--
-name: 'Skill: Design sync'
+name: 'Skill: design-sync'
 description: >-
-  Skill for syncing a React design system to claude.ai/design by configuring the
-  target project, running the converter, verifying previews, and uploading
-  verified artifacts
+  Bundled design-sync skill — Push a React design system to claude.ai/design.
+  This runs a converter that bundles the real component code (from Storybook or
+  a bare package) and uploads it. Use when the user runs /design-sync or says
+  "sync my design system to Claude Design".
 ccVersion: 2.1.187
 -->
 ---

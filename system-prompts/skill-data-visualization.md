@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Data Visualization'
 description: >-
-  Skill instructions for producing accessible, brand-neutral charts, graphs,
-  dashboards, and data visualizations using a validated method
-ccVersion: 2.1.198
+  SKILL.md body for the built-in Data Visualization skill, loaded into the
+  model's context when the skill is invoked.
+ccVersion: null
 -->
 ---
 name: Data Visualization

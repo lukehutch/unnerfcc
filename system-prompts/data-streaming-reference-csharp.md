@@ -1,9 +1,7 @@
 <!--
 name: 'Data: Streaming reference — C#'
-description: >-
-  C# streaming reference including streaming events and the
-  RawMessageStreamEvent TryPick methods
-ccVersion: 2.1.182
+description: Streaming API reference doc (C# bindings).
+ccVersion: 2.1.183
 -->
 # Streaming — C#
 

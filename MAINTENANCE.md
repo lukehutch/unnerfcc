@@ -16,7 +16,7 @@ Together they handle most of a refresh automatically; you only step in when upst
 
 ## `sync-version.mjs`
 
-Node ES module, pinned to `gray-matter@4.0.3` — the exact dependency tweakcc uses — so its output is byte-identical to a tweakcc extraction. Rebuilds every `.md` in `system-prompts/` from the `prompts-X.Y.Z.json` that tweakcc publishes for that version. On every run it also diffs the fresh stock against `system-prompt-checksums.json`, prints what Anthropic CHANGED / ADDED / REMOVED, and rewrites the manifest.
+Node ES module, pinned to `gray-matter@4.0.3` — the exact dependency tweakcc-fixed uses — so its output is byte-identical to a tweakcc-fixed extraction. Rebuilds every `.md` in `system-prompts/` from the `prompts-X.Y.Z.json` that [skrabe/tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed) publishes for that version. Duplicate prompt ids (the fork catalogs some ids at multiple binary sites) collapse to their first occurrence, matching the fork's own extractor. On every run it also diffs the fresh stock against `system-prompt-checksums.json`, prints what Anthropic CHANGED / ADDED / REMOVED, and rewrites the manifest.
 
 **One-time setup** (installs the pinned dep into `scripts/node_modules/`; lockfile is checked in, so it's reproducible and idempotent):
 
@@ -27,7 +27,7 @@ cd scripts && npm install --ignore-scripts --save-exact && cd ..
 **Usage:**
 
 ```bash
-node scripts/sync-version.mjs X.Y.Z --download          # rebuild stock from tweakcc's published JSON
+node scripts/sync-version.mjs X.Y.Z --download          # rebuild stock from tweakcc-fixed's published JSON
 node scripts/sync-version.mjs                            # prompt interactively for the version
 node scripts/sync-version.mjs X.Y.Z --download --dry-run # preview, write nothing
 ```
@@ -35,8 +35,8 @@ node scripts/sync-version.mjs X.Y.Z --download --dry-run # preview, write nothin
 | Flag | What it does |
 |---|---|
 | *(none)* | Wipe `./system-prompts/*.md` and rewrite from the JSON for the given version. |
-| `--download` | Skip the local-clone check; always fetch the JSON from GitHub. **Use this** unless you keep a local tweakcc clone. |
-| `--tweakcc-dir PATH` | Local tweakcc clone to read the JSON from. The built-in default is a maintainer-specific path; pass `--download` to ignore it. |
+| `--download` | Skip the local-clone check; always fetch the JSON from GitHub. **Use this** unless you keep a local tweakcc-fixed clone. |
+| `--tweakcc-dir PATH` | Local tweakcc-fixed clone to read the JSON from. The built-in default is a maintainer-specific path; pass `--download` to ignore it. |
 | `--target PATH` | Output directory (default `./system-prompts/`). |
 | `--manifest PATH` | Stock-checksum manifest to diff against and update (default `system-prompt-checksums.json`). |
 | `--dry-run` | Report what would change (including the stock diff) without writing. |
@@ -44,7 +44,7 @@ node scripts/sync-version.mjs X.Y.Z --download --dry-run # preview, write nothin
 | `--no-manifest` | Don't read or write the checksum manifest. |
 | `-h`, `--help` | Show usage. |
 
-The printed CHANGED/ADDED/REMOVED diff — not `git diff` on the un-nerfed tree — is your clean "what changed upstream" worklist (`git diff` mixes upstream changes with your un-nerf reverts; the manifest diff doesn't). If tweakcc hasn't published the JSON for your version yet, the script exits with a 404 — see UNNERF-GUIDE Part 8.
+The printed CHANGED/ADDED/REMOVED diff — not `git diff` on the un-nerfed tree — is your clean "what changed upstream" worklist (`git diff` mixes upstream changes with your un-nerf reverts; the manifest diff doesn't). If tweakcc-fixed hasn't published the JSON for your version yet, the script exits with a 404 — see UNNERF-GUIDE Part 8.
 
 ---
 
@@ -57,7 +57,7 @@ Stdlib-only Python, no pip install, safe to run repeatedly. Reads every `.md` in
 | **APPLIED** | Found stock text, replaced it with the un-nerf. |
 | **SKIPPED** | Un-nerf already present — nothing to do. |
 | **NORMALIZED** | No content change, but CRLF line endings fixed to LF. |
-| **FAIL** | Neither stock nor un-nerf found — upstream drifted. Needs attention. |
+| **FAIL** | Neither stock nor un-nerf found — upstream drifted. Needs attention. Also raised by the **orphan-variable guard**: a rule whose `unnerf` introduces a `${NAME}` placeholder that isn't in its `stock` text or the target file's `variables:` frontmatter is refused before it can crash Claude Code at launch (UNNERF-GUIDE Part 6). |
 
 | Flag | What it does |
 |---|---|
@@ -83,7 +83,7 @@ python3 scripts/apply-unnerfs.py --check || {
 
 ## `prompt-checksums.mjs`
 
-The MD5-manifest tool `sync-version.mjs` uses internally, also runnable standalone against a **stock** tree (a tweakcc extraction or a `sync-version.mjs --target` output — never the un-nerfed `system-prompts/`):
+The MD5-manifest tool `sync-version.mjs` uses internally, also runnable standalone against a **stock** tree (a tweakcc-fixed extraction or a `sync-version.mjs --target` output — never the un-nerfed `system-prompts/`):
 
 ```bash
 node scripts/prompt-checksums.mjs --dir <stock-dir>                              # diff against the manifest (read-only)
@@ -97,4 +97,4 @@ What the manifest is and why it fingerprints *stock* (not the un-nerfed files): 
 
 ## Why a JSON, and not just the binary?
 
-`sync-version.mjs` reads tweakcc's `prompts-X.Y.Z.json` rather than the installed binary because the binary holds the prompt *body text* but nothing else: no catalog of *which* string literals are prompts (the ~526 are buried among thousands), no `name`/`description` (tweakcc's editorial labels live only in the JSON), and no `pieces[]` / `identifierMap` — the interpolation structure tweakcc needs to *locate and patch* each prompt. The binary is enough to **verify** a known prompt is still present (UNNERF-GUIDE Part 7), but reconstructing the named `.md` set for a new version is the work tweakcc publishes per release. Mechanics: UNNERF-GUIDE Part 3.
+`sync-version.mjs` reads tweakcc-fixed's `prompts-X.Y.Z.json` rather than the installed binary because the binary holds the prompt *body text* but nothing else: no catalog of *which* string literals are prompts (the ~1,437 sites are buried among thousands of literals), no `name`/`description` (the editorial labels live only in the JSON), and no `pieces[]` / `identifierMap` — the interpolation structure the patcher needs to *locate and patch* each prompt. The binary is enough to **verify** a known prompt is still present (UNNERF-GUIDE Part 7), but reconstructing the named `.md` set for a new version is the work tweakcc-fixed publishes per release. Mechanics: UNNERF-GUIDE Part 3.

@@ -3,7 +3,7 @@ name: 'System Reminder: Memory extraction tool constraints'
 description: >-
   Lists the tools available to the memory extraction subagent for reading and
   updating memory files
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - READ_TOOL_NAME
   - GREP_TOOL_NAME

@@ -1,9 +1,11 @@
 <!--
 name: 'System Prompt: Fork usage guidelines'
 description: >-
-  Instructions for when to fork subagents and rules against reading fork output
-  mid-flight or fabricating fork results
-ccVersion: 2.1.176
+  Guidance on when to fork yourself (subagent_type: "fork") instead of spawning
+  a fresh subagent — fork open-ended/survey questions whose intermediate tool
+  output is not worth keeping in context; forks inherit context and share the
+  prompt cache
+ccVersion: 2.1.177
 -->
 
 

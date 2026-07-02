@@ -78,6 +78,7 @@ And a final `=== Summary ===` block with totals + exit code.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -192,7 +193,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-explore.md": [
         Rule(
             stock="NOTE: You are meant to be a fast agent that returns output as quickly as possible. In order to achieve this you must:\n- Make efficient use of the tools that you have at your disposal: be smart about how you search for files and implementations\n- Wherever possible you should try to spawn multiple parallel tool calls for grepping and reading files",
-            unnerf="NOTE: Be exhaustively thorough in your exploration. Completeness trumps speed every time — missing a relevant file or pattern is far worse than taking extra time:\n- Use every tool at your disposal aggressively: search across multiple naming conventions, directory structures, and file types\n- Spawn multiple parallel tool calls wherever possible for grepping and reading files to cover more ground simultaneously\n- Follow leads, cross-references, and related patterns wherever they go — don't stop at the first match\n- Read full file contents when relevant, not just snippets, so you understand the full context\n- When the caller requests thorough exploration, exhaust every reasonable search strategy and then try a few more",
+            unnerf="NOTE: Be exhaustively thorough in your exploration. Completeness matters more than speed — a missed file or pattern costs more than the extra search time:\n- Search across multiple naming conventions, directory structures, and file types\n- Spawn multiple parallel tool calls wherever possible for grepping and reading files to cover more ground simultaneously\n- Follow leads, cross-references, and related patterns wherever they go — don't stop at the first match\n- Read full file contents when relevant, not just snippets, so you understand the full context\n- When the caller requests thorough exploration, exhaust every reasonable search strategy before reporting back",
             description="explore intro: exhaustive thoroughness over speed",
         ),
         Rule(
@@ -208,7 +209,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-general-purpose.md": [
         Rule(
             stock="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done.\"} When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.",
-            unnerf="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly. Do the work that a careful senior developer would do, including edge cases and fixing obviously related issues you discover. Don't add purely cosmetic or speculative improvements unrelated to the task.\"} When you complete the task, respond with a thorough, detailed report covering what was done, every key finding, the reasoning behind decisions, edge cases you considered, and any related observations the caller should know about. The caller relies on your report to understand the full picture — do not minimize detail.",
+            unnerf="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly. Do the work that a careful senior developer would do, including edge cases and fixing obviously related issues you discover. Don't add purely cosmetic or speculative improvements unrelated to the task.\"} When you complete the task, respond with a thorough, detailed report covering what was done, every key finding, the reasoning behind decisions, edge cases you considered, and any related observations the caller should know about. The caller relies on your report to understand the full picture — include everything needed to act on it without re-investigating.",
             description="general-purpose: senior-dev completeness + thorough final report",
         ),
     ],
@@ -498,7 +499,7 @@ RULES: dict[str, list[Rule]] = {
     "system-prompt-remote-plan-mode-ultraplan.md": [
         Rule(
             stock="Run a lightweight planning process, consistent with how you would in regular plan mode: \n- Explore the codebase directly with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents.",
-            unnerf="Run a thorough planning process, consistent with how you would in regular plan mode:\n- Explore the codebase aggressively with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents; this planning session runs in a single context. Compensate with exhaustive first-hand exploration: read every file that bears on the design and trace the key call paths yourself rather than sampling.",
+            unnerf="Run a thorough planning process, consistent with how you would in regular plan mode:\n- Explore the codebase thoroughly with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents; this planning session runs in a single context. Compensate with exhaustive first-hand exploration: read every file that bears on the design and trace the key call paths yourself rather than sampling.",
             description="ultraplan: thorough planning, exhaustive in-context exploration (env may not support subagents)",
         ),
         Rule(
@@ -515,7 +516,7 @@ RULES: dict[str, list[Rule]] = {
     "system-prompt-remote-planning-session.md": [
         Rule(
             stock="Run a lightweight planning process, consistent with how you would in regular plan mode: \n- Explore the codebase directly with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents. ",
-            unnerf="Run a thorough planning process, consistent with how you would in regular plan mode:\n- Explore the codebase aggressively with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents; this planning session runs in a single context. Compensate with exhaustive first-hand exploration: read every file that bears on the design and trace the key call paths yourself rather than sampling.",
+            unnerf="Run a thorough planning process, consistent with how you would in regular plan mode:\n- Explore the codebase thoroughly with Glob, Grep, and Read. Read the relevant code, understand how the pieces fit, look for existing functions and patterns you can reuse instead of proposing new ones, and shape an approach grounded in what's actually there.\n- Do not spawn subagents; this planning session runs in a single context. Compensate with exhaustive first-hand exploration: read every file that bears on the design and trace the key call paths yourself rather than sampling.",
             description="remote-planning: thorough planning, exhaustive in-context exploration (env may not support subagents)",
         ),
     ],
@@ -560,31 +561,30 @@ RULES: dict[str, list[Rule]] = {
     ],
 
     # -------------------------------------------------------------------------
-    # system-reminder-plan-mode-is-active-5-phase.md — multi-agent default
-    # (Phase-1 exploration only. In v2.1.198 Anthropic split the single 5-phase
-    # reminder into per-phase prompts; this .md now carries just Phase 1, so only
-    # the exploration flip lives here. The Phase-2 "Design" flip was RETARGETED to
-    # system-reminder-plan-mode-phase-2-design.md below — not retired, because the
-    # design text is literal static content in that new standalone prompt and thus
-    # reachable by the .md patcher, unlike the v2.1.196 coordinator case where the
-    # phrase moved into an unreachable ${VARIABLE} value.)
+    # system-reminder-plan-mode-phase-1-understanding-parallel-agents.md —
+    # multi-agent default (Phase-1 exploration).
+    # RETARGETED at the tweakcc-fixed switch: the fork's finer-grained extraction
+    # catalogs the Phase-1 exploration body as its own prompt, with generated
+    # variable names (..._VAR_0 = the explore-subagent object, ..._VAR_1 = the
+    # agent-count) instead of the old ${EXPLORE_SUBAGENT}/${PLAN_V2_EXPLORE_AGENT_COUNT}
+    # names that Piebald's coarser 5-phase prompt used. Same stock sentence, new
+    # placeholder spelling — both stock and unnerf had their variables renamed.
     # -------------------------------------------------------------------------
-    "system-reminder-plan-mode-is-active-5-phase.md": [
+    "system-reminder-plan-mode-phase-1-understanding-parallel-agents.md": [
         Rule(
-            stock="2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.\n   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or you're making a small targeted change.\n   - Use multiple agents when: the scope is uncertain, multiple areas of the codebase are involved, or you need to understand existing patterns before planning.\n   - Quality over quantity - ${PLAN_V2_EXPLORE_AGENT_COUNT} agents maximum, but you should try to use the minimum number of agents necessary (usually just 1)\n   - If using multiple agents: Provide each agent with a specific search focus or area to explore. Example: One agent searches for existing implementations, another explores related components, a third investigating testing patterns",
-            unnerf="2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to aggressively explore the codebase. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.\n   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.\n   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.\n   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.",
-            description="plan-mode 5-phase explore: aggressive, multi-agent default",
+            stock="2. **Launch up to ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0.agentType} agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.\n   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or you're making a small targeted change.\n   - Use multiple agents when: the scope is uncertain, multiple areas of the codebase are involved, or you need to understand existing patterns before planning.\n   - Quality over quantity - ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} agents maximum, but you should try to use the minimum number of agents necessary (usually just 1)\n   - If using multiple agents: Provide each agent with a specific search focus or area to explore. Example: One agent searches for existing implementations, another explores related components, a third investigating testing patterns",
+            unnerf="2. **Launch up to ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0.agentType} agents IN PARALLEL** (single message, multiple tool calls) to explore the codebase thoroughly. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.\n   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.\n   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.\n   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.",
+            description="plan-mode phase-1 explore: aggressive, multi-agent default",
         ),
     ],
 
     # -------------------------------------------------------------------------
-    # system-reminder-plan-mode-phase-2-design.md — err on launching Plan agents
-    # (New standalone prompt in v2.1.198, carrying the Phase-2 "Design" guidance
-    # that used to live in system-reminder-plan-mode-is-active-5-phase.md. The
-    # stock text is byte-identical across the split, so this is a straight
-    # retarget of the former "5-phase design" rule.)
+    # system-reminder-plan-mode-phase-2-design-multi-agent.md — err on launching
+    # Plan agents. (Carried the Phase-2 "Design" guidance since the v2.1.198
+    # per-phase split; renamed from system-reminder-plan-mode-phase-2-design at
+    # the tweakcc-fixed switch. Stock text unchanged — a straight retarget.)
     # -------------------------------------------------------------------------
-    "system-reminder-plan-mode-phase-2-design.md": [
+    "system-reminder-plan-mode-phase-2-design-multi-agent.md": [
         Rule(
             stock="- **Default**: Launch at least 1 Plan agent for most tasks - it helps validate your understanding and consider alternatives\n- **Skip agents**: Only for truly trivial tasks (typo fixes, single-line changes, simple renames)",
             unnerf="- **Default**: Launch one or more Plan agents for almost every task — they validate your understanding, consider alternatives, and surface issues you'd miss solo. Err on the side of launching them.\n- **Skip agents**: Only for genuinely trivial tasks (typo fixes, single-line changes, simple renames) where there's nothing to design",
@@ -631,23 +631,26 @@ RULES: dict[str, list[Rule]] = {
             description='hook-condition agent: verify correctly over step-count minimization',
         ),
     ],
-    "agent-prompt-code-review-part-2-low-effort-mode.md": [
+    # renamed at the tweakcc-fixed switch (was agent-prompt-code-review-part-2-low-effort-mode)
+    "skill-code-review-effort-low.md": [
         Rule(
             stock='Output at most **4 findings**, most-severe first, one line each',
             unnerf='Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them)',
             description="code-review low-effort: don't silently drop found bugs (tier budget kept)",
         ),
     ],
-    "agent-prompt-general-task-agent.md": [
+    # RETARGETED from agent-prompt-general-task-agent.md at the tweakcc-fixed
+    # switch: the fork catalogs the shared "~225c" agent-description constant as
+    # its own prompt (general-purpose-short). The old prompt's second sentence
+    # ("respond with a concise report ... only needs the essentials") exists in
+    # the fork's catalog only inside agent-prompt-general-purpose.md, whose own
+    # rule already flips it — so the former second rule here was RETIRED as a
+    # duplicate, not lost.
+    "agent-prompt-general-purpose-short.md": [
         Rule(
             stock="Complete the task fully—don't gold-plate, but don't leave it half-done.",
             unnerf="Complete the task fully and to a high, senior-engineer standard—don't leave it half-done, and handle the edge cases, error paths, and closely related issues that a correct and robust solution requires.",
-            description='general-task agent: senior-grade completeness, not gold-plate minimalism',
-        ),
-        Rule(
-            stock='respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.',
-            unnerf='respond with a thorough report covering everything that was done, every key finding, the specific files and locations involved, the decisions you made and why, and any caveats, risks, or unresolved issues — the caller relays this to the user and cannot see your work, so include everything needed to act on it without re-investigating.',
-            description='general-task agent: thorough report (caller cannot see the work)',
+            description='general-purpose (short variant): senior-grade completeness, not gold-plate minimalism',
         ),
     ],
     "agent-prompt-security-review-slash-command.md": [
@@ -664,7 +667,8 @@ RULES: dict[str, list[Rule]] = {
             description='transcript-chunk summary: capture every substantive point, no sentence cap',
         ),
     ],
-    "agent-prompt-simplify-slash-command.md": [
+    # renamed at the tweakcc-fixed switch (was agent-prompt-simplify-slash-command)
+    "workflow-simplify-cleanup-agents.md": [
         Rule(
             stock='Finish with a brief summary of what was fixed and what was\nskipped (or confirm the code was already clean).',
             unnerf='Finish with a thorough summary of what was fixed and why, and what was\nskipped with the reason for each skip (or confirm the code was already clean).',
@@ -681,14 +685,16 @@ RULES: dict[str, list[Rule]] = {
         ),
     ],
     # "skill-pre-meeting-checkin-event-brief.md": RETIRED — prompt removed by Anthropic in v2.1.181
-    "skill-verify-skill.md": [
+    # renamed at the tweakcc-fixed switch (was skill-verify-skill)
+    "skill-verify.md": [
         Rule(
             stock='Timebox\n  ~15min. Stuck → BLOCKED with exactly where',
             unnerf="Push hard to get a handle — install the missing deps, patch the gates, read the stack trace and try again. Fall back to BLOCKED only once you've genuinely exhausted the obvious launch paths, with exactly where",
             description='verify skill: gate BLOCKED on genuine exhaustion, not a 15-minute clock',
         ),
     ],
-    "system-prompt-02-comment-why-only-guidance.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-02-comment-why-only-guidance)
+    "system-prompt-doing-tasks-no-comments.md": [
         Rule(
             stock='Default to writing no comments. Only add one when the WHY is non-obvious:',
             unnerf='Comment wherever it genuinely helps a future reader, focusing on the non-obvious WHY:',
@@ -709,7 +715,8 @@ RULES: dict[str, list[Rule]] = {
             description='clarify-first: investigate until specific, not a one-minute time-box',
         ),
     ],
-    "system-prompt-coordinator-worker-instructions.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-coordinator-worker-instructions)
+    "system-prompt-worker-agent.md": [
         Rule(
             stock="Complete exactly what was asked. Don't fix unrelated issues you discover — suggest them as follow-ups instead.",
             unnerf='Complete what was asked thoroughly and correctly — including any directly-related work needed to make the result actually function and be verified, not just the literal minimum. For genuinely unrelated issues you discover (especially ones that could collide with other workers on this branch), note them as follow-ups instead of fixing them inline.',
@@ -724,25 +731,28 @@ RULES: dict[str, list[Rule]] = {
     "system-prompt-doing-tasks-ambitious.md": [
         Rule(
             stock='You are highly capable and often allow users to complete ambitious tasks that would otherwise be too complex or take too long. You should defer to user judgement about whether a task is too large to attempt.',
-            unnerf='You are highly capable and often allow users to complete ambitious tasks that would otherwise be too complex or take too long. You should defer to user judgement about whether a task is too large to attempt — but never scale back rigor, effort, or care. Bring your full capability to every task. On anything non-trivial, think deeply, broadly, and creatively before acting: weigh multiple approaches and consider non-obvious or cross-cutting connections rather than committing to the first idea that works. Reaching the correct, complete, robust result matters far more than minimizing effort, tokens, or output — never trade away rigor, depth, or correctness for speed or brevity. Verify your work empirically: actually run the code, the tests, or the command and read the result rather than asserting from plausibility; treat your own conclusions as unverified until you have checked them; and close every gap in your reasoning, or state precisely what remains unresolved.',
+            unnerf='You are highly capable and often allow users to complete ambitious tasks that would otherwise be too complex or take too long. You should defer to user judgement about whether a task is too large to attempt — but never scale back rigor, effort, or care. Bring your full capability to every task. On anything non-trivial, think deeply, broadly, and creatively before acting: weigh multiple approaches and consider non-obvious or cross-cutting connections rather than committing to the first idea that works. Reaching the correct, complete, robust result matters more than minimizing effort, tokens, or output — never trade away rigor, depth, or correctness for speed or brevity. Verify your work empirically: actually run the code, the tests, or the command and read the result rather than asserting from plausibility; treat your own conclusions as unverified until you have checked them; and close every gap in your reasoning, or state precisely what remains unresolved.',
             description='STANDARDS: full-effort, deep/broad thinking + empirical verification on ambitious tasks',
         ),
     ],
-    "system-prompt-doing-tasks-no-additions.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-doing-tasks-no-additions)
+    "system-prompt-doing-tasks-no-gold-plating.md": [
         Rule(
             stock="Don't add features, refactor, or introduce abstractions beyond what the task requires. A bug fix doesn't need surrounding cleanup; a one-shot operation doesn't need a helper. Don't design for hypothetical future requirements. Three similar lines is better than a premature abstraction. No half-finished implementations either.",
             unnerf='Implement the task completely and to a senior-engineer standard. Handle the edge cases, error paths, and failure modes the task implies, even if unstated, and add the validation, structure, and abstractions that make the change correct, robust, and maintainable. When a bug fix exposes adjacent breakage or you touch code that is plainly flawed, fix it and say what you did rather than working around it. Leave every file you touch clearer than you found it. And never ship a half-finished implementation.',
             description='no-additions: implement completely to a senior standard; fix plainly-broken adjacent code',
         ),
     ],
-    "system-prompt-exploratory-questions-analyze-before-implementing.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-exploratory-questions-analyze-before-implementing)
+    "system-prompt-doing-tasks-exploratory-questions.md": [
         Rule(
             stock='respond in 2-3 sentences with a recommendation and the main tradeoff.',
             unnerf='respond with a thorough analysis: lay out the viable options, the key tradeoffs of each, and your recommendation with the reasoning behind it.',
             description='exploratory questions: full options+tradeoffs analysis, not 2-3 sentences',
         ),
     ],
-    "system-prompt-outcome-first-communication-style.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-outcome-first-communication-style)
+    "system-prompt-communicating-with-the-user.md": [
         Rule(
             stock="Only write a code comment to state a constraint the code itself can't show",
             unnerf="Write a code comment whenever it captures something the code itself can't show — a constraint, a non-obvious invariant, or the reasoning behind a subtle choice",
@@ -756,7 +766,8 @@ RULES: dict[str, list[Rule]] = {
             description='permission classifier: reason carefully even on clear-cut (safety-amplifying)',
         ),
     ],
-    "system-prompt-phase-four-of-plan-mod.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-phase-four-of-plan-mod)
+    "agent-prompt-plan-mode-phase-4.md": [
         Rule(
             stock='Include only your recommended approach, not all alternatives',
             unnerf='Lead with your recommended approach; briefly note the key alternatives you weighed and why you rejected them, so the decision is legible — but keep the focus on what to execute',
@@ -843,7 +854,8 @@ RULES: dict[str, list[Rule]] = {
     # closes a process-brevity cap on a human-facing report. All are bucket-3
     # (process brevity): they suppress substantive status/explanation to a human.
     # -------------------------------------------------------------------------
-    "agent-prompt-code-review-part-9-fix-application.md": [
+    # renamed at the tweakcc-fixed switch (was agent-prompt-code-review-part-9-fix-application)
+    "skill-code-review-applying-fixes.md": [
         Rule(
             # Same sentence as agent-prompt-simplify-slash-command.md (already
             # un-nerfed). --fix has just mutated the user's working tree; the
@@ -864,6 +876,33 @@ RULES: dict[str, list[Rule]] = {
             stock='briefly explain what the fix will do, then ask me to confirm',
             unnerf='clearly explain what the fix will do and why it is the right fix, then ask me to confirm',
             description='troubleshooting confirm gate: explain the fix clearly + why (informs the safety decision)',
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # tool-description-cloud-agent-launched-result.md /
+    # tool-result-cloud-agent-launched-notify-user.md — launch note: what + why.
+    # RESTORED at the tweakcc-fixed switch. The v2.1.196 sync retired the
+    # coordinator launch-note flip (see the RETIRED block below) because Anthropic
+    # moved "briefly tell the user what you launched" into the
+    # ${WAIT_FOR_AGENT_RESULTS_INSTRUCTION} variable's VALUE — unreachable through
+    # Piebald's catalog, which stops at named prompts. tweakcc-fixed's ~3x
+    # extraction catalogs that value as these two fragments, so the flip is
+    # reachable again. Same intent as the retired rule; the functional clauses
+    # ("do not echo this tool result", "end your response", "results will arrive
+    # in a subsequent message") are preserved.
+    # -------------------------------------------------------------------------
+    "tool-description-cloud-agent-launched-result.md": [
+        Rule(
+            stock="In your own words, briefly tell the user what you launched — do not echo this tool result — and end your response.",
+            unnerf="In your own words, tell the user what you launched and why — what the agent is investigating or building and what you expect to learn back — do not echo this tool result — and end your response.",
+            description="cloud-agent launch note: explain what/why launched (restored: fork catalogs the once-unreachable variable value)",
+        ),
+    ],
+    "tool-result-cloud-agent-launched-notify-user.md": [
+        Rule(
+            stock="In your own words, briefly tell the user what you launched — do not echo this tool result. Agent results will arrive in a subsequent message.",
+            unnerf="In your own words, tell the user what you launched and why — what the agent is investigating or building and what you expect to learn back — do not echo this tool result. Agent results will arrive in a subsequent message.",
+            description="cloud-agent launch note (quiet variant): explain what/why launched (mirrors cloud-agent-launched-result)",
         ),
     ],
     # -------------------------------------------------------------------------
@@ -930,6 +969,51 @@ def apply_rules(
             continue
 
         path = prompts_dir / filename
+        # Orphan-variable guard. A ${NAME} placeholder in an un-nerf that isn't
+        # in the target prompt's identifierMap is emitted into the binary's
+        # template literal verbatim; at launch the JS engine tries to resolve it
+        # and Claude Code crashes with `ReferenceError: NAME is not defined` (or
+        # tweakcc-fixed's leak guard silently skips the whole prompt). Catch it
+        # at authoring time: a rule may only reference identifiers its own
+        # `stock` text already uses, or ones declared in the target file's
+        # `variables:` frontmatter.
+        fm_vars: set[str] = set()
+        if path.exists():
+            fm = re.match(r"<!--\n(.*?)-->", path.read_bytes().decode("utf-8"), re.S)
+            if fm:
+                fm_vars = {
+                    ln.strip()[2:].strip()
+                    for ln in fm.group(1).splitlines()
+                    if ln.strip().startswith("- ")
+                }
+        var_pat = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)")
+        guard_failed = False
+        for rule in rules:
+            orphans = (
+                set(var_pat.findall(rule.unnerf))
+                - set(var_pat.findall(rule.stock))
+                - fm_vars
+            )
+            if orphans:
+                guard_failed = True
+                results.append(
+                    Result(
+                        filename=filename,
+                        status="failed",
+                        rule_description=rule.description,
+                        detail=(
+                            f"ORPHAN VARIABLE GUARD: the un-nerf introduces "
+                            f"${{...}} identifiers not present in the rule's "
+                            f"stock text or the file's frontmatter variables: "
+                            f"{sorted(orphans)}. A placeholder outside the "
+                            f"prompt's identifierMap crashes Claude Code at "
+                            f"launch (ReferenceError). Fix the rule's `unnerf` "
+                            f"text before applying."
+                        ),
+                    )
+                )
+        if guard_failed:
+            continue
         if not path.exists():
             results.append(
                 Result(

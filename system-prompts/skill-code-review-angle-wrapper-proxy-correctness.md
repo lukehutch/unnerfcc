@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Code Review (Angle E — wrapper/proxy correctness)'
 description: >-
-  Code-review finder angle for wrapping types (caches, proxies, decorators),
-  checking every method forwards faithfully to the wrapped object
-ccVersion: 2.1.173
+  The wrapper/proxy finder angle of the code-review skill — when a type wraps
+  another (cache, proxy, decorator), check the forwarding is faithful
+ccVersion: 2.1.160
 -->
 ### Angle E — wrapper/proxy correctness
 

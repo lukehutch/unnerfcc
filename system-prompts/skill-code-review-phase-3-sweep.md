@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Code Review (Phase 3 — sweep for gaps)'
 description: >-
-  Final code-review sweep: a clean-slate reviewer re-reads the diff to catch
-  defects the earlier passes missed
-ccVersion: 2.1.173
+  Shared Phase 3 of the code-review skill — a fresh finder re-reads the diff for
+  defects not already listed
+ccVersion: 2.1.160
 variables:
   - SWEEP_MISS_CATEGORIES
 -->

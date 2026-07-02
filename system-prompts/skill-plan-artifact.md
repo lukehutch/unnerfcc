@@ -1,9 +1,11 @@
 <!--
-name: 'Skill: Plan Artifact'
+name: 'Skill: plan-artifact'
 description: >-
-  Skill instructions for creating or customizing shareable plan artifacts from
-  implementation plans, design docs, or RFCs
-ccVersion: 2.1.198
+  Bundled plan-artifact skill — Create or customize a shareable plan Artifact
+  from an implementation plan, design doc, or RFC. Use when asked to publish a
+  plan as an artifact, restyle or edit a plan artifact, or present a plan as a
+  shareable page.
+ccVersion: null
 -->
 ---
 name: plan-artifact

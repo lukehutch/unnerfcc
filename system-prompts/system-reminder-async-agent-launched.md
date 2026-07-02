@@ -1,8 +1,9 @@
 <!--
 name: 'System Reminder: Async agent launched'
 description: >-
-  Warns Claude not to duplicate an asynchronously launched agent's work or read
-  its full JSONL transcript output file
+  Model-facing reminder warning the model not to duplicate an asynchronously
+  launched agent's work (same files/topics) and to take non-overlapping tasks.
+  2.1.193 reworded the opening (fuzzy-miss restore).
 ccVersion: 2.1.193
 variables:
   - AGENT_OUTPUT_FILE

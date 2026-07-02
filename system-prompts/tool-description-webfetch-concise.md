@@ -1,9 +1,11 @@
 <!--
 name: 'Tool Description: WebFetch (concise)'
 description: >-
-  Concise tool description for WebFetch covering URL fetching, private URL
-  limitations, redirects, and caching
-ccVersion: 2.1.176
+  Concise WebFetch tool description — fetches a URL, converts the page to
+  markdown, and answers a prompt against it via a small fast model; notes
+  auth-URL failure, HTTPS upgrade, cross-host redirect return, and the 15-minute
+  per-URL cache
+ccVersion: 2.1.177
 variables:
   - IS_ARTIFACT_TOOL_ENABLED
 -->

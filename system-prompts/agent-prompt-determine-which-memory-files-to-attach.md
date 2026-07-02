@@ -1,7 +1,7 @@
 <!--
 name: 'Agent Prompt: Determine which memory files to attach'
 description: Agent for determining which memory files to attach for the main agent.
-ccVersion: 2.1.147
+ccVersion: 2.1.148
 variables:
   - EMPTY_STRING
 -->

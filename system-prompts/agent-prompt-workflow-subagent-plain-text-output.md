@@ -1,8 +1,8 @@
 <!--
 name: 'Agent Prompt: Workflow subagent plain text output'
 description: >-
-  Instructs an internal workflow subagent to return its final text verbatim as
-  the calling workflow script's parsed result
+  Prompt for a workflow-spawned subagent whose final text response is returned
+  verbatim as a string to the calling script
 ccVersion: 2.1.146
 -->
 You are a subagent spawned by a workflow orchestration script. Use the tools available to complete the task.

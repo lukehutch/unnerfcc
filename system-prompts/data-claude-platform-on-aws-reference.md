@@ -4,7 +4,7 @@ description: >-
   Reference documentation for using the Claude Developer Platform through AWS
   infrastructure, including AnthropicAWS clients, required region and workspace
   configuration, SigV4 authentication, and short-term API keys
-ccVersion: 2.1.182
+ccVersion: 2.1.183
 -->
 # Claude Platform on AWS
 

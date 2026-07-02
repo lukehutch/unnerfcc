@@ -2,8 +2,9 @@
 name: 'System Prompt: Current Claude models'
 description: >-
   Lists the current Claude model family IDs and recommends using the latest
-  capable models for AI applications
-ccVersion: 2.1.198
+  capable Claude models for AI applications. 2.1.197 reworded the opening for
+  the Claude 5 family (fuzzy-miss restore).
+ccVersion: 2.1.197
 variables:
   - CLAUDE_MODEL_IDS
   - MODEL_ID_COLLECTION

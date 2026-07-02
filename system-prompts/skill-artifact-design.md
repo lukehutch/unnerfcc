@@ -1,9 +1,8 @@
 <!--
-name: 'Skill: Artifact design'
+name: 'Skill: artifact-design'
 description: >-
-  Design guidance skill for producing distinctive, polished artifacts by
-  calibrating visual treatment, applying design fundamentals, planning
-  color/type/layout, and avoiding templated AI-generated defaults
+  Bundled artifact-design skill — Design guidance and fundamentals for
+  Artifacts.
 ccVersion: 2.1.193
 -->
 ---

@@ -1,9 +1,7 @@
 <!--
 name: 'Data: Streaming reference — PHP'
-description: >-
-  PHP streaming reference including streaming events and handling content block
-  deltas (requires SDK v0.5.0+)
-ccVersion: 2.1.182
+description: Streaming API reference doc (PHP bindings).
+ccVersion: 2.1.183
 -->
 # Streaming — PHP
 

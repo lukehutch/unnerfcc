@@ -1,6 +1,9 @@
 <!--
-name: 'Tool Description: Bash (Git commit and PR creation instructions)'
-description: Instructions for creating git commits and GitHub pull requests
+name: 'Tool Description: Bash git commit and PR creation instructions'
+description: >-
+  Bash-tool git commit + PR creation instructions (now wrapped in a ${.commit?…}
+  conditional) — the git safety protocol, commit-only-when-asked rule, and the
+  numbered parallel-command commit/PR workflow
 ccVersion: 2.1.178
 variables:
   - LOADED_COMMANDS_CONTEXT

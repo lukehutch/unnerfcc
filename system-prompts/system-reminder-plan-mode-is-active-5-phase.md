@@ -1,19 +1,42 @@
 <!--
 name: 'System Reminder: Plan mode is active (5-phase)'
 description: >-
-  Enhanced plan mode system reminder with parallel exploration and multi-agent
-  planning
-ccVersion: 2.1.198
+  Outer shell of the 5-phase plan-mode workflow reminder (Plan File Info, Plan
+  Workflow, Phase 3 Review, Phase 5 Call) with the Phase 1/2 bodies now split
+  into shared constants and interpolated as ${s}/${i}; injected via
+  Cp([In({content:a,isMeta:!0})]).
+ccVersion: null
 variables:
-  - EXPLORE_SUBAGENT
-  - PLAN_V2_EXPLORE_AGENT_COUNT
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_0
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_1
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_2
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_3
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_4
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_5
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_6
+  - SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_7
 -->
-### Phase 1: Initial Understanding
-Goal: Gain a comprehensive understanding of the user's request by reading through code and asking them questions. Critical: In this phase you should only use the ${EXPLORE_SUBAGENT.agentType} subagent type.
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_0}
 
-1. Focus on understanding the user's request and the code associated with their request. Actively search for existing functions, utilities, and patterns that can be reused — avoid proposing new code when suitable implementations already exist.
+## Plan File Info:
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_1}
+You should build your plan incrementally by writing to or editing this file. NOTE that this is the only file you are allowed to edit - other than this you are only allowed to take READ-ONLY actions.
 
-2. **Launch up to ${PLAN_V2_EXPLORE_AGENT_COUNT} ${EXPLORE_SUBAGENT.agentType} agents IN PARALLEL** (single message, multiple tool calls) to aggressively explore the codebase. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.
-   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.
-   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.
-   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.
+## Plan Workflow
+
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_2}
+
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_3}
+
+### Phase 3: Review
+Goal: Review the plan(s) from Phase 2 and ensure alignment with the user's intentions.
+1. Read the critical files you identified during exploration to deepen your understanding
+2. Ensure that the plans align with the user's original request
+3. Use ${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_4} to clarify any remaining questions with the user
+
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_5}
+
+### Phase 5: Call ${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_6.name}
+${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_7()}
+
+NOTE: At any point in time through this workflow you should feel free to ask the user questions or clarifications using the ${SYSTEM_REMINDER_PLAN_MODE_IS_ACTIVE_5_PHASE_VAR_4} tool. Don't make large assumptions about user intent. The goal is to present a well researched plan to the user, and tie any loose ends before implementation begins.

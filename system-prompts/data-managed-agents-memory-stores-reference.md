@@ -4,7 +4,7 @@ description: >-
   Reference documentation for Managed Agents memory stores, including store
   creation, session attachment, FUSE mounts, memory CRUD, concurrency, versions,
   redaction, and endpoint paths
-ccVersion: 2.1.119
+ccVersion: 2.1.141
 -->
 # Managed Agents — Memory Stores
 
@@ -28,8 +28,8 @@ Every mutation to a memory produces an immutable **memory version** (`memver_...
 
 ```python
 store = client.beta.memory_stores.create(
-    name=\"User Preferences\",
-    description=\"Per-user preferences and project context.\",
+    name="User Preferences",
+    description="Per-user preferences and project context.",
 )
 print(store.id)  # memstore_01Hx...
 ```
@@ -45,8 +45,8 @@ Pre-load reference material before any session runs. `memories.create` creates a
 ```python
 client.beta.memory_stores.memories.create(
     store.id,
-    path=\"/formatting_standards.md\",
-    content=\"All reports use GAAP formatting. Dates are ISO-8601...\",
+    path="/formatting_standards.md",
+    content="All reports use GAAP formatting. Dates are ISO-8601...",
 )
 ```
 
@@ -60,10 +60,10 @@ session = client.beta.sessions.create(
     environment_id=environment.id,
     resources=[
         {
-            \"type\": \"memory_store\",
-            \"memory_store_id\": store.id,
-            \"access\": \"read_write\",  # or \"read_only\"; default is \"read_write\"
-            \"instructions\": \"User preferences and project context. Check before starting any task.\",
+            "type": "memory_store",
+            "memory_store_id": store.id,
+            "access": "read_write",  # or "read_only"; default is "read_write"
+            "instructions": "User preferences and project context. Check before starting any task.",
         }
     ],
 )
@@ -71,16 +71,16 @@ session = client.beta.sessions.create(
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `type` | ✅ | `\"memory_store\"` |
+| `type` | ✅ | `"memory_store"` |
 | `memory_store_id` | ✅ | `memstore_...` |
-| `access` | — | `\"read_write\"` (default) or `\"read_only\"` — enforced at the filesystem level on the mount |
+| `access` | — | `"read_write"` (default) or `"read_only"` — enforced at the filesystem level on the mount |
 | `instructions` | — | Session-specific guidance for this store, in addition to the store's `name`/`description`. ≤ 4,096 chars. |
 
 **Max 8 memory stores per session.** Attach multiple when different slices of memory have different owners or lifecycles — e.g. one read-only shared-reference store plus one read-write per-user store, or one store per end-user/team/project sharing a single agent config.
 
 ### How the agent sees it (FUSE mount)
 
-Each attached store is mounted in the session container at `/mnt/memory/<store-name>/`. The agent interacts with it using the standard file tools (`bash`, `read`, `write`, `edit`, `glob`, `grep`) — there are no dedicated memory tools. `access: \"read_only\"` makes the mount read-only at the filesystem level; `\"read_write\"` allows the agent to create, edit, and delete files under it. A short description of each mount (name, path, `instructions`, access) is automatically injected into the system prompt so the agent knows the store exists without you having to mention it.
+Each attached store is mounted in the session container at `/mnt/memory/<store-name>/`. The agent interacts with it using the standard file tools (`bash`, `read`, `write`, `edit`, `glob`, `grep`) — there are no dedicated memory tools. `access: "read_only"` makes the mount read-only at the filesystem level; `"read_write"` allows the agent to create, edit, and delete files under it. A short description of each mount (name, path, `instructions`, access) is automatically injected into the system prompt so the agent knows the store exists without you having to mention it.
 
 Writes the agent makes under the mount are persisted back to the store and produce memory versions just like host-side `memories.update` calls.
 
@@ -90,14 +90,14 @@ Use these for review workflows, correcting bad memories, or seeding stores out-o
 
 ### List
 
-Returns `Memory | MemoryPrefix` entries — a `MemoryPrefix` (`type: \"memory_prefix\"`, just a `path`) is a directory-like node when listing hierarchically. Use `path_prefix` to scope (include a trailing slash: `\"/notes/\"` matches `/notes/a.md` but not `/notes_backup/old.md`) and `depth` to bound the tree walk. `order_by` / `order` sort the result. Pass `view=\"full\"` to include `content` in each item; the default `\"basic\"` returns metadata only.
+Returns `Memory | MemoryPrefix` entries — a `MemoryPrefix` (`type: "memory_prefix"`, just a `path`) is a directory-like node when listing hierarchically. Use `path_prefix` to scope (include a trailing slash: `"/notes/"` matches `/notes/a.md` but not `/notes_backup/old.md`) and `depth` to bound the tree walk. `order_by` / `order` sort the result. Pass `view="full"` to include `content` in each item; the default `"basic"` returns metadata only.
 
 ```python
-for m in client.beta.memory_stores.memories.list(store.id, path_prefix=\"/\"):
-    if m.type == \"memory\":
-        print(f\"{m.path}  ({m.content_size_bytes} bytes, sha={m.content_sha256[:8]})\")
-    else:  # \"memory_prefix\"
-        print(f\"{m.path}/\")
+for m in client.beta.memory_stores.memories.list(store.id, path_prefix="/"):
+    if m.type == "memory":
+        print(f"{m.path}  ({m.content_size_bytes} bytes, sha={m.content_sha256[:8]})")
+    else:  # "memory_prefix"
+        print(f"{m.path}/")
 ```
 
 ### Read
@@ -107,7 +107,7 @@ mem = client.beta.memory_stores.memories.retrieve(memory_id, memory_store_id=sto
 print(mem.content)
 ```
 
-`retrieve` defaults to `view=\"full\"` (content included); `view` matters mainly on list endpoints.
+`retrieve` defaults to `view="full"` (content included); `view` matters mainly on list endpoints.
 
 ### Create vs. update
 
@@ -119,14 +119,14 @@ print(mem.content)
 ```python
 mem = client.beta.memory_stores.memories.create(
     store.id,
-    path=\"/preferences/formatting.md\",
-    content=\"Always use tabs, not spaces.\",
+    path="/preferences/formatting.md",
+    content="Always use tabs, not spaces.",
 )
 
 client.beta.memory_stores.memories.update(
     mem.id,
     memory_store_id=store.id,
-    path=\"/archive/2026_q1_formatting.md\",  # rename
+    path="/archive/2026_q1_formatting.md",  # rename
 )
 ```
 
@@ -138,8 +138,8 @@ client.beta.memory_stores.memories.update(
 client.beta.memory_stores.memories.update(
     mem.id,
     memory_store_id=store.id,
-    content=\"CORRECTED: Always use 2-space indentation.\",
-    precondition={\"type\": \"content_sha256\", \"content_sha256\": mem.content_sha256},
+    content="CORRECTED: Always use 2-space indentation.",
+    precondition={"type": "content_sha256", "content_sha256": mem.content_sha256},
 )
 ```
 
@@ -157,19 +157,19 @@ Every mutation creates an immutable `memver_...` snapshot. Versions accumulate f
 
 | Operation that triggers it | `operation` field on the version |
 | --- | --- |
-| `memories.create` at a new path | `\"created\"` |
-| `memories.update` changing `content`, `path`, or both (or an agent-side write to the mount) | `\"modified\"` |
-| `memories.delete` | `\"deleted\"` |
+| `memories.create` at a new path | `"created"` |
+| `memories.update` changing `content`, `path`, or both (or an agent-side write to the mount) | `"modified"` |
+| `memories.delete` | `"deleted"` |
 
 Each version also records `created_by` — an actor object with `type` ∈ `session_actor` / `api_actor` / `user_actor` — and, after redaction, `redacted_at` + `redacted_by`.
 
 ### List versions
 
-Newest-first, paginated. Filter by `memory_id`, `operation`, `session_id`, `api_key_id`, or `created_at_gte` / `created_at_lte`. Pass `view=\"full\"` to include `content`; default is metadata-only.
+Newest-first, paginated. Filter by `memory_id`, `operation`, `session_id`, `api_key_id`, or `created_at_gte` / `created_at_lte`. Pass `view="full"` to include `content`; default is metadata-only.
 
 ```python
 for v in client.beta.memory_stores.memory_versions.list(store.id, memory_id=mem.id):
-    print(f\"{v.id}: {v.operation}\")
+    print(f"{v.id}: {v.operation}")
 ```
 
 ### Retrieve a version

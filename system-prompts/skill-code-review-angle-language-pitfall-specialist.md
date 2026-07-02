@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Code Review (Angle D — language-pitfall specialist)'
 description: >-
-  Code-review finder angle that hunts for the well-known traps of the diff's
-  language or framework
-ccVersion: 2.1.173
+  The language-pitfall finder angle of the code-review skill — scan for the
+  classic pitfalls of the diff's language/framework
+ccVersion: 2.1.160
 -->
 ### Angle D — language-pitfall specialist
 

@@ -7,7 +7,7 @@ right keep/flip calls) then follow Part 2 (the workflow). The later parts are th
 reference detail behind each step.
 
 > Companion docs: [README](README.md) (what/why for users), [MAINTENANCE](MAINTENANCE.md)
-> (script flags), [BACKGROUND](BACKGROUND.md) (history, how tweakcc works).
+> (script flags), [BACKGROUND](BACKGROUND.md) (history, how tweakcc-fixed works).
 > This guide supersedes and unifies the "upgrade" material in those.
 
 ---
@@ -68,11 +68,42 @@ When you flip, write the replacement in the project's voice: lead with the
 genuinely-good clause already present (safety caveats, "never half-finished");
 keep it about **depth and completeness**, never about padding word count.
 
+### Writing the flip — register rules
+
+How a flip is *worded* matters as much as what it flips. Current Claude models
+follow plain directives more literally than older ones, and overcorrect on
+rhetorical pressure — which for this project means over-verbosity, our known
+failure mode. These rules distill Anthropic's prompting guidance plus field
+lessons from [lobotomized-claude-code](https://github.com/skrabe/lobotomized-claude-code)
+(the opposite project: it cuts prompts down per-model, and documents what
+newer models do badly under). Apply them to every `unnerf` string:
+
+1. **No CAPS theater.** `MUST` / `NEVER` / `ALWAYS` / `CRITICAL` trigger
+   overcorrection. Plain imperatives outperform.
+2. **Positive framing where a positive form exists.** "Do not minimize detail"
+   → "include everything needed to act on it without re-investigating".
+   Negative-framed clauses with no positive equivalent ("never ship a
+   half-finished implementation") stay.
+3. **Concrete requirements over exhortations.** "Handle the edge cases, error
+   paths, and failure modes the task implies" beats "be very thorough". Name
+   the behavior you want; skip the adverbs ("aggressively") and intensifiers
+   ("far worse", "every time").
+4. **State it once.** A requirement restated in three phrasings is scaffolding,
+   not emphasis — and an over-long flip dilutes the prompt it lives in and
+   costs tokens on every turn. If a sentence adds no new requirement, cut it.
+5. **No motivational filler.** "…and then try a few more", "persistence is the
+   point" — rhetoric after a rule that already covers it. Cut.
+6. **Never introduce a `${VAR}` the prompt doesn't already have.** A
+   placeholder outside the prompt's `identifierMap` is emitted into the
+   binary's template literal verbatim and crashes Claude Code at launch
+   (`ReferenceError`). `apply-unnerfs.py` enforces this automatically (the
+   orphan-variable guard, Part 6) — don't fight it.
+
 ---
 
 ## Part 2 — The upgrade workflow (happy path)
 
-When Anthropic ships Claude Code `X.Y.Z` and tweakcc has published
+When Anthropic ships Claude Code `X.Y.Z` and tweakcc-fixed has published
 `prompts-X.Y.Z.json` (usually within hours — see Part 8):
 
 ```bash
@@ -110,8 +141,8 @@ the new version. This is the authoritative "what did Anthropic change" list —
 and crucially it is **clean**: because it fingerprints *stock*, it is not
 polluted by your own un-nerf edits the way `git diff` on the un-nerfed tree is.
 
-If tweakcc has **not** published `prompts-X.Y.Z.json` yet, you can't run the
-happy path — see Part 8 ("the publish lag") for what to do.
+If tweakcc-fixed has **not** published `prompts-X.Y.Z.json` yet, you can't run
+the happy path — see Part 8 ("the publish lag") for what to do.
 
 ### Committing
 
@@ -132,30 +163,52 @@ rules retired (removed prompts) or added (new nerfs), and any FAILs you resolved
 Claude Code ships as a compiled Bun **native binary** with its prompts baked in
 as string literals. There are two ways to get the stock text:
 
-### A. tweakcc's published JSON (the normal source)
+### A. tweakcc-fixed's published JSON (the normal source)
 
-tweakcc publishes one `prompts-X.Y.Z.json` per supported CC version at
-`https://raw.githubusercontent.com/Piebald-AI/tweakcc/refs/heads/main/data/prompts/`.
+tweakcc-fixed publishes one `prompts-X.Y.Z.json` per supported CC version at
+`https://raw.githubusercontent.com/skrabe/tweakcc-fixed/refs/heads/main/data/prompts/`.
 Each prompt object is `{ id, name, description, version, pieces[], identifiers[],
 identifierMap }`. The `.md` body is reconstructed by interleaving `pieces` with
 `${HUMAN_NAME}` placeholders from `identifierMap`; the frontmatter is `name`,
 `description`, `ccVersion` (the version when *that prompt* last changed — **not**
 the global CC version), and `variables`. `scripts/sync-version.mjs` does exactly
-this, byte-identically to a tweakcc extraction.
+this, byte-identically to a tweakcc-fixed extraction.
 
-> tweakcc does **not** publish every patch release, and a fresh release can lag by
-> hours-to-days. If the JSON for your installed version isn't up yet, see Part 8
-> ("the publish lag") — but the normal case is that the latest version is available.
+The fork's catalog is ~2.5× the size of upstream tweakcc's (1,437 sites / 1,331
+unique ids vs 540 for v2.1.198): it also captures per-turn fragments, the
+*values* of interpolated `${VARIABLES}` (which are prompts in their own right —
+see the Part 6 drift table), and compact `-concise`/`-short` variants of tool
+descriptions. Three things upstream's JSON doesn't prepare you for:
 
-### B. The installed binary, via `tweakcc unpack` (ground truth, version-independent)
+- **Duplicate ids.** Some prompt ids appear at multiple binary sites (one JSON
+  entry per site; ~53 dup ids in v2.1.198, all but one byte-identical).
+  tweakcc-fixed's own extractor creates the `.md` from the **first** entry and
+  skips the rest; `sync-version.mjs` does the same, so file counts are unique-id
+  counts.
+- **Generated variable names.** Fragments the fork discovers without editorial
+  names get machine-generated placeholders
+  (`${<PROMPT_ID>_VAR_0}`, `_VAR_1`, …) instead of human names like
+  `${EXPLORE_SUBAGENT}`. Rules that target such fragments must spell the
+  placeholders exactly as extracted.
+- **`ccVersion: null`.** Fragments first catalogued by the fork's extractor may
+  carry a null version — treat them as "current" and let the manifest track
+  changes.
 
-`tweakcc unpack` extracts the bundled JS from *any* installed binary without
-needing published JSON — useful to (a) verify the JSON-derived prompts actually
-match what you're running, and (b) inspect a version tweakcc hasn't published.
+> tweakcc-fixed does **not** publish every patch release, and a fresh release can
+> lag by hours-to-days. If the JSON for your installed version isn't up yet, see
+> Part 8 ("the publish lag") — but the normal case is that the latest version is
+> available.
+
+### B. The installed binary, via `tweakcc-fixed unpack` (ground truth, version-independent)
+
+`tweakcc-fixed unpack` extracts the bundled JS from *any* installed binary
+without needing published JSON — useful to (a) verify the JSON-derived prompts
+actually match what you're running, and (b) inspect a version tweakcc-fixed
+hasn't published.
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"   # e.g. .../@anthropic-ai/claude-code/bin/claude.exe
-npx --yes tweakcc@latest unpack /tmp/cc.js "$CCBIN"   # writes ~17 MB of JS; reads only, non-destructive
+npx --yes tweakcc-fixed@latest unpack /tmp/cc.js "$CCBIN"   # writes ~17 MB of JS; reads only, non-destructive
 ```
 
 You then search that JS for prompt text. **Escaping gotcha:** the minified JS
@@ -198,7 +251,7 @@ node scripts/prompt-checksums.mjs --dir <stock-dir> --check
 node scripts/prompt-checksums.mjs --dir <stock-dir> --ccVersion X.Y.Z --write
 ```
 
-`--dir` must point at **stock** prompts (a tweakcc extraction or a
+`--dir` must point at **stock** prompts (a tweakcc-fixed extraction or a
 `sync-version.mjs --target` output), never the un-nerfed `system-prompts/`.
 
 ---
@@ -234,8 +287,13 @@ degrades engineering work or human-facing reporting gets a rule. Be conservative
 
 For maximum confidence on a big sweep, partition the prompt set by category
 (`system-prompt-*`, `agent-prompt-*`, `tool-description-*`, `skill-*` +
-`system-reminder-*`, `data-*`) and review each slice independently against the
-Part-1 buckets — `data-*` is almost always all-keep (reference blobs).
+`system-reminder-*`, `data-*`, and — under the tweakcc-fixed catalog —
+`tool-parameter-*`, `tool-result-*`, `workflow-*`) and review each slice
+independently against the Part-1 buckets. `data-*` is almost always all-keep
+(reference blobs); `tool-parameter-*` is essentially always all-keep — parameter
+descriptions ("concise label", "1-2 sentences") are output-format contracts,
+bucket 1 by definition; `workflow-*` script bodies are machine-orchestrated
+(schema-parsed agent outputs), also keep.
 
 ---
 
@@ -269,6 +327,14 @@ FAILs).
 - **Quote/escape safety:** an un-nerf containing `"` inside a `${"..."}` literal
   can break things; non-idempotent rules where `unnerf` contains `stock` verbatim
   will re-apply forever — avoid both. Gate with `--check`.
+- **Orphan-variable guard (automatic):** `apply-unnerfs.py` refuses any rule
+  whose `unnerf` introduces a `${NAME}` identifier that isn't in the rule's own
+  `stock` text or the target file's `variables:` frontmatter. Such a placeholder
+  has no entry in the prompt's `identifierMap`, so it reaches the binary's
+  template literal unresolved and crashes Claude Code at launch
+  (`ReferenceError: NAME is not defined`) — or trips tweakcc-fixed's leak guard,
+  which silently skips the whole prompt. The guard fails loudly at apply time
+  instead. (Lesson imported from lobotomized-claude-code's post-mortems.)
 
 ### Handling FAILs (drift) and structural changes
 
@@ -276,9 +342,10 @@ FAILs).
 |---|---|
 | Upstream **reworded** the passage | Update the rule's `stock` to the new wording (the `unnerf` usually stands). |
 | Upstream **removed** the passage/prompt | **Retire** the rule (delete it; note in commit). |
-| Upstream moved the passage into a `${VARIABLE}` | **Retire** — the variable's value isn't in any extracted `.md`, so tweakcc's patcher (it replaces static `pieces` and treats `${VARS}` as wildcards) can't reach it. |
+| Upstream moved the passage into a `${VARIABLE}` | **Search the catalog before retiring.** tweakcc-fixed catalogs many variable *values* as their own fragments (often under generated `_VAR_n` names or a `tool-result-*`/`tool-description-*` id) — grep the full stock tree for the passage; if it surfaces as a fragment, **retarget** the rule there. Only retire if the value genuinely isn't catalogued. (Precedent: the "briefly tell the user what you launched" flip, retired in v2.1.196 when the text moved into `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}`, was restored at the tweakcc-fixed switch — the fork catalogs that value as `tool-description-cloud-agent-launched-result` + `tool-result-cloud-agent-launched-notify-user`.) |
 | Upstream **replaced** brevity with neutral/pro-thorough text | Retire the rule — the nerf is gone. |
 | A prompt was **renamed** | **Retarget**: move the rule to the new filename key (e.g. `skill-simplify.md` → `agent-prompt-simplify-slash-command.md`). |
+| The extractor **re-fragmented** a prompt (tweakcc-fixed splits shared constants and phase bodies into their own fragments) | **Retarget** to the fragment that carries the passage, respelling any `${VARS}` to the fragment's own placeholder names. If the passage now exists in two fragments and one already has a rule flipping it, retire the duplicate rather than double-ruling the same binary text. |
 
 Confirm the same flip isn't needed in a **sibling** prompt — Claude Code often
 duplicates a sentence across related prompts, and rules are per-file. Don't
@@ -286,10 +353,11 @@ eyeball this — run the **exhaustive sibling audit**: import `RULES`, and for e
 rule grep its `stock` across every stock `.md`; any match in a file that *isn't*
 the rule's own key is an un-ruled sibling to flip (unless the match is
 example/reference content — e.g. a sample prompt quoted inside a guide, which
-stays). The current audit finds **0 un-ruled siblings**: every cross-file `stock` match
-is already ruled in both files, except the intentional `skill-model-migration-guide`
-keep — that phrase sits inside a sample prompt quoted for users (example content,
-not a directive to Claude). See Part 9.
+stays). The current audit (over the full 1,331-file tweakcc-fixed catalog) finds
+**0 un-ruled siblings**: every cross-file `stock` match is already ruled in both
+files, except the intentional `skill-model-migration-guide` keep — that phrase
+sits inside a sample prompt quoted for users (example content, not a directive
+to Claude). See Part 9.
 
 ---
 
@@ -301,16 +369,16 @@ a patch release that changed prompts the published JSON doesn't yet cover):
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"
-npx --yes tweakcc@latest unpack /tmp/cc.js "$CCBIN"
+npx --yes tweakcc-fixed@latest unpack /tmp/cc.js "$CCBIN"
 # for each prompt, check its longest pure-ASCII piece is present in /tmp/cc.js
 # (see scripts usage / Part 3 escaping note). Near-total presence => essentially
 # identical; the only expected misses are micro-prompts that are pure ${interpolation}
 # with no static text long enough to fingerprint (nothing to mismatch).
 ```
 
-To verify an **applied** un-nerf actually reached the binary (after `tweakcc
---apply`), unpack the *patched* binary and grep for un-nerf sentinels present and
-stock sentinels gone:
+To verify an **applied** un-nerf actually reached the binary (after
+`tweakcc-fixed --apply`), unpack the *patched* binary and grep for un-nerf
+sentinels present and stock sentinels gone:
 
 ```bash
 # un-nerf present (expect >0):
@@ -322,39 +390,68 @@ grep -c "introduce abstractions beyond what the task requires" /tmp/cc.js
 ```
 
 `install.sh` automates exactly this and **fails loudly (leaving the binary clean)
-on a no-op/partial apply** — never trust tweakcc's "applied successfully" message
-alone; it can report success while patching nothing.
+on a no-op/partial apply** — never trust tweakcc-fixed's "applied successfully"
+message alone; it can report success while patching nothing.
 
 **Two benign-noise traps when re-applying** (both look like failures but aren't):
 
-- **"Could not find system prompt …" ×dozens** — you ran `tweakcc --apply` against
-  an **already-un-nerfed** binary, so tweakcc hunts for the *stock* text that the
-  prior patch already replaced and can't find it. The un-nerf is fine; the apply is
-  just a redundant no-op. `install.sh` avoids this by reinstalling a clean **stock**
-  binary before every re-apply (it detects a prior un-nerf via [[the sentinels]] and
-  `npm install -g @anthropic-ai/claude-code@<ver>` overwrites the patched binary).
-  Proof: from a pristine binary the flood is 0 warnings; from a patched one it's ~62.
-- **"Customizations applied with some failures / open an issue"** — a bare `--apply`
-  also runs tweakcc's *other* feature patches from your `~/.tweakcc/config.json`
-  (Opusplan, session memory, model customizations, …). On a very fresh CC build some
-  of those can't be located. That is **tweakcc's** to fix and is unrelated to the
-  un-nerf — tweakcc itself prints "these do not affect your system prompt patches."
-  `install.sh` verifies the un-nerf independently (sentinels) and says so.
+- **"Could not find system prompt …" ×dozens** — you ran `tweakcc-fixed --apply`
+  against an **already-un-nerfed** binary, so it hunts for the *stock* text that
+  the prior patch already replaced and can't find it. The un-nerf is fine; the
+  apply is just a redundant no-op. `install.sh` avoids this by reinstalling a
+  clean **stock** binary before every re-apply (it detects a prior un-nerf via
+  [[the sentinels]] and `npm install -g @anthropic-ai/claude-code@<ver>`
+  overwrites the patched binary). Proof: from a pristine binary the flood is 0
+  warnings; from a patched one it's dozens.
+- **"Customizations applied with some failures / open an issue"** — a bare
+  `--apply` also runs tweakcc-fixed's *other* feature patches from your
+  `~/.tweakcc/config.json` (themes, session memory, model customizations, …). On
+  a very fresh CC build some of those can't be located. That is
+  **tweakcc-fixed's** to fix and is unrelated to the un-nerf — it prints "these
+  do not affect your system prompt patches." `install.sh` verifies the un-nerf
+  independently (sentinels) and says so.
 
 ---
 
-## Part 8 — tweakcc operational reference
+## Part 8 — tweakcc-fixed operational reference
+
+This project targets [skrabe/tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed),
+a strict-superset fork of [Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc).
+What the fork adds that this project relies on:
+
+- **~2.5× prompt coverage** (1,437 sites / 1,331 unique ids vs 540 upstream for
+  v2.1.198): per-turn fragments, interpolated-variable values, compact tool-
+  description variants, MCP instruction blocks. This is what made the Part-9
+  restorations possible.
+- **Native-install overrides** — upstream gates system-prompt overrides off for
+  native (Bun-compiled) installs; the fork applies them.
+- **npm package `tweakcc-fixed`** (≥ 2.0.0 — versions ≤ 1.0.5 are an unrelated,
+  unmaintained earlier fork). Prompt data is fetched from the fork's repo at
+  runtime, so a new CC release works as soon as its JSON lands on `main`.
+- **Its own feature patches, some DEFAULT-ON.** Two default-on patches change
+  model-facing behavior beyond prompts: `dream-mode` (memory consolidation +
+  `/dream`) and `claudemd-context-once-per-conversation` (rewrites how CLAUDE.md
+  reaches the model). `install.sh` seeds `settings.misc.enableDreamMode` and
+  `settings.misc.claudemdContextOncePerConversation` to `false` in
+  `~/.tweakcc/config.json` (only when the keys are absent — an explicit user
+  choice is never overridden) so unnerfcc stays prompts-only.
+- **A `system-reminders/` override surface** (`~/.tweakcc/system-reminders/`) for
+  per-turn injections that never surface as named prompts, plus `shadows:`
+  frontmatter and empty-body suppression in overrides. unnerfcc doesn't use any
+  of these (we flip, never cut), but you'll meet them reading fork behavior; the
+  system-reminder registry is a surface this project has **not yet audited** for
+  nerfs.
 
 ### Commands (confirmed)
 
 | Command | What it does |
 |---|---|
-| `tweakcc --apply` (bare) | **THE** system-prompt apply path. Patches every prompt whose `~/.tweakcc/system-prompts/*.md` differs from stock. Self-downloads `prompts-X.Y.Z.json`, self-creates `native-binary.backup`. |
-| `tweakcc --apply --patches <ids>` | **NOT** for prompts — selects UI/theme/feature patches. Applies **zero** `.md` edits. Do not use it to apply un-nerfs. |
-| `tweakcc unpack <out.js> <bin>` | Extract bundled JS from a binary (read-only, version-independent). The inspection/verify workhorse. |
-| `tweakcc repack <in.js> <bin>` | Re-embed JS (as Bun bytecode; size balloons). |
-| `tweakcc --restore` / `--revert` | Restore the binary from `native-binary.backup`. |
-| `tweakcc --list-system-prompts [ver]` | List prompts known for a version. |
+| `tweakcc-fixed --apply` (bare) | **THE** system-prompt apply path. Patches every prompt whose `~/.tweakcc/system-prompts/*.md` differs from stock. Self-downloads `prompts-X.Y.Z.json`, self-creates `native-binary.backup`. Also runs the fork's own feature patches per `~/.tweakcc/config.json` (see default-on note above). |
+| `tweakcc-fixed --apply --patches <ids>` | **NOT** for prompts — selects UI/theme/feature patches. Applies **zero** `.md` edits. Do not use it to apply un-nerfs. |
+| `tweakcc-fixed unpack <out.js> <bin>` | Extract bundled JS from a binary (read-only, version-independent). The inspection/verify workhorse. |
+| `tweakcc-fixed repack <in.js> <bin>` | Re-embed JS (as Bun bytecode; size balloons). |
+| `tweakcc-fixed --restore` / `--revert` | Restore the binary from `native-binary.backup`. |
+| `tweakcc-fixed --list-system-prompts [ver]` | List prompts known for a version. |
 
 The interactive TUI extracts the full `.md` set from the binary, but **cannot be
 scripted** (no TTY → the React app crashes; no non-interactive extraction flag).
@@ -362,21 +459,23 @@ Use `sync-version.mjs` (JSON) or `unpack` instead.
 
 ### The publish lag (the common blocker)
 
-Both `sync-version.mjs --download` and `tweakcc --apply` need
+Both `sync-version.mjs --download` and `tweakcc-fixed --apply` need
 `prompts-X.Y.Z.json`, which lags a fresh CC release by hours-to-days. When it's
 missing (404):
 
 - **Preferred: wait for the latest version's JSON.** Since we target only the
   latest, the simplest correct move is to re-run the happy path once
   `prompts-X.Y.Z.json` for your installed version publishes (usually within a day).
+  (The fork's `showtime` skill is its own upgrade pipeline — new-version JSONs
+  land on its `main` when that runs; watch the repo if you're blocked.)
 - **Stopgap only if you must ship now:** sync to the newest *published* version ≤
   installed and verify against the binary (Part 7). Treat it as temporary — re-sync
   to the latest as soon as its JSON is up; the manifest will flag whatever the
   interim version missed. Don't carry the interim version as a tracked target.
-- **Applying to the binary must wait** for the matching JSON (tweakcc can't locate
-  prompts without it). Build tweakcc from `main` to get the freshest CC support
-  (`install.sh` does this by default); `main` carries prompt-locator/repack fixes
-  before they're cut into an npm release.
+- **Applying to the binary must wait** for the matching JSON (tweakcc-fixed can't
+  locate prompts without it). Build tweakcc-fixed from `main` to get the freshest
+  CC support (`install.sh` does this by default); `main` carries
+  prompt-locator/repack fixes before they're cut into an npm release.
 
 ### `~/.tweakcc/` layout — what to clear
 
@@ -400,7 +499,7 @@ for f in system-prompts prompt-data-cache systemPromptOriginalHashes.json \
 done
 ```
 
-tweakcc won't overwrite an *edited* `.md`, so a clean extraction needs the
+tweakcc-fixed won't overwrite an *edited* `.md`, so a clean extraction needs the
 `system-prompts/` dir cleared first.
 
 ### Dead ends (don't repeat)
@@ -408,74 +507,89 @@ tweakcc won't overwrite an *edited* `.md`, so a clean extraction needs the
 - `--apply --patches <ids>` to apply prompts → applies nothing.
 - `adhoc-patch` for bulk prompt edits → matches raw bytes only, breaks on any
   escaped char.
-- Trusting tweakcc's "applied" message → always `unpack`+grep to verify.
-- A tweakcc older than `main` / 4.1.1 → mis-locates Latin-1 prompts and aborts
-  the repack on a fresh CC build. Use `main` (what `install.sh` builds) or ≥ 4.1.1.
+- Trusting tweakcc-fixed's "applied" message → always `unpack`+grep to verify.
+- The npm package `tweakcc-fixed` at versions ≤ 1.0.5 → a different, unmaintained
+  fork. Use ≥ 2.0.0, or build from `main` (what `install.sh` does).
+- (Historical, base-tool era:) a tweakcc older than `main` / 4.1.1 → mis-located
+  Latin-1 prompts and aborted the repack on a fresh CC build.
 
 ---
 
 ## Part 9 — Current state (v2.1.198)
 
-We track **only the latest** Claude Code version whose prompt JSON tweakcc has
-published. Replace this snapshot each sync rather than appending history.
+We track **only the latest** Claude Code version whose prompt JSON tweakcc-fixed
+has published. Replace this snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.198** — the latest CC release, and the newest
-  tweakcc has prompt data for. (The prior sync stopped at v2.1.196 as a stopgap
-  while v2.1.197's JSON lagged; v2.1.197 and v2.1.198 have since published, so this
-  sync jumped straight to the latest.)
-- **Scale:** **80 un-nerf rules across 62 files**, 541 prompts, `--check` clean
-  (540 from the v2.1.198 JSON + 1 restored by hand — see the follow-up correction
-  at the end of this section).
-- **Last sync (v2.1.196 → v2.1.198):** manifest delta — **36 changed, 22 added, 8
-  removed** (482 unchanged; 526 → 540 prompts). Of the 22 added, **21 kept** and 1
-  received the retargeted design flip (below). Kept covers the 9 new `data-*` blobs
-  (7 data-visualization + plan-artifact template + diff-dialog schema), 7 new skills,
-  and the worktree-shipping / shared-git-stash / code-review-artifact-publishing /
-  project-skill-upkeep system-prompts — their only brevity phrases are
-  structured-output or anti-padding formatting. The changed set is dominated by
-  `data-managed-agents-*` API-reference refreshes (all `data-*` = keep) and the
-  security-monitor prompts (safety content = keep). No new bucket-2/3 nerf.
-- **One rule retired, one retargeted** — two different Part-6 drift rows:
-  - **Retired** `system-prompt-agent-memory-instructions` — Anthropic removed the
-    prompt outright; its "Write concise notes" flip is gone tree-wide (removed, not
-    relocated → nothing to retarget).
-  - **Retargeted** the Phase-2 design flip ("err on launching Plan agents").
-    Anthropic split the single `system-reminder-plan-mode-is-active-5-phase` prompt
-    into per-phase prompts; the design guidance now lives in the new standalone
-    `system-reminder-plan-mode-phase-2-design`, where it is **literal static
-    content** — so the `.md` patcher can still reach it (a retarget, not a retire).
-    Contrast the v2.1.196 coordinator case, where the phrase moved into an
-    *unreachable* `${VARIABLE}` value and had to be retired. The Phase-1 exploration
-    flip stays in the (now Phase-1-only) 5-phase prompt.
-- **Sibling audit (Part 6):** **0 un-ruled siblings** — every cross-file `stock`
-  match is flipped (or transformed by the sibling's own rule) in both files, except
-  the intentional `skill-model-migration-guide` keep (the "give a recommendation,
-  not an exhaustive survey" line sits inside a sample prompt quoted for users —
-  example content, not a directive to Claude).
-- **Binary check (Part 7):** verified against the **installed v2.1.198 binary**
-  (`tweakcc unpack` + fingerprint): **all 540 prompts byte-present** — 529 matched
-  on a ≥20-char literal run, the other 11 are `${interpolation}`-dominated
-  micro-prompts confirmed via their shorter literal segments. **Zero mismatches**:
-  the JSON-derived stock is byte-identical to what's actually running.
-- **Follow-up correction — a tweakcc catalog gap, not a real removal.** A binary
-  check that only fingerprints the 540 *tracked* prompts has a blind spot: it
-  can't catch a prompt that tweakcc's JSON silently dropped, since there's no
-  tracked file left to check. Re-verifying all 8 files the manifest reported as
-  "removed" between v2.1.196 and v2.1.198 individually against the raw v2.1.198
-  binary (not just against the tracked tree) found that 7 are genuine removals
-  (confirmed absent from the binary under several distinctive phrases each), but
-  **`system-prompt-current-claude-models.md`** — "The most recent Claude models
-  are the Claude 5 family..." — is still live in the binary, byte-identical to
-  its last-synced text. `prompts-2.1.198.json` simply omits it; this is a tweakcc
-  cataloging miss, not an Anthropic removal. Restored the file (`ccVersion:
-  2.1.198`, hand-added to the manifest) rather than retiring anything — there was
-  no rule to retire since this prompt never had one. Since `sync-version.mjs`
-  wipes and rewrites purely from the JSON, this restoration **will not survive**
-  the next full sync unless tweakcc's catalog picks the prompt back up — check
-  for it specifically after every future sync targeting this file's content
-  (search for "The most recent Claude models are") before trusting a "removed"
-  verdict for it again. The general lesson: a manifest "removed" entry means
-  *tweakcc's catalog* lost the prompt, which is usually because Anthropic did
-  too — but isn't guaranteed. When a removal is surprising (a prompt that sounds
-  load-bearing, or an oddly-round drop in count), spot-check it against the raw
-  binary before retiring anything tied to it.
+- **Version:** built from **v2.1.198** — the latest CC release — using the
+  **skrabe/tweakcc-fixed catalog** for the first time. This sync was the
+  **tweakcc → tweakcc-fixed switch**: same CC version as the prior sync, but the
+  prompt source moved from Piebald's `prompts-2.1.198.json` (540 prompts) to the
+  fork's (1,437 sites / **1,331 unique prompts** — duplicate-id sites collapse
+  to their first occurrence, matching the fork's own extractor).
+- **Scale:** **81 un-nerf rules across 64 files**, 1,331 prompts, `--check`
+  clean, orphan-variable guard passing.
+- **Catalog delta at the switch (Piebald 540 → fork 1,331):** manifest diff —
+  **254 changed, 889 added, 99 removed, 188 unchanged**. Read carefully, this is
+  almost entirely *extraction* delta, not Anthropic delta:
+  - Of the 99 "removed", **60 are pure renames** (byte-identical body under a
+    new id — the fork uses different editorial ids, e.g.
+    `system-prompt-doing-tasks-no-additions` → `system-prompt-doing-tasks-no-gold-plating`)
+    and **39 are near-renames** (fork extracts the fragment with different
+    boundaries or unescaped quotes). Nothing was actually dropped: every old
+    prompt's content is present in the fork catalog.
+  - Of the 254 "changed", most differ only in frontmatter (name/description
+    editorial differences) or **escape fidelity** — the fork unescapes `\"` and
+    `\'` that Piebald's extraction preserved. 30 have real static-text diffs;
+    all resolve to extraction-boundary or catalog-variant differences (e.g. the
+    peer-message authority warning binds to a different same-family variant —
+    safety content, keep). **No new bucket-2/3 nerf.**
+  - The 889 added files were full-sweep triaged (Part 5 grep + read): 68
+    brevity-signature candidates, **all keeps** — parameter-format contracts
+    (`tool-parameter-*`), workflow-script parsed outputs, reference/example
+    blobs, index-budget mechanics, focus-mode/insights UX variants — **except**
+    the two launch-note fragments below.
+- **Two flips restored** (the headline win of the switch): the "briefly tell the
+  user what you launched" launch-note flip, retired in v2.1.196 when Anthropic
+  moved the text into the `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}` variable's
+  value, is reachable again — the fork catalogs that value as
+  `tool-description-cloud-agent-launched-result` and
+  `tool-result-cloud-agent-launched-notify-user`. Both now carry the what+why
+  flip (functional clauses preserved).
+- **Twelve rules retargeted, one retired:**
+  - 12 rule keys moved to the fork's ids (8 pure renames, 2 near-renames, and
+    the 2 plan-mode phase fragments — Phase-1's rule also had its placeholders
+    respelled to the fork's generated
+    `${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0/1}`
+    names).
+  - **Retired** the `agent-prompt-general-task-agent` report flip as a
+    duplicate: the fork catalogs that prompt as the shared constant
+    `agent-prompt-general-purpose-short` (first sentence only, retargeted); its
+    report sentence exists in the catalog only inside
+    `agent-prompt-general-purpose.md`, whose own rule already flips it.
+- **Register pass (Part 1 rules, new this sync):** 6 un-nerf texts cleaned of
+  rhetorical intensifiers ("trumps speed every time", "far worse/more"),
+  register noise ("aggressively" ×3), motivational filler ("and then try a few
+  more"), and negative framing ("do not minimize detail" → "include everything
+  needed to act on it without re-investigating"). Same requirements, plainer
+  register; install.sh sentinels untouched.
+- **Sibling audit (Part 6), run over all 1,331 stock files:** **0 un-ruled
+  siblings** — 7 cross-file `stock` matches, all ruled on both sides (ultraplan
+  ↔ remote-planning, subagent-delegation ↔ subagent-prompt-writing, quick-pr ↔
+  bash-git-commit, general-purpose-short ↔ general-purpose) except the
+  intentional `skill-model-migration-guide` keep (sample prompt quoted for
+  users — example content, not a directive to Claude).
+- **The v2.1.198 catalog-gap prompt is back:** `system-prompt-current-claude-models`
+  ("The most recent Claude models are…"), silently missing from Piebald's
+  `prompts-2.1.198.json` and hand-restored last sync, **is present in the fork's
+  catalog** — the hand-restoration and its special-case caveat are retired. The
+  general lesson stands: when a manifest "removed" is surprising, spot-check the
+  raw binary before retiring anything.
+- **Binary check (Part 7):** not re-run this sync (no patchable binary in the
+  sync environment). The prior sync verified all 540 Piebald-catalog prompts
+  byte-present in the installed v2.1.198 binary; the fork catalog is a superset
+  extracted from that same binary version, and `install.sh` verifies sentinels
+  land on every install. Re-run the full fingerprint check at the next
+  version bump.
+- **Not yet audited:** tweakcc-fixed's `system-reminders/` registry (per-turn
+  injections that never surface as named prompts) — a future sweep surface, see
+  Part 8.

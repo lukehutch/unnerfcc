@@ -1,10 +1,9 @@
 <!--
-name: 'Skill: Code Review (conventions dimension)'
+name: 'Skill: /code-review CLAUDE.md conventions'
 description: >-
-  Code-review dimension: flag diff lines that break a rule stated in an
-  applicable CLAUDE.md (user, repo-root, or ancestor-directory), quoting the
-  exact rule and offending line, and emit nothing when no CLAUDE.md governs the
-  change
+  Code-review step: locate the CLAUDE.md files that govern the changed code
+  (user-level, repo-root, and ancestor-directory CLAUDE.md/CLAUDE.local.md) so
+  the review honors project conventions
 ccVersion: 2.1.178
 -->
 ### Conventions (CLAUDE.md)

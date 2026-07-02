@@ -1,9 +1,9 @@
 <!--
 name: 'System Prompt: Subagent delegation examples'
 description: >-
-  Provides example interactions showing how a coordinator agent should delegate
-  tasks to subagents, handle waiting states, and report results
-ccVersion: 2.1.176
+  Worked example of forking a survey question (a branch ship-readiness audit) —
+  the assistant thinking plus the Agent-tool call with subagent_type "fork"
+ccVersion: 2.1.177
 variables:
   - AGENT_TOOL_NAME
 -->

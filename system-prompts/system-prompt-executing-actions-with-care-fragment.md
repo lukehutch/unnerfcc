@@ -1,9 +1,7 @@
 <!--
 name: 'System Prompt: Executing actions with care (fragment)'
-description: >-
-  Brief form of the 'executing actions with care' guidance separating safe
-  investigation from hard-to-reverse actions
-ccVersion: 2.1.173
+description: Short fragment of the executing-actions-with-care section
+ccVersion: 2.1.141
 -->
 # Executing actions with care
 

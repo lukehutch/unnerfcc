@@ -3,7 +3,7 @@ name: 'System Reminder: Brief mode user-facing output'
 description: >-
   Reminds Claude that plain assistant text is hidden in brief mode and
   user-facing output must be sent through SendUserMessage
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - SEND_USER_MESSAGE_TOOL_NAME
 -->

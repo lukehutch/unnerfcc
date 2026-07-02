@@ -3,7 +3,7 @@ name: 'System Prompt: Insights what works'
 description: >-
   Analyzes Claude Code usage data to identify workflows that are working well
   for the user
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 -->
 Analyze this Claude Code usage data and identify what's working well for this user. Use second person ("you").
 

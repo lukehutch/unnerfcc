@@ -1,8 +1,8 @@
 <!--
 name: 'System Prompt: Chrome browser MCP tools'
 description: >-
-  Instructions for loading deferred Chrome browser MCP tools through ToolSearch
-  in a single batched selection before browser tasks
+  MCP-server instructions telling the agent to batch-load deferred
+  claude-in-chrome tool schemas in a single ToolSearch call
 ccVersion: 2.1.172
 -->
 **IMPORTANT: If the Chrome browser tools are deferred (must be loaded via ToolSearch before use), load them with ToolSearch before calling them, and batch every tool you expect to need into ONE ToolSearch call (the select query accepts a comma-separated list). Do NOT load tools one at a time; each separate ToolSearch call wastes a full round-trip.**

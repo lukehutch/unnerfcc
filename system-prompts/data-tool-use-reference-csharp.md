@@ -1,9 +1,7 @@
 <!--
 name: 'Data: Tool use reference — C#'
-description: >-
-  C# tool use reference including defining tools and reconstructing response
-  content for the follow-up assistant message
-ccVersion: 2.1.182
+description: Tool-use API reference doc (C# bindings).
+ccVersion: 2.1.183
 -->
 # Tool Use — C#
 

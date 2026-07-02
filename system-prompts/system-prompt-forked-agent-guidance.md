@@ -1,9 +1,10 @@
 <!--
 name: 'System Prompt: Forked agent guidance'
 description: >-
-  Explains that calling Agent with subagent_type "fork" creates a background
-  fork and when to use it
-ccVersion: 2.1.176
+  Explains what calling the Agent tool with subagent_type "fork" does — inherits
+  full context, runs in the background, and keeps tool output out of your
+  context — and tells a running fork to execute directly rather than re-delegate
+ccVersion: 2.1.177
 variables:
   - AGENT_TOOL_NAME
 -->

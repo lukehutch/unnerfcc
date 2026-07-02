@@ -1,9 +1,9 @@
 <!--
 name: 'Skill: Code Review (Phase 0 — gather the diff)'
 description: >-
-  Opening step of the code-review skill: assemble the unified diff to review
-  with git diff
-ccVersion: 2.1.173
+  Shared Phase 0 of the code-review skill — gather the unified diff under review
+  via git diff
+ccVersion: 2.1.148
 -->
 ## Phase 0 — Gather the diff
 

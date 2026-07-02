@@ -1,9 +1,7 @@
 <!--
 name: 'Data: Tool use reference — PHP'
-description: >-
-  PHP tool use reference including the beta tool runner and the manual agentic
-  loop with camelCase keys
-ccVersion: 2.1.182
+description: Tool-use API reference doc (PHP bindings).
+ccVersion: 2.1.183
 -->
 # Tool Use — PHP
 

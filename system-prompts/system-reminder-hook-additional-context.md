@@ -1,7 +1,7 @@
 <!--
 name: 'System Reminder: Hook additional context'
 description: Additional context from a hook
-ccVersion: 2.1.18
+ccVersion: 2.1.142
 variables:
   - ATTACHMENT_OBJECT
 -->

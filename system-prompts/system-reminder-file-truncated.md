@@ -1,7 +1,7 @@
 <!--
 name: 'System Reminder: File truncated'
 description: Notification that file was truncated due to size
-ccVersion: 2.1.18
+ccVersion: 2.1.142
 variables:
   - ATTACHMENT_OBJECT
   - MAX_LINES_CONSTANT

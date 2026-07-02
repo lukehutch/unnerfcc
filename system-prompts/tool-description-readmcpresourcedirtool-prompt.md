@@ -3,7 +3,7 @@ name: 'Tool Description: ReadMcpResourceDirTool prompt'
 description: >-
   Tool prompt for listing direct children of an MCP directory resource and
   explaining the required server and uri parameters
-ccVersion: 2.1.186
+ccVersion: 2.1.187
 variables:
   - DIRECTORY_MIME_TYPE
 -->

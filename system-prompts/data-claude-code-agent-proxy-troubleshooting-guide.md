@@ -3,7 +3,7 @@ name: 'Data: Claude Code agent proxy troubleshooting guide'
 description: >-
   Troubleshooting guide for Claude Code's policy-enforcing HTTPS agent proxy,
   covering TLS trust setup, status checks, git, docker, and unsupported traffic
-ccVersion: 2.1.186
+ccVersion: 2.1.187
 variables:
   - AGENT_PROXY_URL
   - AGENT_PROXY_CA_BUNDLE_PATH

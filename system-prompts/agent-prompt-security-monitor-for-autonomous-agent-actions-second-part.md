@@ -1,9 +1,10 @@
 <!--
-name: 'Agent Prompt: Security monitor for autonomous agent actions (second part)'
+name: 'Agent Prompt: Security Monitor Environment (Part 2)'
 description: >-
-  Defines the environment context, block rules, and allow exceptions that govern
-  which tool actions the agent may or may not perform
-ccVersion: 2.1.198
+  Environment/trust-slot section of the autonomous-agent security monitor system
+  prompt (now three slot kinds: context, trust, sensitivity, with the
+  user_environment_to_replace / user_allow_rules_to_replace blocks).
+ccVersion: null
 -->
 ## Environment
 

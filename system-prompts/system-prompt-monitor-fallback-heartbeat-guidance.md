@@ -4,7 +4,7 @@ description: >-
   Guides dynamic loop ticks to use Monitor as the primary wake signal,
   ScheduleWakeup as a fallback heartbeat, and stop the monitor when ending the
   loop
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - MONITOR_TOOL_NAME
   - TASK_LIST_TOOL_NAME

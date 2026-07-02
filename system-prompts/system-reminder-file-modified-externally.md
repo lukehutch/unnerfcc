@@ -1,7 +1,7 @@
 <!--
 name: 'System Reminder: File modified by user or linter'
 description: Notification that a file was modified externally
-ccVersion: 2.1.18
+ccVersion: 2.1.142
 variables:
   - ATTACHMENT_OBJECT
 -->

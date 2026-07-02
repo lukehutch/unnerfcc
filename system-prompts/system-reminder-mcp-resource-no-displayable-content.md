@@ -1,7 +1,7 @@
 <!--
 name: 'System Reminder: MCP resource no displayable content'
 description: Shown when MCP resource has no displayable content
-ccVersion: 2.1.18
+ccVersion: 2.1.142
 variables:
   - ATTACHMENT_OBJECT
 -->

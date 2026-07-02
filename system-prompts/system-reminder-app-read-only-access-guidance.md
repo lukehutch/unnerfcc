@@ -3,7 +3,7 @@ name: 'System Reminder: App read-only access guidance'
 description: >-
   Warns that read-tier non-browser apps are screenshot-only and asks the user to
   perform interactions themselves
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - READ_ONLY_APP_LIST
   - READ_ONLY_APPS

@@ -3,7 +3,7 @@ name: 'System Reminder: MCP servers connecting'
 description: >-
   Lists MCP servers that are still connecting and tells the agent to search
   their tools before reporting a capability unavailable
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - PENDING_MCP_SERVERS
   - TOOL_SEARCH_TOOL_NAME

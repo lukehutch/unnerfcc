@@ -4,11 +4,10 @@ description: >-
   Describes the PowerShell command execution tool with syntax guidance, timeout
   settings, and instructions to prefer specialized tools over PowerShell for
   file operations
-ccVersion: 2.1.198
+ccVersion: null
 variables:
   - RENDER_COMMAND_NOTES_FN
   - COMMAND_NOTES
-  - POWERSHELL_TIMEOUT_NOTE
   - MAX_TIMEOUT_MS_FN
   - DEFAULT_TIMEOUT_MS_FN
   - MAX_OUTPUT_CHARS_FN
@@ -20,13 +19,14 @@ variables:
   - WRITE_TOOL_NAME
   - POWERSHELL_TOOL_NAME
   - CUSTOM_GIT_NOTES
+  - TOOL_DESCRIPTION_POWERSHELL_VAR_13
 -->
 Executes a given PowerShell command with optional timeout. Working directory persists between commands; shell state (variables, functions) does not.
 
 IMPORTANT: This tool is for terminal operations via PowerShell: git, npm, docker, and PS cmdlets. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
 
 ${RENDER_COMMAND_NOTES_FN(COMMAND_NOTES)}
-${POWERSHELL_TIMEOUT_NOTE}
+${MAX_TIMEOUT_MS_FN}
 Before executing the command, please follow these steps:
 
 1. Directory Verification:
@@ -81,24 +81,24 @@ Second line with $literal dollar signs.
 
 Usage notes:
   - The command argument is required.
-  - You can specify an optional timeout in milliseconds (up to ${MAX_TIMEOUT_MS_FN()}ms / ${MAX_TIMEOUT_MS_FN()/60000} minutes). If not specified, commands will timeout after ${DEFAULT_TIMEOUT_MS_FN()}ms (${DEFAULT_TIMEOUT_MS_FN()/60000} minutes).
+  - You can specify an optional timeout in milliseconds (up to ${DEFAULT_TIMEOUT_MS_FN()}ms / ${DEFAULT_TIMEOUT_MS_FN()/60000} minutes). If not specified, commands will timeout after ${MAX_OUTPUT_CHARS_FN()}ms (${MAX_OUTPUT_CHARS_FN()/60000} minutes).
   - It is very helpful if you write a clear, concise description of what this command does.
-  - If the output exceeds ${MAX_OUTPUT_CHARS_FN()} characters, output will be truncated before being returned to you.
-${CUSTOM_USAGE_NOTE?CUSTOM_USAGE_NOTE+`
+  - If the output exceeds ${CUSTOM_USAGE_NOTE()} characters, output will be truncated before being returned to you.
+${GLOB_TOOL_NAME?GLOB_TOOL_NAME+`
 `:""}  - Avoid using PowerShell to run commands that have dedicated tools, unless explicitly instructed:
-    - File search: Use ${GLOB_TOOL_NAME} (NOT Get-ChildItem -Recurse)
-    - Content search: Use ${GREP_TOOL_NAME} (NOT Select-String)
-    - Read files: Use ${READ_TOOL_NAME} (NOT Get-Content)
-    - Edit files: Use ${EDIT_TOOL_NAME}
-    - Write files: Use ${WRITE_TOOL_NAME} (NOT Set-Content/Out-File)
+    - File search: Use ${GREP_TOOL_NAME} (NOT Get-ChildItem -Recurse)
+    - Content search: Use ${READ_TOOL_NAME} (NOT Select-String)
+    - Read files: Use ${EDIT_TOOL_NAME} (NOT Get-Content)
+    - Edit files: Use ${WRITE_TOOL_NAME}
+    - Write files: Use ${POWERSHELL_TOOL_NAME} (NOT Set-Content/Out-File)
     - Communication: Output text directly (NOT Write-Output/Write-Host)
   - When issuing multiple commands:
-    - If the commands are independent and can run in parallel, make multiple ${POWERSHELL_TOOL_NAME} tool calls in a single message.
-    - If the commands depend on each other and must run sequentially, chain them in a single ${POWERSHELL_TOOL_NAME} call (see edition-specific chaining syntax above).
+    - If the commands are independent and can run in parallel, make multiple ${CUSTOM_GIT_NOTES} tool calls in a single message.
+    - If the commands depend on each other and must run sequentially, chain them in a single ${CUSTOM_GIT_NOTES} call (see edition-specific chaining syntax above).
     - Use \`;\` only when you need to run commands sequentially but don't care if earlier commands fail.
     - DO NOT use newlines to separate commands (newlines are ok in quoted strings and here-strings)
   - Do NOT prefix commands with \`cd\` or \`Set-Location\` -- the working directory is already set to the correct project directory automatically.
-${CUSTOM_GIT_NOTES?CUSTOM_GIT_NOTES+`
+${TOOL_DESCRIPTION_POWERSHELL_VAR_13?TOOL_DESCRIPTION_POWERSHELL_VAR_13+`
 `:""}  - For git commands:
     - Prefer to create a new commit rather than amending an existing commit.
     - Before running destructive operations (e.g., git reset --hard, git push --force, git checkout --), consider whether there is a safer alternative that achieves the same goal. Only use destructive operations when they are truly the best approach.

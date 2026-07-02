@@ -1,7 +1,7 @@
 <!--
 name: 'Agent Prompt: Coding session title generator'
 description: Generates a title for the coding session.
-ccVersion: 2.1.176
+ccVersion: 2.1.177
 -->
 Generate a concise, sentence-case title (3-7 words) that captures the main topic or goal of this coding session. The title should be clear enough that the user recognizes the session in a list. Use sentence case: capitalize only the first word and proper nouns.
 

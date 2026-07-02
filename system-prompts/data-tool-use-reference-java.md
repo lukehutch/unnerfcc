@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Tool use reference — Java'
-description: Java tool use reference including defining tools and the manual agentic loop
-ccVersion: 2.1.182
+description: Tool-use API reference doc (Java bindings).
+ccVersion: 2.1.183
 -->
 # Tool Use — Java
 

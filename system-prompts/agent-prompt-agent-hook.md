@@ -1,7 +1,7 @@
 <!--
 name: 'Agent Prompt: Agent Hook'
 description: Prompt for an 'agent hook'
-ccVersion: 2.1.173
+ccVersion: 2.1.178
 variables:
   - HOOK_EVALUATION_TASK_PROMPT
   - TRANSCRIPT_PATH

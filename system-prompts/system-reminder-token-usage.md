@@ -1,7 +1,7 @@
 <!--
 name: 'System Reminder: Token usage'
 description: Current token usage statistics
-ccVersion: 2.1.18
+ccVersion: 2.1.142
 variables:
   - ATTACHMENT_OBJECT
 -->

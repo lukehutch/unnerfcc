@@ -1,10 +1,9 @@
 <!--
-name: 'Skill: Cowork plugin authoring'
+name: 'Skill: Cowork Plugin Authoring'
 description: >-
-  Skill instructions for creating or customizing Cowork plugins, including mode
-  selection, research, implementation, packaging, connector replacement, and
-  plugin delivery
-ccVersion: 2.1.163
+  Skill for creating a new Cowork plugin from scratch or customizing an existing
+  one for an organization, delivering an installable .plugin file
+ccVersion: 2.1.165
 -->
 # Cowork Plugin Authoring
 
