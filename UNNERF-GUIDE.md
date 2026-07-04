@@ -35,6 +35,17 @@ The restrictions worth lifting fall into these groups:
 | 4 | **Local flags / refusals** | content-flagging, refusals, and alarms that run in the *local* prompt (suspected-injection alarms, "refuse anything resembling X", self-hedging about Claude's own responses, anti-malicious reminders) | **LIFT** — see the guardrail policy below |
 | 5 | **Thoroughness directives** | "think step by step", "check your work" | **AMPLIFY** where weakened |
 
+> **No numeric output limits.** A prompt that caps *how many* items CC may report
+> — "at most 8 findings", "≤4", "up to 6 candidates", or a `${MAX_FINDINGS}`
+> interpolation that injects the ceiling — is a Group-1/3 brevity cap wearing a
+> number. **LIFT it: let CC report every relevant, potentially-valuable finding,
+> ranked most-severe first, with no numeric ceiling.** A real finding CC drops to
+> hit a quota is exactly the failure this project exists to prevent. Keep only the
+> *ordering* and genuine parse contracts (a fixed-length enum, an array a script
+> indexes by position) — never a bound on the count of substantive results. When
+> the cap is injected by a `${VAR}` (e.g. `${MAX_FINDINGS}`), removing the `${VAR}`
+> reference is the lift — see register rule 6 and Part 6.
+
 ### Guardrail policy — lift local restrictions, rely on server-side enforcement
 
 Claude Code's content-flagging and refusal instructions are **local**: they live
@@ -133,11 +144,21 @@ included; the audit re-checks them:
    costs tokens on every turn. If a sentence adds no new requirement, cut it.
 5. **No motivational filler.** "…and then try a few more", "persistence is the
    point" — rhetoric after a rule that already covers it. Cut.
-6. **Never introduce a `${VAR}` the prompt doesn't already have.** A
-   placeholder outside the prompt's `identifierMap` is emitted into the
-   binary's template literal verbatim and crashes Claude Code at launch
-   (`ReferenceError`). `apply-unnerfs.py` enforces this automatically (the
-   orphan-variable guard, Part 6) — don't fight it.
+6. **Never *introduce* a `${VAR}` the prompt doesn't already have — but
+   *removing* one is fine, and often the point.** Introducing a placeholder
+   outside the prompt's `identifierMap` crashes Claude Code at launch
+   (`ReferenceError`); `apply-unnerfs.py` enforces this automatically (the
+   orphan-variable guard, Part 6) — don't fight it. The guard is
+   **one-directional**: it only stops you *adding* an undefined placeholder.
+   *Dropping* a `${VAR}` reference is safe and often the whole point of the lift
+   when that variable's only job is to cap verbosity, effort, or output count —
+   e.g. a `${MAX_FINDINGS}` that limits how many findings CC may report. Cut the
+   reference and the cap goes with it. Repack is name-based (Part 3: the body is
+   reconstructed by interleaving `pieces` with named `identifierMap`
+   placeholders), so the now-unused `variables:` frontmatter entry becomes a
+   harmless orphan — the interpolation simply drops out of the rebuilt template.
+   Leave the frontmatter line as-is; it is inert, and stripping it is cosmetic
+   (stock re-extraction reintroduces it each sync anyway).
 
 ---
 
@@ -383,6 +404,12 @@ FAILs).
   (`ReferenceError: NAME is not defined`) — or trips tweakcc-fixed's leak guard,
   which silently skips the whole prompt. The guard fails loudly at apply time
   instead. (Lesson imported from lobotomized-claude-code's post-mortems.)
+  The guard is **one-directional** — it never objects to a rule that *removes* a
+  `${VAR}` reference. Dropping a verbosity/effort/count-cap variable (e.g.
+  `${MAX_FINDINGS}`) is a valid, encouraged un-nerf: repack is name-based, so the
+  orphaned `variables:` frontmatter entry is inert (the interpolation drops out of
+  the rebuilt template). Don't add a rule to strip the frontmatter line — it's
+  cosmetic, and stock re-extraction reintroduces it each sync anyway.
 
 ### Handling FAILs (drift) and structural changes
 
@@ -572,9 +599,9 @@ has published. Replace this snapshot each sync rather than appending history.
   **skrabe/tweakcc-fixed catalog** (1,483 sites / **1,372 unique prompts** —
   duplicate-id sites collapse to their first occurrence, matching the fork's own
   extractor).
-- **Scale:** **111 un-nerf rules across 78 files**, 1,372 prompts, `--check`
+- **Scale:** **121 un-nerf rules across 79 files**, 1,372 prompts, `--check`
   clean, orphan-variable guard passing. **The v2.1.199 version bump itself
-  needed no new rules and caused no rule drift; the +30 over the 81-rule sync
+  needed no new rules and caused no rule drift; the +40 over the 81-rule sync
   baseline are policy-audit lifts (see Part 1), not stock drift.**
 - **Upstream delta (v2.1.198 → v2.1.199):** the manifest diff over-reports
   "changed" because it fingerprints the full `.md` including frontmatter, and
@@ -606,7 +633,7 @@ has published. Replace this snapshot each sync rather than appending history.
   (`Rules applied: 81, FAILED: 0, Missing: 0`) — 8 rule-carrying files were in
   the manifest "changed" list, but for every one the change was a ccVersion bump
   or edits outside the un-nerfed passage; no rule's `stock` anchor moved. (The
-  rule set has since grown to 111 via the Part 1 policy audit; `--check` remains
+  rule set has since grown to 121 via the Part 1 policy audit; `--check` remains
   clean at `FAILED: 0, Missing: 0`.)
 - **Carry-forward state (from the tweakcc-fixed switch, still true):**
   `system-prompt-current-claude-models` remains present in the fork catalog (no

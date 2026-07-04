@@ -30,8 +30,8 @@ export const meta = {
 // keeps one finder per angle; cleanup is one finder covering all cleanup
 // angles, capped at (cleanup-angle count × perAngle) so the merged finder
 // has the same total cleanup-candidate budget the old per-angle finders had.
-//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings
-//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings
+//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings
+//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings
 //   max   → same structure as xhigh (the API reasoning effort differs, not the fan-out)
 const LEVEL_PARAMS = {
   high: { correctnessAngles: 3, perAngle: 6, maxFindings: 10, sweep: false },
@@ -169,7 +169,7 @@ const FINDER_PROMPT = f => {
       : "Run the diff command above and review ONLY through the lens of your assigned angle:\\n\\n") +
     f.text + "\\n" +
     (isCleanup ? CLEANUP_PRECEDENCE + "\\n" : "") +
-    "Surface up to " + f.cap + " candidate findings, each with file, line, a one-line summary, and a concrete failure_scenario — the user-visible consequence (error, wrong output, data loss), not an intermediate state (value stale, set grows). " +
+    "Surface every candidate finding, each with file, line, a one-line summary, and a concrete failure_scenario — the user-visible consequence (error, wrong output, data loss), not an intermediate state (value stale, set grows). " +
     (isCleanup
       ? "Cover whichever lenses apply — you do not need findings from every lens; prioritize the highest-cost issues across all of them. "
       : "") +
@@ -193,7 +193,7 @@ const canonFile = raw => {
   }
   return best || p
 }
-const ingest = (cs, cap, kind) => cs.slice(0, cap).map(c => ({ ...c, file: canonFile(c.file), kind }))
+const ingest = (cs, cap, kind) => cs.map(c => ({ ...c, file: canonFile(c.file), kind }))
 const loc = c => c.file + (c.line != null ? ":" + c.line : "")
 const inBounds = (i, n) => Number.isInteger(i) && i >= 0 && i < n
 
@@ -276,7 +276,7 @@ if (P.sweep) {
     "## Already-found candidates (do NOT re-derive or re-confirm these)\\n" + knownBlock + "\\n\\n" +
     "Re-read the diff and the enclosing functions looking ONLY for defects not already listed. " +
     "Focus on what the first pass tends to miss: " + SWEEP_GAP_FOCUS + "\\n\\n" +
-    "Surface up to " + SWEEP_MAX + " additional candidates. If nothing new, return an empty list — do not pad.\\n\\nStructured output only.",
+    "Surface every additional candidate. If nothing new, return an empty list — do not pad.\\n\\nStructured output only.",
     { label: "sweep", phase: "Sweep", schema: CANDIDATES_SCHEMA }
   )
   if (sweep && sweep.candidates.length > 0) {
@@ -310,9 +310,9 @@ if (surviving.length === 0) {
   }
 }
 
-// ─── Synthesize: rank, merge semantic dupes, cap ───
+// ─── Synthesize: rank, merge semantic dupes (uncapped — report all) ───
 phase("Synthesize")
-// Correctness bugs outrank cleanup findings when the cap forces a cut;
+// Correctness bugs are ranked above cleanup findings;
 // CONFIRMED outranks PLAUSIBLE within each group.
 const rank = c => (c.kind === "cleanup" ? 2 : 0) + (c.verdict === "PLAUSIBLE" ? 1 : 0)
 const ranked = surviving.slice().sort((a, b) => rank(a) - rank(b))
@@ -328,14 +328,14 @@ const report = await agent(
   "Return decisions about findings BY INDEX — never re-emit finding text.\\n" +
   "1. For each distinct defect, emit one decision with its index. When several findings describe the same defect (same root cause), keep one entry and list the others in its merge array.\\n" +
   "2. Order decisions most-severe first. Correctness bugs always outrank cleanup findings.\\n" +
-  "3. Keep at most " + P.maxFindings + " decisions; omit the least severe beyond the cap.\\n" +
+  "3. Keep every distinct finding; do not omit any to satisfy a count.\\n" +
   "4. Write a 2-3 sentence summary of the review.\\n\\nStructured output only.",
   { label: "synthesize", schema: REPORT_SCHEMA }
 )
 
 // Assembler invariants:
-//   1. No silent drops while there is room: every verified finding either appears
-//      (as primary or merge note) or is omitted only because the cap is full.
+//   1. No silent drops: every verified finding appears
+//      (as primary or merge note).
 //   2. The displayed primary is the synthesizer's choice (d.index) — it picks the
 //      best-described representative; we only escalate the verdict label when a
 //      merged member is CONFIRMED.
@@ -345,7 +345,6 @@ const seen = new Set()
 const claim = i => (inBounds(i, ranked.length) && !seen.has(i) ? (seen.add(i), true) : false)
 const findings = []
 for (const d of decisions) {
-  if (findings.length >= P.maxFindings) break
   if (!claim(d.index)) continue
   const c = ranked[d.index]
   const merged = (Array.isArray(d.merge) ? d.merge : []).filter(claim).map(i => ranked[i])
@@ -355,7 +354,7 @@ for (const d of decisions) {
 }
 const usedDecisions = findings.length > 0
 let backfilled = 0
-for (let i = 0; i < ranked.length && findings.length < P.maxFindings; i++) {
+for (let i = 0; i < ranked.length; i++) {
   if (seen.has(i)) continue
   const c = ranked[i]
   findings.push({ file: c.file, line: c.line, summary: c.summary, failure_scenario: c.failure_scenario, category: c.kind, verdict: c.verdict })

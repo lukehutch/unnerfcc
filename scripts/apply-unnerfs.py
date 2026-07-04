@@ -758,6 +758,69 @@ RULES: dict[str, list[Rule]] = {
             description='code-review sweep: drop the 8-candidate cap (matches the phase-1 finder flip)',
         ),
     ],
+    # The bundled /code-review WORKFLOW script (distinct from the skill-code-review-*
+    # prompts). The script IS the prompt, so its numeric caps are lifted here the
+    # same way — unlike a binary-baked cap, these are editable text. Removed caps
+    # leave a few now-inert vars (P.maxFindings, f.cap); harmless in JS.
+    "workflow-script-code-review.md": [
+        # Per-angle candidate cap — the enforcement point. Finders' candidates all
+        # flow to verification instead of being sliced to `cap` (also covers sweep,
+        # which reuses ingest). Resolves the stock contradiction where the prompt
+        # says "do not silently drop candidates" but the code slices them.
+        Rule(
+            stock='const ingest = (cs, cap, kind) => cs.slice(0, cap).map(c => ({ ...c, file: canonFile(c.file), kind }))',
+            unnerf='const ingest = (cs, cap, kind) => cs.map(c => ({ ...c, file: canonFile(c.file), kind }))',
+            description='/code-review workflow: ingest every candidate (drop per-angle slice cap)',
+        ),
+        Rule(
+            stock='"Surface up to " + f.cap + " candidate findings, each with file, line',
+            unnerf='"Surface every candidate finding, each with file, line',
+            description='/code-review workflow finder prompt: surface every candidate',
+        ),
+        Rule(
+            stock='"Surface up to " + SWEEP_MAX + " additional candidates. If nothing new, return an empty list — do not pad.',
+            unnerf='"Surface every additional candidate. If nothing new, return an empty list — do not pad.',
+            description='/code-review workflow sweep prompt: surface every additional candidate',
+        ),
+        # Final findings cap — the headline lift. Report every verified surviving
+        # finding, no numeric ceiling.
+        Rule(
+            stock='"3. Keep at most " + P.maxFindings + " decisions; omit the least severe beyond the cap.',
+            unnerf='"3. Keep every distinct finding; do not omit any to satisfy a count.',
+            description='/code-review workflow synthesis prompt: keep every finding (no cap)',
+        ),
+        Rule(
+            stock='for (const d of decisions) {\n  if (findings.length >= P.maxFindings) break\n  if (!claim(d.index)) continue',
+            unnerf='for (const d of decisions) {\n  if (!claim(d.index)) continue',
+            description='/code-review workflow assembler: drop the maxFindings break',
+        ),
+        Rule(
+            stock='for (let i = 0; i < ranked.length && findings.length < P.maxFindings; i++) {',
+            unnerf='for (let i = 0; i < ranked.length; i++) {',
+            description='/code-review workflow backfill: append every remaining verified finding',
+        ),
+        # Comments that would otherwise claim findings are still capped.
+        Rule(
+            stock='//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings',
+            unnerf='//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings',
+            description='/code-review workflow tier comment: reflect uncapped output',
+        ),
+        Rule(
+            stock='// ─── Synthesize: rank, merge semantic dupes, cap ───',
+            unnerf='// ─── Synthesize: rank, merge semantic dupes (uncapped — report all) ───',
+            description='/code-review workflow synthesize header comment: uncapped',
+        ),
+        Rule(
+            stock='// Correctness bugs outrank cleanup findings when the cap forces a cut;\n// CONFIRMED outranks PLAUSIBLE within each group.',
+            unnerf='// Correctness bugs are ranked above cleanup findings;\n// CONFIRMED outranks PLAUSIBLE within each group.',
+            description='/code-review workflow rank comment: no cap-forced cut',
+        ),
+        Rule(
+            stock='//   1. No silent drops while there is room: every verified finding either appears\n//      (as primary or merge note) or is omitted only because the cap is full.',
+            unnerf='//   1. No silent drops: every verified finding appears\n//      (as primary or merge note).',
+            description='/code-review workflow assembler-invariant comment: no cap',
+        ),
+    ],
     # RETARGETED from agent-prompt-general-task-agent.md at the tweakcc-fixed
     # switch: the fork catalogs the shared "~225c" agent-description constant as
     # its own prompt (general-purpose-short). The old prompt's second sentence
