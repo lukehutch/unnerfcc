@@ -705,6 +705,11 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-code-review-effort-low.md": [
         Rule(
+            stock='Effort-tier prompt for low code review — single diff pass, no verify, up to 4\n  findings',
+            unnerf='Effort-tier prompt for low code review — single diff pass, no verify, all\n  qualifying findings',
+            description='code-review low frontmatter: match the already-lifted body (drop "up to 4")',
+        ),
+        Rule(
             stock='Output at most **4 findings**, most-severe first, one line each',
             unnerf='Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them)',
             description="code-review low-effort: output every qualifying finding (cap lifted)",
@@ -744,6 +749,13 @@ RULES: dict[str, list[Rule]] = {
             stock='altitude, and conventions findings when the output cap forces a cut.',
             unnerf='altitude, and conventions findings in ordering.',
             description='code-review prioritization: remove output-cap premise',
+        ),
+    ],
+    "skill-code-review-phase-3-sweep.md": [
+        Rule(
+            stock='Surface **up to 8 additional candidates**, each naming a defect not already on\nthe list.',
+            unnerf='Surface **every additional candidate**, each naming a defect not already on\nthe list.',
+            description='code-review sweep: drop the 8-candidate cap (matches the phase-1 finder flip)',
         ),
     ],
     # RETARGETED from agent-prompt-general-task-agent.md at the tweakcc-fixed

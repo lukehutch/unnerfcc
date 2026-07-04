@@ -1,8 +1,8 @@
 <!--
 name: 'Skill: Code Review (low effort)'
 description: >-
-  Effort-tier prompt for low code review — single diff pass, no verify, up to 4
-  findings
+  Effort-tier prompt for low code review — single diff pass, no verify, all
+  qualifying findings
 ccVersion: 2.1.152
 -->
 \`low effort → 1 diff pass → no verify → all qualifying findings\`

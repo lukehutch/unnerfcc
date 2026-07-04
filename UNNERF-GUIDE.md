@@ -572,9 +572,9 @@ has published. Replace this snapshot each sync rather than appending history.
   **skrabe/tweakcc-fixed catalog** (1,483 sites / **1,372 unique prompts** —
   duplicate-id sites collapse to their first occurrence, matching the fork's own
   extractor).
-- **Scale:** **109 un-nerf rules across 77 files**, 1,372 prompts, `--check`
+- **Scale:** **111 un-nerf rules across 78 files**, 1,372 prompts, `--check`
   clean, orphan-variable guard passing. **The v2.1.199 version bump itself
-  needed no new rules and caused no rule drift; the +28 over the 81-rule sync
+  needed no new rules and caused no rule drift; the +30 over the 81-rule sync
   baseline are policy-audit lifts (see Part 1), not stock drift.**
 - **Upstream delta (v2.1.198 → v2.1.199):** the manifest diff over-reports
   "changed" because it fingerprints the full `.md` including frontmatter, and
@@ -606,7 +606,7 @@ has published. Replace this snapshot each sync rather than appending history.
   (`Rules applied: 81, FAILED: 0, Missing: 0`) — 8 rule-carrying files were in
   the manifest "changed" list, but for every one the change was a ccVersion bump
   or edits outside the un-nerfed passage; no rule's `stock` anchor moved. (The
-  rule set has since grown to 109 via the Part 1 policy audit; `--check` remains
+  rule set has since grown to 111 via the Part 1 policy audit; `--check` remains
   clean at `FAILED: 0, Missing: 0`.)
 - **Carry-forward state (from the tweakcc-fixed switch, still true):**
   `system-prompt-current-claude-models` remains present in the fork catalog (no
