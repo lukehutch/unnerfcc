@@ -131,7 +131,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-auto-mode-rule-reviewer.md": [
         Rule(
             stock="Be concise and constructive. Only comment on rules that could be improved. If all rules look good, say so.",
-            unnerf="Be thorough and constructive. For each rule that could be improved, explain exactly why, show concrete examples of how the classifier might misinterpret it, and propose specific rewording. Include the reasoning behind each suggestion so the user can evaluate it. If all rules look good, say so — and explain what makes them work well, so the user understands the patterns to reuse.",
+            unnerf="Be thorough and constructive. For each improvable rule, explain why, show how the classifier might misread it, and propose specific rewording with your reasoning. If all rules are good, say so and explain what makes them work, so the user can reuse the pattern.",
             description="rule-review: thorough critique with examples and reasoning",
         ),
     ],
@@ -146,7 +146,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-background-job-agent-instructions.md": [
         Rule(
             stock="**Narrate.** One line on your approach before acting. After each chunk: what happened, what's next.",
-            unnerf="**Narrate.** Explain your approach before acting — cover what you plan to do, why, and any tradeoffs you weighed. After each chunk: what happened, what's next, and any non-obvious decisions, surprises, or observations worth surfacing. Substantive narration helps the user follow along and trust the work; one-liners hide the reasoning.",
+            unnerf="**Narrate.** Before acting, explain your approach, why, and any tradeoffs. After each chunk: what happened, what's next, and any non-obvious decision, surprise, or observation. Narrate with substance — one-liners hide the reasoning.",
             description="background-job narrate: substantive over one-line",
         ),
     ],
@@ -157,7 +157,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-batch-slash-command.md": [
         Rule(
             stock="   Write the recipe as a short, concrete set of steps that a worker can execute autonomously. Include any setup (start a dev server, build first) and the exact command/interaction to verify.",
-            unnerf="   Write the recipe as a concrete, thorough set of steps that a worker can execute autonomously without needing to ask clarifying questions. Include any setup (start a dev server, build first), the exact commands/interactions to verify, expected output or signals, and any gotchas you encountered while researching.",
+            unnerf="   Write the recipe as concrete, thorough steps a worker can execute autonomously without asking clarifying questions. Include setup (dev server, build first), the exact commands to verify, expected output or signals, and any gotchas you hit while researching.",
             description="batch recipe: thorough steps, gotchas, expected signals",
         ),
     ],
@@ -168,7 +168,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-claude-guide-agent.md": [
         Rule(
             stock="- Keep responses concise and actionable\n- Include specific examples or code snippets when helpful\n- Reference exact documentation URLs in your responses\n- Help users discover features by proactively suggesting related commands, shortcuts, or capabilities",
-            unnerf="- Provide thorough, detailed, and actionable guidance — walk the user through the full picture rather than leaving them to piece it together\n- Include specific examples and code snippets generously, with explanations of what each part does\n- Reference exact documentation URLs in your responses\n- Help users discover features by proactively suggesting related commands, shortcuts, capabilities, and adjacent workflows they may not have considered\n- Explain the \"why\" behind recommendations, not just the \"how\"",
+            unnerf="- Give thorough, actionable guidance — walk the user through the full picture, don't make them piece it together\n- Include examples and code snippets generously, explaining what each part does\n- Reference exact documentation URLs\n- Proactively suggest related commands, shortcuts, capabilities, and adjacent workflows\n- Explain the \"why\", not just the \"how\"",
             description="claude-guide: thorough guidance, generous examples, explain why",
         ),
     ],
@@ -182,7 +182,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-dream-memory-consolidation.md": [
         Rule(
             stock="Return a brief summary of what you consolidated, updated, or pruned. If nothing changed (memories are already tight), say so.",
-            unnerf="Return a thorough summary of what you consolidated, updated, or pruned — including which files changed, what signal drove each change, and any patterns you noticed while reviewing. If nothing changed, say so and describe what you reviewed.",
+            unnerf="Summarize thoroughly what you consolidated, updated, or pruned: which files changed, what signal drove each change, and any patterns you noticed. If nothing changed, say so and describe what you reviewed.",
             description="consolidation summary: thorough with reasoning (v2.1.116-compat)",
         ),
     ],
@@ -193,12 +193,12 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-explore.md": [
         Rule(
             stock="NOTE: You are meant to be a fast agent that returns output as quickly as possible. In order to achieve this you must:\n- Make efficient use of the tools that you have at your disposal: be smart about how you search for files and implementations\n- Wherever possible you should try to spawn multiple parallel tool calls for grepping and reading files",
-            unnerf="NOTE: Be exhaustively thorough in your exploration. Completeness matters more than speed — a missed file or pattern costs more than the extra search time:\n- Search across multiple naming conventions, directory structures, and file types\n- Spawn multiple parallel tool calls wherever possible for grepping and reading files to cover more ground simultaneously\n- Follow leads, cross-references, and related patterns wherever they go — don't stop at the first match\n- Read full file contents when relevant, not just snippets, so you understand the full context\n- When the caller requests thorough exploration, exhaust every reasonable search strategy before reporting back",
+            unnerf="NOTE: Explore exhaustively. Completeness beats speed — a missed file costs more than the extra search time:\n- Search across multiple naming conventions, directory structures, and file types\n- Spawn parallel tool calls to grep and read files, covering more ground at once\n- Follow leads, cross-references, and related patterns wherever they go — don't stop at the first match\n- Read full files when relevant, not just snippets\n- Exhaust every reasonable search strategy before reporting back",
             description="explore intro: exhaustive thoroughness over speed",
         ),
         Rule(
             stock="Complete the user's search request efficiently and report your findings clearly.",
-            unnerf="Complete the user's search request exhaustively and report your findings with full detail, including file paths, code excerpts, architectural observations, and any related patterns or edge cases you noticed along the way.",
+            unnerf="Complete the search exhaustively and report in full detail: file paths, code excerpts, architectural observations, and any related patterns or edge cases you noticed.",
             description="explore closing: exhaustive search with detailed report",
         ),
     ],
@@ -209,7 +209,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-general-purpose.md": [
         Rule(
             stock="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done.\"} When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.",
-            unnerf="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly. Do the work that a careful senior developer would do, including edge cases and fixing obviously related issues you discover. Don't add purely cosmetic or speculative improvements unrelated to the task.\"} When you complete the task, respond with a thorough, detailed report covering what was done, every key finding, the reasoning behind decisions, edge cases you considered, and any related observations the caller should know about. The caller relies on your report to understand the full picture — include everything needed to act on it without re-investigating.",
+            unnerf="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly, to a careful senior developer's standard — handle edge cases and fix obviously related issues you find. Don't add cosmetic or speculative changes unrelated to the task.\"} When done, report thoroughly: what you did, every key finding, the reasoning behind decisions, edge cases considered, and related observations. The caller acts on your report without re-investigating — include what that takes.",
             description="general-purpose: senior-dev completeness + thorough final report",
         ),
     ],
@@ -237,7 +237,7 @@ RULES: dict[str, list[Rule]] = {
     "agent-prompt-webfetch-summarizer.md": [
         Rule(
             stock="${IS_TRUSTED_DOMAIN?\"Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.\":`Provide a concise response based only on the content above. In your response:",
-            unnerf="${IS_TRUSTED_DOMAIN?\"Provide a thorough, detailed response based on the content above. Include all relevant details, code examples, documentation excerpts, configuration options, caveats, and related context the caller would benefit from knowing. Err on the side of completeness — the caller is relying on you to surface everything useful from the fetched content.\":`Provide a thorough response based only on the content above, surfacing all relevant details, code examples, and context the caller needs. In your response:",
+            unnerf="${IS_TRUSTED_DOMAIN?\"Respond thoroughly based on the content above. Include every relevant detail, code example, documentation excerpt, configuration option, and caveat the caller needs. Surface everything useful from the fetched content.\":`Respond thoroughly based only on the content above, surfacing every relevant detail, code example, and context the caller needs. In your response:",
             description="webfetch summarizer: thorough over concise, both template arms",
         ),
     ],

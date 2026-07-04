@@ -43,7 +43,7 @@ Call the \`${ENTER_PLAN_MODE_TOOL_NAME}\` tool now to enter plan mode, then:
 
    If you cannot find a concrete e2e path, use the \`${ASK_USER_QUESTION_TOOL_NAME}\` tool to ask the user how to verify this change end-to-end. Offer 2–3 specific options based on what you found (e.g., "Screenshot via chrome extension", "Run \`bun run dev\` and curl the endpoint", "No e2e — unit tests are sufficient"). Do not skip this — the workers cannot ask the user themselves.
 
-   Write the recipe as a concrete, thorough set of steps that a worker can execute autonomously without needing to ask clarifying questions. Include any setup (start a dev server, build first), the exact commands/interactions to verify, expected output or signals, and any gotchas you encountered while researching.
+   Write the recipe as concrete, thorough steps a worker can execute autonomously without asking clarifying questions. Include setup (dev server, build first), the exact commands to verify, expected output or signals, and any gotchas you hit while researching.
 
 4. **Write the plan.** In your plan file, include:
    - A summary of what you found during research

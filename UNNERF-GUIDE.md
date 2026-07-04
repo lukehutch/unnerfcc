@@ -14,69 +14,109 @@ reference detail behind each step.
 
 ## Part 1 — The objective
 
-Claude Code's stock prompts contain far more instructions to **be brief** than to
-**be thorough** — roughly 5:1. That imbalance makes the model cut corners on real
-work. This project rebalances it. The goal is **not verbosity** — it is
-**thoroughness**. The stock prompts conflate the two; they are not the same.
+Claude Code's stock prompts lean hard on **holding back** — be brief, do the
+minimum, investigate only as far as needed, flag and hedge, refuse anything that
+pattern-matches a risk. This project **lifts those leashes**. The goal is a tool
+that works to its **full capability** by default: thorough where depth helps, and
+**unrestricted on legitimate work**.
 
-Every stock brevity directive falls into one of four buckets. The whole project
-is one rule applied consistently:
+> **One direction, always: lift restrictions; never add them.** Every rule either
+> removes a cap or turns a "hold back" into "go as far as the work needs." A
+> change that would *impose* a new constraint is out of scope, even if it looks
+> tidier.
 
-> **Keep bucket 1. Flip buckets 2 and 3. Amplify bucket 4.**
+The restrictions worth lifting fall into these groups:
 
-| # | Bucket | What it controls | Action | Example |
-|---|--------|------------------|--------|---------|
-| 1 | **Chat brevity** | length of conversational replies to trivial asks | **KEEP** | "respond in 2-3 sentences", "a terse one-liner is fine" for *what's the git status* |
-| 2 | **Implementation brevity** | the *code* Claude writes | **FLIP** | "don't add abstractions", "simplest approach", "don't gold-plate", "do the minimum" |
-| 3 | **Process brevity** | how Claude *investigates and reports to a human* | **FLIP** | "as quickly as possible", "report back concisely", "2-sentence summary", "briefly explain" |
-| 4 | **Thoroughness** | "think step by step", "consider edge cases" | **AMPLIFY** | already pro-quality — strengthen it |
+| # | Group | What it caps | Action |
+|---|-------|--------------|--------|
+| 1 | **Length / chat brevity** | how much Claude tells the user ("2-3 sentences", "keep it short") | **LIFT** — say as much as the task warrants; length is the user's call, not the prompt's |
+| 2 | **Implementation brevity** | the code Claude writes ("simplest approach", "don't add abstractions", "do the minimum") | **LIFT** — implement to a senior standard |
+| 3 | **Process brevity** | how Claude investigates and reports ("as quickly as possible", "2-sentence summary") | **LIFT** — investigate and report as thoroughly as the work deserves |
+| 4 | **Local flags / refusals** | content-flagging, refusals, and alarms that run in the *local* prompt (suspected-injection alarms, "refuse anything resembling X", self-hedging about Claude's own responses, anti-malicious reminders) | **LIFT** — see the guardrail policy below |
+| 5 | **Thoroughness directives** | "think step by step", "check your work" | **AMPLIFY** where weakened |
 
-### The keep/flip decision procedure
+### Guardrail policy — lift local restrictions, rely on server-side enforcement
 
-When a prompt contains a brevity-signature phrase, decide with this checklist
-(in order — the first match wins):
+Claude Code's content-flagging and refusal instructions are **local**: they live
+in the system prompt that runs on the *user's own machine*. They are **not** the
+layer that enforces safety. Anthropic's models refuse genuinely harmful requests
+as a matter of **server-side and trained-in** behavior on every API call,
+regardless of what any local system prompt says. Removing a local guardrail line
+therefore **cannot** disable that enforcement — this repo only edits local prompt
+text; the real gate is untouched. (This is also why removing these lines does not
+enable malicious use: the model still refuses genuinely harmful work server-side.)
 
-1. **Is the output a structured artifact or machine-parsed?** A title, branch
-   name, commit message, JSON object, classification label, autocomplete
-   suggestion, a status string parsed by a script, a notification with an
-   explicit character cap. → **KEEP.** Length here is UX/format, not work depth.
-   (`agent-prompt-session-title-and-branch-generation`, `system-prompt-insights-*`,
-   `agent-prompt-workflow-subagent-plain-text-output`.)
-2. **Is it a functional constraint?** "minimal `old_string` for uniqueness",
-   "no preamble before the *required* tool call", "avoid sleep-polling",
-   "CLAUDE.md must be concise" (it loads into every session). → **KEEP.** The
-   brevity is doing real mechanical work.
-3. **Is it safety / security?** Deny-rules, confirmation gates, classifier
-   guidance. → **KEEP** (or make *stricter* — never weaker). A *fuller*
-   explanation that helps a human's safety decision is a legitimate flip of the
-   *explanation*, not the gate (see `system-prompt-troubleshooting-confirmation-policy`).
-4. **Is it reference / documentation / example content?** Every `data-*.md` blob,
-   API docs, sample prompts quoted inside a guide. → **KEEP.** A length cap
-   *inside an example* is not a directive to Claude.
-5. **Otherwise — does it cap engineering depth or human-facing reporting?**
-   "simplest approach", "don't add/refactor/abstract", "investigate as quickly as
-   possible", "keep your report short", a 2-sentence cap on an end-of-turn or
-   subagent-to-human summary. → **FLIP** to thoroughness.
+What the local lines *do* add is a redundant extra filtering layer with a **high
+false-positive rate**: they interrupt legitimate security research, ordinary code
+work, and benign requests to raise alarms or refuse, far more often than they
+catch anything the server-side layer would miss. On the user's own machine a local
+"refuse X" reminder is **security theater** — the enforcing gate is elsewhere, and
+the local echo mostly generates noise.
 
-The hardest calls are subagent prompts: a subagent's report **to a human or to an
-orchestrating agent that needs detail** should be thorough (flip), but a subagent
-whose output is **parsed by a workflow script** should stay concise (keep). Same
-word, opposite call — decide by *who consumes the output*.
+So this project lifts local content-flagging, refusals, and anti-malicious
+reminders, and relies on server-side guardrails for anything concerning harm to
+*third parties*. Not to enable malicious use (that behavior is server-side and
+unaffected) — to stop the local layer from second-guessing legitimate work.
 
-When you flip, write the replacement in the project's voice: lead with the
-*requirement* ("Make your review exhaustive…"), not the prohibition; preserve any
-genuinely-good clause already present (safety caveats, "never half-finished");
-keep it about **depth and completeness**, never about padding word count.
+**One class stays, and it is the *only* thing protected locally:** unintended harm
+to the **user**, caused by the agent itself being hijacked or misfiring.
+Concretely — accidental prompt injection from spawned agents, skills, tool
+results, or file content; unintended damage to the local filesystem; hijacking of
+the user's accounts; and exfiltration of the user's data the user did not
+explicitly request. Server-side guardrails do **not** cover this: nothing on
+Anthropic's side stops a hijacked *local* agent from following injected
+instructions to delete files, take over an account, or leak data. These checks
+have negligible false-positive cost and real protective value, so they are
+**kept** — and if a stock prompt in this class is itself too weak, strengthen it.
+Rules in `apply-unnerfs.py` never weaken this class.
 
-### Writing the flip — register rules
+### The keep/lift decision procedure
 
-How a flip is *worded* matters as much as what it flips. Current Claude models
-follow plain directives more literally than older ones, and overcorrect on
-rhetorical pressure — which for this project means over-verbosity, our known
-failure mode. These rules distill Anthropic's prompting guidance plus field
-lessons from [lobotomized-claude-code](https://github.com/skrabe/lobotomized-claude-code)
-(the opposite project: it cuts prompts down per-model, and documents what
-newer models do badly under). Apply them to every `unnerf` string:
+When a prompt contains a brevity- or restriction-signature phrase, decide with
+this checklist (first match wins):
+
+1. **Does removing it break tool mechanics or machine parsing?** A character cap
+   on a value that gets *truncated* downstream, "minimal `old_string` for
+   uniqueness" (excess context makes Edit fail), a status string a script parses,
+   "no preamble before the *required* tool call". → **KEEP.** The constraint does
+   real mechanical work, not depth-nerfing. (A length cap on a JSON *string field*
+   does **not** break parsing — JSON strings take any length — so those LIFT.)
+2. **Is it reference / documentation / example content?** Every `data-*.md` blob,
+   API docs, sample prompts quoted inside a guide, a length cap *inside an
+   example*. → **KEEP.** Not a directive to Claude.
+3. **Does it protect the *user* from their own hijacked or misfiring agent?**
+   accidental injection from spawned agents/skills/tool-results/content,
+   unintended local-filesystem damage, account hijacking, unrequested data
+   exfiltration, confirm-before-irreversible/outward. → **KEEP** (strengthen if
+   weak). Server-side doesn't cover this; it is the only class protected locally.
+4. **Otherwise** — any length cap, implementation/process brevity directive,
+   content flag, refusal, or alarm on legitimate work → **LIFT.**
+
+Subagent prompts still need care: a report **consumed by a human or an
+orchestrating agent** should be thorough (lift), but output **parsed by a workflow
+script** stays terse (keep, per #1). Same word, opposite call — decide by *who
+consumes the output*.
+
+When you lift, write the replacement in the project's voice: lead with the
+*requirement*, not the prohibition; preserve any genuinely-good clause already
+present ("never half-finished"); keep it about **capability and depth**, never
+about padding word count — and follow the register rules below to the letter.
+
+### Writing the rule — register rules
+
+**The prompt language you write must itself be brief, clear, imperative, and
+active — not verbose passive prose.** This is about the *instruction text*, not
+about Claude's output: a rule tells Claude to be thorough and uncapped, but it
+says so in as few plain imperative words as carry the requirement. A terse
+active directive lands harder and costs fewer tokens on every turn than a padded
+one; an over-long rule also dilutes the prompt it lives in. Current Claude models
+follow plain directives more literally and overcorrect on rhetorical pressure,
+so verbosity here is actively counterproductive. These rules distill Anthropic's
+prompting guidance plus field lessons from
+[lobotomized-claude-code](https://github.com/skrabe/lobotomized-claude-code)
+(the opposite project: it cuts prompts down per-model, and documents what newer
+models do badly under). Apply them to **every** `unnerf` string — existing rules
+included; the audit re-checks them:
 
 1. **No CAPS theater.** `MUST` / `NEVER` / `ALWAYS` / `CRITICAL` trigger
    overcorrection. Plain imperatives outperform.

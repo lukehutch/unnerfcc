@@ -71,7 +71,7 @@ ${CLAUDE_MD_RECONCILIATION_BLOCK}
 ${ADDITIONAL_DREAM_GUIDANCE_FN()}
 ---
 
-Return a thorough summary of what you consolidated, updated, or pruned — including which files changed, what signal drove each change, and any patterns you noticed while reviewing. If nothing changed, say so and describe what you reviewed.${ADDITIONAL_CONTEXT?`
+Summarize thoroughly what you consolidated, updated, or pruned: which files changed, what signal drove each change, and any patterns you noticed. If nothing changed, say so and describe what you reviewed.${ADDITIONAL_CONTEXT?`
 
 ## Additional context
 

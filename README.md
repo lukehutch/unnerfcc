@@ -1,6 +1,6 @@
 # tweakcc system prompts — un-nerfed edition
 
-**Claude Code's own system prompts, rewritten to make the model thorough instead of terse.** Claude Code ships with its prompts baked into the binary, and they lean hard on brevity — "be concise," "do the minimum," "report back in two sentences" — by roughly 5:1 over instructions to be thorough. Those directives don't just shorten chat replies; they push the model to write shallower code, investigate less, and under-report what it found. This repo extracts the prompts, flips the brevity directives that cap *engineering depth and investigation* into instructions to be thorough (while keeping the ones that merely stop it from wall-of-texting a trivial question), and patches them back into the binary with [tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed) — so Claude Code does the careful, senior-grade version of the work by default.
+**Claude Code's own system prompts, rewritten to make the model thorough instead of terse.** Claude Code ships with its prompts baked into the binary, and they lean hard on brevity — "be concise," "do the minimum," "report back in two sentences" — by roughly 5:1 over instructions to be thorough. Those directives don't just shorten chat replies; they push the model to write shallower code, investigate less, and under-report what it found. This repo extracts the prompts, lifts the directives that cap *engineering depth, investigation, and response length* — plus the over-broad flags and refusals that fire on legitimate work — and patches them back into the binary with [tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed), so Claude Code does the careful, senior-grade version of the work, unrestricted on legitimate tasks, by default. Safety enforcement stays where it actually lives — server-side and trained into the model — so lifting the redundant *local* reminders cuts the false-positive rate without touching what prevents genuine harm (see the thesis).
 
 This is the live set I run daily — not cleaned up for public consumption, in-progress un-nerfs and all.
 
@@ -46,14 +46,19 @@ You don't have to patch anything to get value here — the files stand alone as 
 
 ## The un-nerf thesis
 
-Claude Code's stock prompts carry far more instructions to be brief than to be thorough — roughly 5:1. They fall into four groups:
+Claude Code's stock prompts lean hard on holding back — be brief, do the minimum, investigate only as far as needed, flag and hedge, refuse anything that pattern-matches a risk. This project lifts those leashes. **One direction, always: lift restrictions; never add them.** What gets lifted:
 
-1. **Chat brevity** — "respond in 2-3 sentences." Controls the text Claude sends you. Mostly fine; nobody wants an essay for "what's the git status."
-2. **Implementation brevity** — "don't add abstractions," "simplest approach." Controls the code Claude writes. Produces shallow implementations.
-3. **Process brevity** — "as quickly as possible," "2-sentence summary." Controls how Claude investigates and reports. Produces under-investigation and under-reporting.
-4. **Thoroughness** — "think step by step," "consider edge cases." Already good — just outnumbered.
+1. **Length / chat brevity** — "respond in 2-3 sentences." Caps how much Claude tells you. Lifted — length is your call, not the prompt's.
+2. **Implementation brevity** — "don't add abstractions," "simplest approach." Produces shallow code. Lifted — implement to a senior standard.
+3. **Process brevity** — "as quickly as possible," "2-sentence summary." Produces under-investigation and under-reporting. Lifted — investigate and report as thoroughly as the work deserves.
+4. **Local flags / refusals** — suspected-injection alarms, "refuse anything resembling X," anti-malicious reminders, self-hedging. Lifted — see below.
+5. **Thoroughness** — "think step by step," "consider edge cases." Already good; amplified where weakened.
 
-The whole project is one rule: **keep group 1, flip groups 2 and 3, amplify group 4.** The goal isn't verbosity — it's thoroughness. The stock prompts conflate the two; they aren't the same.
+**On the flags (group 4).** These run in the *local* prompt on your machine — they are not what enforces safety. Anthropic refuses genuinely harmful requests server-side and in the model, on every API call, regardless of the local prompt; this repo only edits local text, so it *can't* disable that (which is why lifting the local reminders doesn't enable misuse — the model still refuses genuine harm). What the local layer adds is a redundant filter with a high false-positive rate that interrupts legitimate work. So we lift all local restrictions and rely on server-side enforcement.
+
+**The one thing kept local:** protection of *you* from *your own* hijacked or misfiring agent — accidental prompt injection from spawned agents/skills/content, unintended damage to your filesystem, account hijacking, or exfiltration of your data you didn't ask for. Server-side guardrails don't cover this (nothing stops a hijacked local agent from `rm -rf`-ing your files or leaking your data), and it has no real false-positive cost, so it stays. It's the only class protected locally — everything else local is lifted.
+
+The goal isn't verbosity or recklessness — it's a capable tool with the leashes that only ever produced false positives removed.
 
 ---
 
