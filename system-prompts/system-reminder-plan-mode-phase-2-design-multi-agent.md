@@ -4,7 +4,7 @@ description: >-
   True-branch Phase 2 Design text for the 5-phase plan-mode reminder; directs
   launching up to N Plan agents in parallel with guidelines/examples for when to
   use multiple agents.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_REMINDER_PLAN_MODE_PHASE_2_DESIGN_MULTI_AGENT_VAR_0
   - SYSTEM_REMINDER_PLAN_MODE_PHASE_2_DESIGN_MULTI_AGENT_VAR_1

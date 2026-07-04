@@ -3,7 +3,7 @@ name: 'Tool Result: Teammate spawned'
 description: >-
   tool_result confirming a background agent spawned successfully with its id and
   name.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_DESCRIPTION_TEAMMATE_SPAWNED_RESULT_VAR_0
 -->

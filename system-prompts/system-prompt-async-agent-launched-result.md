@@ -3,7 +3,7 @@ name: 'System Prompt: Async agent launched result'
 description: >-
   Tool_result confirming an async agent launched in the background, giving the
   internal agentId and SendMessage continuation hint
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_PROMPT_ASYNC_AGENT_LAUNCHED_RESULT_VAR_0
 -->

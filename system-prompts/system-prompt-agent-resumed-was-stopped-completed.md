@@ -4,7 +4,7 @@ description: >-
   sendMessage tool-result message returned to the model when a stopped target
   agent was resumed with the user's message and ran to completion synchronously,
   carrying its final text.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_PROMPT_AGENT_RESUMED_WAS_STOPPED_COMPLETED_VAR_0
   - SYSTEM_PROMPT_AGENT_RESUMED_WAS_STOPPED_COMPLETED_VAR_1

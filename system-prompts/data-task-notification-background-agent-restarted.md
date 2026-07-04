@@ -4,7 +4,7 @@ description: >-
   Message injected via H_r/ud with mode:'task-notification' into a
   <notification> block telling the model a background agent was auto-restarted
   from its saved transcript.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - DATA_TASK_NOTIFICATION_BACKGROUND_AGENT_RESTARTED_VAR_0
   - DATA_TASK_NOTIFICATION_BACKGROUND_AGENT_RESTARTED_VAR_1

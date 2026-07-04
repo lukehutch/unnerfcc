@@ -103,6 +103,14 @@ newer models do badly under). Apply them to every `unnerf` string:
 
 ## Part 2 — The upgrade workflow (happy path)
 
+> **Automated path:** the repo ships a `sync-and-release` skill
+> ([`.claude/skills/sync-and-release/SKILL.md`](.claude/skills/sync-and-release/SKILL.md))
+> that drives this whole workflow end-to-end — re-apply, drift resolution,
+> bucket analysis, commit, tag, and GitHub release — with the exact phase
+> checklist and non-negotiable git rules. Use it for a full release; the steps
+> below are the underlying manual procedure it automates (and the source of
+> truth it defers to).
+
 When Anthropic ships Claude Code `X.Y.Z` and tweakcc-fixed has published
 `prompts-X.Y.Z.json` (usually within hours — see Part 8):
 
@@ -515,81 +523,56 @@ tweakcc-fixed won't overwrite an *edited* `.md`, so a clean extraction needs the
 
 ---
 
-## Part 9 — Current state (v2.1.198)
+## Part 9 — Current state (v2.1.199)
 
 We track **only the latest** Claude Code version whose prompt JSON tweakcc-fixed
 has published. Replace this snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.198** — the latest CC release — using the
-  **skrabe/tweakcc-fixed catalog** for the first time. This sync was the
-  **tweakcc → tweakcc-fixed switch**: same CC version as the prior sync, but the
-  prompt source moved from Piebald's `prompts-2.1.198.json` (540 prompts) to the
-  fork's (1,437 sites / **1,331 unique prompts** — duplicate-id sites collapse
-  to their first occurrence, matching the fork's own extractor).
-- **Scale:** **81 un-nerf rules across 64 files**, 1,331 prompts, `--check`
-  clean, orphan-variable guard passing.
-- **Catalog delta at the switch (Piebald 540 → fork 1,331):** manifest diff —
-  **254 changed, 889 added, 99 removed, 188 unchanged**. Read carefully, this is
-  almost entirely *extraction* delta, not Anthropic delta:
-  - Of the 99 "removed", **60 are pure renames** (byte-identical body under a
-    new id — the fork uses different editorial ids, e.g.
-    `system-prompt-doing-tasks-no-additions` → `system-prompt-doing-tasks-no-gold-plating`)
-    and **39 are near-renames** (fork extracts the fragment with different
-    boundaries or unescaped quotes). Nothing was actually dropped: every old
-    prompt's content is present in the fork catalog.
-  - Of the 254 "changed", most differ only in frontmatter (name/description
-    editorial differences) or **escape fidelity** — the fork unescapes `\"` and
-    `\'` that Piebald's extraction preserved. 30 have real static-text diffs;
-    all resolve to extraction-boundary or catalog-variant differences (e.g. the
-    peer-message authority warning binds to a different same-family variant —
-    safety content, keep). **No new bucket-2/3 nerf.**
-  - The 889 added files were full-sweep triaged (Part 5 grep + read): 68
-    brevity-signature candidates, **all keeps** — parameter-format contracts
-    (`tool-parameter-*`), workflow-script parsed outputs, reference/example
-    blobs, index-budget mechanics, focus-mode/insights UX variants — **except**
-    the two launch-note fragments below.
-- **Two flips restored** (the headline win of the switch): the "briefly tell the
-  user what you launched" launch-note flip, retired in v2.1.196 when Anthropic
-  moved the text into the `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}` variable's
-  value, is reachable again — the fork catalogs that value as
-  `tool-description-cloud-agent-launched-result` and
-  `tool-result-cloud-agent-launched-notify-user`. Both now carry the what+why
-  flip (functional clauses preserved).
-- **Twelve rules retargeted, one retired:**
-  - 12 rule keys moved to the fork's ids (8 pure renames, 2 near-renames, and
-    the 2 plan-mode phase fragments — Phase-1's rule also had its placeholders
-    respelled to the fork's generated
-    `${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0/1}`
-    names).
-  - **Retired** the `agent-prompt-general-task-agent` report flip as a
-    duplicate: the fork catalogs that prompt as the shared constant
-    `agent-prompt-general-purpose-short` (first sentence only, retargeted); its
-    report sentence exists in the catalog only inside
-    `agent-prompt-general-purpose.md`, whose own rule already flips it.
-- **Register pass (Part 1 rules, new this sync):** 6 un-nerf texts cleaned of
-  rhetorical intensifiers ("trumps speed every time", "far worse/more"),
-  register noise ("aggressively" ×3), motivational filler ("and then try a few
-  more"), and negative framing ("do not minimize detail" → "include everything
-  needed to act on it without re-investigating"). Same requirements, plainer
-  register; install.sh sentinels untouched.
-- **Sibling audit (Part 6), run over all 1,331 stock files:** **0 un-ruled
-  siblings** — 7 cross-file `stock` matches, all ruled on both sides (ultraplan
-  ↔ remote-planning, subagent-delegation ↔ subagent-prompt-writing, quick-pr ↔
-  bash-git-commit, general-purpose-short ↔ general-purpose) except the
-  intentional `skill-model-migration-guide` keep (sample prompt quoted for
-  users — example content, not a directive to Claude).
-- **The v2.1.198 catalog-gap prompt is back:** `system-prompt-current-claude-models`
-  ("The most recent Claude models are…"), silently missing from Piebald's
-  `prompts-2.1.198.json` and hand-restored last sync, **is present in the fork's
-  catalog** — the hand-restoration and its special-case caveat are retired. The
-  general lesson stands: when a manifest "removed" is surprising, spot-check the
-  raw binary before retiring anything.
+- **Version:** built from **v2.1.199** — the latest CC release — using the
+  **skrabe/tweakcc-fixed catalog** (1,483 sites / **1,372 unique prompts** —
+  duplicate-id sites collapse to their first occurrence, matching the fork's own
+  extractor).
+- **Scale:** **81 un-nerf rules across 64 files**, 1,372 prompts, `--check`
+  clean, orphan-variable guard passing. **No new rules this sync; no rule drift.**
+- **Upstream delta (v2.1.198 → v2.1.199):** the manifest diff over-reports
+  "changed" because it fingerprints the full `.md` including frontmatter, and
+  Anthropic populated a real `ccVersion` on many prompts (the fork's v2.1.198
+  extraction carried `ccVersion: null`), so a `null → 2.1.199` frontmatter bump
+  alone flags a file. Filtering to real body changes: **+43 added, −2 removed,
+  19 modified with a genuine body diff** (the rest are ccVersion-only). This was
+  a **feature build-out**, not a posture change — Cowork onboarding, Claude
+  Design, and plugin/skill/connector marketplace tooling.
+  - **Added (43):** all bucket-1 keeps — `skill-setup-cowork*` (UI onboarding
+    flow: "two or three sentences plus the card" is UX-driven, flipping it would
+    wall-of-text the onboarding), `tool-description-*`/`tool-parameter-*` for the
+    new list/search/suggest tools (functional), `tool-result-*` status/error
+    messages (structured), `system-prompt-design-command-consent-revoke-row`
+    (a refusal-policy table row, not brevity). No brevity-signature directive on
+    engineering depth or human-facing reporting anywhere in the set.
+  - **Removed (2):** `system-prompt-local-command-stdout-framing-tag-4` and
+    `tool-parameter-projects-force` — neither carried an un-nerf rule, so nothing
+    to retire.
+  - **Modified (19 real-body):** all variable renames (e.g.
+    `SYSTEM_PROMPT_MEMORY_INSTRUCTIONS_VAR_4` →
+    `HAS_PROJECT_SKILL_UPKEEP_INSTRUCTIONS_FN`), functional token changes
+    (`[FILE_OVER_5MB]` → `[FILE_TOO_LARGE]`, added findings `category` field,
+    PowerShell tool-name remaps), a consent/coordination reword, or upstream
+    **adding** thoroughness (`skill-artifact-design` and
+    `tool-description-artifacttool-2` both gained a "design both themes" pro-thorough
+    paragraph — kept as-is). **No new bucket-2/3 nerf, no weakened bucket-4.**
+- **Drift check:** all 81 rules re-applied byte-exactly (`Rules applied: 81,
+  FAILED: 0, Missing: 0`) — 8 rule-carrying files were in the manifest "changed"
+  list, but for every one the change was a ccVersion bump or edits outside the
+  un-nerfed passage; no rule's `stock` anchor moved.
+- **Carry-forward state (from the tweakcc-fixed switch, still true):**
+  `system-prompt-current-claude-models` remains present in the fork catalog (no
+  hand-restoration needed), and the two "briefly tell the user what you launched"
+  launch-note flips (`tool-description-cloud-agent-launched-result`,
+  `tool-result-cloud-agent-launched-notify-user`) remain reachable and applied.
 - **Binary check (Part 7):** not re-run this sync (no patchable binary in the
-  sync environment). The prior sync verified all 540 Piebald-catalog prompts
-  byte-present in the installed v2.1.198 binary; the fork catalog is a superset
-  extracted from that same binary version, and `install.sh` verifies sentinels
-  land on every install. Re-run the full fingerprint check at the next
-  version bump.
+  sync environment). The fork catalog is a superset extracted from the same
+  binary version, and `install.sh` verifies sentinels land on every install.
+  Re-run the full fingerprint check at the next version bump.
 - **Not yet audited:** tweakcc-fixed's `system-reminders/` registry (per-turn
   injections that never surface as named prompts) — a future sweep surface, see
   Part 8.

@@ -4,7 +4,7 @@ description: >-
   Bundled /code-review workflow — scopes the diff, fans out per-angle finders,
   dedups, verifies, sweeps for gaps (xhigh/max), and synthesizes;
   effort-parameterized via LEVEL_PARAMS
-ccVersion: 2.1.196
+ccVersion: 2.1.199
 variables:
   - JSON
   - WORKFLOW_NAME
@@ -351,14 +351,14 @@ for (const d of decisions) {
   const merged = (Array.isArray(d.merge) ? d.merge : []).filter(claim).map(i => ranked[i])
   const verdict = merged.some(m => m.verdict === "CONFIRMED") ? "CONFIRMED" : c.verdict
   const also = merged.length > 0 ? " [same root cause also at: " + merged.map(loc).join(", ") + "]" : ""
-  findings.push({ file: c.file, line: c.line, summary: c.summary + also, failure_scenario: c.failure_scenario, verdict })
+  findings.push({ file: c.file, line: c.line, summary: c.summary + also, failure_scenario: c.failure_scenario, category: c.kind, verdict })
 }
 const usedDecisions = findings.length > 0
 let backfilled = 0
 for (let i = 0; i < ranked.length && findings.length < P.maxFindings; i++) {
   if (seen.has(i)) continue
   const c = ranked[i]
-  findings.push({ file: c.file, line: c.line, summary: c.summary, failure_scenario: c.failure_scenario, verdict: c.verdict })
+  findings.push({ file: c.file, line: c.line, summary: c.summary, failure_scenario: c.failure_scenario, category: c.kind, verdict: c.verdict })
   backfilled++
 }
 const summary = usedDecisions && report

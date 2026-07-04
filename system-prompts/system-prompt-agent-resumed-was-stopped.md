@@ -3,7 +3,7 @@ name: 'System Prompt: Agent resumed (was stopped) result'
 description: >-
   SendMessage tool_result reporting the target agent was stopped and resumed in
   the background with the message
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_PROMPT_AGENT_RESUMED_WAS_STOPPED_VAR_0
   - SYSTEM_PROMPT_AGENT_RESUMED_WAS_STOPPED_VAR_1

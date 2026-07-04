@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Managed Agents reference — Go'
 description: Managed Agents API reference doc (Go bindings).
-ccVersion: null
+ccVersion: 2.1.199
 -->
 # Managed Agents — Go
 

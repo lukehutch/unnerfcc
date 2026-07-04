@@ -4,7 +4,7 @@ description: >-
   Agent tool usage notes — always include a short description, the agent returns
   a single result not visible to the user, and guidance on stateless invocation
   and trusting agent output
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_BASE_DESCRIPTION
   - TOOL_PARAMETERS_DESCRIPTION

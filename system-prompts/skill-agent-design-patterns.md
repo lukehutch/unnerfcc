@@ -4,7 +4,7 @@ description: >-
   Reference guide covering decision heuristics for building agents on the Claude
   API, including tool surface design, context management, caching strategies,
   and composing tool calls
-ccVersion: null
+ccVersion: 2.1.199
 -->
 # Agent Design Patterns
 

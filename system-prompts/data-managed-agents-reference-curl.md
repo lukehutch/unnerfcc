@@ -3,7 +3,7 @@ name: 'Data: Managed Agents reference — cURL'
 description: >-
   Provides cURL and raw HTTP request examples for the Managed Agents API
   including environment, agent, and session lifecycle operations
-ccVersion: null
+ccVersion: 2.1.199
 -->
 # Managed Agents — cURL / Raw HTTP
 

@@ -4,7 +4,7 @@ description: >-
   False-branch (o=iAt() disabled) Phase 1 Initial Understanding text for the
   5-phase plan-mode reminder; instructs reading/exploring files directly without
   subagents.
-ccVersion: null
+ccVersion: 2.1.199
 -->
 ### Phase 1: Initial Understanding
 Goal: Gain a comprehensive understanding of the user's request by reading through code and asking them questions.

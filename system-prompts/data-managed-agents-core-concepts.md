@@ -4,7 +4,7 @@ description: >-
   Reference documentation for the Managed Agents API covering core concepts
   (Agents, Sessions, Environments, Containers), lifecycle, versioning,
   endpoints, and usage patterns
-ccVersion: null
+ccVersion: 2.1.199
 -->
 # Managed Agents — Core Concepts
 

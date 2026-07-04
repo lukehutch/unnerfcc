@@ -4,7 +4,7 @@ description: >-
   Simplified usage notes for the Agent tool, including when to delegate, fork
   behavior, resumption, worktree isolation, background execution, parallel
   launches, and context restrictions
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_BASE_DESCRIPTION
   - HAS_PRO_RESTRICTION_NOTE

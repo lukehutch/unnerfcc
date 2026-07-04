@@ -4,7 +4,7 @@ description: >-
   Fallback-branch (n===-1) form of the noop:true/false guidance appended by
   Gda() to the full ScheduleWakeup/snooze loop-dynamic prompt; identical
   guidance to the split-site variant.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_DESCRIPTION_SCHEDULEWAKEUP_NOOP_FLAG_GUIDANCE_2_VAR_0
 -->

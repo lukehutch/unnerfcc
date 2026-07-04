@@ -3,7 +3,7 @@ name: 'Tool Description: ArtifactTool'
 description: >-
   Tool description for ArtifactTool — renders an HTML or Markdown file to a
   default-private hosted web page on claude.ai
-ccVersion: 2.1.196
+ccVersion: 2.1.199
 variables:
   - TOOL_DESCRIPTION_ARTIFACTTOOL_2_VAR_0
 -->
@@ -22,5 +22,7 @@ Render an HTML or Markdown file to an Artifact — a default-private web page ho
 **Self-contained only**: A strict CSP blocks requests to any external host — CDN scripts, external stylesheets, fonts, remote images, fetch/XHR/WebSockets. Inline all CSS/JS and embed assets as data: URIs.
 
 **Responsive**: Use relative units, flexbox/grid, \`max-width:100%\` on images. Wide content (tables, diagrams, code blocks) must scroll inside its own \`overflow-x: auto\` container — the page body must never scroll horizontally.
+
+**Theme-aware**: Pages render in the viewer's light or dark theme. Unless the design deliberately commits to a single look, style both: use \`@media (prefers-color-scheme: dark)\` as the default signal, plus \`:root[data-theme="dark"]\` / \`:root[data-theme="light"]\` overrides — the viewer's theme toggle stamps \`data-theme\` on the root element, and it must win in both directions.
 
 **Favicon** (required): Pass one or two emoji as \`favicon\` (e.g. \`"📊"\`, \`"🐛"\`, \`"⚡🔥"\`). It becomes the browser-tab icon. Emoji only — no SVG, no markup. Keep it the **same** across redeploys of an artifact — users find their tab by its icon, and a changed favicon reads as a different page. Only pick a new emoji on a hard pivot in what the artifact is about (new investigation, new deliverable), not for incremental updates.

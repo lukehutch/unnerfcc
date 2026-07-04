@@ -3,7 +3,7 @@ name: 'System Prompt: Agent resumed (no active task) result'
 description: >-
   SendMessage tool_result reporting the target agent had no active task and was
   resumed from transcript in the background
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_PROMPT_AGENT_RESUMED_NO_ACTIVE_TASK_VAR_0
   - SYSTEM_PROMPT_AGENT_RESUMED_NO_ACTIVE_TASK_VAR_1

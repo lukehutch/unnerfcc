@@ -4,7 +4,7 @@ description: >-
   tool_result text returned when the user does not answer an AskUserQuestion in
   time, telling the model to proceed on best judgment and optionally re-ask
   later.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_RESULT_ASK_USER_QUESTION_TIMEOUT_NO_RESPONSE_VAR_0
   - TOOL_RESULT_ASK_USER_QUESTION_TIMEOUT_NO_RESPONSE_VAR_1

@@ -5,7 +5,7 @@ description: >-
   /code-review command: concatenates the effort/context header, review-target
   prefix, main review instructions body, and the comment/fix/ultra addenda into
   the prompt sent to the model.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_PROMPT_CODE_REVIEW_INLINE_COMMAND_ASSEMBLY_VAR_0
   - SYSTEM_PROMPT_CODE_REVIEW_INLINE_COMMAND_ASSEMBLY_VAR_1

@@ -4,7 +4,7 @@ description: >-
   tool_result reporting a launched cloud agent with
   taskId/session_url/output_file and guidance to briefly tell the user and end
   the response.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_DESCRIPTION_CLOUD_AGENT_LAUNCHED_RESULT_VAR_0
 -->

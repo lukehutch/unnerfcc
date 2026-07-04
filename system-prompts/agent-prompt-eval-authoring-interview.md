@@ -3,7 +3,7 @@ name: 'Agent Prompt: Eval-authoring Interview'
 description: >-
   System prompt for `claude plugin eval init` that runs the interactive
   eval-suite authoring interview
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - AGENT_PROMPT_EVAL_AUTHORING_INTERVIEW_VAR_0
   - AGENT_PROMPT_EVAL_AUTHORING_INTERVIEW_VAR_1

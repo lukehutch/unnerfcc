@@ -4,7 +4,7 @@ description: >-
   False-branch Phase 2 Design text for the 5-phase plan-mode reminder; directs
   producing the implementation plan directly with background context,
   constraints, and a detailed plan.
-ccVersion: null
+ccVersion: 2.1.199
 -->
 ### Phase 2: Design
 Goal: Design an implementation approach based on the user's intent and your exploration results from Phase 1.

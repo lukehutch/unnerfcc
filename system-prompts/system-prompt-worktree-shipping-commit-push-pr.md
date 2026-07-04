@@ -3,7 +3,7 @@ name: 'Worktree shipping — commit, push, draft PR'
 description: >-
   System-prompt fragment instructing an agent isolated in a worktree to commit,
   push, and open a draft PR without asking, with the guardrails around it.
-ccVersion: null
+ccVersion: 2.1.199
 -->
 
 

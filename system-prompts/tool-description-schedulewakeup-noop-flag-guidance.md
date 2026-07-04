@@ -5,7 +5,7 @@ description: >-
   loop-dynamic tool prompt at the '## Picking delaySeconds' insertion point;
   explains when to set noop and that consecutive noop ticks fold into one
   context entry.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - TOOL_DESCRIPTION_SCHEDULEWAKEUP_NOOP_FLAG_GUIDANCE_VAR_0
   - TOOL_DESCRIPTION_SCHEDULEWAKEUP_NOOP_FLAG_GUIDANCE_VAR_1

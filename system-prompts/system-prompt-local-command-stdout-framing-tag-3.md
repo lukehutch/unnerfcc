@@ -7,6 +7,6 @@ description: >-
   a local command produces output that is fed back to the model.
 ccVersion: 2.1.191
 variables:
-  - SYSTEM_PROMPT_LOCAL_COMMAND_STDOUT_FRAMING_TAG_3_VAR_0
+  - SYSTEM_PROMPT_LOCAL_COMMAND_STDOUT_FRAMING_TAG_4_VAR_0
 -->
-<local-command-stdout>${SYSTEM_PROMPT_LOCAL_COMMAND_STDOUT_FRAMING_TAG_3_VAR_0}</local-command-stdout>
+<local-command-stdout>${SYSTEM_PROMPT_LOCAL_COMMAND_STDOUT_FRAMING_TAG_4_VAR_0.value}</local-command-stdout>

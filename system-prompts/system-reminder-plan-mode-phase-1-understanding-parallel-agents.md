@@ -4,7 +4,7 @@ description: >-
   True-branch Phase 1 Initial Understanding text for the 5-phase plan-mode
   reminder; instructs launching up to N agentType subagents in parallel to
   explore the codebase.
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0
   - SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1

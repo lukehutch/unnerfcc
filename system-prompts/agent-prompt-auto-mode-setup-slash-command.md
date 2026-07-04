@@ -3,7 +3,7 @@ name: 'Command Prompt: Auto-mode Setup & Customisation'
 description: >-
   Prompt body for the /auto-mode-setup command that guides the model through
   configuring auto-mode environment and rules in settings.json
-ccVersion: null
+ccVersion: 2.1.199
 variables:
   - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_0
   - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_1

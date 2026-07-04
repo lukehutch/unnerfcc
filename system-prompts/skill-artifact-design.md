@@ -3,7 +3,7 @@ name: 'Skill: artifact-design'
 description: >-
   Bundled artifact-design skill — Design guidance and fundamentals for
   Artifacts.
-ccVersion: 2.1.193
+ccVersion: 2.1.199
 -->
 ---
 name: artifact-design
@@ -33,6 +33,8 @@ Fundamentals below apply to everything. The editorial process after that runs on
 **Pair typefaces** Typography carries the page even when the page isn't about typography. The Artifact CSP blocks font CDNs, so don't link a webfont URL and risk a silent fallback. Instead inline the face as a @font-face data URI. Keep running text near 65 characters wide; set a type scale and stay on it; give headings \`text-wrap: balance\`, body text room to breathe, and uppercase labels a touch of letter-spacing.
 
 **Choose neutrals, don't default to them.** A pure mid-grey reads as unconsidered; a grey with a slight hue bias toward the page's accent reads as chosen. Pure white and near-black are fine grounds when they suit the subject — the point is that the neutral was picked, not inherited.
+
+**Design both themes.** The page renders in the viewer's theme: \`prefers-color-scheme\` carries the OS preference, and the viewer's toggle stamps \`data-theme="dark"\` / \`data-theme="light"\` on the root element, which must override the media query in both directions. The robust pattern is token-level: define the palette as custom properties on \`:root\`, redefine only the tokens under \`@media (prefers-color-scheme: dark)\` — style components through the tokens, never directly inside the media query — then redefine them again under \`:root[data-theme="dark"]\` and \`:root[data-theme="light"]\`. Give the second theme the same care as the first — don't naively invert; keep contrast legible and the accent working on both grounds. A design that deliberately commits to one visual world (a neon arcade screen, a letterpress invitation) may stay single-theme — make it a choice, not an omission.
 
 **Let layout do the spacing.** Lay out sibling groups with flex or grid and \`gap\`, not per-element margins that silently collapse or double. Wide content — tables, code, diagrams — gets \`overflow-x: auto\` on its own container so the page body never scrolls sideways. Reach for \`font-variant-numeric: tabular-nums\` wherever digits line up in columns.
 
