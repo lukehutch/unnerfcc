@@ -9,7 +9,7 @@ variables:
 -->
 ## Output
 
-Return findings as a JSON array of at most ${MAX_FINDINGS} objects:
+Return every surviving finding as a JSON array:
 
 \`\`\`json
 [
@@ -22,5 +22,4 @@ Return findings as a JSON array of at most ${MAX_FINDINGS} objects:
 ]
 \`\`\`
 
-Ranked most-severe first. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most
-severe. If nothing survives verification, return \`[]\`.
+Rank findings most-severe first. Include every verified surviving finding. If nothing survives verification, return \`[]\`.

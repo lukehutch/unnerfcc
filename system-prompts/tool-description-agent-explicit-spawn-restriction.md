@@ -7,4 +7,4 @@ ccVersion: 2.1.178
 -->
 
 
-**Spawn agents whenever parallel investigation or fan-out would produce a more thorough, accurate answer.** Each spawn starts cold and re-derives context you have, so brief it well — but a task with multiple angles, several independent parts, or a broad search surface is a strong reason to delegate in parallel rather than serialize inline. Use this tool when the user says to use a subagent or names an agent type, and proactively whenever splitting work across agents covers more ground or verifies findings independently.
+**Spawn agents whenever parallel investigation or fan-out would produce a more thorough, accurate answer.** Brief each spawn well because it starts cold. Use this tool when the user asks for a subagent or names an agent type, and proactively for independent angles, several parts, broad search, or verification. Launch parallel agents for independent subtasks; keep work inline only when delegation adds no coverage.

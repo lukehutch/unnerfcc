@@ -637,6 +637,72 @@ RULES: dict[str, list[Rule]] = {
         ),
     ],
     # renamed at the tweakcc-fixed switch (was agent-prompt-code-review-part-2-low-effort-mode)
+    "skill-code-review-effort-medium.md": [
+        Rule(
+            stock='Effort-tier prompt for medium code review — 3 angles, up to 6 candidates,\n  precision-biased, up to 8 findings',
+            unnerf='Effort-tier prompt for medium code review — 3 angles, uncapped candidate reporting,\n  precision-biased, all qualifying findings',
+            description='code-review medium frontmatter: drop candidate/finding caps',
+        ),
+        Rule(
+            stock='\\`medium effort → 3+5 angles × 6 candidates → 1-vote verify → ≤8 findings\\`',
+            unnerf='\\`medium effort → 3+5 angles → 1-vote verify → all qualifying findings\\`',
+            description='code-review medium tier line: all qualifying findings',
+        ),
+        Rule(
+            stock='## Phase 1 — Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 6 each)',
+            unnerf='## Phase 1 — Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)',
+            description='code-review medium phase heading: drop per-angle cap',
+        ),
+        Rule(
+            stock='surfaces **up to 6 candidate findings** with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            unnerf='surfaces every candidate finding with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            description='code-review medium finders: surface every candidate',
+        ),
+    ],
+    "skill-code-review-effort-high.md": [
+        Rule(
+            stock='Effort-tier prompt for high code review — 3 angles, up to 6 candidates,\n  recall-biased, up to 10 findings',
+            unnerf='Effort-tier prompt for high code review — 3 angles, uncapped candidate reporting,\n  recall-biased, all qualifying findings',
+            description='code-review high frontmatter: drop candidate/finding caps',
+        ),
+        Rule(
+            stock='\\`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings\\`',
+            unnerf='\\`high effort → 3+5 angles → 1-vote verify (recall-biased) → all qualifying findings\\`',
+            description='code-review high tier line: all qualifying findings',
+        ),
+        Rule(
+            stock='## Phase 1 — Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 6 each)',
+            unnerf='## Phase 1 — Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)',
+            description='code-review high phase heading: drop per-angle cap',
+        ),
+        Rule(
+            stock='surfaces **up to 6 candidate findings** with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            unnerf='surfaces every candidate finding with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            description='code-review high finders: surface every candidate',
+        ),
+    ],
+    "skill-code-review-effort-max.md": [
+        Rule(
+            stock='Effort-tier prompt for max and xhigh code review — 5 angles, up to 8\n  candidates, recall-biased, up to 15 findings',
+            unnerf='Effort-tier prompt for max and xhigh code review — 5 angles, uncapped\n  candidate reporting, recall-biased, all qualifying findings',
+            description='code-review max frontmatter: drop candidate/finding caps',
+        ),
+        Rule(
+            stock='\\`${EFFORT_LEVEL} effort → 5+5 angles × 8 candidates → 1-vote verify → sweep → ≤15 findings\\`',
+            unnerf='\\`${EFFORT_LEVEL} effort → 5+5 angles → 1-vote verify → sweep → all qualifying findings\\`',
+            description='code-review max tier line: all qualifying findings',
+        ),
+        Rule(
+            stock='## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 8 each)',
+            unnerf='## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)',
+            description='code-review max phase heading: drop per-angle cap',
+        ),
+        Rule(
+            stock='surfaces **up to 8 candidate findings**. Do NOT let one angle\'s conclusions\nsuppress another\'s — if two angles flag the same line for different reasons,\nrecord both.',
+            unnerf='surfaces every candidate finding. Do NOT let one angle\'s conclusions\nsuppress another\'s — if two angles flag the same line for different reasons,\nrecord both.',
+            description='code-review max finders: surface every candidate',
+        ),
+    ],
     "skill-code-review-effort-low.md": [
         Rule(
             stock='Output at most **4 findings**, most-severe first, one line each',
@@ -647,6 +713,37 @@ RULES: dict[str, list[Rule]] = {
             stock='low effort → 1 diff pass → no verify → ≤4 findings',
             unnerf='low effort → 1 diff pass → no verify → all qualifying findings',
             description='code-review low-effort tier line: drop the ≤4 cap (matches the findings-output flip)',
+        ),
+    ],
+    "skill-code-review-output-format.md": [
+        Rule(
+            stock='Return findings as a JSON array of at most ${MAX_FINDINGS} objects:',
+            unnerf='Return every surviving finding as a JSON array:',
+            description='code-review JSON output: report every surviving finding',
+        ),
+        Rule(
+            stock='Ranked most-severe first. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most\nsevere. If nothing survives verification, return \\`[]\\`.',
+            unnerf='Rank findings most-severe first. Include every verified surviving finding. If nothing survives verification, return \\`[]\\`.',
+            description='code-review JSON output: drop final findings cap',
+        ),
+    ],
+    "skill-code-review-output-report-findings.md": [
+        Rule(
+            stock='with \\`{level, findings}\\`. \\`findings\\` is at most ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
+            unnerf='with \\`{level, findings}\\`. \\`findings\\` includes every surviving entry ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
+            description='ReportFindings output: report every surviving finding',
+        ),
+        Rule(
+            stock='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. If more than ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} survive, keep the ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} most severe. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text.',
+            unnerf='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. Include all surviving findings. If nothing survives verification,\ncall it with an empty array. Do not also print the findings as text.',
+            description='ReportFindings output: drop final findings cap',
+        ),
+    ],
+    "skill-code-review-findings-prioritization-note.md": [
+        Rule(
+            stock='altitude, and conventions findings when the output cap forces a cut.',
+            unnerf='altitude, and conventions findings in ordering.',
+            description='code-review prioritization: remove output-cap premise',
         ),
     ],
     # RETARGETED from agent-prompt-general-task-agent.md at the tweakcc-fixed
@@ -741,7 +838,7 @@ RULES: dict[str, list[Rule]] = {
     "system-prompt-doing-tasks-ambitious.md": [
         Rule(
             stock='You are highly capable and often allow users to complete ambitious tasks that would otherwise be too complex or take too long. You should defer to user judgement about whether a task is too large to attempt.',
-            unnerf='You are highly capable and often let users complete ambitious tasks that would otherwise be too complex or take too long. Defer to user judgement on whether a task is too large to attempt — but never scale back rigor, effort, or care. Bring your full capability to every task. On anything non-trivial, think deeply and broadly before acting: weigh multiple approaches and consider non-obvious, cross-cutting connections rather than taking the first idea that works. Correct, complete, robust results matter more than minimizing effort, tokens, or output — never trade away rigor, depth, or correctness for speed or brevity. Verify empirically: run the code, tests, or command and read the result rather than asserting from plausibility; treat your conclusions as unverified until you check them; and close every gap in your reasoning, or state precisely what stays unresolved.',
+            unnerf='You are highly capable and often let users complete ambitious tasks that would otherwise be too complex or take too long. Defer to user judgement on whether a task is too large to attempt. Bring full capability to every task. For non-trivial work, think deeply and broadly before acting: weigh multiple approaches and non-obvious connections. Correct, complete, robust results outrank speed, token savings, and brevity; never trade away rigor, depth, or correctness. Verify empirically: run the code, tests, or command and read the result. Mark conclusions unverified until checked, and state unresolved gaps precisely.',
             description='STANDARDS: full-effort, deep/broad thinking + empirical verification on ambitious tasks',
         ),
     ],
@@ -825,7 +922,7 @@ RULES: dict[str, list[Rule]] = {
     "tool-description-agent-explicit-spawn-restriction.md": [
         Rule(
             stock='**Do not spawn agents unless the user asks.** Each spawn starts cold and re-derives context you already have — it\'s the expensive path on this plan. A task with "multiple angles," "thorough," or several parts is not a request to spawn; handle it inline with your own tools. Only use this tool when the user explicitly says to use a subagent, or names one of the available agent types.',
-            unnerf='**Spawn agents whenever parallel investigation or fan-out would produce a more thorough, accurate answer.** Each spawn starts cold and re-derives context you have, so brief it well — but a task with multiple angles, several independent parts, or a broad search surface is a strong reason to delegate in parallel rather than serialize inline. Use this tool when the user says to use a subagent or names an agent type, and proactively whenever splitting work across agents covers more ground or verifies findings independently.',
+            unnerf='**Spawn agents whenever parallel investigation or fan-out would produce a more thorough, accurate answer.** Brief each spawn well because it starts cold. Use this tool when the user asks for a subagent or names an agent type, and proactively for independent angles, several parts, broad search, or verification. Launch parallel agents for independent subtasks; keep work inline only when delegation adds no coverage.',
             description='agent tool: spawn for parallel/fan-out investigation (brief them well)',
         ),
     ],
@@ -1014,6 +1111,25 @@ RULES: dict[str, list[Rule]] = {
             stock="2-3 sentences describing the impressive workflow or approach",
             unnerf="A description of the impressive workflow or approach, as deep as it warrants",
             description="insights what-works description slot: lift the 2-3 sentence cap",
+        ),
+    ],
+    "system-prompt-proactive-schedule-offer-after-natural-future-follow-up.md": [
+        Rule(
+            stock="Instructs the agent to offer a one-line /schedule follow-up after completed\n  work when there is a likely one-time or recurring future action",
+            unnerf="Instructs the agent to offer a /schedule follow-up after completed work\n  when there is a likely one-time or recurring future action",
+            description="schedule offer frontmatter: drop one-line cap",
+        ),
+        Rule(
+            stock='you can end your reply with a one-line offer to `/schedule` a background agent to do it.',
+            unnerf='you can end your reply with an offer to `/schedule` a background agent to do it.',
+            description="schedule offer body: drop one-line cap",
+        ),
+    ],
+    "system-prompt-strict-proactive-schedule-offer-gate.md": [
+        Rule(
+            stock='Quote the artifact in a one-line offer and derive timing from it',
+            unnerf='Quote the artifact in the offer and derive timing from it',
+            description="strict schedule offer: drop one-line cap",
         ),
     ],
 }

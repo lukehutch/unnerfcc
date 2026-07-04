@@ -1,8 +1,8 @@
 <!--
 name: 'Skill: Code Review (max / xhigh effort)'
 description: >-
-  Effort-tier prompt for max and xhigh code review — 5 angles, up to 8
-  candidates, recall-biased, up to 15 findings
+  Effort-tier prompt for max and xhigh code review — 5 angles, uncapped
+  candidate reporting, recall-biased, all qualifying findings
 ccVersion: 2.1.178
 variables:
   - EFFORT_LEVEL
@@ -19,17 +19,17 @@ variables:
   - PHASE_3_SWEEP
   - OUTPUT_FORMAT_FN
 -->
-\`${EFFORT_LEVEL} effort → 5+5 angles × 8 candidates → 1-vote verify → sweep → ≤15 findings\`
+\`${EFFORT_LEVEL} effort → 5+5 angles → 1-vote verify → sweep → all qualifying findings\`
 
 You are reviewing for **recall** at ${EFFORT_LEVEL==="max"?"maximum":"extra-high"} effort: catch every real bug. At
 this level, catching real bugs matters more than avoiding false positives — a
 missed bug ships. Err on the side of surfacing.
 
 ${PHASE_0_GATHER_DIFF}
-## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 8 each)
+## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)
 
 Run **10 independent finder angles** via the ${AGENT_TOOL_NAME} tool. Each
-surfaces **up to 8 candidate findings**. Do NOT let one angle's conclusions
+surfaces every candidate finding. Do NOT let one angle's conclusions
 suppress another's — if two angles flag the same line for different reasons,
 record both.
 

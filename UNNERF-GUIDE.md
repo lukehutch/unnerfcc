@@ -572,8 +572,10 @@ has published. Replace this snapshot each sync rather than appending history.
   **skrabe/tweakcc-fixed catalog** (1,483 sites / **1,372 unique prompts** —
   duplicate-id sites collapse to their first occurrence, matching the fork's own
   extractor).
-- **Scale:** **81 un-nerf rules across 64 files**, 1,372 prompts, `--check`
-  clean, orphan-variable guard passing. **No new rules this sync; no rule drift.**
+- **Scale:** **109 un-nerf rules across 77 files**, 1,372 prompts, `--check`
+  clean, orphan-variable guard passing. **The v2.1.199 version bump itself
+  needed no new rules and caused no rule drift; the +28 over the 81-rule sync
+  baseline are policy-audit lifts (see Part 1), not stock drift.**
 - **Upstream delta (v2.1.198 → v2.1.199):** the manifest diff over-reports
   "changed" because it fingerprints the full `.md` including frontmatter, and
   Anthropic populated a real `ccVersion` on many prompts (the fork's v2.1.198
@@ -600,10 +602,12 @@ has published. Replace this snapshot each sync rather than appending history.
     **adding** thoroughness (`skill-artifact-design` and
     `tool-description-artifacttool-2` both gained a "design both themes" pro-thorough
     paragraph — kept as-is). **No new bucket-2/3 nerf, no weakened bucket-4.**
-- **Drift check:** all 81 rules re-applied byte-exactly (`Rules applied: 81,
-  FAILED: 0, Missing: 0`) — 8 rule-carrying files were in the manifest "changed"
-  list, but for every one the change was a ccVersion bump or edits outside the
-  un-nerfed passage; no rule's `stock` anchor moved.
+- **Drift check:** at sync time all 81 rules re-applied byte-exactly
+  (`Rules applied: 81, FAILED: 0, Missing: 0`) — 8 rule-carrying files were in
+  the manifest "changed" list, but for every one the change was a ccVersion bump
+  or edits outside the un-nerfed passage; no rule's `stock` anchor moved. (The
+  rule set has since grown to 109 via the Part 1 policy audit; `--check` remains
+  clean at `FAILED: 0, Missing: 0`.)
 - **Carry-forward state (from the tweakcc-fixed switch, still true):**
   `system-prompt-current-claude-models` remains present in the fork catalog (no
   hand-restoration needed), and the two "briefly tell the user what you launched"
