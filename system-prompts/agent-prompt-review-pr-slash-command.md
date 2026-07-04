@@ -23,4 +23,4 @@ Additional instructions from the user: ${AGENT_PROMPT_REVIEW_PR_SLASH_COMMAND_VA
 ${AGENT_PROMPT_REVIEW_PR_SLASH_COMMAND_VAR_2(AGENT_PROMPT_REVIEW_PR_SLASH_COMMAND_VAR_3)}
 ## Present the review
 
-After the final phase, do not reply with the raw JSON findings array. Present a readable review: a 2-3 sentence overview of what the PR does, then the surviving findings most-severe first as \`file:line — summary (failure scenario)\`, or a note that nothing survived verification.
+After the final phase, do not reply with the raw JSON findings array. Present a readable review: an overview of what the PR does, then the surviving findings most-severe first as \`file:line — summary (failure scenario)\`, or a note that nothing survived verification.

@@ -5,7 +5,7 @@ description: >-
   findings
 ccVersion: 2.1.152
 -->
-\`low effort → 1 diff pass → no verify → ≤4 findings\`
+\`low effort → 1 diff pass → no verify → all qualifying findings\`
 
 ## Turn 1 — read
 

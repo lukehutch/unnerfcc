@@ -11,7 +11,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 {
   "intro": "1 sentence of context",
   "impressive_workflows": [
-    {"title": "Short title (3-6 words)", "description": "2-3 sentences describing the impressive workflow or approach. Use 'you' not 'the user'."}
+    {"title": "Short title (3-6 words)", "description": "A description of the impressive workflow or approach, as deep as it warrants. Use 'you' not 'the user'."}
   ]
 }
 
