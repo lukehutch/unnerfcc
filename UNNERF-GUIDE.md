@@ -448,6 +448,12 @@ the splicer compares the edited `.md` against stock (reconstructed from the cata
   from the patched binary. `install.sh` warns and ships the rest; `upgrade.sh` treats
   it as a **release blocker** (`die`). Fix the catalog `pieces` or the rule anchor,
   then re-run.
+- **`[info] input bundle is ALREADY un-nerfed …`** — you ran the splice against a
+  binary a prior run already patched (detected via the un-nerf sentinels in the
+  *input*, before splicing). Every un-nerf's stock anchor is gone, so they all
+  couldNotFind — expected, **not** lost (exit 0). Reinstall stock CC first for a
+  clean apply. This global check is why a genuine single drop against a stock binary
+  still reports LOST while a wholesale patched-re-run doesn't false-alarm.
 
 > **Lesson (the `agent-prompt-general-purpose-short` drop).** In 2.1.201 the short
 > ~225c agent self-description is the standalone constant `BCa` (`"You are…half-done.
