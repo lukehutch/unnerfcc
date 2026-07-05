@@ -32,6 +32,14 @@ system-prompts/*.diff.html
 # the lockfile is checked in for reproducibility).
 scripts/node_modules/
 
+# Vendored tweakcc modules: source + package.json are committed, but deps and
+# build artifacts are NOT — node-lief is a platform-specific native addon that
+# must be `npm install`ed locally, and dist/ is rebuilt from source by
+# upgrade.sh / install.sh (vendor/tweakcc/build.sh).
+vendor/tweakcc/*/node_modules/
+vendor/tweakcc/*/dist/
+vendor/tweakcc/tools/node_modules/
+
 # Python bytecode cache from apply-unnerfs.py
 scripts/__pycache__/
 __pycache__/

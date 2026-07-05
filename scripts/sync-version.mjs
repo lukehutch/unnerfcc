@@ -143,6 +143,18 @@ function generateMarkdownFromPrompt(prompt) {
 
 async function loadStringsFile(version, tweakccDir, { forceDownload }) {
   if (!forceDownload) {
+    // Prefer OUR OWN catalog — unnerfcc now generates prompts-<version>.json
+    // itself (upgrade.sh → gen-catalog.mjs), so we no longer depend on skrabe
+    // publishing it. This repo-local copy is the source of truth.
+    const ours = path.join(REPO_ROOT, "data", "prompts", `prompts-${version}.json`);
+    try {
+      const text = await fs.readFile(ours, "utf-8");
+      console.error(`reading our catalog: ${ours}`);
+      return JSON.parse(text);
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err;
+    }
+
     const local = path.join(
       tweakccDir,
       "data",

@@ -95,16 +95,28 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 ## Repo layout
 
 ```
-├── install.sh                    # one-command installer (fetches latest rules from git)
-├── system-prompt-checksums.json  # MD5 of every STOCK prompt; drives change detection
+├── install.sh                    # one-command installer (standalone: vendored patch + native I/O)
+├── upgrade.sh                    # one-command sync to a NEW CC release (see UPGRADE.md)
+├── system-prompt-checksums.json  # SHA-256 of every STOCK prompt; drives change detection
+├── data/prompts/                 # the prompt catalog — WE generate + own this now (was skrabe's)
 ├── scripts/
-│   ├── sync-version.mjs          # rebuild stock prompts + auto-diff the checksum manifest
-│   ├── prompt-checksums.mjs      # MD5 manifest tool
+│   ├── gen-catalog.mjs           # extract our own catalog from the CC binary's JS
+│   ├── prompt-index.mjs          # SHA-256 identity/drift hashing + cross-version diff
+│   ├── relabel.mjs               # prepare/merge Claude's semantic labels for the delta
+│   ├── validate-catalog.mjs      # structural gates on a generated catalog
+│   ├── sync-version.mjs          # rebuild stock prompts from our catalog
+│   ├── prompt-checksums.mjs      # SHA-256 manifest tool
 │   └── apply-unnerfs.py          # replay all un-nerfs after a CC version bump
-└── system-prompts/               # 1,401 markdown files (Claude Code v2.1.201, tweakcc-fixed catalog)
+├── vendor/tweakcc/               # pinned, provenance-tracked copies of the tweakcc code we use
+│   ├── tools/promptExtractor.js  #   catalog extractor  (+ data/ classification cache)
+│   ├── native/                   #   unpack/repack the Bun native binary (node-lief)
+│   └── patch/                    #   splice edited prompts into the JS bundle
+└── system-prompts/               # 1,401 markdown files (Claude Code v2.1.201)
 ```
 
-`system-prompts/` holds the un-nerfed prompts (`tool-description-*`, `system-prompt-*`, `system-reminder-*`, `data-*`, `agent-prompt-*`, `skill-*`, `tool-parameter-*`, `tool-result-*`, `workflow-*`). The checksum manifest fingerprints **stock**, not the un-nerfed files — so on a version bump `sync-version.mjs` reports exactly what Anthropic changed, uncoloured by the un-nerfs. See [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+`system-prompts/` holds the un-nerfed prompts (`tool-description-*`, `system-prompt-*`, `system-reminder-*`, `data-*`, `agent-prompt-*`, `skill-*`, `tool-parameter-*`, `tool-result-*`, `workflow-*`). The checksum manifest fingerprints **stock**, not the un-nerfed files — so on a version bump `sync-version.mjs` reports exactly what Anthropic changed, uncoloured by the un-nerfs.
+
+**Standalone upgrades.** unnerfcc no longer waits on the tweakcc-fixed project to publish a prompt catalog: [`upgrade.sh`](upgrade.sh) unpacks the new CC binary, extracts our own catalog, SHA-256-diffs it against the previous one, **launches Claude Code to semantically label** the handful of new/changed fragments, validates, and replays the un-nerfs — all with vendored tweakcc code (`vendor/tweakcc/`). Full playbook: [UPGRADE.md](UPGRADE.md). The only time tweakcc-fixed is needed again is if Bun changes its binary format (detected and reported).
 
 ---
 
