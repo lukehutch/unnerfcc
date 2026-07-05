@@ -100,7 +100,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 
 `system-prompts/` holds the un-nerfed prompts (`tool-description-*`, `system-prompt-*`, `system-reminder-*`, `data-*`, `agent-prompt-*`, `skill-*`, `tool-parameter-*`, `tool-result-*`, `workflow-*`). The checksum manifest fingerprints **stock**, not the un-nerfed files — so on a version bump `sync-version.mjs` reports exactly what Anthropic changed, uncoloured by the un-nerfs.
 
-**Standalone upgrades.** unnerfcc depends on no external patcher: [`upgrade.sh`](upgrade.sh) unpacks the new CC binary, **classifies its new strings with Claude** (SHA-256-cached in [`data/string-catalog.json`](data/string-catalog.json) — prompt vs non-prompt, and which prompts carry nerfs), replays the un-nerf rules, and verifies the patch boots — all with our own toolkit in [`lib/`](lib), which uses only general libraries (node-lief, babel, prettier). Full playbook: [UPGRADE.md](UPGRADE.md). If Bun ever changes its binary format, that's detected and reported (update `lib/bun-binary.mjs`).
+**Standalone upgrades.** unnerfcc depends on no external patcher: [`upgrade.sh`](upgrade.sh) unpacks the new CC binary, **classifies its new strings with Claude** (Opus, SHA-256-cached in [`data/string-catalog.json`](data/string-catalog.json) — prompt vs non-prompt, which prompts carry nerfs, plus a proposed name + slot audit for maintainer sign-off), replays the un-nerf rules, and verifies the patch boots — all with our own toolkit in [`lib/`](lib), which uses only general libraries (node-lief, babel, prettier). Full playbook: [UPGRADE.md](UPGRADE.md). If Bun ever changes its binary format, that's detected and reported (update `lib/bun-binary.mjs`).
 
 ---
 

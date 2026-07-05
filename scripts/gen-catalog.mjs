@@ -157,7 +157,15 @@ const isPromptShaped = (p) => {
       && !/^(Error|Failed|Cannot|Could not|Invalid|Warning|\[|\{)/.test(t.trim())) return true;
   return false;
 };
-const candidates = fresh.prompts.filter((p) => !freshUsed.has(identityHash(p)) && isPromptShaped(p));
+// Attach the classifier's PROPOSED name/description/slots to each candidate so
+// the maintainer reviews a pre-labeled worklist (skrabe's "proposes names, I
+// sign off"), then promotes the confirmed ones into the catalog with real ids.
+const candidates = fresh.prompts
+  .filter((p) => !freshUsed.has(identityHash(p)) && isPromptShaped(p))
+  .map((p) => {
+    const rec = classified[identityHash(p)] || {};
+    return { ...p, proposedName: rec.proposedName || "", proposedDescription: rec.proposedDescription || "", slots: rec.slots || "", unnerf: !!rec.unnerf };
+  });
 
 writeFileSync(outCatalog, JSON.stringify(out, null, 2));
 if (candidates.length) writeFileSync(outCatalog.replace(/\.json$/, ".candidates.json"), JSON.stringify({ version, prompts: candidates }, null, 2));

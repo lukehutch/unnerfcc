@@ -45,7 +45,8 @@ The whole upgrade is one command:
   every known prompt is matched to its current extracted form (id carried,
   pieces refreshed), and the extractor's over-inclusion is diverted to a
   `*.candidates.json` for review — never polluting the catalog. Only the few
-  dozen reworded/new fragments reach Claude — pointed at `LABELING-TASK.md`, the
+  dozen reworded/new fragments reach Claude (**Opus**), which proposes a
+  `name` + `description` and a per-`${…}`-slot binding audit against the
   worklist, the previous catalog, and `UNNERF-GUIDE.md`. For a **reworded**
   prompt Claude is told to **preserve the existing id** (our rules are keyed to
   it).
@@ -56,7 +57,9 @@ The whole upgrade is one command:
 
 1. **Review the relabels.** Claude's labels are validated (unique, slot-complete,
    id-stable) but semantic — skim `data/prompts/prompts-<version>.json`'s new
-   entries. Category prefixes (`tool-parameter-` vs `tool-result-`) are the most
+   entries. (At patch time `lib/patch-prompts.mjs` re-checks slot alignment and
+   **fails closed** — skips rather than splice — on any capture/identifier count
+   mismatch, so a mis-bound `${…}` can never reach the binary.) Category prefixes (`tool-parameter-` vs `tool-result-`) are the most
    common thing to hand-correct; the id string itself is ours to choose (it need
    not match skrabe).
 2. **Bucket-analyze new/changed prompts** per [UNNERF-GUIDE.md](UNNERF-GUIDE.md)

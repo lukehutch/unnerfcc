@@ -177,10 +177,17 @@ step does, the Claude classification of new strings, the review beats, the
 Bun-format-change path) lives in **[UPGRADE.md](UPGRADE.md)**. In brief:
 
 ```bash
-./upgrade.sh          # detect new CC → unpack → classify new strings (Claude,
+./upgrade.sh          # detect new CC → unpack → classify new strings (Opus,
                       # cached) → generate catalog → replay un-nerfs → verify boots
 python3 scripts/apply-unnerfs.py --check   # gate: 0 FAILED, 0 missing
 ```
+
+Classification of new strings runs on **Opus** (the one-time bootstrap over the
+whole bundle used Haiku; incremental per-release runs use Opus for un-nerf
+recall). For each new prompt Claude proposes a `name` + `description` and a
+per-`${…}`-slot binding audit — a pre-labeled worklist surfaced in
+`<catalog>.candidates.json`, which the maintainer confirms before promoting into
+the catalog with a real id.
 
 Then the maintainer's judgment step (this guide's reason to exist): for each
 prompt Claude flags as un-nerf-worthy (`data/unnerf-candidates.json`) or that
