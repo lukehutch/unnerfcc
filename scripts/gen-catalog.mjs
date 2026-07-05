@@ -142,8 +142,16 @@ for (const s of seed.prompts) {
 // 4. Genuinely-new candidates: fresh prompts matched to no seed, filtered to
 //    prompt-shaped (markdown header OR long instructional prose), so the
 //    maintainer sees real additions, not the 7k of error/library strings.
+// Prefer the Claude CLASSIFICATION store (authoritative — no guessing): a
+// non-carried string is a prompt candidate iff Claude classified it "prompt".
+// Fall back to a shape heuristic only for strings not yet in the store, so
+// gen-catalog still works before the classification bootstrap has run.
+let classified = {};
+try { classified = JSON.parse(readFileSync(join(REPO, "data", "string-catalog.json"), "utf8")).strings || {}; } catch {}
 const isPromptShaped = (p) => {
-  const t = reconstruct(p);
+  const rec = classified[identityHash(p)];
+  if (rec) return rec.class === "prompt";                     // Claude decided
+  const t = reconstruct(p);                                   // fallback: unclassified
   if (/^\s*#{1,3}\s+\S/.test(t)) return true;                 // markdown heading
   if (t.length >= 200 && /\b(you|your|the user|must|should|do not|avoid|when)\b/i.test(t)
       && !/^(Error|Failed|Cannot|Could not|Invalid|Warning|\[|\{)/.test(t.trim())) return true;

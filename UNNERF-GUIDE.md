@@ -169,68 +169,24 @@ included; the audit re-checks them:
 
 ---
 
-## Part 2 — The upgrade workflow (happy path)
+## Part 2 — The upgrade workflow
 
-> **Automated path:** the repo ships a `sync-and-release` skill
-> ([`.claude/skills/sync-and-release/SKILL.md`](.claude/skills/sync-and-release/SKILL.md))
-> that drives this whole workflow end-to-end — re-apply, drift resolution,
-> bucket analysis, commit, tag, and GitHub release — with the exact phase
-> checklist and non-negotiable git rules. Use it for a full release; the steps
-> below are the underlying manual procedure it automates (and the source of
-> truth it defers to).
-
-When Anthropic ships Claude Code `X.Y.Z` and tweakcc-fixed has published
-`prompts-X.Y.Z.json` (usually within hours — see Part 8):
+The workflow is now **[`./upgrade.sh`](upgrade.sh)** — fully standalone, no
+tweakcc, no waiting on anyone to publish a catalog. The full playbook (what each
+step does, the Claude classification of new strings, the review beats, the
+Bun-format-change path) lives in **[UPGRADE.md](UPGRADE.md)**. In brief:
 
 ```bash
-# 0. one-time: install the gray-matter dep the sync script uses
-cd scripts && npm install --ignore-scripts --save-exact && cd ..
-
-# 1. Rebuild STOCK prompts for the new version AND auto-diff the checksum manifest.
-#    This overwrites system-prompts/*.md with stock and rewrites
-#    system-prompt-checksums.json. The diff it prints IS your review worklist.
-node scripts/sync-version.mjs X.Y.Z --download
-
-# 2. Replay the un-nerfs onto the fresh stock.
-python3 scripts/apply-unnerfs.py
-
-# 3. Read the apply report. Any [FAIL] = a rule whose stock text drifted (Part 6).
-#    Fix rules until the report is all APPLIED/SKIP, then gate:
-python3 scripts/apply-unnerfs.py --check    # exit 0 = idempotent & clean
-
-# 4. Review the manifest diff from step 1 (Part 5):
-#      CHANGED with a rule  -> apply-unnerfs already told you (FAIL) if it drifted
-#      CHANGED without rule -> grep-triage + read; flip if it's a new bucket-2/3 nerf
-#      ADDED                -> grep-triage + read each; most data-*/structured = keep
-#      REMOVED              -> retire the rule(s) targeting it
-git diff system-prompts/ system-prompt-checksums.json   # eyeball before committing
-
-# 5. (optional, recommended) verify against the actually-installed binary (Part 7)
-
-# 6. Commit the stock+un-nerf+manifest+rule changes together (Part 2, "commit").
+./upgrade.sh          # detect new CC → unpack → classify new strings (Claude,
+                      # cached) → generate catalog → replay un-nerfs → verify boots
+python3 scripts/apply-unnerfs.py --check   # gate: 0 FAILED, 0 missing
 ```
 
-**What `sync-version.mjs` prints (the key new behavior).** On every run it diffs
-the freshly-generated stock against the manifest from the *previous* sync and
-reports `CHANGED / ADDED / REMOVED / unchanged`, then rewrites the manifest for
-the new version. This is the authoritative "what did Anthropic change" list —
-and crucially it is **clean**: because it fingerprints *stock*, it is not
-polluted by your own un-nerf edits the way `git diff` on the un-nerfed tree is.
-
-If tweakcc-fixed has **not** published `prompts-X.Y.Z.json` yet, you can't run
-the happy path — see Part 8 ("the publish lag") for what to do.
-
-### Committing
-
-Stage the prompt tree, the manifest, and any rule changes together:
-
-```bash
-git add system-prompts/ system-prompt-checksums.json scripts/apply-unnerfs.py
-git commit   # message: "sync prompts to Claude Code vX.Y.Z (+/- rules, manifest)"
-```
-
-Commit while the diff is small and the context is fresh. Note in the message any
-rules retired (removed prompts) or added (new nerfs), and any FAILs you resolved.
+Then the maintainer's judgment step (this guide's reason to exist): for each
+prompt Claude flags as un-nerf-worthy (`data/unnerf-candidates.json`) or that
+drifted (`apply-unnerfs.py --check` FAILs), make the keep/flip call **per Part 1**
+and update the rules in `scripts/apply-unnerfs.py` (Part 6). Commit the catalog,
+`system-prompts/`, the SHA-256 manifest, and any rule changes together.
 
 ---
 
@@ -239,52 +195,30 @@ rules retired (removed prompts) or added (new nerfs), and any FAILs you resolved
 Claude Code ships as a compiled Bun **native binary** with its prompts baked in
 as string literals. There are two ways to get the stock text:
 
-### A. tweakcc-fixed's published JSON (the normal source)
+### A. Our own catalog (`data/prompts/prompts-X.Y.Z.json`)
 
-tweakcc-fixed publishes one `prompts-X.Y.Z.json` per supported CC version at
-`https://raw.githubusercontent.com/skrabe/tweakcc-fixed/refs/heads/main/data/prompts/`.
-Each prompt object is `{ id, name, description, version, pieces[], identifiers[],
-identifierMap }`. The `.md` body is reconstructed by interleaving `pieces` with
-`${HUMAN_NAME}` placeholders from `identifierMap`; the frontmatter is `name`,
-`description`, `ccVersion` (the version when *that prompt* last changed — **not**
-the global CC version), and `variables`. `scripts/sync-version.mjs` does exactly
-this, byte-identically to a tweakcc-fixed extraction.
+`upgrade.sh` generates this from the installed binary (via `scripts/gen-catalog.mjs`)
+— **we own it**, no download. Each prompt is `{ id, name, description, version,
+pieces[], identifiers[], identifierMap }`. The `.md` body is reconstructed by
+interleaving `pieces` with `${HUMAN_NAME}` placeholders from `identifierMap`;
+frontmatter is `name`, `description`, `ccVersion` (the version when *that prompt*
+last changed — **not** the global CC version), and `variables`.
+`scripts/sync-version.mjs` does the reconstruction. Two things to know:
 
-The fork's catalog is ~2.5× the size of upstream tweakcc's (1,437 sites / 1,331
-unique ids vs 540 for v2.1.198): it also captures per-turn fragments, the
-*values* of interpolated `${VARIABLES}` (which are prompts in their own right —
-see the Part 6 drift table), and compact `-concise`/`-short` variants of tool
-descriptions. Three things upstream's JSON doesn't prepare you for:
+- **Duplicate ids.** Some prompt ids appear at multiple binary sites (one entry
+  per site, usually byte-identical); file counts are unique-id counts.
+- **Generated variable names.** Slots without an editorial name carry
+  machine-generated placeholders (`${<PROMPT_ID>_VAR_0}`, …). Rules that target
+  such a fragment must spell the placeholder exactly as extracted.
 
-- **Duplicate ids.** Some prompt ids appear at multiple binary sites (one JSON
-  entry per site; ~53 dup ids in v2.1.198, all but one byte-identical).
-  tweakcc-fixed's own extractor creates the `.md` from the **first** entry and
-  skips the rest; `sync-version.mjs` does the same, so file counts are unique-id
-  counts.
-- **Generated variable names.** Fragments the fork discovers without editorial
-  names get machine-generated placeholders
-  (`${<PROMPT_ID>_VAR_0}`, `_VAR_1`, …) instead of human names like
-  `${EXPLORE_SUBAGENT}`. Rules that target such fragments must spell the
-  placeholders exactly as extracted.
-- **`ccVersion: null`.** Fragments first catalogued by the fork's extractor may
-  carry a null version — treat them as "current" and let the manifest track
-  changes.
+### B. The installed binary, via `lib/bun-binary.mjs unpack` (ground truth)
 
-> tweakcc-fixed does **not** publish every patch release, and a fresh release can
-> lag by hours-to-days. If the JSON for your installed version isn't up yet, see
-> Part 8 ("the publish lag") — but the normal case is that the latest version is
-> available.
-
-### B. The installed binary, via `tweakcc-fixed unpack` (ground truth, version-independent)
-
-`tweakcc-fixed unpack` extracts the bundled JS from *any* installed binary
-without needing published JSON — useful to (a) verify the JSON-derived prompts
-actually match what you're running, and (b) inspect a version tweakcc-fixed
-hasn't published.
+Extract the bundled JS from any installed binary directly — to inspect a prompt
+or confirm a rule's `stock` text still matches what you're running:
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"   # e.g. .../@anthropic-ai/claude-code/bin/claude.exe
-npx --yes tweakcc-fixed@latest unpack /tmp/cc.js "$CCBIN"   # writes ~17 MB of JS; reads only, non-destructive
+node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js   # writes ~18 MB of JS; read-only, non-destructive
 ```
 
 You then search that JS for prompt text. **Escaping gotcha:** the minified JS
@@ -297,16 +231,16 @@ run** of a piece (no `` ` `` `"` `\` newline), or build an escape-aware regex
 
 ---
 
-## Part 4 — Detecting what changed (the MD5 manifest)
+## Part 4 — Detecting what changed (the SHA-256 manifest)
 
-`system-prompt-checksums.json` records the MD5 of every **stock** `.md` for the
+`system-prompt-checksums.json` records the SHA-256 of every **stock** `.md` for the
 currently-synced version. It is the project's memory of "what the upstream
 prompts looked like last time," so a version bump can answer precisely: which
 stock prompts changed, which are new, which are gone.
 
 - **What's hashed:** the full stock `.md` (frontmatter + body). An untouched
   prompt keeps the same `ccVersion` and is byte-identical across CC versions →
-  identical MD5; any change to body *or* metadata flips it. (A pure `ccVersion`
+  identical SHA-256; any change to body *or* metadata flips it. (A pure `ccVersion`
   re-stamp with an otherwise-identical body *will* flip the hash — that's a
   conservative false-positive, not a miss. Confirm with a quick `diff`.)
 - **It is STOCK hashes, not the un-nerfed files** committed in `system-prompts/`.
@@ -451,7 +385,7 @@ a patch release that changed prompts the published JSON doesn't yet cover):
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"
-npx --yes tweakcc-fixed@latest unpack /tmp/cc.js "$CCBIN"
+node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js
 # for each prompt, check its longest pure-ASCII piece is present in /tmp/cc.js
 # (see scripts usage / Part 3 escaping note). Near-total presence => essentially
 # identical; the only expected misses are micro-prompts that are pure ${interpolation}
@@ -495,107 +429,13 @@ message alone; it can report success while patching nothing.
 
 ---
 
-## Part 8 — tweakcc-fixed operational reference
+## Part 8 — (removed)
 
-This project targets [skrabe/tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed),
-a strict-superset fork of [Piebald-AI/tweakcc](https://github.com/Piebald-AI/tweakcc).
-What the fork adds that this project relies on:
-
-- **~2.5× prompt coverage** (1,437 sites / 1,331 unique ids vs 540 upstream for
-  v2.1.198): per-turn fragments, interpolated-variable values, compact tool-
-  description variants, MCP instruction blocks. This is what made the Part-9
-  restorations possible.
-- **Native-install overrides** — upstream gates system-prompt overrides off for
-  native (Bun-compiled) installs; the fork applies them.
-- **npm package `tweakcc-fixed`** (≥ 2.0.0 — versions ≤ 1.0.5 are an unrelated,
-  unmaintained earlier fork). Prompt data is fetched from the fork's repo at
-  runtime, so a new CC release works as soon as its JSON lands on `main`.
-- **Its own feature patches, some DEFAULT-ON.** Two default-on patches change
-  model-facing behavior beyond prompts: `dream-mode` (memory consolidation +
-  `/dream`) and `claudemd-context-once-per-conversation` (rewrites how CLAUDE.md
-  reaches the model). `install.sh` seeds `settings.misc.enableDreamMode` and
-  `settings.misc.claudemdContextOncePerConversation` to `false` in
-  `~/.tweakcc/config.json` (only when the keys are absent — an explicit user
-  choice is never overridden) so unnerfcc stays prompts-only.
-- **A `system-reminders/` override surface** (`~/.tweakcc/system-reminders/`) for
-  per-turn injections that never surface as named prompts, plus `shadows:`
-  frontmatter and empty-body suppression in overrides. unnerfcc doesn't use any
-  of these (we flip, never cut), but you'll meet them reading fork behavior; the
-  system-reminder registry is a surface this project has **not yet audited** for
-  nerfs.
-
-### Commands (confirmed)
-
-| Command | What it does |
-|---|---|
-| `tweakcc-fixed --apply` (bare) | **THE** system-prompt apply path. Patches every prompt whose `~/.tweakcc/system-prompts/*.md` differs from stock. Self-downloads `prompts-X.Y.Z.json`, self-creates `native-binary.backup`. Also runs the fork's own feature patches per `~/.tweakcc/config.json` (see default-on note above). |
-| `tweakcc-fixed --apply --patches <ids>` | **NOT** for prompts — selects UI/theme/feature patches. Applies **zero** `.md` edits. Do not use it to apply un-nerfs. |
-| `tweakcc-fixed unpack <out.js> <bin>` | Extract bundled JS from a binary (read-only, version-independent). The inspection/verify workhorse. |
-| `tweakcc-fixed repack <in.js> <bin>` | Re-embed JS (as Bun bytecode; size balloons). |
-| `tweakcc-fixed --restore` / `--revert` | Restore the binary from `native-binary.backup`. |
-| `tweakcc-fixed --list-system-prompts [ver]` | List prompts known for a version. |
-
-The interactive TUI extracts the full `.md` set from the binary, but **cannot be
-scripted** (no TTY → the React app crashes; no non-interactive extraction flag).
-Use `sync-version.mjs` (JSON) or `unpack` instead.
-
-### The publish lag (the common blocker)
-
-Both `sync-version.mjs --download` and `tweakcc-fixed --apply` need
-`prompts-X.Y.Z.json`, which lags a fresh CC release by hours-to-days. When it's
-missing (404):
-
-- **Preferred: wait for the latest version's JSON.** Since we target only the
-  latest, the simplest correct move is to re-run the happy path once
-  `prompts-X.Y.Z.json` for your installed version publishes (usually within a day).
-  (The fork's `showtime` skill is its own upgrade pipeline — new-version JSONs
-  land on its `main` when that runs; watch the repo if you're blocked.)
-- **Stopgap only if you must ship now:** sync to the newest *published* version ≤
-  installed and verify against the binary (Part 7). Treat it as temporary — re-sync
-  to the latest as soon as its JSON is up; the manifest will flag whatever the
-  interim version missed. Don't carry the interim version as a tracked target.
-- **Applying to the binary must wait** for the matching JSON (tweakcc-fixed can't
-  locate prompts without it). Build tweakcc-fixed from `main` to get the freshest
-  CC support (`install.sh` does this by default); `main` carries
-  prompt-locator/repack fixes before they're cut into an npm release.
-
-### `~/.tweakcc/` layout — what to clear
-
-`config.json` (settings + `ccVersion`), `system-prompts/*.md`,
-`prompt-data-cache/prompts-X.Y.Z.json`, `systemPromptOriginalHashes.json`,
-`systemPromptAppliedHashes.json`, `native-binary.backup` (~400 MB), and
-`native-claudejs-{orig,patched}.js`.
-
-A **stale** older-version state shadows new prompts. `install.sh` clears it for
-you before staging — preserving `config.json` and **deleting** the rest,
-including the ~400 MB `native-binary.backup` and the `native-claudejs` dumps.
-This project keeps **no backups**: stock is always re-extractable and rollback is
-a Claude Code reinstall, not `--restore`. By hand:
-
-```bash
-cd ~/.tweakcc || exit
-for f in system-prompts prompt-data-cache systemPromptOriginalHashes.json \
-         systemPromptAppliedHashes.json native-binary.backup \
-         native-claudejs-orig.js native-claudejs-patched.js .unnerf-stale-*; do
-  rm -rf "$f"
-done
-```
-
-tweakcc-fixed won't overwrite an *edited* `.md`, so a clean extraction needs the
-`system-prompts/` dir cleared first.
-
-### Dead ends (don't repeat)
-
-- `--apply --patches <ids>` to apply prompts → applies nothing.
-- `adhoc-patch` for bulk prompt edits → matches raw bytes only, breaks on any
-  escaped char.
-- Trusting tweakcc-fixed's "applied" message → always `unpack`+grep to verify.
-- The npm package `tweakcc-fixed` at versions ≤ 1.0.5 → a different, unmaintained
-  fork. Use ≥ 2.0.0, or build from `main` (what `install.sh` does).
-- (Historical, base-tool era:) a tweakcc older than `main` / 4.1.1 → mis-located
-  Latin-1 prompts and aborted the repack on a fresh CC build.
-
----
+This project no longer uses the tweakcc-fixed tool. Extract/patch/re-package the
+binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
+`node lib/patch-prompts.mjs`); the whole flow is `./install.sh` / `./upgrade.sh`
+([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
+format changes ([BACKGROUND.md](BACKGROUND.md)).
 
 ## Part 9 — Current state (v2.1.201)
 

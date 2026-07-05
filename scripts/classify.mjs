@@ -59,7 +59,29 @@ const BATCH = parseInt(opt("--batch", "100"), 10);
 // cheap). Override with --model for a spot-check with a stronger model.
 const MODEL = opt("--model", "haiku");
 const DRY = argv.includes("--dry-run");
-if (!cliJs || !ccVersion) die("usage: node classify.mjs <cliJs> <ccVersion> [--limit N] [--batch N] [--dry-run]", 2);
+// Sharding: run several workers in parallel over disjoint slices of the work,
+// each writing to its OWN --shard-out file (no store race); merge afterward.
+const SHARDS = parseInt(opt("--shards", "1"), 10);
+const SHARD = parseInt(opt("--shard", "-1"), 10);
+const SHARD_OUT = opt("--shard-out", null);
+
+// merge mode: `node classify.mjs merge <store.json> <shard1.json> ...`
+if (cliJs === "merge") {
+  const storePath = ccVersion;
+  const st = existsSync(storePath) ? JSON.parse(readFileSync(storePath, "utf8")) : { algo: "sha256", strings: {} };
+  st.strings ??= {};
+  let merged = 0;
+  for (const f of argv.slice(2)) {
+    const sh = JSON.parse(readFileSync(f, "utf8"));
+    for (const [h, r] of Object.entries(sh.strings || {})) { st.strings[h] = r; merged++; }
+  }
+  st.strings = Object.fromEntries(Object.entries(st.strings).sort());
+  writeFileSync(storePath, JSON.stringify(st, null, 1) + "\n");
+  console.error(`merged ${merged} shard record(s) → ${storePath} (${Object.keys(st.strings).length} total)`);
+  process.exit(0);
+}
+
+if (!cliJs || !ccVersion) die("usage: node classify.mjs <cliJs> <ccVersion> [--limit N] [--batch N] [--shard I --shards N --shard-out F] [--dry-run]", 2);
 if (!existsSync(cliJs)) die(`cli.js not found: ${cliJs}`);
 
 const policyVersion = existsSync(POLICY_PATH) ? parseInt(readFileSync(POLICY_PATH, "utf8").trim(), 10) : 1;
@@ -93,14 +115,22 @@ if (DRY) { console.log(JSON.stringify({ distinct: byHash.size, toClassify: work.
 if (!work.length) { console.error("nothing to classify — store is current"); process.exit(0); }
 
 // --- 3. classify the work in batches via Claude -----------------------------
-const todo = work.slice(0, LIMIT === Infinity ? work.length : LIMIT);
+// Shard first (disjoint slice per worker), then apply --limit.
+let todo = SHARD >= 0 ? work.filter((_, i) => i % SHARDS === SHARD) : work;
+todo = todo.slice(0, LIMIT === Infinity ? todo.length : LIMIT);
+// Write to the shard file when sharding (no store race); else the main store.
+const outPath = SHARD_OUT || STORE_PATH;
+const outStore = SHARD_OUT ? { algo: "sha256", strings: {} } : store;
+const tag = SHARD >= 0 ? `[shard ${SHARD}/${SHARDS}] ` : "";
 const workDir = mkdtempSync(join(tmpdir(), `unnerfcc-classify-${ccVersion}-`));
+const { rmSync } = await import("node:fs");
 let done = 0;
 for (let i = 0; i < todo.length; i += BATCH) {
   const batch = todo.slice(i, i + BATCH);
   const items = batch.map((w, j) => ({ ref: j, text: w.content.slice(0, 4000) }));
   writeFileSync(join(workDir, "batch.json"), JSON.stringify(items, null, 1));
   writeFileSync(join(workDir, "TASK.md"), classifyInstructions(batch.length));
+  try { rmSync(join(workDir, "result.json")); } catch {} // no stale result on a failed batch
 
   const prompt =
     `Read TASK.md in this directory and follow it EXACTLY. Classify the ${batch.length} strings in batch.json ` +
@@ -118,7 +148,7 @@ for (let i = 0; i < todo.length; i += BATCH) {
     const w = batch[j];
     const res = byRef.get(j) || {};
     const cls = res.class === "prompt" ? "prompt" : "non-prompt";
-    store.strings[w.hash] = {
+    outStore.strings[w.hash] = {
       class: cls,
       unnerf: cls === "prompt" ? !!res.unnerf : false,
       notes: (res.notes || "").slice(0, 200),
@@ -129,9 +159,9 @@ for (let i = 0; i < todo.length; i += BATCH) {
   }
   done += batch.length;
   // Persist after every batch so the (expensive) work is resumable.
-  store.strings = Object.fromEntries(Object.entries(store.strings).sort());
-  writeFileSync(STORE_PATH, JSON.stringify(store, null, 1) + "\n");
-  console.error(`  classified ${done}/${todo.length}`);
+  outStore.strings = Object.fromEntries(Object.entries(outStore.strings).sort());
+  writeFileSync(outPath, JSON.stringify(outStore, null, 1) + "\n");
+  console.error(`  ${tag}classified ${done}/${todo.length}`);
 }
 
 // --- 4. report + surface the un-nerf candidates -----------------------------
