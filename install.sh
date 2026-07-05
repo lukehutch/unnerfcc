@@ -113,17 +113,17 @@ ok "catalog: $CATALOG"
 # --- rebuild stock + replay un-nerfs ---------------------------------------
 log "Rebuilding stock prompts + replaying un-nerfs"
 run "node '$REPO/scripts/sync-version.mjs' '$CC_VERSION'"
-run "python3 '$REPO/scripts/apply-unnerfs.py'"
-run "python3 '$REPO/scripts/apply-unnerfs.py' --check" || die "apply-unnerfs --check not clean"
+run "python3 '$REPO/scripts/apply-unnerfs.py' --quiet"
+run "python3 '$REPO/scripts/apply-unnerfs.py' --check --quiet" || die "apply-unnerfs --check not clean"
 ok "un-nerfed .md set ready in system-prompts/"
 
-if [ "$DRY_RUN" = 1 ]; then log "[dry-run] would back up, unpack, patch, repack, boot-check, verify, install"; exit 0; fi
+if [ "$DRY_RUN" = 1 ]; then log "[dry-run] would unpack, patch, repack, boot-check, verify, install"; exit 0; fi
 
-# --- backup -----------------------------------------------------------------
+# --- workspace --------------------------------------------------------------
+# No backup: the patched binary is only swapped in AFTER a successful boot-check,
+# and any earlier failure exits without touching the installed binary. To restore
+# stock, reinstall Claude Code (see the rollback note at the end).
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-install-XXXX")"; trap 'rm -rf "$WORK"' EXIT
-BACKUP="$WORK/claude.orig"
-log "Backing up the binary"
-cp "$CC_BIN" "$BACKUP"; ok "backup: $BACKUP ($(wc -c < "$BACKUP" | awk '{printf "%.0fMB", $1/1048576}'))"
 
 # --- unpack -> patch -> repack ---------------------------------------------
 CLI_JS="$WORK/cli.js"; PATCHED_JS="$WORK/patched.js"; PATCHED_BIN="$WORK/claude.patched"

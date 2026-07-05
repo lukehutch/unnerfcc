@@ -1376,8 +1376,13 @@ def _truncate(s: str, limit: int) -> str:
     return flat[: limit - 3] + "..."
 
 
-def format_report(results: list[Result], *, dry_run: bool, verbose: bool) -> str:
-    """Produce the human+Claude-readable report."""
+def format_report(results: list[Result], *, dry_run: bool, verbose: bool, quiet: bool = False) -> str:
+    """Produce the human+Claude-readable report.
+
+    quiet: collapse the per-file/per-rule listing to just the Summary counts.
+    FAIL / MISSING entries are ALWAYS listed even in quiet mode — they're the
+    actionable ones; only the (long, repetitive) APPLIED/SKIPPED lines are hidden.
+    """
     by_file: dict[str, list[Result]] = {}
     for r in results:
         by_file.setdefault(r.filename, []).append(r)
@@ -1386,14 +1391,21 @@ def format_report(results: list[Result], *, dry_run: bool, verbose: bool) -> str
     header = "=== Un-nerf re-apply report"
     if dry_run:
         header += " (DRY RUN — no files written)"
+    if quiet:
+        header += " (summary)"
     header += " ==="
     lines.append(header)
     lines.append("")
 
     for filename in sorted(by_file.keys()):
         file_results = by_file[filename]
+        # In quiet mode, only surface files that have a FAIL or MISSING to fix.
+        if quiet and not any(r.status in ("failed", "missing") for r in file_results):
+            continue
         lines.append(f"system-prompts/{filename}")
         for r in file_results:
+            if quiet and r.status not in ("failed", "missing"):
+                continue
             tag = r.status.upper()
             lines.append(f"  [{tag:<8}] {r.rule_description}")
             if r.status == "failed":
@@ -1477,6 +1489,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Include detail on [SKIP] entries too.",
     )
     parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Collapse the per-rule listing to just the Summary counts (FAIL/MISSING still shown).",
+    )
+    parser.add_argument(
         "--dump-rules",
         type=str,
         default=None,
@@ -1510,7 +1528,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     dry_run = args.dry_run or args.check
     results = apply_rules(args.dir, dry_run=dry_run, only=args.only)
-    print(format_report(results, dry_run=dry_run, verbose=args.verbose))
+    print(format_report(results, dry_run=dry_run, verbose=args.verbose, quiet=args.quiet))
 
     # Exit logic
     if args.check:
