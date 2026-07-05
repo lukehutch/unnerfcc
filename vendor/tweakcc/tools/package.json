@@ -1,6 +1,0 @@
-{
-  "name": "unnerfcc-vendored-extractor",
-  "private": true,
-  "description": "Vendored from skrabe/tweakcc-fixed — prompt catalog extractor. See ../UPSTREAM.md.",
-  "dependencies": { "@babel/parser": "^7.26.3" }
-}

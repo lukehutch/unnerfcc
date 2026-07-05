@@ -15,13 +15,14 @@
 #   8. verifies the un-nerfs still apply to the binary        (vendored patcher),
 #   9. leaves everything staged for you to review + commit.
 #
-# It does NOT depend on the tweakcc-fixed project: the extractor, native binary
-# I/O, and patcher are all vendored under vendor/tweakcc/ (see that dir's
-# UPSTREAM.md). The only external "AI" call is `claude` itself for relabeling.
+# It does NOT depend on the tweakcc-fixed project: extract/re-package the binary
+# (lib/bun-binary.mjs), un-minify (lib/beautify.mjs), extract the catalog
+# (lib/extract-prompts.mjs), and patch (lib/patch-prompts.mjs) are all OUR OWN
+# code. The only external "AI" call is `claude` itself for relabeling.
 #
-# BUN FORMAT: if the vendored native I/O reports the binary's Bun container
-# format is one it doesn't understand, this script STOPS and tells you to
-# re-vendor vendor/tweakcc/native/ from a current tweakcc-fixed (see UPSTREAM.md).
+# BUN FORMAT: if lib/bun-binary.mjs reports the binary's Bun container format is
+# one it doesn't understand, this script STOPS — update lib/bun-binary.mjs for
+# the new layout.
 #
 # USAGE
 #   ./upgrade.sh [--version X.Y.Z] [--force] [--no-patch-verify] [--yes]
@@ -31,8 +32,9 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO"
 
-NATIVE_CLI="$REPO/vendor/tweakcc/native/dist/cli.mjs"
-PATCH_CLI="$REPO/vendor/tweakcc/patch/dist/cli.mjs"
+NATIVE_CLI="$REPO/lib/bun-binary.mjs"
+PATCH_CLI="$REPO/lib/patch-prompts.mjs"
+LIB_DIR="$REPO/lib"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
@@ -54,10 +56,11 @@ warn() { printf '\033[1;33m  !\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mupgrade.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 bun_incompatible() {
   printf '\033[1;31m\n╔══════════════════════════════════════════════════════════════╗\n'
-  printf   '║  BUN FORMAT INCOMPATIBLE — the vendored native I/O could not  ║\n'
-  printf   '║  parse this Claude Code binary. Bun likely changed its        ║\n'
-  printf   '║  container format. Re-vendor vendor/tweakcc/native/ from a     ║\n'
-  printf   '║  current tweakcc-fixed and rebuild (see that dir UPSTREAM.md). ║\n'
+  printf   '║  BUN FORMAT INCOMPATIBLE — lib/bun-binary.mjs could not parse ║\n'
+  printf   '║  this Claude Code binary. Bun likely changed its standalone   ║\n'
+  printf   '║  container format. Update the format constants/logic in       ║\n'
+  printf   '║  lib/bun-binary.mjs for the new layout (its header documents  ║\n'
+  printf   '║  the format; a current tweakcc-fixed is a useful reference).  ║\n'
   printf   '╚══════════════════════════════════════════════════════════════╝\033[0m\n' >&2
   printf 'detail: %s\n' "$1" >&2
   exit 3
@@ -67,11 +70,11 @@ bun_incompatible() {
 command -v node >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
 command -v claude  >/dev/null || die "the 'claude' CLI is required for relabeling"
-if [ ! -f "$NATIVE_CLI" ] || { [ "$PATCH_VERIFY" -eq 1 ] && [ ! -f "$PATCH_CLI" ] && [ -d "$REPO/vendor/tweakcc/patch" ]; }; then
-  log "Building vendored tweakcc modules (first run)"
-  bash "$REPO/vendor/tweakcc/build.sh"
+[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
+if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
+  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
+  ( cd "$LIB_DIR" && npm install )
 fi
-[ -f "$NATIVE_CLI" ] || die "vendored native I/O still missing after build: $NATIVE_CLI"
 
 # --- resolve the claude native binary --------------------------------------
 log "Resolving Claude Code binary"
@@ -95,6 +98,26 @@ else
     ok "already at v$CC_VERSION — nothing to do (use --force to regenerate)."
     exit 0
   fi
+fi
+
+# --- check npm for a newer CC release than the one we're about to patch -----
+log "Checking npm for a newer Claude Code release"
+NPM_LATEST="$(npm view @anthropic-ai/claude-code version 2>/dev/null | tail -1 || true)"
+if [ -n "$NPM_LATEST" ]; then
+  newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$2" ]; }
+  if newer "$CC_VERSION" "$NPM_LATEST"; then
+    warn "a newer Claude Code is available: installed v$CC_VERSION, npm latest v$NPM_LATEST."
+    warn "  upgrade.sh patches the INSTALLED version. To move to v$NPM_LATEST, install it first:"
+    warn "    npm install -g @anthropic-ai/claude-code@$NPM_LATEST   # then re-run ./upgrade.sh"
+    if [ "$ASSUME_YES" -eq 0 ]; then
+      printf '  Continue processing the installed v%s anyway? [y/N] ' "$CC_VERSION"
+      read -r ans; case "$ans" in [yY]*) : ;; *) die "stopped — install the newer CC first, then re-run";; esac
+    fi
+  else
+    ok "installed v$CC_VERSION is the latest on npm (v$NPM_LATEST)"
+  fi
+else
+  warn "could not query npm for the latest CC version (offline?) — proceeding with installed v$CC_VERSION"
 fi
 
 NEW_CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
@@ -185,7 +208,7 @@ cat <<EOF
     - data/prompts/prompts-$CC_VERSION.json   (new catalog — WE own this now)
     - system-prompts/*.md                     (reconstructed + un-nerfed)
     - system-prompt-checksums.json            (regenerated by sync-version)
-    - scripts/*, vendor/tweakcc/*             (if changed)
+    - scripts/*, lib/*                        (if changed)
 
   Bucket-analyze any new/changed prompts per UNNERF-GUIDE Part 1, add un-nerf
   rules to scripts/apply-unnerfs.py where warranted, then re-run

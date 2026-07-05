@@ -3,8 +3,9 @@
 unnerfcc is **standalone**: it generates its own prompt catalog and patches the
 Claude Code binary itself, without depending on the tweakcc-fixed *project*
 (no clone, no build-from-`main`, no waiting for skrabe to publish a catalog).
-The tweakcc code we need is **vendored** under [`vendor/tweakcc/`](vendor/tweakcc)
-(see its `UPSTREAM.md`).
+The toolkit that does this is our own, under [`lib/`](lib) — no tweakcc code; it
+uses only general libraries (node-lief for the ELF/Bun surgery, `@babel/parser`
+to parse, prettier to un-minify).
 
 The whole upgrade is one command:
 
@@ -17,13 +18,13 @@ The whole upgrade is one command:
 | Step | Action | Component |
 |---|---|---|
 | 1 | Detect installed CC version; find our latest catalog | — |
-| 2 | Unpack the JS bundle from the CC native binary | `vendor/tweakcc/native` (node-lief) |
-| 3 | Extract a fresh prompt catalog, **seeded with our previous one** so unchanged/reworded prompts keep their ids | `vendor/tweakcc/tools/promptExtractor.js` + `scripts/gen-catalog.mjs` |
+| 2 | Unpack the JS bundle from the CC native binary | `lib/bun-binary.mjs` (node-lief) |
+| 3 | Extract a fresh prompt catalog, **seed-driven** so known prompts keep their ids and the extractor's over-inclusion never reaches the catalog | `lib/extract-prompts.mjs` + `scripts/gen-catalog.mjs` |
 | 4 | SHA-256-diff new vs previous → the relabel worklist | `scripts/prompt-index.mjs` |
 | 5 | **Launch Claude Code headless to semantically label** the new/changed fragments the extractor couldn't identify | `scripts/relabel.mjs` + `claude -p` |
 | 6 | Validate the catalog (structural gates) | `scripts/validate-catalog.mjs` |
 | 7 | Reconstruct stock `.md` + replay un-nerfs | `scripts/sync-version.mjs`, `scripts/apply-unnerfs.py` |
-| 8 | Verify the un-nerfs still patch the binary (patch → repack → boot-check) | `vendor/tweakcc/patch` + `vendor/tweakcc/native` |
+| 8 | Verify the un-nerfs still patch the binary (patch → repack → boot-check) | `lib/patch-prompts.mjs` + `lib/bun-binary.mjs` |
 | 9 | Leave everything staged for your review + commit | — |
 
 ## Why this design
@@ -38,12 +39,16 @@ The whole upgrade is one command:
     keeps `apply-unnerfs.py`'s id-keyed rules stable.**
   - *drift hash* = `sha256(reconstructed body)` — the change-detection signal
     (successor to the old MD5 `system-prompt-checksums.json`).
-- **Claude does only the delta.** The extractor (seeded) already carries ids for
-  the ~97% of prompts that didn't change, and names anything in skrabe's frozen
-  `NEW_PROMPT_ASSIGNMENTS`. Only the few dozen genuinely-new/reworded fragments
-  per release reach Claude — pointed at `LABELING-TASK.md`, the worklist, the
-  previous catalog, and `UNNERF-GUIDE.md`. For a **reworded** prompt Claude is
-  told to **preserve the existing id** (our rules are keyed to it).
+- **Seed-driven catalog + Claude does only the delta.** Our extractor favors
+  recall (it emits every prompt-like literal, ~9k, including error/library
+  strings), so `gen-catalog.mjs` anchors the catalog to the *previous* one:
+  every known prompt is matched to its current extracted form (id carried,
+  pieces refreshed), and the extractor's over-inclusion is diverted to a
+  `*.candidates.json` for review — never polluting the catalog. Only the few
+  dozen reworded/new fragments reach Claude — pointed at `LABELING-TASK.md`, the
+  worklist, the previous catalog, and `UNNERF-GUIDE.md`. For a **reworded**
+  prompt Claude is told to **preserve the existing id** (our rules are keyed to
+  it).
 
 ## The one manual beat: review + bucket-analysis
 
@@ -58,26 +63,28 @@ The whole upgrade is one command:
    Part 1 and add un-nerf rules to `scripts/apply-unnerfs.py` where warranted.
 3. `python3 scripts/apply-unnerfs.py --check` must be clean (0 FAILED, 0 missing).
 4. Commit the catalog, `system-prompts/*.md`, `system-prompt-checksums.json`, and
-   any rule/vendor changes.
+   any rule/`lib/` changes.
 
 ## Applying to your own binary
 
 `upgrade.sh` prepares the repo. To patch YOUR Claude Code binary with the
 un-nerfed prompts, run [`install.sh`](install.sh) (also standalone — same
-vendored patcher + native I/O).
+`lib/` patcher + binary I/O).
 
 ## If the Bun format changed
 
-The native I/O detects a container format it doesn't understand and
-`upgrade.sh` / `install.sh` STOP with a `BUN_FORMAT_INCOMPATIBLE` banner. Bun
-changed its standalone-binary layout. Re-vendor `vendor/tweakcc/native/` from a
-current tweakcc-fixed (that project tracks Bun format changes) per
-[`vendor/tweakcc/UPSTREAM.md`](vendor/tweakcc/UPSTREAM.md), rebuild
-(`vendor/tweakcc/build.sh`), and re-run. This is the *only* time we need
-tweakcc-fixed, and it's a `cp` + rebuild, not a project dependency.
+`lib/bun-binary.mjs` detects a container format it doesn't understand and
+`upgrade.sh` / `install.sh` STOP with a `BUN_FORMAT_INCOMPATIBLE` banner: Bun
+changed its standalone-binary layout. Update the format constants/logic in
+`lib/bun-binary.mjs` for the new layout — its file header documents the format
+(section → `[u64 size][blob]`, blob → `[data][OFFSETS][TRAILER]`, module
+structs), and a current tweakcc-fixed's `nativeInstallation.ts` is a useful
+reference if you need to see how the new format is handled. This is the only
+part that tracks Bun internals.
 
 ## First-run setup
 
-The vendored modules build themselves on first `upgrade.sh`/`install.sh` run
-(`vendor/tweakcc/build.sh`: `npm install` + esbuild). Requirements: Node ≥ 20,
-Python 3, the `claude` CLI, and a C toolchain for `node-lief`'s native addon.
+`lib/`'s deps install themselves on the first `upgrade.sh`/`install.sh` run
+(`cd lib && npm install`: node-lief, @babel/parser, prettier). Requirements:
+Node ≥ 20, Python 3, the `claude` CLI, and a C toolchain for `node-lief`'s
+native addon.

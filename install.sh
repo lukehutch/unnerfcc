@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # install.sh — patch your Claude Code binary with the un-nerfed prompts.
-#              STANDALONE: uses unnerfcc's vendored native I/O + patcher
-#              (vendor/tweakcc/), no dependency on the tweakcc-fixed project.
+#              STANDALONE: uses unnerfcc's OWN toolkit in lib/ (bun-binary,
+#              patch-prompts) — no dependency on the tweakcc-fixed project.
 #
 # WHAT IT DOES
 #   1. Finds your Claude Code native binary and its version.
@@ -16,9 +16,8 @@
 #   5. Verifies the un-nerf sentinels actually landed, and disables CC's
 #      auto-updater so the patch isn't silently reverted on next launch.
 #
-# If Bun changed the binary format, the native I/O reports it and this script
-# STOPS (re-vendor vendor/tweakcc/native from a current tweakcc-fixed — see
-# vendor/tweakcc/UPSTREAM.md).
+# If Bun changed the binary format, lib/bun-binary.mjs reports it and this
+# script STOPS — update lib/bun-binary.mjs for the new layout.
 #
 # USAGE
 #   ./install.sh [--dry-run] [--version X.Y.Z] [--help]
@@ -28,8 +27,9 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO"
 
-NATIVE_CLI="$REPO/vendor/tweakcc/native/dist/cli.mjs"
-PATCH_CLI="$REPO/vendor/tweakcc/patch/dist/cli.mjs"
+NATIVE_CLI="$REPO/lib/bun-binary.mjs"
+PATCH_CLI="$REPO/lib/patch-prompts.mjs"
+LIB_DIR="$REPO/lib"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
@@ -51,10 +51,10 @@ warn() { printf '%s!! %s%s\n' "$Y" "$*" "$N" >&2; }
 die()  { printf '%sERROR:%s %s\n' "$R$B" "$N" "$*" >&2; exit 1; }
 run()  { if [ "$DRY_RUN" = 1 ]; then printf '%s[dry-run]%s %s\n' "$B" "$N" "$*"; else eval "$@"; fi; }
 bun_incompatible() {
-  printf '%s\nBUN FORMAT INCOMPATIBLE — the vendored native I/O could not parse this\n' "$R$B" >&2
-  printf 'Claude Code binary. Bun likely changed its container format. Re-vendor\n' >&2
-  printf 'vendor/tweakcc/native/ from a current tweakcc-fixed and rebuild\n' >&2
-  printf '(see vendor/tweakcc/UPSTREAM.md).%s\ndetail: %s\n' "$N" "$1" >&2
+  printf '%s\nBUN FORMAT INCOMPATIBLE — lib/bun-binary.mjs could not parse this\n' "$R$B" >&2
+  printf 'Claude Code binary. Bun likely changed its standalone container format.\n' >&2
+  printf 'Update the format logic in lib/bun-binary.mjs for the new layout.%s\n' "$N" >&2
+  printf 'detail: %s\n' "$1" >&2
   exit 3
 }
 
@@ -63,14 +63,12 @@ command -v node    >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
 command -v claude  >/dev/null || die "the 'claude' CLI is not on PATH"
 
-# Build vendored modules on first run.
-if [ ! -f "$NATIVE_CLI" ] || [ ! -f "$PATCH_CLI" ]; then
-  log "Building vendored tweakcc modules (first run)"
-  run "bash '$REPO/vendor/tweakcc/build.sh'"
-fi
-if [ "$DRY_RUN" != 1 ]; then
-  [ -f "$NATIVE_CLI" ] || die "native I/O not built: $NATIVE_CLI"
-  [ -f "$PATCH_CLI" ]  || die "patcher not built: $PATCH_CLI"
+# Install lib/ deps on first run (node-lief native addon, babel, prettier).
+[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
+[ -f "$PATCH_CLI" ]  || die "lib/patch-prompts.mjs missing — is the repo intact?"
+if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
+  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
+  run "( cd '$LIB_DIR' && npm install )"
 fi
 
 # --- resolve binary + version ----------------------------------------------
