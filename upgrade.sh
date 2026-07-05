@@ -136,6 +136,25 @@ echo "$UNPACK_OUT" | grep -q "BUN_FORMAT_INCOMPATIBLE" && bun_incompatible "$UNP
 echo "$UNPACK_OUT" | grep -qE "version=$CC_VERSION" || warn "unpacked JS version tag != $CC_VERSION (continuing)"
 ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}') of JS"
 
+# --- 1b. classify new strings via Claude (prompt/non-prompt + un-nerf) ------
+# SHA-256-fingerprint every string; only strings NEW to this build (or prompts
+# judged under an older un-nerf policy version) are sent to Claude. The store
+# (data/string-catalog.json) persists, so this is cheap on a normal upgrade and
+# only large on the one-time bootstrap.
+log "Classifying new strings via Claude (cached by SHA-256)"
+PENDING="$(node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --dry-run 2>/dev/null | grep -oE '"toClassify":[0-9]+' | grep -oE '[0-9]+' || echo '?')"
+if [ "$PENDING" = "0" ]; then
+  ok "no new strings — classification store is current"
+elif [ "$PENDING" -gt 2000 ] && [ "$ASSUME_YES" -eq 0 ]; then
+  warn "$PENDING strings need classifying (a first-run bootstrap — a large Claude job)."
+  printf '  Run it now? [y/N] '; read -r a
+  case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
+    *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION' later";; esac
+else
+  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
+  [ -f "$REPO/data/unnerf-candidates.json" ] && ok "un-nerf candidates for review: data/unnerf-candidates.json"
+fi
+
 # --- 2. extract a fresh catalog (seeded) -----------------------------------
 log "Extracting prompt catalog (seeded from previous for id carry-forward)"
 node "$REPO/scripts/gen-catalog.mjs" "$CLI_JS" "$CC_VERSION" "$NEW_CATALOG" "${PREV_CATALOG:-}"
