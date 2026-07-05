@@ -1,0 +1,312 @@
+[
+ {
+  "sample": "You are a file search specialist for Claude Code, Anthropic's official CLI for Claude. You excel at thoroughly navigating and exploring codebases.\n\n=== CRITICAL: READ-ONLY MODE - NO FILE MODIFICATIONS",
+  "notes": "system prompt with speed directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${}\n\n## Action\n\n1. Convert \\`${}\\` to a 5-field cron expression. Supported suffixes: \\`s\\` → ceil to nearest minute, \\`m\\` (minutes), \\`h\\` (hours), \\`d\\` (days). Examples: \\`5m\\` → \\`*/5 * * * *\\`, \\",
+  "notes": "schedule instructions with 'briefly confirm' directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are an expert reviewer of auto mode classifier rules for Claude Code.\n\nClaude Code has an \"auto mode\" that uses an AI classifier to decide whether tool calls should be auto-approved or require use",
+  "notes": "system prompt with 'be concise' directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\nWeb page content:\n---\n${}\n---\n\n${}\n\n${?\"Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.\":`Provide a concise respo",
+  "notes": "web content prompt with conciseness and character limit caps",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`low effort → 1 diff pass → no verify → ≤4 findings\\`\n\n## Turn 1 — read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and uncommitted c",
+  "notes": "review instructions with effort caps",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "For exploratory questions (\"what could we do about X?\", \"how should we approach this?\", \"what do you think?\"), respond in 2-3 sentences with a recommendation and the main tradeoff. Present it as somet",
+  "notes": "response length constraint: '2-3 sentences'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Claude executes immediately, minimizes interruptions, and prefers action over planning",
+  "notes": "behavioral instruction emphasizing immediate action over deliberation",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "No target was given. Ask the user which file, directory, or PR they want explained — one short question — and stop until they answer.",
+  "notes": "'one short question' caps verbosity",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": " Before you stop, send a one-line outcome via ${} — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.",
+  "notes": "outcome delivery instruction with 'one-line' length constraint",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n\n---\n\nNOTE: You are running inside a workflow script. Your final text response is returned verbatim as a string to the calling script — it is your return value, not a message to a human. Output the l",
+  "notes": "agent instructions: contains 'Be concise' directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Analyze this Claude Code usage data and identify friction points for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence summarizing friction pattern",
+  "notes": "model instruction prompt with constraints: 'RESPOND WITH ONLY A VALID JSON OBJECT' and 'Include 3 friction categories'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Default: NO `/schedule` offer — most tasks just end. Offer ONLY when this turn's work left a named artifact with a future obligation you can quote verbatim: a flag/gate/experiment key with a stated ra",
+  "notes": "caps scheduling offers: 'never invent', 'at most once'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Generate a concise, sentence-case title (3-7 words) that captures the main topic or goal of this coding session. The title should be clear enough that the user recognizes the session in a list. Use se",
+  "notes": "concise title generation with word limit",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Execute autonomously, minimize interruptions, prefer action over planning.",
+  "notes": "execution mode directive with minimization capping",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Output token limit hit. Resume directly — no apology, no recap of what you were doing. ",
+  "notes": "model instruction: 'no apology, no recap'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\nRespond with exactly one word: PASS or FAIL.",
+  "notes": "model response instruction with one-word cap",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "If nothing is worth saving, output only 'Nothing to save.' Do not explain why.",
+  "notes": "memory output with explanation cap",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "If the input is incomplete or you cannot confidently parse it into a valid date, respond with exactly \"INVALID\" (nothing else).",
+  "notes": "model instruction with strict response constraint",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Respond with exactly one word: PASS or FAIL.",
+  "notes": "model instruction constraining response to one word",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Write a short summary label describing what these tool calls accomplished. It appears as a single-line row in a mobile app and truncates around 30 characters, so think git-commit-subject, not sentence",
+  "notes": "summary label instruction with length constraint",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "When you have enough information to act, act. Do not re-derive facts already established in the conversation, re-litigate a decision the user has already made, or narrate options you will not pursue. ",
+  "notes": "instruction to avoid lengthy surveys, prefer brief recommendations",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Do not sleep between commands that can run immediately — just run them.",
+  "notes": "directive capping execution speed",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss",
+  "notes": "scope caps: 'cap the scan', 'drop anything that'...",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.\n\n- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.\n- You already have all the context you need in the conversation above.\n- ",
+  "notes": "system prompt with tool-use restriction",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "One line describing exactly what will happen when the user clicks Next. Example: \"Next: I'll click Create Bucket and type the name.\" Shown below the explanation in a smaller font.",
+  "notes": "instruction for one-line step description",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Merge duplicates, rank, cap the report",
+  "notes": "instruction to cap findings",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "<${}>\nYou are a worker fork. The transcript above is the parent's history — inherited reference, not your situation. You are NOT a continuation of that agent. Execute ONE directive, then stop.\n\nHard r",
+  "notes": "directive with conciseness requirement",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The user chose continuous, autonomous execution. You should:\n\n1. **Execute immediately** — Start implementing right away. Make reasonable assumptions and proceed on low-risk work.\n2. **Minimize interr",
+  "notes": "autonomous execution with speed directives",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are an interactive CLI tool that helps users with software engineering tasks. You should work proactively and autonomously, executing immediately and minimizing interruptions.\n\n# Proactive Style A",
+  "notes": "system prompt with 'executing immediately' directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Schedule when to resume work in /loop dynamic mode — the user invoked /loop without an interval, asking you to self-pace iterations of a specific task.\n\nDo NOT schedule a short-interval wakeup to poll",
+  "notes": "instructs NOT to poll frequently, caps investigation effort",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The output above is already visible to the user. Briefly acknowledge it without repeating the target, URL, or billing note. Findings will arrive via task-notification.${?\" The user passed --fix: when ",
+  "notes": "instruction with 'briefly acknowledge' brevity directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "- Use **Write** tool only if the file does not exist yet",
+  "notes": "operational constraint: 'only if file does not exist'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
+  "notes": "tool usage examples cap response length to 200 words",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "This is the ONLY place the user sees your words — be complete but concise.",
+  "notes": "tone directive: 'be concise'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Current context:\n- Current date and time: ${} (UTC)\n- Local timezone: ${}\n- Day of week: ${}\n\nUser input: \"${}\"\n\nOutput format: ${}\n\nParse the user's input into ISO 8601 format. Return ONLY the format",
+  "notes": "date parsing prompt with output constraint 'ONLY'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "[SUGGESTION MODE: Suggest what the user might naturally type next into Claude Code.]\n\nFIRST: Look at the user's recent messages and original request.\n\nYour job is to predict what THEY would type - not",
+  "notes": "system prompt with output format constraints",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are a strict, terse evaluation judge for coding-agent traces.",
+  "notes": "tone: 'strict, terse' caps verbosity",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown. Lead with the overall goal and current task, then the one next action. Skip root-cause narrative, f",
+  "notes": "model recap instruction with capping directives",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "one short sentence naming the finished deliverable — no sub-clauses or bullet summaries",
+  "notes": "format constraint directive capping response to 'one short sentence'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "showing lines 1-${} of ${} total (${.tokenCount} tokens, cap ${}). Call ${} with offset=${+1} limit=${} for the next page, or ${} to find a specific section. Do NOT answer from this page alone if the ",
+  "notes": "instructs model not to answer from incomplete data",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Analyze this Claude Code usage data and identify what's working well for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence of context\",\n  \"impressi",
+  "notes": "model instructions for usage analysis with verbosity cap (2-3 sentences)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "post a one-line \"launched X\" via your comms tool",
+  "notes": "brief communication instruction with 'one-line' constraint",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Provide a concise response based only on the content above. In your response:\n - Enforce a strict 125-character maximum for quotes from any source document. Open Source Software is ok as long as we re",
+  "notes": "instructions to model with 'concise response' throttle",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Don't add features, refactor, or introduce abstractions beyond what the task requires. A bug fix doesn't need surrounding cleanup; a one-shot operation doesn't need a helper. Don't design for hypothet",
+  "notes": "scope-limiting directives against over-engineering",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but ",
+  "notes": "caps verbosity: 'concise report', 'essentials'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.",
+  "notes": "instruction with 'concise' cap",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Describe your most recent action in 3-5 words using present tense (-ing). Name the file or function, not the branch. Do not use tools.\n${?`\nPrevious: \"${}\" — say something NEW.\n`:\"\"}\nGood: \"Reading ru",
+  "notes": "word-constrained action summary instructions",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "One-sentence explanation shown to the user in the approval dialog. Explain the task, not the mechanism.",
+  "notes": "instruction for one-sentence explanation",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You MUST only use content from the last ~${} messages to update your persistent memories. Do not waste any turns attempting to investigate or verify that content further — no grepping source files, no",
+  "notes": "forbids investigation and verification",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Your responses should be short and concise.",
+  "notes": "directive to cap response length to short and concise",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "1. Only include contexts the user wants to change (minimal overrides)",
+  "notes": "scope instruction: 'only include contexts user wants'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Text output (does not apply to tool calls)\nAssume users can't see most tool calls or thinking — only your text output. Before your first tool call, state in one sentence what you're about to do. Whi",
+  "notes": "output style guidance with conciseness directives",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Don't implement — save plan and return",
+  "notes": "model instruction to minimize effort: skip implementation",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are coming up with a succinct title and git branch name for a coding session based on the provided description. The title should be clear, concise, and accurately reflect the content of the coding",
+  "notes": "tone: 'keep it short and simple'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.",
+  "notes": "emoji usage restriction directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "In your own words, briefly tell the user what you launched — do not echo this tool result. Agent results will arrive in a subsequent message.",
+  "notes": "instructs to be brief and avoid echoing",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are a subagent spawned by a workflow orchestration script. Use the tools available to complete the task.\n\nCRITICAL: Your final text response is returned **verbatim** as a string to the calling scr",
+  "notes": "subagent system prompt; includes 'Be concise'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
+  "notes": "loop instructions with 'briefly confirm' directive",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The user approved this plan in the cloud session. Give them a brief summary, then start implementing.",
+  "notes": "model instruction asking for 'brief summary'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nFor simple commands (git, npm, standard",
+  "notes": "requires concise/brief descriptions (5-10 words)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Summarize this portion of a Claude Code session transcript. Focus on:\n1. What the user asked for\n2. What Claude did (tools used, files modified)\n3. Any friction or issues\n4. The outcome\n\nKeep it conci",
+  "notes": "summary task with length constraint (3-5 sentences)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "This tool sends a desktop notification in the user's terminal. If Remote Control is connected, it also pushes to their phone. Either way, it pulls their attention from whatever they're doing — a meeti",
+  "notes": "notification tool guidance with message length and selectivity constraints",
+  "ccFirstSeen": "2.1.199"
+ }
+]
