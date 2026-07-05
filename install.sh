@@ -5,16 +5,20 @@
 #              patch-prompts) — no dependency on the tweakcc-fixed project.
 #
 # WHAT IT DOES
-#   1. Finds your Claude Code native binary and its version (installing Claude
-#      Code first via npm if it isn't on PATH).
-#   2. Ensures a prompt catalog for that version exists (data/prompts/); if not,
-#      tells you to run ./upgrade.sh first (which generates it).
-#   3. Rebuilds that version's STOCK prompts from the catalog and replays the
+#   1. Picks the CC version to patch — the newest version we have a prompt catalog
+#      for (data/prompts/), unless --version pins one. Works whether or not CC is
+#      installed: it installs (or switches to) that version via npm as needed, and
+#      an already-installed *supported* version is used as-is. If CC's latest npm
+#      release is newer than any catalog we have, it says so (run ./upgrade.sh to
+#      add support) and targets the newest version it CAN patch.
+#   2. Rebuilds that version's STOCK prompts from the catalog and replays the
 #      un-nerfs (sync-version.mjs + apply-unnerfs.py) into system-prompts/.
-#   4. Backs up the binary, unpacks its JS bundle, splices the un-nerfed prompts
-#      in (vendored patcher), repacks, and BOOT-CHECKS the result — restoring the
-#      backup if the patched binary won't start.
-#   5. Verifies the un-nerf sentinels actually landed, and disables CC's
+#   3. Unpacks the binary's JS bundle, splices the un-nerfed prompts in (vendored
+#      patcher), applies the best-effort effort un-nerfs, repacks, and BOOT-CHECKS
+#      the result. No backup is taken: the patched binary is swapped in only after
+#      a clean boot-check, and any earlier failure leaves the installed binary
+#      untouched. To roll back, reinstall Claude Code.
+#   4. Verifies the un-nerf sentinels actually landed, and disables CC's
 #      auto-updater so the patch isn't silently reverted on next launch.
 #
 # If Bun changed the binary format, lib/bun-binary.mjs reports it and this
@@ -22,6 +26,8 @@
 #
 # USAGE
 #   ./install.sh [--dry-run] [--version X.Y.Z] [--help]
+#     --version X.Y.Z  pin an exact CC release (must have a catalog); default is
+#                      the newest catalog we ship.
 #
 set -euo pipefail
 
@@ -63,14 +69,66 @@ bun_incompatible() {
 command -v node    >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
 
-# Claude Code must be present to patch it — if it isn't on PATH, install it (stock)
-# first, then proceed. Honors --version (installs that exact release; otherwise the
-# latest). npm's global bin dir isn't always on PATH, so re-resolve after install.
-if ! command -v claude >/dev/null; then
-  command -v npm >/dev/null || die "the 'claude' CLI is not on PATH and npm is unavailable to install it"
-  PKG="@anthropic-ai/claude-code${WANT_VERSION:+@$WANT_VERSION}"
-  log "Claude Code not found on PATH — installing $PKG globally"
-  run "npm install -g '$PKG'"
+# Install lib/ deps on first run (node-lief native addon, babel, prettier).
+[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
+[ -f "$PATCH_CLI" ]  || die "lib/patch-prompts.mjs missing — is the repo intact?"
+if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
+  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
+  run "( cd '$LIB_DIR' && npm install )"
+fi
+
+# --- choose the CC version to target ---------------------------------------
+# Works whether or not Claude Code is installed. We can only patch a version we
+# have a prompt catalog for, so the default target is the newest such version;
+# an already-installed *supported* version is respected as-is (no churn).
+log "Resolving target Claude Code version"
+
+# Newest version we have a catalog for (the newest we can patch).
+SUPPORTED_LATEST="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null \
+  | sed -n 's#.*/prompts-\([0-9][0-9.]*\)\.json$#\1#p' | sort -V | tail -1)"
+[ -n "$SUPPORTED_LATEST" ] || die "no prompt catalogs in $PROMPTS_DIR — is the repo intact?"
+
+# Newest published CC (best-effort; network). Purely informational.
+NPM_LATEST=""
+command -v npm >/dev/null && NPM_LATEST="$(npm view @anthropic-ai/claude-code version 2>/dev/null || true)"
+
+# Currently-installed CC version, if any.
+INSTALLED_VERSION=""
+command -v claude >/dev/null && \
+  INSTALLED_VERSION="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+
+# Target: explicit --version wins; else keep a supported installed version; else
+# fall back to the newest version we can patch.
+if [ -n "$WANT_VERSION" ]; then
+  CC_VERSION="$WANT_VERSION"
+elif [ -n "$INSTALLED_VERSION" ] && [ -f "$PROMPTS_DIR/prompts-$INSTALLED_VERSION.json" ]; then
+  CC_VERSION="$INSTALLED_VERSION"
+else
+  CC_VERSION="$SUPPORTED_LATEST"
+fi
+
+CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
+[ -f "$CATALOG" ] || die "no prompt catalog for v$CC_VERSION at $CATALOG.
+    We have catalogs up to v$SUPPORTED_LATEST. Run  ./upgrade.sh  against a v$CC_VERSION
+    binary to generate it, or pass --version <a supported release>."
+
+# Report the gap between what CC ships and what we can patch.
+if [ -n "$NPM_LATEST" ] && [ "$NPM_LATEST" != "$SUPPORTED_LATEST" ] && \
+   [ "$(printf '%s\n%s\n' "$NPM_LATEST" "$SUPPORTED_LATEST" | sort -V | tail -1)" = "$NPM_LATEST" ]; then
+  warn "Claude Code latest is v$NPM_LATEST; unnerfcc has prompts only up to v$SUPPORTED_LATEST → targeting v$CC_VERSION."
+  warn "  To support v$NPM_LATEST, run ./upgrade.sh against it first."
+fi
+ok "target version: v$CC_VERSION (catalog: $CATALOG)"
+
+# --- ensure CC is installed at the target version --------------------------
+if [ "$INSTALLED_VERSION" != "$CC_VERSION" ]; then
+  command -v npm >/dev/null || die "need Claude Code v$CC_VERSION but npm is unavailable to install it"
+  if [ -n "$INSTALLED_VERSION" ]; then
+    log "Installed Claude Code is v$INSTALLED_VERSION — switching to v$CC_VERSION (the version unnerfcc patches)"
+  else
+    log "Claude Code not found on PATH — installing v$CC_VERSION"
+  fi
+  run "npm install -g '@anthropic-ai/claude-code@$CC_VERSION'"
   if [ "$DRY_RUN" != 1 ]; then
     hash -r 2>/dev/null || true
     if ! command -v claude >/dev/null; then
@@ -81,34 +139,22 @@ if ! command -v claude >/dev/null; then
       fi
     fi
     command -v claude >/dev/null || die "installed Claude Code but 'claude' is still not on PATH — add \"\$(npm config get prefix)/bin\" to your PATH and re-run"
-    ok "Claude Code installed: $(command -v claude)"
   fi
 fi
 
-# Install lib/ deps on first run (node-lief native addon, babel, prettier).
-[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
-[ -f "$PATCH_CLI" ]  || die "lib/patch-prompts.mjs missing — is the repo intact?"
-if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
-  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
-  run "( cd '$LIB_DIR' && npm install )"
-fi
-
-# --- resolve binary + version ----------------------------------------------
+# --- resolve binary --------------------------------------------------------
 log "Resolving Claude Code binary"
-LAUNCHER="$(command -v claude)"
-CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
-[ -f "$CC_BIN" ] || die "could not resolve the claude binary from $LAUNCHER"
-CC_VERSION="${WANT_VERSION:-$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)}"
-[ -n "$CC_VERSION" ] || die "could not determine installed CC version"
-ok "binary: $CC_BIN (v$CC_VERSION)"
-
-CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
-if [ ! -f "$CATALOG" ]; then
-  die "no prompt catalog for v$CC_VERSION at $CATALOG.
-    Run  ./upgrade.sh  first — it generates the catalog for the installed CC
-    version (and relabels any new prompts). Then re-run install.sh."
+if [ "$DRY_RUN" = 1 ] && ! command -v claude >/dev/null; then
+  ok "dry-run: would target v$CC_VERSION (binary not resolved — not installed)"
+else
+  LAUNCHER="$(command -v claude)"
+  CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
+  [ -f "$CC_BIN" ] || die "could not resolve the claude binary from $LAUNCHER"
+  RESOLVED_VERSION="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  [ "$RESOLVED_VERSION" = "$CC_VERSION" ] || \
+    warn "resolved binary reports v$RESOLVED_VERSION but targeting v$CC_VERSION — a stale launcher may be shadowing it"
+  ok "binary: $CC_BIN (v$CC_VERSION)"
 fi
-ok "catalog: $CATALOG"
 
 # --- rebuild stock + replay un-nerfs ---------------------------------------
 log "Rebuilding stock prompts + replaying un-nerfs"
