@@ -5,7 +5,8 @@
 #              patch-prompts) — no dependency on the tweakcc-fixed project.
 #
 # WHAT IT DOES
-#   1. Finds your Claude Code native binary and its version.
+#   1. Finds your Claude Code native binary and its version (installing Claude
+#      Code first via npm if it isn't on PATH).
 #   2. Ensures a prompt catalog for that version exists (data/prompts/); if not,
 #      tells you to run ./upgrade.sh first (which generates it).
 #   3. Rebuilds that version's STOCK prompts from the catalog and replays the
@@ -61,7 +62,28 @@ bun_incompatible() {
 # --- preconditions ----------------------------------------------------------
 command -v node    >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
-command -v claude  >/dev/null || die "the 'claude' CLI is not on PATH"
+
+# Claude Code must be present to patch it — if it isn't on PATH, install it (stock)
+# first, then proceed. Honors --version (installs that exact release; otherwise the
+# latest). npm's global bin dir isn't always on PATH, so re-resolve after install.
+if ! command -v claude >/dev/null; then
+  command -v npm >/dev/null || die "the 'claude' CLI is not on PATH and npm is unavailable to install it"
+  PKG="@anthropic-ai/claude-code${WANT_VERSION:+@$WANT_VERSION}"
+  log "Claude Code not found on PATH — installing $PKG globally"
+  run "npm install -g '$PKG'"
+  if [ "$DRY_RUN" != 1 ]; then
+    hash -r 2>/dev/null || true
+    if ! command -v claude >/dev/null; then
+      NPM_BIN="$(npm config get prefix 2>/dev/null)/bin"
+      if [ -x "$NPM_BIN/claude" ]; then
+        PATH="$NPM_BIN:$PATH"; export PATH
+        warn "added npm global bin to PATH for this run: $NPM_BIN (add it to your shell profile to keep 'claude' available)"
+      fi
+    fi
+    command -v claude >/dev/null || die "installed Claude Code but 'claude' is still not on PATH — add \"\$(npm config get prefix)/bin\" to your PATH and re-run"
+    ok "Claude Code installed: $(command -v claude)"
+  fi
+fi
 
 # Install lib/ deps on first run (node-lief native addon, babel, prettier).
 [ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
