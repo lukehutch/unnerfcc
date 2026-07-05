@@ -97,6 +97,33 @@ What the manifest is and why it fingerprints *stock* (not the un-nerfed files): 
 
 ---
 
+## `patch-prompts.mjs`
+
+Node ES module — the **prompt splicer**. Locates each un-nerfed `.md` body in the
+extracted JS by its catalog `pieces` and replaces it in place by byte offset (the
+core binary patch). Run by `install.sh` / `upgrade.sh`, not usually by hand:
+
+```bash
+node lib/patch-prompts.mjs apply <inJs> <catalog.json> <systemPromptsDir> <outJs>
+```
+
+It reconstructs stock from the catalog to grade every skip, so a benign no-op is
+never confused with a genuinely dropped un-nerf:
+
+| Outcome | Meaning |
+|---|---|
+| **`patched`** | Un-nerfed body found + spliced. |
+| **`unchanged`** | `.md` already equals what's in the bundle (idempotent). |
+| **`[info] N … (harmless)`** | Prompt not uniquely locatable **and** its `.md` equals stock — we don't un-nerf it, so leaving it is a correct no-op (the ~60 memory/tool-result/LSP micro-prompts). |
+| **`[LOST] <id>` banner** | `.md` **differs** from stock but wasn't spliced — a real un-nerf is MISSING from the binary. Fix the catalog `pieces` / rule anchor. |
+
+**Exit codes:** `0` clean · `2` output is not valid JS (never repack) · `3` one or
+more un-nerfs were LOST. `install.sh` warns on `3` and ships the rest; `upgrade.sh`
+treats `3` as a release blocker. Full rationale + the general-purpose-short lesson:
+[UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 7.
+
+---
+
 ## `apply-code-patches.mjs`
 
 Node ES module. unnerfcc's **best-effort effort un-nerfs** — edits CC's own

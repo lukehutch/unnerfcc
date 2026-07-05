@@ -112,7 +112,17 @@ echo "$OUT" | grep -q BUN_FORMAT_INCOMPATIBLE && bun_incompatible "$OUT"; [ $RC 
 ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}')"
 
 log "Splicing un-nerfed prompts into the bundle"
-node "$PATCH_CLI" apply "$CLI_JS" "$CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" | sed 's/^/    /'
+# Exit codes: 0 ok · 2 output is invalid JS (must NOT repack) · 3 a real un-nerf
+# failed to splice (output is valid, just missing that one — ship the rest, warn
+# loudly) · anything else is a crash. Capture the RC so pipefail can't abort us
+# before we classify it.
+set +e; SPLICE_OUT="$(node "$PATCH_CLI" apply "$CLI_JS" "$CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" 2>&1)"; SRC=$?; set -e
+echo "$SPLICE_OUT" | sed 's/^/    /'
+case "$SRC" in
+  0) : ;;
+  3) warn "one or more un-nerfs did NOT reach the binary (see [LOST] above) — shipping the remaining un-nerfs; fix the catalog pieces/rule anchor and re-run" ;;
+  *) die "prompt splice failed (exit $SRC) — see output above" ;;
+esac
 
 # --- effort un-nerfs (BEST-EFFORT; must never block the prompt patches) -----
 # Lift CC's silent effort caps (mid-tier model default, /effort capped below the

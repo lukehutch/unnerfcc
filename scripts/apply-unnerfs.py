@@ -821,18 +821,26 @@ RULES: dict[str, list[Rule]] = {
             description='/code-review workflow assembler-invariant comment: no cap',
         ),
     ],
-    # RETARGETED from agent-prompt-general-task-agent.md at the tweakcc-fixed
-    # switch: the fork catalogs the shared "~225c" agent-description constant as
-    # its own prompt (general-purpose-short). The old prompt's second sentence
-    # ("respond with a concise report ... only needs the essentials") exists in
-    # the fork's catalog only inside agent-prompt-general-purpose.md, whose own
-    # rule already flips it — so the former second rule here was RETIRED as a
-    # duplicate, not lost.
+    # This file targets the STANDALONE general-purpose fallback constant (`BCa` in
+    # the 2.1.201 bundle), used as the system prompt when getSystemPrompt() throws
+    # — a DIFFERENT bundle string from the main general-purpose prompt (which
+    # inlines only the first two sentences as `${"..."}` and is un-nerfed by
+    # agent-prompt-general-purpose.md). The catalog `pieces` were corrected to the
+    # full constant (opening + report tail); the short-only form used to resolve
+    # INTO the main prompt's inlined copy and got dropped by the splice overlap
+    # guard, so this un-nerf never reached the binary. Both sentences are flipped
+    # here to match the sibling long prompt (completeness + report-thoroughly),
+    # keeping the fallback consistent with the primary path.
     "agent-prompt-general-purpose-short.md": [
         Rule(
             stock="Complete the task fully—don't gold-plate, but don't leave it half-done.",
             unnerf="Complete the task fully and to a high, senior-engineer standard—don't leave it half-done, and handle the edge cases, error paths, and closely related issues that a correct and robust solution requires.",
             description='general-purpose (short variant): senior-grade completeness, not gold-plate minimalism',
+        ),
+        Rule(
+            stock="When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.",
+            unnerf="When you complete the task, report thoroughly: what was done, every key finding, and the reasoning behind decisions — the caller acts on your report without re-investigating, so include what that takes.",
+            description='general-purpose (short variant): thorough report tail, not "only the essentials" (mirrors the long prompt)',
         ),
     ],
     "agent-prompt-security-review-slash-command.md": [

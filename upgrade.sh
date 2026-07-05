@@ -202,7 +202,11 @@ ok "un-nerfs applied + idempotent"
 if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   log "Verifying un-nerfs patch the binary (vendored patcher + repack + boot-check)"
   PATCHED_JS="$WORK/patched.js"; PATCHED_BIN="$WORK/claude-patched.exe"
-  node "$PATCH_CLI" apply "$CLI_JS" "$NEW_CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" | sed 's/^/  /'
+  # Release gate: exit 3 means a real un-nerf failed to splice (see [LOST] banner)
+  # — block the release so the drifted anchor gets fixed. exit 2 = invalid output.
+  set +e; SPLICE_OUT="$(node "$PATCH_CLI" apply "$CLI_JS" "$NEW_CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" 2>&1)"; SRC=$?; set -e
+  echo "$SPLICE_OUT" | sed 's/^/  /'
+  [ "$SRC" -eq 0 ] || die "prompt splice reported failures (exit $SRC) — fix before releasing (see output above)"
 
   # --- effort un-nerfs (BEST-EFFORT) + posture drift detection --------------
   # Lift CC's silent effort caps on the prompt-patched bundle. A failure here

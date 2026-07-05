@@ -434,6 +434,33 @@ message alone; it can report success while patching nothing.
   do not affect your system prompt patches." `install.sh` verifies the un-nerf
   independently (sentinels) and says so.
 
+**The vendored splicer classifies its own skips by severity** (`lib/patch-prompts.mjs`).
+When a prompt can't be uniquely located (couldNotFind / several matches, none a
+standalone string literal / two prompts resolving to overlapping bundle regions),
+the splicer compares the edited `.md` against stock (reconstructed from the catalog
+`pieces`):
+
+- **`[info] N stock prompt(s) not re-spliced … (harmless)`** — the `.md` equals
+  stock, so we weren't changing it; leaving the bundle untouched is a correct no-op.
+  These are the ~60 memory/tool-result/LSP micro-prompts we don't un-nerf. Ignore them.
+- **`[LOST] <id>` banner + exit 3** — the `.md` *differs* from stock (a real un-nerf)
+  but never reached the bundle. This is a genuine failure: the un-nerf is MISSING
+  from the patched binary. `install.sh` warns and ships the rest; `upgrade.sh` treats
+  it as a **release blocker** (`die`). Fix the catalog `pieces` or the rule anchor,
+  then re-run.
+
+> **Lesson (the `agent-prompt-general-purpose-short` drop).** In 2.1.201 the short
+> ~225c agent self-description is the standalone constant `BCa` (`"You are…half-done.
+> When you complete… essentials."`), used as the general-purpose agent's *fallback*
+> system prompt. The catalog's `pieces` for it were stale — the short-only sentence,
+> which no longer exists standalone; it only appears **inlined** (`${"…"}`) inside the
+> long general-purpose prompt. So the splicer resolved short *into* the long prompt's
+> region and the overlap guard silently dropped it, leaving `BCa` un-un-nerfed. Fix:
+> correct the catalog `pieces` to the **full** `BCa` string (so it matches `BCa`
+> uniquely and not the inlined copy), and flip both sentences (completeness + report
+> tail) to match the sibling long prompt. The severity split above exists so this
+> class of silent drop can never hide among the benign skips again.
+
 ---
 
 ## Part 8 — (removed)
