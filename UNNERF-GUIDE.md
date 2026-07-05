@@ -1,14 +1,21 @@
-# The un-nerf guide — objectives & upgrade playbook
+# The un-nerf guide — objectives
 
-This is the single source of truth for **what this project is trying to do** and
-**how to upgrade it when Anthropic ships a new Claude Code version**. If you are
-re-running the sync against a newer Claude Code, read Part 1 (so you make the
-right keep/flip calls) then follow Part 2 (the workflow). The later parts are the
-reference detail behind each step.
+This is the single source of truth for **what this project is trying to do** —
+the un-nerf policy: which prompt restrictions to lift, which to keep, and why.
+**Part 1 is the load-bearing part** and is current. Read it before adding or
+changing any un-nerf rule.
 
-> Companion docs: [README](README.md) (what/why for users), [MAINTENANCE](MAINTENANCE.md)
-> (script flags), [BACKGROUND](BACKGROUND.md) (history, how tweakcc-fixed works).
-> This guide supersedes and unifies the "upgrade" material in those.
+> [!NOTE]
+> The **upgrade/sync workflow** now lives in [UPGRADE.md](UPGRADE.md) — unnerfcc
+> is standalone (its own `lib/` toolkit, SHA-256 Claude classification, no
+> tweakcc dependency). The later parts of this guide (the tweakcc-based sync
+> playbook, Parts 2 / 7–9) predate that rewrite and are being superseded by
+> UPGRADE.md; treat Part 1 (the policy) as authoritative and UPGRADE.md as the
+> workflow.
+
+> Companion docs: [README](README.md) (what/why for users) · [UPGRADE](UPGRADE.md)
+> (the release workflow) · [MAINTENANCE](MAINTENANCE.md) (script flags) ·
+> [BACKGROUND](BACKGROUND.md) (how it works).
 
 ---
 
