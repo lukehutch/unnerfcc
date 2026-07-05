@@ -106,8 +106,9 @@ Node ES module — the **prompt splicer**. **Parses the extracted JS with
 AST nodes on their DECODED content (its catalog `pieces`) — not a regex. Matching on
 decoded content makes it encoding-agnostic: it finds a prompt whether the bundle
 stores it as a single/double-quoted literal, a backtick template, or a `+`-concat
-chain, and patches **every** node that matches (a reused prompt is un-nerfed at all
-its call-sites, even under different encodings). Shares its node→`pieces` logic with
+run of any mix of those (folded into one contiguous string, slots and all), and
+patches **every** node that matches (a reused prompt is un-nerfed at all its
+call-sites, even under different encodings). Shares its node→`pieces` logic with
 `extract-prompts.mjs` so the two agree exactly. Run by `install.sh` / `upgrade.sh`,
 not usually by hand:
 
