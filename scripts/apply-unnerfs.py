@@ -1468,7 +1468,30 @@ def main(argv: Optional[list[str]] = None) -> int:
         action="store_true",
         help="Include detail on [SKIP] entries too.",
     )
+    parser.add_argument(
+        "--dump-rules",
+        type=str,
+        default=None,
+        metavar="PATH",
+        help="Write every un-nerf rule (id, stock, unnerf) as JSON to PATH and exit. "
+        "Lets the rule-direct binary patcher (lib/patch-rules.mjs) drive off the rules "
+        "without reconstructing .md files.",
+    )
     args = parser.parse_args(argv)
+
+    if args.dump_rules:
+        import json as _json
+
+        out = []
+        for fname, rules in RULES.items():
+            pid = fname[:-3] if fname.endswith(".md") else fname
+            for r in rules:
+                out.append(
+                    {"id": pid, "stock": r.stock, "unnerf": r.unnerf, "description": r.description}
+                )
+        Path(args.dump_rules).write_text(_json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+        print(f"dumped {len(out)} rules -> {args.dump_rules}")
+        return 0
 
     if not args.dir.exists():
         print(f"ERROR: prompts directory not found: {args.dir}", file=sys.stderr)
