@@ -93,7 +93,10 @@ for (const s of seed.prompts) {
   if (exact) { out.prompts.push({ ...s }); freshUsed.add(ih); carried++; continue; }
   const fk = fuzzyKey(s);
   const fz = fk.length >= FUZZY_MIN ? freshFuzzy.get(fk) : undefined;
-  if (fz) {
+  // Only fuzzy-carry to a fresh prompt NOT already claimed by an exact or an
+  // earlier fuzzy match — otherwise two seed prompts sharing a stable prefix
+  // would both map to the same fresh entry (duplicate identity / id mis-carry).
+  if (fz && !freshUsed.has(identityHash(fz))) {
     // reworded: take the fresh pieces (current text, for patching), keep the
     // identity. The interpolation slots usually don't change when prose is
     // reworded, so CARRY the seed's identifierMap (its names) whenever the
