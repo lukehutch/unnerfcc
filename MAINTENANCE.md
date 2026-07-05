@@ -101,9 +101,15 @@ What the manifest is and why it fingerprints *stock* (not the un-nerfed files): 
 
 ## `patch-prompts.mjs`
 
-Node ES module — the **prompt splicer**. Locates each un-nerfed `.md` body in the
-extracted JS by its catalog `pieces` and replaces it in place by byte offset (the
-core binary patch). Run by `install.sh` / `upgrade.sh`, not usually by hand:
+Node ES module — the **prompt splicer**. **Parses the extracted JS with
+@babel/parser** and locates each un-nerfed `.md` body by matching string-producing
+AST nodes on their DECODED content (its catalog `pieces`) — not a regex. Matching on
+decoded content makes it encoding-agnostic: it finds a prompt whether the bundle
+stores it as a single/double-quoted literal, a backtick template, or a `+`-concat
+chain, and patches **every** node that matches (a reused prompt is un-nerfed at all
+its call-sites, even under different encodings). Shares its node→`pieces` logic with
+`extract-prompts.mjs` so the two agree exactly. Run by `install.sh` / `upgrade.sh`,
+not usually by hand:
 
 ```bash
 node lib/patch-prompts.mjs apply <inJs> <catalog.json> <systemPromptsDir> <outJs>

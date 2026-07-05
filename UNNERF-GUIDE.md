@@ -441,16 +441,21 @@ the splicer compares the edited `.md` against stock (reconstructed from the cata
   clean apply. This global check is why a genuine single drop against a stock binary
   still reports LOST while a wholesale patched-re-run doesn't false-alarm.
 
-**All identical call-sites are patched, not just the first.** The *catalog* collapses
-duplicate-id sites to their first occurrence (extraction-time — Part 9), but at *patch*
-time the splicer does the opposite: when a prompt's stock text appears as the identical
-standalone string literal at several bundle offsets (e.g. a constant reused as a
-fallback, or the same wording under two ids), `chooseMatch` recognizes the byte-identical
-matches as one reused constant and `apply()` patches **every** one — the run summary's
-`dupSites` counts the extra sites, and an `[info] patched N additional duplicate
-call-site(s)…` line names them. Only genuinely *different* standalone texts stay
-ambiguous and are skipped. (A sentence embedded inside a *larger* prompt is a separate
-prompt with its own id — patched by its own rule, not by this expansion.)
+**The splicer is AST-based and encoding-agnostic.** It parses the bundle with
+`@babel/parser` and locates each prompt by matching string-producing AST nodes on
+their DECODED content (quotes/escapes stripped, per-build identifier names excised,
+`+`-concatenation folded) — never a regex over the raw text. So a prompt is found by
+*what it says*, not how it's spelled: single- or double-quoted literal, backtick
+template with `${…}`, or a `+`-concat chain all resolve to the same content key, and
+**every** matching node is patched. That's how "all call-sites are patched, not just
+the first" and "duplicates broken up differently are still found" both fall out for
+free — the run summary's `dupSites` counts the extra sites and an `[info] patched N
+additional call-site(s)…` line names them. The *catalog* collapses duplicate-id sites
+to their first occurrence at extraction time (Part 9), but the splicer patches every
+site of a reused constant regardless. (A sentence embedded inside a *larger* prompt is
+a separate node/prompt with its own id — patched by its own rule, and the overlap
+guard keeps the outer node when two matched nodes nest.) The shared node→`pieces`
+logic lives in `extract-prompts.mjs`, so the extractor and patcher agree exactly.
 
 > **Lesson (the `agent-prompt-general-purpose-short` drop).** In 2.1.201 the short
 > ~225c agent self-description is the standalone constant `BCa` (`"You are…half-done.
