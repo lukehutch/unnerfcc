@@ -11,7 +11,7 @@ This repo extracts every prompt, lifts those two classes of restriction, and pat
 This is the live set I run daily — not cleaned up for public consumption, in-progress un-nerfs and all.
 
 > [!NOTE]
-> **Built from Claude Code v2.1.199** — 121 un-nerf rules across 79 files, `--check` clean, reconstructed byte-identically to a [tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed) extraction. The fork's catalog covers **1,372 prompts** (1,483 binary sites) — ~2.5× what the base tweakcc catalog carries — adding the per-turn fragments, interpolated-variable values, and compact tool-description variants the base tool skips. The v2.1.199 bump itself was a feature build-out (Cowork onboarding, Claude Design, plugin/skill/connector marketplace tooling): 43 prompts added, 2 removed, none touching the brevity/thoroughness posture, so **the version bump needed no new rules** and every existing rule re-applied byte-exactly against fresh stock. The rule count grew from the 81-rule sync baseline via the policy audit (lifting local restrictions; see the thesis), not stock drift. Full sync record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 9.
+> **Built from Claude Code v2.1.201** — 121 un-nerf rules across 79 files, `--check` clean, reconstructed byte-identically to a [tweakcc-fixed](https://github.com/skrabe/tweakcc-fixed) extraction. The fork's catalog covers **1,401 prompts** (1,513 binary sites) — ~2.5× what the base tweakcc catalog carries — adding the per-turn fragments, interpolated-variable values, and compact tool-description variants the base tool skips. The v2.1.199→v2.1.201 bump was a feature build-out (background-observer agent, `set_cwd`/directory-trust, memory-sync conflict handling, Claude-Tag/Slack): 30 prompts added, 1 removed, none touching the brevity/thoroughness posture, so **the version bump needed no new rules** and every existing rule re-applied byte-exactly against fresh stock. The rule count grew from the 81-rule sync baseline via the policy audit (lifting local restrictions; see the thesis), not stock drift. Full sync record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 9.
 
 **Docs:** [Un-nerf guide](UNNERF-GUIDE.md) (objectives + upgrade playbook) · [Maintenance](MAINTENANCE.md) (script flags) · [Background](BACKGROUND.md) (how tweakcc works)
 
@@ -101,7 +101,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 │   ├── sync-version.mjs          # rebuild stock prompts + auto-diff the checksum manifest
 │   ├── prompt-checksums.mjs      # MD5 manifest tool
 │   └── apply-unnerfs.py          # replay all un-nerfs after a CC version bump
-└── system-prompts/               # 1,372 markdown files (Claude Code v2.1.199, tweakcc-fixed catalog)
+└── system-prompts/               # 1,401 markdown files (Claude Code v2.1.201, tweakcc-fixed catalog)
 ```
 
 `system-prompts/` holds the un-nerfed prompts (`tool-description-*`, `system-prompt-*`, `system-reminder-*`, `data-*`, `agent-prompt-*`, `skill-*`, `tool-parameter-*`, `tool-result-*`, `workflow-*`). The checksum manifest fingerprints **stock**, not the un-nerfed files — so on a version bump `sync-version.mjs` reports exactly what Anthropic changed, uncoloured by the un-nerfs. See [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
@@ -110,7 +110,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 
 ## Compatibility
 
-- **Claude Code:** built from v2.1.199 (the latest release, and the newest tweakcc-fixed has prompt data for). Per-prompt `ccVersion:` frontmatter records when each prompt last changed. Upgrade playbook: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+- **Claude Code:** built from v2.1.201 (the latest release, and the newest tweakcc-fixed has prompt data for). Per-prompt `ccVersion:` frontmatter records when each prompt last changed. Upgrade playbook: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
 - **Models:** tuned for current Claude (Opus 4.8 / Sonnet 4.6 / Haiku 4.5). Older or smaller models may over-explain trivial asks.
 - **Watch for over-verbosity** — the main failure mode. If Claude writes essays for "what time is it?", start with `system-prompt-communication-style.md` and `system-prompt-tone-concise-output-short.md`. Thorough output also costs more tokens; plan accordingly.
 

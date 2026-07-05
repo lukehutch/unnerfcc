@@ -3,7 +3,7 @@ name: 'Command Prompt: Auto-mode Setup & Customisation'
 description: >-
   Prompt body for the /auto-mode-setup command that guides the model through
   configuring auto-mode environment and rules in settings.json
-ccVersion: 2.1.199
+ccVersion: 2.1.201
 variables:
   - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_0
   - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_1
@@ -417,7 +417,7 @@ Sensitivity (filling these in sharpens the default heuristic):
 ### User-specific
 
 - **Primary use of Claude Code** — e.g. software development, ML research, infra automation
-- **Trusted repo** — this user's checkouts and their remotes
+- **Trusted repo** — this user's checkouts and their configured remotes; when the repo's public/private visibility is given, it scopes what is OK to commit or push there
 - **Org-specific CLIs** — internal command-line tools this user actually invokes; note any subcommands that can delete or launch resources
 - Any "routine under <user>/ prefix" qualifiers that apply to this user specifically
 
@@ -541,7 +541,7 @@ comes from policy settings instead):
       "...",
       "### User-specific",
       "**Primary use of Claude Code**: backend development",
-      "**Trusted repo**: github.com/acme/widgets and its remotes",
+      "**Trusted repo**: github.com/acme/widgets (private — OK for the team's own work)",
       "..."
     ]
   }
