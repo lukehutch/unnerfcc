@@ -55,9 +55,12 @@ const cliJs = argv[0], ccVersion = argv[1];
 const opt = (name, def) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : def; };
 const LIMIT = parseInt(opt("--limit", "0"), 10) || Infinity;
 const BATCH = parseInt(opt("--batch", "100"), 10);
-// Bulk classification is a large, simple task — use Haiku by default (fast +
-// cheap). Override with --model for a spot-check with a stronger model.
-const MODEL = opt("--model", "haiku");
+// Model. The one-time bootstrap used Haiku (cheap, mostly non-prompts). But the
+// un-nerf judgment needs real reasoning — a recall check against the existing
+// rules showed Haiku caught only obvious brevity caps and missed the subtler
+// implementation/process-brevity nerfs. So the DEFAULT is now Opus (latest), and
+// the intended use going forward is Opus on only the NEW strings per CC release.
+const MODEL = opt("--model", "opus");
 const DRY = argv.includes("--dry-run");
 // Sharding: run several workers in parallel over disjoint slices of the work,
 // each writing to its OWN --shard-out file (no store race); merge afterward.
@@ -202,13 +205,22 @@ binary. For each, decide two things.
    - When genuinely unsure but it reads like model-facing instructions, prefer
      \`"prompt"\` (a false prompt is harmless; a missed prompt is not).
 2. **unnerf** (only meaningful when class is \`"prompt"\`): \`true\` if the prompt
-   contains directives that **cap thoroughness, verbosity, effort, or
-   investigation** — e.g. "be concise", "respond in N sentences", "do the
-   minimum", "don't add abstractions", "as quickly as possible", "keep it short",
-   or over-broad refusal/hedging flags — the kind unnerfcc lifts (rewriting
-   toward thoroughness). \`false\` if it's a prompt with no such nerf. Do NOT flag
-   genuine safety/user-protection text or functional length limits (parser/UI
-   caps) as un-nerf-worthy.
+   caps the model's THOROUGHNESS in ANY of the ways unnerfcc lifts. Judge by
+   MEANING, not keywords — the subtle ones matter most:
+   - **Length / chat brevity** — "concise", "short", "respond in N sentences", "brief".
+   - **Implementation brevity** — "simplest approach", "don't add abstractions",
+     "**don't add error handling / validation / fallbacks**", "don't refactor",
+     "match the scope", "minimal", "three similar lines beats an abstraction".
+   - **Process brevity** — "as quickly as possible", "don't explore more than
+     necessary", "**concise report / summary**", "**the minimum number of** agents",
+     "do the minimum", "report back in N sentences".
+   - **Over-broad refusal / hedging** flags that fire on legitimate work.
+   Examples that ARE un-nerf-worthy even though they don't say "be brief":
+   "Don't add error handling for scenarios that can't happen" (implementation),
+   "report back with a concise summary" (process), "use the minimum number of
+   subagents" (process). \`false\` if the prompt has no such cap. Do NOT flag
+   genuine safety / user-protection text (e.g. destructive-action care,
+   authorization requirements) or functional parser/UI length limits.
 3. **notes**: one short clause — why (e.g. "tone: 'short and concise'").
 
 ## Output

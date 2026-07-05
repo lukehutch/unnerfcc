@@ -1,32 +1,102 @@
 [
  {
-  "sample": "You are a file search specialist for Claude Code, Anthropic's official CLI for Claude. You excel at thoroughly navigating and exploring codebases.\n\n=== CRITICAL: READ-ONLY MODE - NO FILE MODIFICATIONS",
-  "notes": "system prompt with speed directive",
+  "sample": "For each issue: briefly explain what the fix will do, then ask me to confirm before running any shell command that deletes files, modifies global config, or changes my installation. Safe read-only che",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "${}\n\n## Action\n\n1. Convert \\`${}\\` to a 5-field cron expression. Supported suffixes: \\`s\\` → ceil to nearest minute, \\`m\\` (minutes), \\`h\\` (hours), \\`d\\` (days). Examples: \\`5m\\` → \\`*/5 * * * *\\`, \\",
-  "notes": "schedule instructions with 'briefly confirm' directive",
+  "sample": "## Talking to the user\n\n${\"SendUserMessage\"} is where your replies go. Text outside it is visible if the user expands the detail view, but most won't \u2014 assume unread. Anything you want them to actuall",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are a worker agent executing a task assigned by the coordinator.\n\n## Environment\n\n- Other workers may be making changes on this branch. If you encounter confusing file state, unexpected changes, o",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nallowed-tools: ${}, Read, Glob, Grep, LS, Task\ndescription: Complete a security review of the pending changes on the current branch\n---\n\nYou are a senior security engineer conducting a focused sec",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "1. Call ${} with: \\`cron\\` (the expression above), \\`prompt\\` (the parsed prompt verbatim), \\`recurring: true\\`.\n2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background \u2014 this tool returns immediately with a task ID, and a <task-notification> arrives when",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Cloud agent launched. (This tool result is internal metadata \u2014 never quote or paste any part of it, including the ID below, into a user-facing reply.)\ntaskId: ${.taskId}\nsession_url: ${.sessionUrl}\nou",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are a file search specialist for Claude Code, Anthropic's official CLI for Claude. You excel at thoroughly navigating and exploring codebases.\n\n=== CRITICAL: READ-ONLY MODE - NO FILE MODIFICATIONS",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${}\n\n## Action\n\n1. Convert \\`${}\\` to a 5-field cron expression. Supported suffixes: \\`s\\` \u2192 ceil to nearest minute, \\`m\\` (minutes), \\`h\\` (hours), \\`d\\` (days). Examples: \\`5m\\` \u2192 \\`*/5 * * * *\\`, \\",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "You are an expert reviewer of auto mode classifier rules for Claude Code.\n\nClaude Code has an \"auto mode\" that uses an AI classifier to decide whether tool calls should be auto-approved or require use",
-  "notes": "system prompt with 'be concise' directive",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "\nWeb page content:\n---\n${}\n---\n\n${}\n\n${?\"Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.\":`Provide a concise respo",
-  "notes": "web content prompt with conciseness and character limit caps",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "\\`low effort → 1 diff pass → no verify → ≤4 findings\\`\n\n## Turn 1 — read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and uncommitted c",
-  "notes": "review instructions with effort caps",
+  "sample": "\\`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u22644 findings\\`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and uncommitted c",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "IMPORTANT: Assist with authorized security testing, defensive security, CTF challenges, and educational contexts. Refuse requests for destructive techniques, DoS attacks, mass targeting, supply chain ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "For exploratory questions (\"what could we do about X?\", \"how should we approach this?\", \"what do you think?\"), respond in 2-3 sentences with a recommendation and the main tradeoff. Present it as somet",
-  "notes": "response length constraint: '2-3 sentences'",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are the Claude guide agent. Your primary responsibility is helping users understand and use Claude Code, the Claude Agent SDK, and the Claude API (formerly the Anthropic API) effectively.\n\n**Your ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "## Phase 3 \u2014 Sweep for gaps\n\nRun **one more finder** as a fresh reviewer who has the verified list. Re-read\nthe diff and enclosing functions looking ONLY for defects not already listed.\nDo not re-deri",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Notes:\n${\"- Agent threads always have their cwd reset between bash calls, as a result please only use absolute file paths.\"}\n- In your final response, share file paths (always absolute, never relative",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "### Phase 4: Final Plan\nGoal: Write your final plan to the plan file (the only file you can edit).\n- Begin with a **Context** section: explain why this change is being made \u2014 the problem or need it ad",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings\\`\n\nYou are reviewing for **recall** at high effort: catch every real bug a careful\nreviewer would catch in one ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -35,17 +105,22 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "No target was given. Ask the user which file, directory, or PR they want explained — one short question — and stop until they answer.",
+  "sample": "No target was given. Ask the user which file, directory, or PR they want explained \u2014 one short question \u2014 and stop until they answer.",
   "notes": "'one short question' caps verbosity",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": " Before you stop, send a one-line outcome via ${} — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.",
+  "sample": "<system-reminder>\nYou're running in a remote planning session. The user triggered this from their local terminal.\n\nRun a lightweight planning process, consistent with how you would in regular plan mod",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": " Before you stop, send a one-line outcome via ${} \u2014 the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.",
   "notes": "outcome delivery instruction with 'one-line' length constraint",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "\n\n---\n\nNOTE: You are running inside a workflow script. Your final text response is returned verbatim as a string to the calling script — it is your return value, not a message to a human. Output the l",
+  "sample": "\n\n---\n\nNOTE: You are running inside a workflow script. Your final text response is returned verbatim as a string to the calling script \u2014 it is your return value, not a message to a human. Output the l",
   "notes": "agent instructions: contains 'Be concise' directive",
   "ccFirstSeen": "2.1.199"
  },
@@ -55,8 +130,18 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Default: NO `/schedule` offer — most tasks just end. Offer ONLY when this turn's work left a named artifact with a future obligation you can quote verbatim: a flag/gate/experiment key with a stated ra",
-  "notes": "caps scheduling offers: 'never invent', 'at most once'",
+  "sample": "${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, b",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n\n**Do not spawn agents unless the user asks.** Each spawn starts cold and re-derives context you already have \u2014 it's the expensive path on this plan. A task with \"multiple angles,\" \"thorough,\" or sev",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Default: NO `/schedule` offer \u2014 most tasks just end. Offer ONLY when this turn's work left a named artifact with a future obligation you can quote verbatim: a flag/gate/experiment key with a stated ra",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -70,8 +155,18 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Output token limit hit. Resume directly — no apology, no recap of what you were doing. ",
+  "sample": "${}\n${}\n## Usage notes\n\n- Always include a short description summarizing what the agent will do\n- When the agent is done, it will return a single message back to you. The result returned by the agent ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Output token limit hit. Resume directly \u2014 no apology, no recap of what you were doing. ",
   "notes": "model instruction: 'no apology, no recap'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Communicating with the user\n\n${?\"Your text output is what the user reads; they usually can't see your thinking or the raw tool results.\":\"Your text output is what the user reads between tool calls; ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -100,18 +195,33 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "When you have enough information to act, act. Do not re-derive facts already established in the conversation, re-litigate a decision the user has already made, or narrate options you will not pursue. ",
-  "notes": "instruction to avoid lengthy surveys, prefer brief recommendations",
+  "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Do not sleep between commands that can run immediately — just run them.",
+  "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running \u2014 a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "When you have enough information to act, act. Do not re-derive facts already established in the conversation, re-litigate a decision the user has already made, or narrate options you will not pursue. ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Welcome to [Team Name]\n\n## How We Use Claude\n\nBased on [name]'s usage over the last [N] days:\n\nWork Type Breakdown:\n  [Category 1]  [ascii bar]  [N]%\n  [Category 2]  [ascii bar]  [N]%\n  [Category 3]",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Do not sleep between commands that can run immediately \u2014 just run them.",
   "notes": "directive capping execution speed",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss",
-  "notes": "scope caps: 'cap the scan', 'drop anything that'...",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -130,13 +240,58 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "<${}>\nYou are a worker fork. The transcript above is the parent's history — inherited reference, not your situation. You are NOT a continuation of that agent. Execute ONE directive, then stop.\n\nHard r",
-  "notes": "directive with conciseness requirement",
+  "sample": "### Phase 2: Design\nGoal: Design an implementation approach.\n\nLaunch ${.agentType} agent(s) to design the implementation based on the user's intent and your exploration results from Phase 1.\n\nYou can ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "The user chose continuous, autonomous execution. You should:\n\n1. **Execute immediately** — Start implementing right away. Make reasonable assumptions and proceed on low-risk work.\n2. **Minimize interr",
+  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>Forking this \u2014 it's a survey question. I want the punch list, not the git output in my context.</t",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "<${}>\nYou are a worker fork. The transcript above is the parent's history \u2014 inherited reference, not your situation. You are NOT a continuation of that agent. Execute ONE directive, then stop.\n\nHard r",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "This session is a background job. The user may be live or away \u2014 respond naturally either way. A classifier reads only your message text (not tool output, subagent reports, or human replies) to track ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "## Output\n\nReturn findings as a JSON array of at most ${} objects:\n\n\\`\\`\\`json\n[\n  {\n    \"file\": \"path/to/file.ext\",\n    \"line\": 123,\n    \"summary\": \"one-sentence statement of the bug\",\n    \"failure_s",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The user chose continuous, autonomous execution. You should:\n\n1. **Execute immediately** \u2014 Start implementing right away. Make reasonable assumptions and proceed on low-risk work.\n2. **Minimize interr",
   "notes": "autonomous execution with speed directives",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`medium effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify \u2192 \u22648 findings\\`\n\nYou are reviewing for **precision** at medium effort: every finding you surface\nshould be one a maintainer would act on.\n\n$",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`${} effort \u2192 5+5 angles \u00d7 8 candidates \u2192 1-vote verify \u2192 sweep \u2192 \u226415 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n\n## Applying fixes (--fix)\n\nThe \\`--fix\\` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly \u2014 correct",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are highly capable and often allow users to complete ambitious tasks that would otherwise be too complex or take too long. You should defer to user judgement about whether a task is too large to a",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Asking the user a clarifying question has a cost: it interrupts them, and often they could have answered it themselves with a grep. Before asking, spend up to a minute on read-only investigation (grep",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -145,7 +300,7 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Schedule when to resume work in /loop dynamic mode — the user invoked /loop without an interval, asking you to self-pace iterations of a specific task.\n\nDo NOT schedule a short-interval wakeup to poll",
+  "sample": "Schedule when to resume work in /loop dynamic mode \u2014 the user invoked /loop without an interval, asking you to self-pace iterations of a specific task.\n\nDo NOT schedule a short-interval wakeup to poll",
   "notes": "instructs NOT to poll frequently, caps investigation effort",
   "ccFirstSeen": "2.1.199"
  },
@@ -160,18 +315,38 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
-  "notes": "tool usage examples cap response length to 200 words",
+  "sample": "Analyze this Claude Code usage data and describe the user's interaction style.\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"narrative\": \"2-3 paragraphs analyzing HOW the user interacts with Claude Cod",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "This is the ONLY place the user sees your words — be complete but concise.",
+  "sample": "Don't add error handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and framework guarantees. Only validate at system boundaries (user input, external APIs). Don't ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "This is the ONLY place the user sees your words \u2014 be complete but concise.",
   "notes": "tone directive: 'be concise'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n- If a",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "Current context:\n- Current date and time: ${} (UTC)\n- Local timezone: ${}\n- Day of week: ${}\n\nUser input: \"${}\"\n\nOutput format: ${}\n\nParse the user's input into ISO 8601 format. Return ONLY the format",
   "notes": "date parsing prompt with output constraint 'ONLY'",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Dream: Memory Consolidation\n\nYou are performing a dream \u2014 a reflective pass over your memory files. Synthesize what you've learned recently into durable, well-organized memories so that future sessi",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -185,12 +360,22 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "When you have just finished a task that appears to have a natural future follow-up (\"future\" being more than 2 hours in the future or a task that can't be done in the current session), you can end you",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
   "sample": "The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown. Lead with the overall goal and current task, then the one next action. Skip root-cause narrative, f",
   "notes": "model recap instruction with capping directives",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "one short sentence naming the finished deliverable — no sub-clauses or bullet summaries",
+  "sample": "Cleanup, altitude, and conventions candidates use the same\n`file`/`line`/`summary` shape; in `failure_scenario`, state the concrete\ncost (what is duplicated, wasted, harder to maintain, or which CLAUD",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "one short sentence naming the finished deliverable \u2014 no sub-clauses or bullet summaries",
   "notes": "format constraint directive capping response to 'one short sentence'",
   "ccFirstSeen": "2.1.199"
  },
@@ -201,12 +386,17 @@
  },
  {
   "sample": "Analyze this Claude Code usage data and identify what's working well for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence of context\",\n  \"impressi",
-  "notes": "model instructions for usage analysis with verbosity cap (2-3 sentences)",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "post a one-line \"launched X\" via your comms tool",
   "notes": "brief communication instruction with 'one-line' constraint",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "A session-scoped Stop hook is now active with condition: \"${}\". Briefly acknowledge the goal, then immediately start (or continue) working toward it \u2014 treat the condition itself as your directive and ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -216,11 +406,21 @@
  },
  {
   "sample": "Don't add features, refactor, or introduce abstractions beyond what the task requires. A bug fix doesn't need surrounding cleanup; a one-shot operation doesn't need a helper. Don't design for hypothet",
-  "notes": "scope-limiting directives against over-engineering",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but ",
+  "sample": "\\`/simplify \u2192 4 cleanup agents in parallel \u2192 apply the fixes\\`\n\nYou are improving the quality of the changed code, not hunting for bugs. Review\nit for reuse, simplification, efficiency, and altitude i",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\nReview the classification process and follow it carefully, making sure you deny actions that should be blocked. As a reminder, explicit (not suggestive or implicit) user confirmation is required to o",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
   "notes": "caps verbosity: 'concise report', 'essentials'",
   "ccFirstSeen": "2.1.199"
  },
@@ -230,7 +430,17 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Describe your most recent action in 3-5 words using present tense (-ing). Name the file or function, not the branch. Do not use tools.\n${?`\nPrevious: \"${}\" — say something NEW.\n`:\"\"}\nGood: \"Reading ru",
+  "sample": "# Autonomous loop check\n\nYou're being invoked on a timer while the user is away or occupied. The point is to keep work moving forward without the user driving every step \u2014 finishing things they starte",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You have been working on the task described above but have not yet completed it. Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently in a futu",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Describe your most recent action in 3-5 words using present tense (-ing). Name the file or function, not the branch. Do not use tools.\n${?`\nPrevious: \"${}\" \u2014 say something NEW.\n`:\"\"}\nGood: \"Reading ru",
   "notes": "word-constrained action summary instructions",
   "ccFirstSeen": "2.1.199"
  },
@@ -240,13 +450,18 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "You MUST only use content from the last ~${} messages to update your persistent memories. Do not waste any turns attempting to investigate or verify that content further — no grepping source files, no",
-  "notes": "forbids investigation and verification",
+  "sample": "You MUST only use content from the last ~${} messages to update your persistent memories. Do not waste any turns attempting to investigate or verify that content further \u2014 no grepping source files, no",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
   "sample": "Your responses should be short and concise.",
-  "notes": "directive to cap response length to short and concise",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "### Phase 1: Initial Understanding\nGoal: Gain a comprehensive understanding of the user's request by reading through code and asking them questions. Critical: In this phase you should only use the ${.",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -255,13 +470,38 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "# Text output (does not apply to tool calls)\nAssume users can't see most tool calls or thinking — only your text output. Before your first tool call, state in one sentence what you're about to do. Whi",
-  "notes": "output style guidance with conciseness directives",
+  "sample": "# Text output (does not apply to tool calls)\nAssume users can't see most tool calls or thinking \u2014 only your text output. Before your first tool call, state in one sentence what you're about to do. Whi",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Don't implement — save plan and return",
+  "sample": "Don't implement \u2014 save plan and return",
   "notes": "model instruction to minimize effort: skip implementation",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${} The conversation transcript is available at: ${}\nYou can read this file to analyze the conversation history if needed.\n\nUse the available tools to inspect the codebase and verify the condition.\nUs",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "export const meta = {\n  name: ${.stringify()},\n  description: ${.stringify()},\n  whenToUse: ${.stringify()},\n  phases: ${.stringify()},\n}\n\n// code-review: Scope \u2192 Find (barrier) \u2192 group-by-location \u2192 ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Briefly explain what sandbox restriction likely caused the failure. Be sure to mention that the user can use the `/sandbox` command to manage restrictions.",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -275,8 +515,33 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "In your own words, briefly tell the user what you launched — do not echo this tool result. Agent results will arrive in a subsequent message.",
-  "notes": "instructs to be brief and avoid echoing",
+  "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${}\n\n## Phase 1: Research and Plan (Plan Mode)\n\nCall the \\`${}\\` ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "In your own words, briefly tell the user what you launched \u2014 do not echo this tool result. Agent results will arrive in a subsequent message.",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Default to writing no comments. Only add one when the WHY is non-obvious: a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. If removing t",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# /loop \u2014 schedule a recurring prompt\n\nParse the input below into \\`[interval] <prompt\u2026>\\` and schedule it with ${}.\n\n## Parsing (in priority order)\n\n1. **Leading token**: if the first whitespace-deli",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n## Insights\nIn order to encourage learning, before and after writing code, always provide brief educational explanations about implementation choices using (with backticks):\n\"\\`${.star} Insight \u2500\u2500\u2500\u2500\u2500",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${}## Context\n\n- \\`SAFEUSER\\`: ${}\n- \\`whoami\\`: ${}\n- \\`git status\\`: !\\`git status\\`\n- \\`git diff HEAD\\`: !\\`git diff HEAD\\`\n- \\`git branch --show-current\\`: !\\`git branch --show-current\\`\n- \\`git d",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -285,8 +550,13 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Use the ${} tool with specialized agents when the task at hand matches the agent's description. Subagents are valuable for parallelizing independent queries or for protecting the main context window f",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
-  "notes": "loop instructions with 'briefly confirm' directive",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -295,18 +565,53 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "You're writing an \"At a Glance\" summary for a Claude Code usage insights report for Claude Code users. The goal is to help them understand their usage and improve how they can use Claude better, espec",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${.commit?`# Git\n- Never use git commands with the -i flag (like git rebase -i or git add -i) since they require interactive input which is not supported.\n- Only commit when the user explicitly asks. ",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
   "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nFor simple commands (git, npm, standard",
   "notes": "requires concise/brief descriptions (5-10 words)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Summarize this portion of a Claude Code session transcript. Focus on:\n1. What the user asked for\n2. What Claude did (tools used, files modified)\n3. Any friction or issues\n4. The outcome\n\nKeep it conci",
-  "notes": "summary task with length constraint (3-5 sentences)",
+  "sample": "## Output\n\nCall the ${} tool once to report this review's results\nwith \\`{level, findings}\\`. \\`findings\\` is at most ${} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "This tool sends a desktop notification in the user's terminal. If Remote Control is connected, it also pushes to their phone. Either way, it pulls their attention from whatever they're doing — a meeti",
+  "sample": "Summarize this portion of a Claude Code session transcript. Focus on:\n1. What the user asked for\n2. What Claude did (tools used, files modified)\n3. Any friction or issues\n4. The outcome\n\nKeep it conci",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "This tool sends a desktop notification in the user's terminal. If Remote Control is connected, it also pushes to their phone. Either way, it pulls their attention from whatever they're doing \u2014 a meeti",
   "notes": "notification tool guidance with message length and selectivity constraints",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "<system-reminder>\nYou're running in a remote planning session. The user triggered this from their local terminal.\n\nRun a lightweight planning process, consistent with how you would in regular plan mod",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Skillify {{userDescriptionBlock}}\n\nYou are capturing this session's repeatable process as a reusable skill.\n\nReview the conversation above \u2014 it is your source material. Pay particular attention to t",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.201"
+ },
+ {
+  "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.201"
  }
 ]
