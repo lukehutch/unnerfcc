@@ -97,6 +97,28 @@ What the manifest is and why it fingerprints *stock* (not the un-nerfed files): 
 
 ---
 
+## `apply-code-patches.mjs`
+
+Node ES module. unnerfcc's **best-effort effort un-nerfs** — edits CC's own
+code/data strings (not prompts) in the extracted JS to lift silent effort caps
+(mid-tier model `default_effort`, `/effort` capped below `max`). Runs *after* the
+prompt patch in `install.sh` / `upgrade.sh`; a failure never blocks the prompt
+un-nerfs. Full rationale: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 10.
+
+```bash
+node lib/apply-code-patches.mjs apply   <inJs> <outJs>   # patch (best-effort, always exits 0)
+node lib/apply-code-patches.mjs posture <inJs>           # snapshot the effort surface (JSON)
+node lib/apply-code-patches.mjs verify  <inJs>           # exit 0 iff all effort un-nerfs present
+```
+
+| Result per patch | Meaning |
+|---|---|
+| **APPLIED** | Anchor found, patch spliced + verified. |
+| **ALREADY** | Effort un-nerf already present (idempotent re-run). |
+| **FAILED** | Anchor missing/ambiguous — CC's effort code likely changed. Reported, not fatal; update the string-literal anchors in `apply-code-patches.mjs`. `upgrade.sh` also diffs `data/effort-posture.json` to surface this. |
+
+---
+
 ## Why a JSON, and not just the binary?
 
 `sync-version.mjs` reads tweakcc-fixed's `prompts-X.Y.Z.json` rather than the installed binary because the binary holds the prompt *body text* but nothing else: no catalog of *which* string literals are prompts (the ~1,437 sites are buried among thousands of literals), no `name`/`description` (the editorial labels live only in the JSON), and no `pieces[]` / `identifierMap` — the interpolation structure the patcher needs to *locate and patch* each prompt. The binary is enough to **verify** a known prompt is still present (UNNERF-GUIDE Part 7), but reconstructing the named `.md` set for a new version is the work tweakcc-fixed publishes per release. Mechanics: UNNERF-GUIDE Part 3.

@@ -203,6 +203,27 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   log "Verifying un-nerfs patch the binary (vendored patcher + repack + boot-check)"
   PATCHED_JS="$WORK/patched.js"; PATCHED_BIN="$WORK/claude-patched.exe"
   node "$PATCH_CLI" apply "$CLI_JS" "$NEW_CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" | sed 's/^/  /'
+
+  # --- effort un-nerfs (BEST-EFFORT) + posture drift detection --------------
+  # Lift CC's silent effort caps on the prompt-patched bundle. A failure here
+  # never blocks the prompt un-nerfs. The stock effort "posture" is snapshotted
+  # and diffed against the committed manifest, so a change in CC's effort surface
+  # (renamed field, restructured enum) surfaces as a LOUD worklist, not a silent
+  # regression — same idea as the prompt-checksum manifest.
+  POSTURE="$REPO/data/effort-posture.json"; POSTURE_NEW="$WORK/effort-posture.json"
+  node "$REPO/lib/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
+  EFF_JS="$WORK/patched.effort.js"
+  set +e; EFF_OUT="$(node "$REPO/lib/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+  echo "$EFF_OUT" | sed 's/^/  /'
+  [ -s "$EFF_JS" ] && PATCHED_JS="$EFF_JS"
+  echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
+    warn "effort un-nerf incomplete — CC's effort code likely changed; update lib/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
+  if [ -f "$POSTURE" ] && [ -s "$POSTURE_NEW" ] && ! diff -q "$POSTURE" "$POSTURE_NEW" >/dev/null 2>&1; then
+    warn "CC effort surface changed since last release — review the diff:"
+    diff "$POSTURE" "$POSTURE_NEW" 2>/dev/null | sed 's/^/    /' || true
+  fi
+  [ -s "$POSTURE_NEW" ] && cp "$POSTURE_NEW" "$POSTURE"
+
   set +e
   REPACK_OUT="$(node "$NATIVE_CLI" repack "$CC_BIN" "$PATCHED_JS" "$PATCHED_BIN" 2>&1)"; RC=$?
   set -e

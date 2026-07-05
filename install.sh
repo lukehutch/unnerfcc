@@ -114,6 +114,22 @@ ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}')"
 log "Splicing un-nerfed prompts into the bundle"
 node "$PATCH_CLI" apply "$CLI_JS" "$CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" | sed 's/^/    /'
 
+# --- effort un-nerfs (BEST-EFFORT; must never block the prompt patches) -----
+# Lift CC's silent effort caps (mid-tier model default, /effort capped below the
+# ceiling). Runs on the already-prompt-patched bundle; if an anchor drifted, it
+# reports and we ship the prompt un-nerfs alone. See lib/apply-code-patches.mjs.
+EFF_JS="$WORK/patched.effort.js"
+log "Applying effort un-nerfs (best-effort)"
+set +e; EFF_OUT="$(node "$REPO/lib/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+echo "$EFF_OUT" | sed 's/^/    /'
+if [ -s "$EFF_JS" ]; then
+  PATCHED_JS="$EFF_JS"   # ship prompt + effort un-nerfs
+  echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
+    warn "effort un-nerf incomplete — CC's effort code likely changed; prompt un-nerfs are unaffected"
+else
+  warn "effort un-nerf pass produced no output — shipping prompt un-nerfs only (binary unaffected)"
+fi
+
 log "Repacking + boot-check"
 set +e; OUT="$(node "$NATIVE_CLI" repack "$CC_BIN" "$PATCHED_JS" "$PATCHED_BIN" 2>&1)"; RC=$?; set -e
 echo "$OUT" | grep -q BUN_FORMAT_INCOMPATIBLE && bun_incompatible "$OUT"

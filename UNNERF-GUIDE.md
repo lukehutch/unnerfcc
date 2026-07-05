@@ -509,3 +509,57 @@ has published. Replace this snapshot each sync rather than appending history.
 - **Not yet audited:** tweakcc-fixed's `system-reminders/` registry (per-turn
   injections that never surface as named prompts) — a future sweep surface, see
   Part 8.
+
+---
+
+## Part 10 — Effort un-nerfs (lifting silent effort degradation)
+
+Beyond prompt text, CC degrades reasoning **effort in code**. unnerfcc's charter:
+**never let effort be silently degraded.** These are handled by
+[`lib/apply-code-patches.mjs`](lib/apply-code-patches.mjs) — a **best-effort,
+second-tier** pass that edits CC's own code/data strings (not prompts) on the
+already-prompt-patched bundle. It **can never block the prompt un-nerfs**:
+`install.sh` / `upgrade.sh` run it after the prompt patch, and any failure is
+reported while the prompt un-nerfs ship regardless.
+
+**The nerfs (confirmed in v2.1.201 by reading the bundle):**
+- **Mid-tier model default.** Effort resolves from a data field `default_effort`
+  per model in the catalog; the resolver is `…?.default_effort??"high"`. Opus 4.8
+  ships `default_effort:"high"` — the *middle* of `["low","medium","high","xhigh","max"]`.
+- **`/effort` capped below `max`.** The persisted-setting enum is
+  `["low","medium","high","xhigh"]` (no `max`) and the write validator rejects
+  `"max"`; `max` is reachable only via `CLAUDE_CODE_EFFORT_LEVEL` env or transient
+  modes. A user cannot persist the model's top tier.
+- **Launch-effort pin.** On a fresh Opus/Fable session the resolver returns the
+  *model default*, overriding the user's persisted effort until they touch
+  `/effort` (which unpins). Raising the default (below) defeats this too.
+- **Not a nerf — leave alone:** subagents/side-calls already inherit the parent
+  session's chosen effort via `getAppState`; compaction/web-search side-calls use
+  full session effort. No patch needed.
+
+**The patches (P1–P3), anchored on string-literal contracts — never minified
+symbols or code shape, so they survive minification churn and resolver
+restructuring:**
+- **P1 floor `default_effort:"high"` → `"max"`.** *Regression-proof:* CC's own
+  runtime guard `if(eff==="max"&&!supportsMax(model))eff="high"` downgrades an
+  unsupported `max` back to `high` — exactly the stock value — so a raised model
+  either rises to `max` (Opus 4.8, and any future max-capable model) or stays
+  `high`. Never below stock. `"xhigh"` defaults are left untouched (raising them
+  to `max` could trip the guard *down* to `high` — a regression). This also
+  defeats the launch-pin, since the default it resolves to is now `max`.
+- **P2 uncap the `/effort` enum** `["low","medium","high","xhigh"]` → add `"max"`.
+- **P3 validator accepts `"max"`** (captures the minified parameter name).
+
+**Robustness + drift detection.** Each patch is idempotent, self-verifying, and
+independent; a missing anchor fails *open* to stock behavior (never worse) and is
+reported. `upgrade.sh` snapshots the stock effort surface to
+[`data/effort-posture.json`](data/effort-posture.json) and **diffs it each sync** —
+a renamed field or restructured enum surfaces as a loud worklist (update the
+anchors in `apply-code-patches.mjs`), the same idea as the Part 4 checksum
+manifest. Flags: `node lib/apply-code-patches.mjs {apply <in> <out>|posture <in>|verify <in>}`.
+
+**Honest limit.** Model downgrades pushed via Anthropic's **server-side** Statsig
+config (e.g. `tengu_auto_mode_config` routing the auto-mode classifier to a small
+model) are out of a local binary patch's reach. We document that rather than
+pretend a patch closes it. Sonnet is the lowest model we'd ever want for real
+work; Haiku is not good enough for the tasks these un-nerfs exist to enable.

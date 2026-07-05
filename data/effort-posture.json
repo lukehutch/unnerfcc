@@ -1,0 +1,11 @@
+{
+  "defaultEffort": {
+    "high": 3,
+    "xhigh": 1,
+    "max": 0
+  },
+  "effortEnumCapped": 1,
+  "effortEnumUncapped": 7,
+  "validatorCapped": 1,
+  "capGuardPresent": true
+}
