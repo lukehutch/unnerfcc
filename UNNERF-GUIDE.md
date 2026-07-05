@@ -268,8 +268,8 @@ node scripts/prompt-checksums.mjs --dir <stock-dir> --check
 node scripts/prompt-checksums.mjs --dir <stock-dir> --ccVersion X.Y.Z --write
 ```
 
-`--dir` must point at **stock** prompts (a tweakcc-fixed extraction or a
-`sync-version.mjs --target` output), never the un-nerfed `system-prompts/`.
+`--dir` must point at **stock** prompts (a `sync-version.mjs --target` or
+`gen-catalog.mjs` output), never the un-nerfed `system-prompts/`.
 
 ---
 
@@ -304,8 +304,8 @@ degrades engineering work or human-facing reporting gets a rule. Be conservative
 
 For maximum confidence on a big sweep, partition the prompt set by category
 (`system-prompt-*`, `agent-prompt-*`, `tool-description-*`, `skill-*` +
-`system-reminder-*`, `data-*`, and — under the tweakcc-fixed catalog —
-`tool-parameter-*`, `tool-result-*`, `workflow-*`) and review each slice
+`system-reminder-*`, `data-*`, `tool-parameter-*`, `tool-result-*`,
+`workflow-*`) and review each slice
 independently against the Part-1 buckets. `data-*` is almost always all-keep
 (reference blobs); `tool-parameter-*` is essentially always all-keep — parameter
 descriptions ("concise label", "1-2 sentences") are output-format contracts,
@@ -349,8 +349,8 @@ FAILs).
   `stock` text or the target file's `variables:` frontmatter. Such a placeholder
   has no entry in the prompt's `identifierMap`, so it reaches the binary's
   template literal unresolved and crashes Claude Code at launch
-  (`ReferenceError: NAME is not defined`) — or trips tweakcc-fixed's leak guard,
-  which silently skips the whole prompt. The guard fails loudly at apply time
+  (`ReferenceError: NAME is not defined`) — or trips the splicer's leak guard
+  (`lib/patch-prompts.mjs`), which skips the prompt. The guard fails loudly at apply time
   instead. (Lesson imported from lobotomized-claude-code's post-mortems.)
   The guard is **one-directional** — it never objects to a rule that *removes* a
   `${VAR}` reference. Dropping a verbosity/effort/count-cap variable (e.g.
@@ -365,10 +365,10 @@ FAILs).
 |---|---|
 | Upstream **reworded** the passage | Update the rule's `stock` to the new wording (the `unnerf` usually stands). |
 | Upstream **removed** the passage/prompt | **Retire** the rule (delete it; note in commit). |
-| Upstream moved the passage into a `${VARIABLE}` | **Search the catalog before retiring.** tweakcc-fixed catalogs many variable *values* as their own fragments (often under generated `_VAR_n` names or a `tool-result-*`/`tool-description-*` id) — grep the full stock tree for the passage; if it surfaces as a fragment, **retarget** the rule there. Only retire if the value genuinely isn't catalogued. (Precedent: the "briefly tell the user what you launched" flip, retired in v2.1.196 when the text moved into `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}`, was restored at the tweakcc-fixed switch — the fork catalogs that value as `tool-description-cloud-agent-launched-result` + `tool-result-cloud-agent-launched-notify-user`.) |
+| Upstream moved the passage into a `${VARIABLE}` | **Search the catalog before retiring.** Our extractor catalogs many variable *values* as their own fragments (often under generated `_VAR_n` names or a `tool-result-*`/`tool-description-*` id) — grep the full stock tree for the passage; if it surfaces as a fragment, **retarget** the rule there. Only retire if the value genuinely isn't catalogued. (Precedent: the "briefly tell the user what you launched" flip, retired in v2.1.196 when the text moved into `${WAIT_FOR_AGENT_RESULTS_INSTRUCTION}`, was restored once the value was catalogued as `tool-description-cloud-agent-launched-result` + `tool-result-cloud-agent-launched-notify-user`.) |
 | Upstream **replaced** brevity with neutral/pro-thorough text | Retire the rule — the nerf is gone. |
 | A prompt was **renamed** | **Retarget**: move the rule to the new filename key (e.g. `skill-simplify.md` → `agent-prompt-simplify-slash-command.md`). |
-| The extractor **re-fragmented** a prompt (tweakcc-fixed splits shared constants and phase bodies into their own fragments) | **Retarget** to the fragment that carries the passage, respelling any `${VARS}` to the fragment's own placeholder names. If the passage now exists in two fragments and one already has a rule flipping it, retire the duplicate rather than double-ruling the same binary text. |
+| The extractor **re-fragmented** a prompt (our extractor splits shared constants and phase bodies into their own fragments) | **Retarget** to the fragment that carries the passage, respelling any `${VARS}` to the fragment's own placeholder names. If the passage now exists in two fragments and one already has a rule flipping it, retire the duplicate rather than double-ruling the same binary text. |
 
 Confirm the same flip isn't needed in a **sibling** prompt — Claude Code often
 duplicates a sentence across related prompts, and rules are per-file. Don't
@@ -376,11 +376,14 @@ eyeball this — run the **exhaustive sibling audit**: import `RULES`, and for e
 rule grep its `stock` across every stock `.md`; any match in a file that *isn't*
 the rule's own key is an un-ruled sibling to flip (unless the match is
 example/reference content — e.g. a sample prompt quoted inside a guide, which
-stays). The current audit (over the full 1,331-file tweakcc-fixed catalog) finds
+stays). The current audit (over the full 1,401-file catalog) finds
 **0 un-ruled siblings**: every cross-file `stock` match is already ruled in both
-files, except the intentional `skill-model-migration-guide` keep — that phrase
-sits inside a sample prompt quoted for users (example content, not a directive
-to Claude). See Part 9.
+files. This cycle the audit caught one real sibling — the plan-specificity cap in
+`system-prompt-remote-planning-session`, the same nerf `ultraplan` flips — and it
+was given its own rule. The only remaining cross-file matches are the intentional
+`skill-model-migration-guide` keeps: two directive sentences (`act-when-ready`,
+`no-unnecessary-error-handling`) that sit inside `>` blockquotes quoting *other*
+prompts as reference material, not as directives to Claude. See Part 9.
 
 ---
 
@@ -400,8 +403,8 @@ node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js
 ```
 
 To verify an **applied** un-nerf actually reached the binary (after
-`tweakcc-fixed --apply`), unpack the *patched* binary and grep for un-nerf
-sentinels present and stock sentinels gone:
+`./install.sh` / `node lib/patch-prompts.mjs`), unpack the *patched* binary and
+grep for un-nerf sentinels present and stock sentinels gone:
 
 ```bash
 # un-nerf present (expect >0):
@@ -413,26 +416,9 @@ grep -c "introduce abstractions beyond what the task requires" /tmp/cc.js
 ```
 
 `install.sh` automates exactly this and **fails loudly (leaving the binary clean)
-on a no-op/partial apply** — never trust tweakcc-fixed's "applied successfully"
-message alone; it can report success while patching nothing.
-
-**Two benign-noise traps when re-applying** (both look like failures but aren't):
-
-- **"Could not find system prompt …" ×dozens** — you ran `tweakcc-fixed --apply`
-  against an **already-un-nerfed** binary, so it hunts for the *stock* text that
-  the prior patch already replaced and can't find it. The un-nerf is fine; the
-  apply is just a redundant no-op. `install.sh` avoids this by reinstalling a
-  clean **stock** binary before every re-apply (it detects a prior un-nerf via
-  [[the sentinels]] and `npm install -g @anthropic-ai/claude-code@<ver>`
-  overwrites the patched binary). Proof: from a pristine binary the flood is 0
-  warnings; from a patched one it's dozens.
-- **"Customizations applied with some failures / open an issue"** — a bare
-  `--apply` also runs tweakcc-fixed's *other* feature patches from your
-  `~/.tweakcc/config.json` (themes, session memory, model customizations, …). On
-  a very fresh CC build some of those can't be located. That is
-  **tweakcc-fixed's** to fix and is unrelated to the un-nerf — it prints "these
-  do not affect your system prompt patches." `install.sh` verifies the un-nerf
-  independently (sentinels) and says so.
+on a no-op/partial apply** — it verifies the 5 sentinels independently rather than
+trusting the splice's own summary, and the splicer's own LOST banner + exit 3
+(below) is the primary guard against a silent no-op.
 
 **The vendored splicer classifies its own skips by severity** (`lib/patch-prompts.mjs`).
 When a prompt can't be uniquely located (couldNotFind / several matches, none a
@@ -454,6 +440,17 @@ the splicer compares the edited `.md` against stock (reconstructed from the cata
   couldNotFind — expected, **not** lost (exit 0). Reinstall stock CC first for a
   clean apply. This global check is why a genuine single drop against a stock binary
   still reports LOST while a wholesale patched-re-run doesn't false-alarm.
+
+**All identical call-sites are patched, not just the first.** The *catalog* collapses
+duplicate-id sites to their first occurrence (extraction-time — Part 9), but at *patch*
+time the splicer does the opposite: when a prompt's stock text appears as the identical
+standalone string literal at several bundle offsets (e.g. a constant reused as a
+fallback, or the same wording under two ids), `chooseMatch` recognizes the byte-identical
+matches as one reused constant and `apply()` patches **every** one — the run summary's
+`dupSites` counts the extra sites, and an `[info] patched N additional duplicate
+call-site(s)…` line names them. Only genuinely *different* standalone texts stay
+ambiguous and are skipped. (A sentence embedded inside a *larger* prompt is a separate
+prompt with its own id — patched by its own rule, not by this expansion.)
 
 > **Lesson (the `agent-prompt-general-purpose-short` drop).** In 2.1.201 the short
 > ~225c agent self-description is the standalone constant `BCa` (`"You are…half-done.
@@ -479,17 +476,21 @@ format changes ([BACKGROUND.md](BACKGROUND.md)).
 
 ## Part 9 — Current state (v2.1.201)
 
-We track **only the latest** Claude Code version whose prompt JSON tweakcc-fixed
-has published. Replace this snapshot each sync rather than appending history.
+We track **only the latest** Claude Code version, generating the prompt catalog
+ourselves from the installed binary each sync (`gen-catalog.mjs`). Replace this
+snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.201** — the latest CC release, and the newest
-  the skrabe/tweakcc-fixed catalog has published prompt data for (1,513 sites /
+- **Version:** built from **v2.1.201** — the latest CC release (1,513 sites /
   **1,401 unique prompts** — duplicate-id sites collapse to their first
-  occurrence, matching the fork's own extractor).
-- **Scale:** **121 un-nerf rules across 79 files**, 1,401 prompts, `--check`
-  clean, orphan-variable guard passing. **The v2.1.201 version bump itself
-  needed no new rules and caused no rule drift; the +40 over the 81-rule sync
-  baseline are policy-audit lifts (see Part 1), not stock drift.**
+  occurrence in our own `gen-catalog.mjs` extractor; note the *splicer* still
+  patches every identical call-site of a reused prompt, see Part 7).
+- **Scale:** **123 un-nerf rules across 79 files**, 1,401 prompts, `--check`
+  clean, orphan-variable guard passing. **The v2.1.201 upstream bump caused no
+  rule drift and needed no new rules to counter stock changes; the +42 over the
+  81-rule sync baseline are policy-audit lifts (see Part 1), not stock drift** —
+  the two most recent being the general-purpose-short report-tail lift (also a
+  retarget onto the standalone `BCa` fallback constant so it reaches the binary)
+  and the remote-planning-session specificity lift (mirrors ultraplan).
 - **Upstream delta (v2.1.199 → v2.1.201):** manifest diff flags **+30 added,
   −1 removed, 14 changed** (net `.md` 1,372 → 1,401). This was a **feature
   build-out**, not a posture change — a background-observer agent, `set_cwd` /
@@ -524,24 +525,24 @@ has published. Replace this snapshot each sync rather than appending history.
     only to the reusable cheatsheet it persists; the skill's actual verification
     guidance stays maximally thorough). **No new bucket-2/3 nerf, no weakened
     bucket-4.**
-- **Drift check:** at sync time all **121 rules re-applied byte-exactly**
-  (`Rules applied: 121, FAILED: 0, Missing: 0`; `--check` → `121 skipped, 0
-  FAILED, 0 missing`). Several rule-carrying files were in the manifest "changed"
-  list, but for every one the change was a ccVersion bump or edits outside the
-  un-nerfed passage; no rule's `stock` anchor moved. All 5 install.sh verify
+- **Drift check:** all **123 rules re-apply byte-exactly**
+  (`Rules applied: 123, FAILED: 0, Missing: 0`; `--check` → `123 skipped, 0
+  FAILED, 0 missing`). The v2.1.201 sync itself re-applied the then-121 rules
+  with no drift (every "changed"-list file was a ccVersion bump or an edit
+  outside the un-nerfed passage; no rule's `stock` anchor moved); the +2 were
+  added afterward this cycle as coverage fixes. All 5 install.sh verify
   sentinels present.
-- **Carry-forward state (from the tweakcc-fixed switch, still true):**
-  `system-prompt-current-claude-models` remains present in the fork catalog (no
+- **Carry-forward state (still true after the move to the standalone `lib/` toolkit):**
+  `system-prompt-current-claude-models` remains present in our catalog (no
   hand-restoration needed), and the two "briefly tell the user what you launched"
   launch-note flips (`tool-description-cloud-agent-launched-result`,
   `tool-result-cloud-agent-launched-notify-user`) remain reachable and applied.
 - **Binary check (Part 7):** not re-run this sync (no patchable binary in the
-  sync environment). The fork catalog is a superset extracted from the same
+  sync environment). Our catalog is extracted from the same
   binary version, and `install.sh` verifies sentinels land on every install.
   Re-run the full fingerprint check at the next version bump.
-- **Not yet audited:** tweakcc-fixed's `system-reminders/` registry (per-turn
-  injections that never surface as named prompts) — a future sweep surface, see
-  Part 8.
+- **Not yet audited:** the `system-reminder-*` per-turn injections that never
+  surface as named prompts — a future full-sweep surface (Part 5).
 
 ---
 

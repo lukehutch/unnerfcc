@@ -24,7 +24,7 @@ The whole upgrade is one command:
 | 5 | **Launch Claude Code headless to semantically label** the new/changed fragments the extractor couldn't identify | `scripts/relabel.mjs` + `claude -p` |
 | 6 | Validate the catalog (structural gates) | `scripts/validate-catalog.mjs` |
 | 7 | Reconstruct stock `.md` + replay un-nerfs | `scripts/sync-version.mjs`, `scripts/apply-unnerfs.py` |
-| 8 | Verify the un-nerfs still patch the binary (patch → repack → boot-check) | `lib/patch-prompts.mjs` + `lib/bun-binary.mjs` |
+| 8 | Patch-verify: splice → effort pass → posture diff → repack → boot-check; a **lost un-nerf (exit 3) blocks the release** | `lib/patch-prompts.mjs` + `lib/apply-code-patches.mjs` + `lib/bun-binary.mjs` |
 | 9 | Leave everything staged for your review + commit | — |
 
 ## Why this design
@@ -58,8 +58,10 @@ The whole upgrade is one command:
 1. **Review the relabels.** Claude's labels are validated (unique, slot-complete,
    id-stable) but semantic — skim `data/prompts/prompts-<version>.json`'s new
    entries. (At patch time `lib/patch-prompts.mjs` re-checks slot alignment and
-   **fails closed** — skips rather than splice — on any capture/identifier count
-   mismatch, so a mis-bound `${…}` can never reach the binary.) Category prefixes (`tool-parameter-` vs `tool-result-`) are the most
+   **fails closed** on any capture/identifier mismatch — a benign skip is a silent
+   no-op, but a mismatch that would **lose an un-nerf raises a banner and exits 3**
+   (a release blocker in `upgrade.sh`), so a mis-bound `${…}` can never reach the
+   binary.) Category prefixes (`tool-parameter-` vs `tool-result-`) are the most
    common thing to hand-correct; the id string itself is ours to choose (it need
    not match skrabe).
 2. **Bucket-analyze new/changed prompts** per [UNNERF-GUIDE.md](UNNERF-GUIDE.md)
@@ -89,5 +91,6 @@ part that tracks Bun internals.
 
 `lib/`'s deps install themselves on the first `upgrade.sh`/`install.sh` run
 (`cd lib && npm install`: node-lief, @babel/parser, prettier). Requirements:
-Node ≥ 20, Python 3, the `claude` CLI, and a C toolchain for `node-lief`'s
-native addon.
+Node ≥ 20, Python 3, a C toolchain for `node-lief`'s native addon, and `npm`.
+`upgrade.sh` additionally needs the `claude` CLI (for relabeling); `install.sh`
+auto-installs Claude Code via npm if it isn't already on PATH.

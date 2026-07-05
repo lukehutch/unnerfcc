@@ -11,7 +11,7 @@ This repo reads every prompt out of the Claude Code binary, lifts those two clas
 This is the live set I run daily — not cleaned up for public consumption, in-progress un-nerfs and all.
 
 > [!NOTE]
-> **Built for Claude Code v2.1.201** — 121 un-nerf rules across 79 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The v2.1.199→v2.1.201 bump was a feature build-out (background-observer agent, `set_cwd`/directory-trust, memory-sync conflict handling, Claude-Tag/Slack): none of it touched the brevity/thoroughness posture, so **it needed no new rules**. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+> **Built for Claude Code v2.1.201** — 123 un-nerf rules across 79 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The v2.1.199→v2.1.201 bump was a feature build-out (background-observer agent, `set_cwd`/directory-trust, memory-sync conflict handling, Claude-Tag/Slack): none of it touched the brevity/thoroughness posture, so **the version bump itself needed no new rules** — the 2 rules added this cycle were separate coverage fixes (a dropped un-nerf whose catalog target never reached the binary, and a sibling-prompt nerf), not bump fallout. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
 
 **Docs:** [Un-nerf guide](UNNERF-GUIDE.md) (objectives + rules) · [Upgrade](UPGRADE.md) (the release playbook) · [Maintenance](MAINTENANCE.md) (script flags) · [Background](BACKGROUND.md) (how it works)
 
@@ -19,13 +19,13 @@ This is the live set I run daily — not cleaned up for public consumption, in-p
 
 ## Install
 
-unnerfcc is **standalone** — it patches your Claude Code binary with its own toolkit, no external tool required. You need Node ≥ 20, Python 3, the `claude` CLI on your PATH, and a C toolchain (for `node-lief`'s native addon, installed on first run).
+unnerfcc is **standalone** — it patches your Claude Code binary with its own toolkit, no external tool required. You need Node ≥ 20, Python 3, and a C toolchain (for `node-lief`'s native addon, installed on first run). Claude Code itself is optional up front — if `claude` isn't on your PATH, `install.sh` installs it for you via npm.
 
 ```bash
 ./install.sh          # --help for options; --dry-run to preview
 ```
 
-[`install.sh`](install.sh) detects your CC version, rebuilds that version's un-nerfed prompt set, **backs up** the binary, unpacks its JS bundle, splices the un-nerfs in, **repacks and boot-checks** the result, installs it (refusing to install a binary that won't boot), and disables CC's auto-updater so the patch survives. To roll back, reinstall Claude Code: `npm install -g @anthropic-ai/claude-code@<version>`.
+[`install.sh`](install.sh) auto-installs Claude Code via npm if it isn't already on your PATH, targets the newest version it has a prompt catalog for (keeping an already-installed supported version, otherwise installing/switching — and warning if CC's latest npm release is newer than our newest catalog), rebuilds that version's un-nerfed prompt set, unpacks its JS bundle, splices the un-nerfs in (`apply-unnerfs.py --quiet`), **repacks and boot-checks** the result, and swaps in the patched binary only after it boots clean (refusing to install a binary that won't boot), then disables CC's auto-updater so the patch survives. No binary backup is kept — to roll back, reinstall Claude Code: `npm install -g @anthropic-ai/claude-code@<version>`.
 
 To sync to a **new** CC release, see [`upgrade.sh`](upgrade.sh) / [UPGRADE.md](UPGRADE.md).
 
@@ -97,7 +97,7 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 │   ├── bun-binary.mjs            #   extract + re-package the Bun native binary (node-lief)
 │   ├── beautify.mjs              #   un-minify the bundle for study (babel + prettier)
 │   ├── extract-prompts.mjs       #   parse the bundle → prompt catalog (babel)
-│   └── patch-prompts.mjs         #   splice edited prompts into the JS bundle
+│   └── patch-prompts.mjs         #   splice edited prompts into every matching call-site (lost un-nerf ⇒ exit 3)
 └── system-prompts/               # 1,401 markdown files (Claude Code v2.1.201)
 ```
 

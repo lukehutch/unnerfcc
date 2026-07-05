@@ -67,7 +67,9 @@ Stdlib-only Python, no pip install, safe to run repeatedly. Reads every `.md` in
 | `--dry-run` | Report what would change without writing. |
 | `--check` | Like `--dry-run`, but exit 1 if any rule would apply or fail. CI gate. |
 | `--only FILE` | Restrict to one filename (no path prefix). |
-| `--verbose` | Show context on SKIPPED entries too. |
+| `--verbose`, `-v` | Show context on SKIPPED entries too. |
+| `--quiet`, `-q` | Collapse the per-rule listing to just the Summary counts (FAIL/MISSING are still shown in full). `install.sh` uses this. |
+| `--dump-rules PATH` | Write every rule (id, stock, unnerf) as JSON to PATH and exit — lets a rule-direct patcher drive off the rules without reconstructing `.md` files. |
 | `--dir PATH` | Target a different prompts directory. |
 
 Run it, fix any FAIL, and re-run until the report is all APPLIED/SKIP/NORMALIZED — then gate with `--check` (exit 0). A FAIL quotes both the stock text it looked for and the un-nerf it expected, so you know exactly what to find; resolve it with the drift table in UNNERF-GUIDE Part 6. To add a new un-nerf, add a `Rule(stock, unnerf, description)` to `RULES` (byte-exact `stock`, preferably a short unique substring) — full recipe in UNNERF-GUIDE Part 6.
@@ -112,10 +114,15 @@ never confused with a genuinely dropped un-nerf:
 
 | Outcome | Meaning |
 |---|---|
-| **`patched`** | Un-nerfed body found + spliced. |
+| **`patched`** | Un-nerfed body found + spliced. A prompt constant reused at several **identical standalone call-sites** is patched at ALL of them, not just the first (`dupSites` counter in the summary; an `[info] patched N additional duplicate call-site(s)…` line names the reused prompts). |
 | **`unchanged`** | `.md` already equals what's in the bundle (idempotent). |
 | **`[info] N … (harmless)`** | Prompt not uniquely locatable **and** its `.md` equals stock — we don't un-nerf it, so leaving it is a correct no-op (the ~60 memory/tool-result/LSP micro-prompts). |
+| **`[info] input bundle is ALREADY un-nerfed (N/5 sentinels present)`** | Re-run detected via un-nerf sentinels in the *input* — every un-nerf's stock anchor is already gone, so those couldNotFinds are expected, not LOST (exit 0). Reinstall stock CC to re-patch cleanly. |
 | **`[LOST] <id>` banner** | `.md` **differs** from stock but wasn't spliced — a real un-nerf is MISSING from the binary. Fix the catalog `pieces` / rule anchor. |
+
+**Summary counters:** `patched unchanged couldNotFind skipped lost dupSites` — `lost`
+gates the exit code; `dupSites` counts extra call-sites of reused prompts patched
+beyond the primary.
 
 **Exit codes:** `0` clean · `2` output is not valid JS (never repack) · `3` one or
 more un-nerfs were LOST. `install.sh` warns on `3` and ships the rest; `upgrade.sh`

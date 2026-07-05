@@ -1,30 +1,32 @@
 ---
 name: sync-and-release
-description: End-to-end workflow to publish a new release after a Claude Code upstream version bump — re-applies un-nerfs to fresh stock, resolves any rule drift, commits the sync, tags `v<cc_version>-<iteration>`, and creates the GitHub release with the correct two-subsection body format. Use when fresh stock `.md` files from `~/.tweakcc/system-prompts/` have been copied into this repo (so `git status` shows the upstream delta as M/D/?) and the user wants to ship a new release.
+description: End-to-end workflow to publish a new release after a Claude Code upstream version bump — re-applies un-nerfs to fresh stock, resolves any rule drift, commits the sync, tags `v<cc_version>-<iteration>`, and creates the GitHub release with the correct two-subsection body format. Use after `./upgrade.sh` has regenerated `system-prompts/` for a new Claude Code version (so `git status` shows the upstream delta as M/D/??) and the user wants to ship a new release.
 ---
 
 # Sync prompts to a new Claude Code version and cut a release
 
 This skill automates the post-upstream-bump release workflow documented in
-[UNNERF-GUIDE.md Part 2](../../../UNNERF-GUIDE.md) (the upgrade happy path).
+[UPGRADE.md](../../../UPGRADE.md) (the standalone upgrade happy path).
 
 ## Preconditions (DO NOT bypass — check them before anything else)
 
 1. **Working directory is the repo root.** Verify with `git remote -v` — it must point at
    `github.com/lukehutch/unnerfcc`. If not, stop.
-2. **Fresh stock has already been copied in.** `git status --short` must show a mix of
+2. **Fresh stock has already been regenerated.** `git status --short` must show a mix of
    `M` / `D` / `??` entries under `system-prompts/` (plus a modified
    `system-prompt-checksums.json`). If the working tree is clean, the regen step hasn't
-   run yet — run `node scripts/sync-version.mjs X.Y.Z --download` (rebuilds stock from
-   skrabe/tweakcc-fixed's published JSON and prints the CHANGED/ADDED/REMOVED worklist),
-   or tell the user to (UNNERF-GUIDE Part 2).
+   run yet — run `./upgrade.sh` (see UPGRADE.md): the standalone flow that unpacks the CC
+   binary, generates the catalog (`gen-catalog.mjs` + Claude classification), reconstructs
+   stock, and replays the un-nerfs — then review the staged delta. (`sync-version.mjs`
+   alone can't bring up a brand-new version; the catalog must exist first.)
 3. **The user has authorized pushes and publishing.** This skill pushes commits, pushes
    tags, and publishes a GitHub release with a zip asset — all visible to others. If the
    user hasn't explicitly authorized these actions for this session, confirm once at the
    top before starting Phase 5.
-4. **Do NOT run tweakcc-fixed itself.** The user runs tweakcc-fixed (or `install.sh`) by
-   hand against their local CC binary. This skill never touches `~/.tweakcc/` or the
-   installed `claude` binary.
+4. **Do NOT run `install.sh` or `upgrade.sh`.** Those are the standalone patch/upgrade
+   flows that install/switch the Claude Code version and modify the installed `claude`
+   binary. This skill only edits the repo and publishes a release — it never modifies the
+   installed binary.
 
 ## Required reading
 
@@ -100,7 +102,7 @@ Or, to find the highest ccVersion in the whole tree (authoritative):
 grep -h '^ccVersion:' system-prompts/*.md | sort -V | tail -1
 ```
 
-Record the exact value — e.g. `2.1.117`. You'll reuse it in the commit title, tag name,
+Record the exact value — e.g. `2.1.201`. You'll reuse it in the commit title, tag name,
 tag annotation, release title, release body, and zip filename. **One source of truth** —
 derive every placeholder from this single string.
 
@@ -163,7 +165,12 @@ Caused by upstream deleting a file that a rule referenced.
 
 ### Final gate for Phase 2
 
-Re-run once more and confirm `Rules FAILED: 0` and `Missing files: 0`. Only then proceed.
+Re-run once more and confirm `Rules FAILED: 0` and `Missing files: 0`. This is the
+*text-level* check only. The release also requires the **binary patch-verify** (run by
+`./upgrade.sh` via `lib/patch-prompts.mjs`) to exit 0: an un-nerf can pass
+`apply-unnerfs.py --check` yet still fail to reach the bundle, which the splicer reports
+as a **LOST un-nerf → exit 3**. An exit 3 is a release blocker — resolve it (fix the
+catalog `pieces` / rule anchor) before tagging. Only then proceed.
 
 ---
 
@@ -343,8 +350,8 @@ Tag name: `v<VERSION>-<ITERATION>`, where `<ITERATION>` was determined in Phase 
 ```
 Un-nerfed system prompts for Claude Code v<VERSION> (iteration <N>)
 
-Tagged snapshot aligned with Claude Code v<VERSION>, extracted via
-tweakcc-fixed. Delta from v<PREV_TAG>: <1-2 sentences on file-count
+Tagged snapshot aligned with Claude Code v<VERSION>, extracted with
+unnerfcc's own standalone toolkit. Delta from v<PREV_TAG>: <1-2 sentences on file-count
 delta and any notable upstream changes>. All un-nerfs remain idempotent
 under scripts/apply-unnerfs.py (<N>/<N> rules applied against fresh
 v<VERSION> stock, <M> skipped, 0 failed). <If rule changes: "Added K
@@ -354,8 +361,8 @@ The -<N> suffix is the iteration number against the same CC version;
 future tweaks on top of v<VERSION> ship as v<VERSION>-<N+1>, etc.
 
 Release asset system-prompts-v<VERSION>-<N>.zip contains the
-<FILE_COUNT> .md files flat at the zip root, drop-in for
-~/.tweakcc/system-prompts/.
+<FILE_COUNT> .md files flat at the zip root — the same set as this
+repo's system-prompts/ (apply with ./install.sh).
 ```
 
 ### Execute
@@ -436,16 +443,15 @@ gh release list --limit 1 --json tagName --jq '.[0].tagName'
 ```markdown
 Un-nerfed Claude Code **v<VERSION>** system prompts — current latest.
 
-- **Zip contents:** <FILE_COUNT> `.md` files at the zip root, ~<SIZE_KB> KB compressed.
-- **Drop-in for:** `~/.tweakcc/system-prompts/`.
+- **Zip contents:** <FILE_COUNT> `.md` files at the zip root, ~<SIZE_KB> KB compressed — the same set as this repo's `system-prompts/`.
 - **Full context:** [README at this tag](https://github.com/lukehutch/unnerfcc/blob/v<VERSION>-<N>/README.md) — un-nerf thesis, before/after examples, install steps, post-bump re-apply workflow.
-- **Install note:** apply with [`skrabe/tweakcc-fixed`](https://github.com/skrabe/tweakcc-fixed) (npm `tweakcc-fixed` ≥ 2.0.0, or built from `main` — what `install.sh` does).
+- **Install:** run [`./install.sh`](https://github.com/lukehutch/unnerfcc/blob/v<VERSION>-<N>/install.sh) — standalone; it installs/pins the supported Claude Code version and patches the installed binary directly (no tweakcc-fixed required).
 
 ## Changes since [`<PREV_TAG>`](https://github.com/lukehutch/unnerfcc/releases/tag/<PREV_TAG>)
 
 ### Upstream (from Anthropic — Claude Code v<PREV_VERSION> → v<VERSION>)
 
-These changes came from Anthropic's v<VERSION> build itself. This repo did **not** author any of them — they flow through verbatim from the stock `tweakcc-fixed` extraction, before any un-nerfing is applied.
+These changes came from Anthropic's v<VERSION> build itself. This repo did **not** author any of them — they flow through verbatim from the stock extraction (our own `gen-catalog.mjs` + `sync-version.mjs`), before any un-nerfing is applied.
 
 - **+N file(s):** <new filename> — <one-sentence description of what the prompt does>
 - **−N file(s):** <deleted filename> — removed entirely.
