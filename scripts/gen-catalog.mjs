@@ -74,6 +74,26 @@ try {
 
 // 2. Index the fresh extraction by identity hash and fuzzy prefix.
 const seed = JSON.parse(readFileSync(seedCatalog, "utf-8"));
+
+// Safety net: the general extractor's inclusion heuristic is a proxy and can
+// miss a prompt (short one-liners especially). But we KNOW every seed prompt,
+// so the heuristic must never be load-bearing for one. Read the bundle once and
+// confirm a seed prompt directly: if a distinctive literal run of its text is
+// present verbatim in the bundle, the prompt is there regardless of what the
+// heuristic decided. A "distinctive run" is a >=25-char stretch of plain
+// printable ASCII with no interpolation / newline / backslash / quote — those
+// are stored source-escaped in the bundle, but plain ASCII is byte-literal.
+const bundle = readFileSync(cliJs, "utf-8");
+function distinctiveRun(p) {
+  let best = null;
+  for (const piece of p.pieces ?? []) {
+    for (const run of piece.split(/\$\{|\\n|\n|\\|["'`]/)) {
+      if (/^[\x20-\x7e]{25,}$/.test(run) && (!best || run.length > best.length)) best = run;
+    }
+  }
+  return best;
+}
+const bundleHasSeed = (p) => { const r = distinctiveRun(p); return r ? bundle.includes(r) : false; };
 const freshByIdentity = new Map();
 const freshFuzzyCounts = new Map(), freshFuzzy = new Map();
 const freshUsed = new Set();
@@ -111,6 +131,11 @@ for (const s of seed.prompts) {
     });
     freshUsed.add(identityHash(fz)); changed++; continue;
   }
+  // Not surfaced by the extractor — but if the prompt's text is verbatim in the
+  // bundle, it IS present (the heuristic just missed it); carry it as-is. This
+  // guarantees no known prompt (e.g. an un-nerf target) is ever dropped by an
+  // extraction-heuristic miss.
+  if (bundleHasSeed(s)) { out.prompts.push({ ...s }); carried++; continue; }
   removed.push(s.id);
 }
 
