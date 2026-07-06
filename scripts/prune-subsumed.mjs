@@ -19,7 +19,7 @@ import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "../lib/node_modules/@babel/parser/lib/index.js";
-import { buildStringLiteral, buildTemplateLiteral } from "../lib/extract-prompts.mjs";
+import { buildStringLiteral, buildTemplateLiteral, extract } from "../lib/extract-prompts.mjs";
 
 const REPO = dirname(dirname(fileURLToPath(import.meta.url)));
 const STORE_PATH = join(REPO, "data", "string-catalog.json");
@@ -32,10 +32,21 @@ const store = JSON.parse(readFileSync(STORE_PATH, "utf8"));
 const hashOf = (pieces) => createHash("sha256").update(pieces.join("")).digest("hex");
 const ast = parse(code, { sourceType: "unambiguous", errorRecovery: true });
 
+// The set of strings the CURRENT extractor actually emits. A leaf whose content is
+// ALSO in this set is not subsumed — it appears independently elsewhere and must
+// keep its classification. Only a leaf that is ONLY part of a run (not extracted
+// standalone) is subsumed.
+const extractedHashes = new Set();
+for (const p of extract(code, ccVersion, { includeAll: true })) extractedHashes.add(hashOf(p.pieces));
+
+// A run folds (its leaves get subsumed) only when it is PURE string — every leaf a
+// StringLiteral or a backtick with no ${…} — matching lib/extract-prompts.mjs. A
+// run with any variable/interpolation operand is NOT folded; its parts stay live.
 const SKIP = new Set(["type", "start", "end", "loc", "range", "leadingComments", "trailingComments", "innerComments", "extra"]);
-const allStringy = (n) =>
-  n.type === "StringLiteral" || n.type === "TemplateLiteral" ||
-  (n.type === "BinaryExpression" && n.operator === "+" && allStringy(n.left) && allStringy(n.right));
+const pureStringy = (n) =>
+  n.type === "StringLiteral" ||
+  (n.type === "TemplateLiteral" && (n.expressions || []).length === 0) ||
+  (n.type === "BinaryExpression" && n.operator === "+" && pureStringy(n.left) && pureStringy(n.right));
 const leaves = (n, acc) => {
   if (n.type === "BinaryExpression" && n.operator === "+") { leaves(n.left, acc); leaves(n.right, acc); }
   else acc.push(n);
@@ -45,17 +56,16 @@ const leaves = (n, acc) => {
 const subsumed = new Set();
 const visit = (n, parent) => {
   if (!n || typeof n.type !== "string") return;
-  const topRun = n.type === "BinaryExpression" && n.operator === "+" && allStringy(n) &&
+  const topFold = n.type === "BinaryExpression" && n.operator === "+" && pureStringy(n) &&
     !(parent && parent.type === "BinaryExpression" && parent.operator === "+");
-  if (topRun) {
+  if (topFold) {
     for (const leaf of leaves(n, [])) {
       const b = leaf.type === "StringLiteral" ? buildStringLiteral(leaf, ccVersion) : buildTemplateLiteral(leaf, code, ccVersion);
       const h = hashOf(b.pieces);
-      if (store.strings[h]) subsumed.add(h);
+      // subsumed only if the leaf is in the store AND not independently extracted
+      if (store.strings[h] && !extractedHashes.has(h)) subsumed.add(h);
     }
-    // interpolation expressions are still extracted; recurse them, not the leaves
-    for (const leaf of leaves(n, [])) if (leaf.type === "TemplateLiteral") for (const e of leaf.expressions || []) visit(e, leaf);
-    return;
+    return; // a pure-string fold has no interpolation expressions to recurse
   }
   for (const k in n) {
     if (SKIP.has(k)) continue;

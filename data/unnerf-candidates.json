@@ -230,6 +230,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.\n\n- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.\n- You already have all the context you need in the conversation above.\n- ",
+  "notes": "system prompt with tool-use restriction",
+  "ccFirstSeen": "2.1.199"
+ },
+ {
   "sample": "One line describing exactly what will happen when the user clicks Next. Example: \"Next: I'll click Create Bucket and type the name.\" Shown below the explanation in a smaller font.",
   "notes": "instruction for one-line step description",
   "ccFirstSeen": "2.1.199"

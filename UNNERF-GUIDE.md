@@ -446,9 +446,12 @@ the splicer compares the edited `.md` against stock (reconstructed from the cata
 their DECODED content (quotes/escapes stripped, per-build identifier names excised,
 `+`-concatenation folded) — never a regex over the raw text. So a prompt is found by
 *what it says*, not how it's spelled: single- or double-quoted literal, backtick
-template with `${…}`, or a `+`-concat run of any mix of those (folded to one
-contiguous string, interpolation slots and all) all resolve to the same content key,
-and **every** matching node is patched. That's how "all call-sites are patched, not just
+template with `${…}`, or a **pure-string `+`-concat run** (any quote mix, folded to
+one contiguous string) all resolve to the same content key, and **every** matching
+node is patched. A `+` run *separated by a variable* (`"a"+x+"b"`) is deliberately
+NOT folded — those interpolate a runtime value (in this bundle, overwhelmingly
+library/error strings), not authored prompt text — so its parts stay separate; a
+genuine prompt with a slot is authored as a single template literal. That's how "all call-sites are patched, not just
 the first" and "duplicates broken up differently are still found" both fall out for
 free — the run summary's `dupSites` counts the extra sites and an `[info] patched N
 additional call-site(s)…` line names them. The *catalog* collapses duplicate-id sites

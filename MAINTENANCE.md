@@ -105,10 +105,11 @@ Node ES module — the **prompt splicer**. **Parses the extracted JS with
 @babel/parser** and locates each un-nerfed `.md` body by matching string-producing
 AST nodes on their DECODED content (its catalog `pieces`) — not a regex. Matching on
 decoded content makes it encoding-agnostic: it finds a prompt whether the bundle
-stores it as a single/double-quoted literal, a backtick template, or a `+`-concat
-run of any mix of those (folded into one contiguous string, slots and all), and
-patches **every** node that matches (a reused prompt is un-nerfed at all its
-call-sites, even under different encodings). Shares its node→`pieces` logic with
+stores it as a single/double-quoted literal, a backtick template, or a pure-string
+`+`-concat run (any quote mix, folded into one contiguous string), and patches
+**every** node that matches (a reused prompt is un-nerfed at all its call-sites,
+even under different encodings). A `+` run separated by a variable (`"a"+x+"b"`)
+is left as separate parts. Shares its node→`pieces` logic with
 `extract-prompts.mjs` so the two agree exactly. Run by `install.sh` / `upgrade.sh`,
 not usually by hand:
 
@@ -140,12 +141,12 @@ treats `3` as a release blocker. Full rationale + the general-purpose-short less
 
 ## `prune-subsumed.mjs`
 
-Node ES module. After the extractor learned to fold a `+`-run of string parts into
-ONE contiguous string, the run's individual leaf parts are no longer extracted on
-their own — they're **subsumed**. This removes from the SHA-256 store
-(`data/string-catalog.json`) any classification keyed on a subsumed leaf's content
-hash (dead weight; a leaf mis-labeled `prompt` is only *part* of a larger string).
-Run once after teaching the extractor to fold, and thereafter it's a no-op.
+Node ES module. After the extractor learned to fold a pure-string `+`-run into ONE
+contiguous string, a leaf part that is **only** part of a run (not also extracted
+standalone elsewhere) is no longer emitted — it's **subsumed**. This removes its
+now-dead classification from the SHA-256 store (`data/string-catalog.json`). It
+compares against the live extraction, so a leaf whose content ALSO appears standalone
+is kept (not pruned). Run once after teaching the extractor to fold; thereafter a no-op.
 
 ```bash
 node scripts/prune-subsumed.mjs <cli.js> <ccVersion> [--dry-run]
