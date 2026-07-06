@@ -138,6 +138,21 @@ treats `3` as a release blocker. Full rationale + the general-purpose-short less
 
 ---
 
+## `prune-subsumed.mjs`
+
+Node ES module. After the extractor learned to fold a `+`-run of string parts into
+ONE contiguous string, the run's individual leaf parts are no longer extracted on
+their own — they're **subsumed**. This removes from the SHA-256 store
+(`data/string-catalog.json`) any classification keyed on a subsumed leaf's content
+hash (dead weight; a leaf mis-labeled `prompt` is only *part* of a larger string).
+Run once after teaching the extractor to fold, and thereafter it's a no-op.
+
+```bash
+node scripts/prune-subsumed.mjs <cli.js> <ccVersion> [--dry-run]
+```
+
+---
+
 ## `apply-code-patches.mjs`
 
 Node ES module. unnerfcc's **best-effort effort un-nerfs** — edits CC's own

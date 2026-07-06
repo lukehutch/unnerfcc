@@ -40,6 +40,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.201"
+ },
+ {
   "sample": "${}\n\n## Action\n\n1. Convert \\`${}\\` to a 5-field cron expression. Supported suffixes: \\`s\\` \u2192 ceil to nearest minute, \\`m\\` (minutes), \\`h\\` (hours), \\`d\\` (days). Examples: \\`5m\\` \u2192 \\`*/5 * * * *\\`, \\",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -160,11 +165,6 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "Output token limit hit. Resume directly \u2014 no apology, no recap of what you were doing. ",
-  "notes": "model instruction: 'no apology, no recap'",
-  "ccFirstSeen": "2.1.199"
- },
- {
   "sample": "# Communicating with the user\n\n${?\"Your text output is what the user reads; they usually can't see your thinking or the raw tool results.\":\"Your text output is what the user reads between tool calls; ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -210,6 +210,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
+  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
+  "ccFirstSeen": "2.1.201"
+ },
+ {
   "sample": "# Welcome to [Team Name]\n\n## How We Use Claude\n\nBased on [name]'s usage over the last [N] days:\n\nWork Type Breakdown:\n  [Category 1]  [ascii bar]  [N]%\n  [Category 2]  [ascii bar]  [N]%\n  [Category 3]",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -222,11 +227,6 @@
  {
   "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
-  "ccFirstSeen": "2.1.199"
- },
- {
-  "sample": "CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.\n\n- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.\n- You already have all the context you need in the conversation above.\n- ",
-  "notes": "system prompt with tool-use restriction",
   "ccFirstSeen": "2.1.199"
  },
  {
@@ -330,11 +330,6 @@
   "ccFirstSeen": "2.1.199"
  },
  {
-  "sample": "This is the ONLY place the user sees your words \u2014 be complete but concise.",
-  "notes": "tone directive: 'be concise'",
-  "ccFirstSeen": "2.1.199"
- },
- {
   "sample": "- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n- If a",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -373,6 +368,11 @@
   "sample": "Cleanup, altitude, and conventions candidates use the same\n`file`/`line`/`summary` shape; in `failure_scenario`, state the concrete\ncost (what is duplicated, wasted, harder to maintain, or which CLAUD",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Tooltip body text. Explain what the user is looking at and why it matters. This is the ONLY place the user sees your words \u2014 be complete but concise.",
+  "notes": "'be complete but concise' caps length",
+  "ccFirstSeen": "2.1.201"
  },
  {
   "sample": "one short sentence naming the finished deliverable \u2014 no sub-clauses or bullet summaries",
@@ -490,6 +490,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "The report to deliver to the observed agent. Be concise and specific.",
+  "notes": "'Be concise and specific' \u2014 process/output brevity cap in a .describe() schema",
+  "ccFirstSeen": "2.1.201"
+ },
+ {
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -603,15 +608,5 @@
   "sample": "# Skillify {{userDescriptionBlock}}\n\nYou are capturing this session's repeatable process as a reusable skill.\n\nReview the conversation above \u2014 it is your source material. Pay particular attention to t",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
- },
- {
-  "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
-  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
-  "ccFirstSeen": "2.1.201"
- },
- {
-  "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
-  "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
-  "ccFirstSeen": "2.1.201"
  }
 ]
