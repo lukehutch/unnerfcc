@@ -11,7 +11,7 @@ This repo reads every prompt out of the Claude Code binary, lifts those two clas
 This is the live set I run daily — not cleaned up for public consumption, in-progress un-nerfs and all.
 
 > [!NOTE]
-> **Built for Claude Code v2.1.201** — 123 un-nerf rules across 79 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The v2.1.199→v2.1.201 bump was a feature build-out (background-observer agent, `set_cwd`/directory-trust, memory-sync conflict handling, Claude-Tag/Slack): none of it touched the brevity/thoroughness posture, so **the version bump itself needed no new rules** — the 2 rules added this cycle were separate coverage fixes (a dropped un-nerf whose catalog target never reached the binary, and a sibling-prompt nerf), not bump fallout. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+> **Built for Claude Code v2.1.201** — 123 un-nerf rules across 79 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The un-nerfs touch only the brevity/thoroughness posture — engineering depth and human-facing reporting — never protection-class or functional strings. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
 
 **Docs:** [Un-nerf guide](UNNERF-GUIDE.md) (objectives + rules) · [Upgrade](UPGRADE.md) (the release playbook) · [Maintenance](MAINTENANCE.md) (script flags) · [Background](BACKGROUND.md) (how it works)
 

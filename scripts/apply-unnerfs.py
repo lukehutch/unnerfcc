@@ -1152,8 +1152,8 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
 
     # =========================================================================
-    # v2.1.199 lift-all-local audit — exhaustive signature sweep of all 1372
-    # prompts (5 parallel triage passes; see UNNERF-GUIDE Part 1). The sweep was
+    # lift-all-local audit — exhaustive signature sweep of the full prompt
+    # catalog (5 parallel triage passes; see UNNERF-GUIDE Part 1). The sweep was
     # overwhelmingly KEEP (user-protection, functional/parse contracts, reference
     # /example, user-selected terse modes). These are the local restriction/flag
     # lifts it surfaced.
