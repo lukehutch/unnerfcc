@@ -7,5 +7,6 @@
   "effortEnumCapped": 1,
   "effortEnumUncapped": 7,
   "validatorCapped": 1,
+  "maxFallback": "high",
   "capGuardPresent": true
 }

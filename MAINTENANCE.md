@@ -158,8 +158,11 @@ node scripts/prune-subsumed.mjs <cli.js> <ccVersion> [--dry-run]
 
 Node ES module. unnerfcc's **best-effort effort un-nerfs** — edits CC's own
 code/data strings (not prompts) in the extracted JS to lift silent effort caps
-(mid-tier model `default_effort`, `/effort` capped below `max`). Runs *after* the
-prompt patch in `install.sh` / `upgrade.sh`; a failure never blocks the prompt
+(mid-tier model `default_effort`, `/effort` capped below `max`). **Model-agnostic**:
+it floors every model's `default_effort` (`high` *and* `xhigh`) to `max` and
+leans on CC's own per-model `max_effort` capability guard to stay safe, so new
+models (future Opus, Fable 5) inherit the floor with no code change. Runs *after*
+the prompt patch in `install.sh` / `upgrade.sh`; a failure never blocks the prompt
 un-nerfs. Full rationale: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 10.
 
 ```bash
@@ -168,11 +171,16 @@ node lib/apply-code-patches.mjs posture <inJs>           # snapshot the effort s
 node lib/apply-code-patches.mjs verify  <inJs>           # exit 0 iff all effort un-nerfs present
 ```
 
+Four patches run in order: **cascade-max-fallback** (P0, makes the raise
+regression-proof — must precede the floor), **floor-default-effort** (P1, raises
+`high` *and* `xhigh` defaults to `max`; the `xhigh` raise is skipped fail-safe if
+P0 didn't apply), **uncap-effort-enum** (P2), **validator-accepts-max** (P3).
+
 | Result per patch | Meaning |
 |---|---|
 | **APPLIED** | Anchor found, patch spliced + verified. |
 | **ALREADY** | Effort un-nerf already present (idempotent re-run). |
-| **FAILED** | Anchor missing/ambiguous — CC's effort code likely changed. Reported, not fatal; update the string-literal anchors in `apply-code-patches.mjs`. `upgrade.sh` also diffs `data/effort-posture.json` to surface this. |
+| **FAILED** | Anchor missing/ambiguous — CC's effort code likely changed. Reported, not fatal; update the string-literal anchors in `apply-code-patches.mjs`. `upgrade.sh` also diffs `data/effort-posture.json` (now including `maxFallback`) to surface this. |
 
 ---
 

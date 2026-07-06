@@ -567,29 +567,57 @@ reported while the prompt un-nerfs ship regardless.
 
 **The nerfs (confirmed in v2.1.201 by reading the bundle):**
 - **Mid-tier model default.** Effort resolves from a data field `default_effort`
-  per model in the catalog; the resolver is `…?.default_effort??"high"`. Opus 4.8
-  ships `default_effort:"high"` — the *middle* of `["low","medium","high","xhigh","max"]`.
+  per model in the catalog; the resolver is `…?.default_effort??"high"`. In
+  v2.1.201 the catalog carries **four** `default_effort` sites: **Fable 5**,
+  **Opus 4.8** and **Sonnet 5** all ship `"high"` (the *middle* of
+  `["low","medium","high","xhigh","max"]`); **Opus 4.7** ships `"xhigh"`. Every
+  one of these models also carries the `max_effort` capability, so none of them
+  actually needs to sit below `max` — the default is a deliberate throttle.
 - **`/effort` capped below `max`.** The persisted-setting enum is
   `["low","medium","high","xhigh"]` (no `max`) and the write validator rejects
   `"max"`; `max` is reachable only via `CLAUDE_CODE_EFFORT_LEVEL` env or transient
   modes. A user cannot persist the model's top tier.
 - **Launch-effort pin.** On a fresh Opus/Fable session the resolver returns the
   *model default*, overriding the user's persisted effort until they touch
-  `/effort` (which unpins). Raising the default (below) defeats this too.
+  `/effort` (which unpins). Raising the default (below) defeats this too — the
+  bundle even carries explicit `unpinOpus47/Opus48/Fable5LaunchEffort` flags,
+  confirming this pin is applied per-model at launch.
 - **Not a nerf — leave alone:** subagents/side-calls already inherit the parent
   session's chosen effort via `getAppState`; compaction/web-search side-calls use
   full session effort. No patch needed.
 
-**The patches (P1–P3), anchored on string-literal contracts — never minified
+**Model-agnostic by construction.** Nothing here names a model. CC decides
+max-support from a **capability** on the model's catalog entry
+(`capabilities.includes("max_effort")`, functions `NDe`/`Coe`) plus an explicit
+*old-model blocklist* — never a hardcoded id of a current model. So a brand-new
+model (the next Opus, the next Fable) inherits the floor the moment Anthropic
+ships it, with no change here. This was **verified against the real v2.1.201
+bundle**: Fable 5 and Opus 4.8 each end up at a genuine `max`.
+
+**The patches (P0–P3), anchored on string-literal contracts — never minified
 symbols or code shape, so they survive minification churn and resolver
 restructuring:**
-- **P1 floor `default_effort:"high"` → `"max"`.** *Regression-proof:* CC's own
-  runtime guard `if(eff==="max"&&!supportsMax(model))eff="high"` downgrades an
-  unsupported `max` back to `high` — exactly the stock value — so a raised model
-  either rises to `max` (Opus 4.8, and any future max-capable model) or stays
-  `high`. Never below stock. `"xhigh"` defaults are left untouched (raising them
-  to `max` could trip the guard *down* to `high` — a regression). This also
-  defeats the launch-pin, since the default it resolves to is now `max`.
+- **P0 cascade the resolver's max-fallback `high` → `xhigh`.** Stock, the
+  resolver drops an unsupported `max` *straight* to `high`
+  (`if(i==="max"&&!NDe(e))i="high"`), skipping `xhigh`. P0 rewrites that fallback
+  to `xhigh`; the resolver's very next line (`if(i==="xhigh"&&!Coe(e))i="high"`)
+  then finishes the job. Net: an unsupported `max` degrades **by true
+  capability** — `max → xhigh → high` — instead of collapsing to `high`. This is
+  what makes flooring *any* starting default to `max` regression-proof.
+- **P1 floor `default_effort` → `"max"`, for both `"high"` and `"xhigh"`
+  defaults.** The `"high"` raise is always safe (an unsupported `max` falls to
+  `high` = stock). The `"xhigh"` raise is applied **only when P0's cascade is
+  present** (otherwise SKIPPED — fail-safe, never a regression). This is the
+  piece that readies the floor for **future Opus** whether it ships a `"high"`
+  default (like Opus 4.8) or an `"xhigh"` default (like Opus 4.7): either way it
+  boots at `max`. It also defeats the launch-pin, since the default it resolves
+  to is now `max`.
+  *Honest scope:* the real **request** path resolves through the guarded resolver
+  (`nQ`, P0's site); a separate **display-layer** reader (`Uqo`→`VEe`) reads the
+  raw default without the capability guard, so a hypothetical model that can't
+  support its own raised default could *show* `max` cosmetically while the effort
+  actually sent stays guarded. Inert for every real model (a stock default is
+  always within the model's ceiling).
 - **P2 uncap the `/effort` enum** `["low","medium","high","xhigh"]` → add `"max"`.
 - **P3 validator accepts `"max"`** (captures the minified parameter name).
 
