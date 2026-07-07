@@ -1,0 +1,62 @@
+# The 50 hardest-for-Claude SWE-bench-Lite instances — the default set for
+# scripts/benchmark.mjs (stock vs un-nerfed accuracy).
+#
+# Provenance: from the SWE-bench experiments leaderboard
+# (github.com/swe-bench/experiments, evaluation/lite, 84 submissions of which 24
+# are Claude-based). Selection: rank SWE-bench-Lite's 300 cases by how FEW Claude
+# submissions solved them (fewest first = hardest for Claude), keep only cases
+# solved by >=1 of all 84 submissions (so there is headroom — excludes the ~35
+# solved by nobody), tie-break by fewest total resolvers, cap 6/repo for spread.
+# Result: 50 cases across 12 repos; 18 solved by NO Claude model, 20 solved by
+# only 1 of the 84 total submissions. Regenerate: see the aggregation over
+# evaluation/lite/*/results/results.json (resolved lists).
+astropy__astropy-14182
+django__django-11742
+django__django-11910
+django__django-13220
+django__django-13768
+matplotlib__matplotlib-18869
+matplotlib__matplotlib-22711
+matplotlib__matplotlib-25079
+matplotlib__matplotlib-25433
+scikit-learn__scikit-learn-10508
+scikit-learn__scikit-learn-10949
+sphinx-doc__sphinx-8474
+sympy__sympy-19007
+django__django-15996
+sympy__sympy-16503
+sphinx-doc__sphinx-8506
+sympy__sympy-21612
+pytest-dev__pytest-6116
+django__django-11905
+pydata__xarray-4248
+pytest-dev__pytest-5221
+sphinx-doc__sphinx-8273
+sympy__sympy-11897
+sympy__sympy-12236
+sympy__sympy-13043
+pydata__xarray-3364
+pytest-dev__pytest-5103
+matplotlib__matplotlib-23299
+pytest-dev__pytest-8906
+astropy__astropy-14365
+sphinx-doc__sphinx-10451
+mwaskom__seaborn-2848
+pylint-dev__pylint-6506
+pallets__flask-4045
+mwaskom__seaborn-3407
+pallets__flask-4992
+pytest-dev__pytest-5413
+pytest-dev__pytest-8365
+scikit-learn__scikit-learn-25500
+sphinx-doc__sphinx-8627
+matplotlib__matplotlib-23476
+psf__requests-2148
+sphinx-doc__sphinx-10325
+scikit-learn__scikit-learn-25747
+pydata__xarray-4094
+scikit-learn__scikit-learn-13497
+scikit-learn__scikit-learn-14087
+pylint-dev__pylint-7080
+psf__requests-1963
+astropy__astropy-6938

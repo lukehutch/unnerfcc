@@ -127,7 +127,7 @@ const EFFORT = (process.env.BENCH_EFFORT || "high").trim();
 // Explicit instance set (one id per line, '#' comments ok): $BENCH_INSTANCES, or
 // the committed default curated "hardest-for-Opus" list. When present, these
 // exact instances run (not the first-N of the dataset) and n is their count.
-const DEFAULT_INSTANCES = join(REPO, "data", "swebench-hardest-for-opus.txt");
+const DEFAULT_INSTANCES = join(REPO, "data", "swebench-hardest-for-claude.txt");
 const instancesFile = (process.env.BENCH_INSTANCES && existsSync(process.env.BENCH_INSTANCES))
   ? process.env.BENCH_INSTANCES : (existsSync(DEFAULT_INSTANCES) ? DEFAULT_INSTANCES : null);
 let INSTANCE_IDS = [];
@@ -350,7 +350,7 @@ const metric = (stock.eval != null && patched.eval != null) ? "eval" : "gen";
 const sVal = stock[metric], pVal = patched[metric];
 const stamp = new Date().toISOString().slice(0, 10);
 const results = { version, n: N, date: stamp, metric, effort: EFFORT, stock, patched,
-  dataset: INSTANCE_IDS.length ? "SWE-bench-lite (hardest-for-Opus subset)" : "SWE-bench-lite", instances: INSTANCE_IDS };
+  dataset: INSTANCE_IDS.length ? "SWE-bench-lite (hardest-for-Claude subset)" : "SWE-bench-lite", instances: INSTANCE_IDS };
 writeFileSync(join(CACHE, `results-${version}.json`), JSON.stringify(results, null, 2));
 
 if (sVal == null || pVal == null) {
@@ -393,7 +393,7 @@ function renderSvg({ version, n, date, metric, sVal, pVal, stock, patched }) {
     ? `stock ${stock.resolved}/${stock.tested} · patched ${patched.resolved}/${patched.tested} resolved`
     : "";
   const metricBase = metric === "eval" ? "evaluation accuracy (issues actually fixed)" : "generation rate (patches produced) — EVAL SKIPPED";
-  const metricName = `${metricBase} · both at --effort ${EFFORT}${INSTANCE_IDS.length ? " · hardest-for-Opus set" : ""}`;
+  const metricName = `${metricBase} · both at --effort ${EFFORT}${INSTANCE_IDS.length ? ` · ${INSTANCE_IDS.length} hardest-for-Claude cases` : ""}`;
   const rt = (stock?.avgGen != null && patched?.avgGen != null)
     ? `avg runtime/instance:  stock ${fmtDur(stock.avgGen)}  ·  patched ${fmtDur(patched.avgGen)}${stock.avgGen > 0 ? `  (${(patched.avgGen / stock.avgGen).toFixed(1)}× slower)` : ""}`
     : "";
@@ -420,7 +420,7 @@ function updateReadme({ version, n, date, metric, sVal, pVal, stock, patched }) 
   const block = `${MARK_START}
 ## Benchmark: does un-nerfing help?
 
-Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the **un-nerfed** build of the *same* Claude Code version, so the only variable is the prompt patch. **Both builds run at \`--effort ${EFFORT}\`** (apples-to-apples: the effort un-nerf is *not* exercised here, so this isolates the prompt rewrites), each under a fresh \`CLAUDE_CONFIG_DIR\` so local \`settings.json\` can't skew it, and with no \`--model\` (each uses the version's default model).${INSTANCE_IDS.length ? ` Instances are the **${n} hardest-for-Opus** SWE-bench-lite cases — ones Claude-3-Opus failed and only 1/84 leaderboard submissions solved — chosen so there's headroom to see a difference (easy cases both builds already ace).` : ""}
+Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the **un-nerfed** build of the *same* Claude Code version, so the only variable is the prompt patch. **Both builds run at \`--effort ${EFFORT}\`** (apples-to-apples: the effort un-nerf is *not* exercised here, so this isolates the prompt rewrites), each under a fresh \`CLAUDE_CONFIG_DIR\` so local \`settings.json\` can't skew it, and with no \`--model\` (each uses the version's default model).${INSTANCE_IDS.length ? ` Instances are the **${n} hardest-for-Claude** SWE-bench-lite cases — ranked by how few of the 24 Claude submissions on the [SWE-bench leaderboard](https://github.com/swe-bench/experiments) solved each, keeping only cases some model *did* solve (headroom; the ~35 nobody solved are excluded), across 12 repos — so the easy cases both builds already ace don't wash out the signal.` : ""}
 
 ![Un-nerf effect on SWE-bench-lite](docs/benchmark.svg)
 
@@ -429,7 +429,7 @@ Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the *
 | Stock v${version} | **${sVal.toFixed(1)}%**${sCount} | ${sRt} |
 | Un-nerfed v${version} | **${pVal.toFixed(1)}%**${pCount} (${delta >= 0 ? "+" : ""}${delta} pts) | ${pRt}${slower} |
 
-${INSTANCE_IDS.length ? `${n} hardest-for-Opus` : "SWE-bench-lite"} instances, both at \`--effort ${EFFORT}\`, ${date}. Runtime is model generation time per instance (Docker eval excluded; per-instance generation cap ${GEN_TIMEOUT}s). **Caveat:** at n=${n} the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(0)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with \`./upgrade.sh --benchmark=N\`.
+${INSTANCE_IDS.length ? `${n} hardest-for-Claude` : "SWE-bench-lite"} instances, both at \`--effort ${EFFORT}\`, ${date}. Runtime is model generation time per instance (Docker eval excluded; per-instance generation cap ${GEN_TIMEOUT}s). **Caveat:** at n=${n} the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(0)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with \`./upgrade.sh --benchmark=N\`.
 ${MARK_END}`;
 
   let md = readFileSync(README, "utf8");
