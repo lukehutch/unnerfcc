@@ -3,8 +3,8 @@ name: 'Data: Claude Tag (Claude in Slack) reference'
 description: >-
   Offline reference for Claude Tag, Claude Code's org-managed Slack surface,
   covering what it is, availability, setup, configuration, and how it differs
-  from the earlier Claude in Slack app
-ccVersion: 2.1.201
+  from the earlier Claude in Slack app.
+ccVersion: 2.1.202
 -->
 # Claude Tag (Claude in Slack)
 
@@ -60,6 +60,8 @@ All of this lives in Admin settings → Claude Tag and applies organization-wide
 Remember the snapshot rule: any change here takes effect in **new** threads only.
 
 ## Where the docs are
+
+These \`.md\` URLs are for fetching. When you link a page for the user, drop the trailing \`.md\` so they get the rendered page.
 
 | Topic | URL |
 |---|---|

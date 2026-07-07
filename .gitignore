@@ -41,3 +41,8 @@ lib/node_modules/
 scripts/__pycache__/
 __pycache__/
 *.pyc
+
+# SWE-bench benchmark working area (harness clone, venv, binary copies,
+# per-run logs). The committed outputs are docs/benchmark.svg + the README
+# section; everything under data/benchmark/ is large, local, regenerable.
+data/benchmark/

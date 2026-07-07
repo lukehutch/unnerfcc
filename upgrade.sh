@@ -3,7 +3,10 @@
 # upgrade.sh — bring unnerfcc up to a new Claude Code release, fully standalone.
 #
 # This is the MAINTAINER flow (install.sh is the end-user apply flow). It:
-#   1. detects the installed CC version and finds our latest catalog,
+#   1. resolves the TARGET version — the newest CC available on npm (or --version),
+#      NOT whatever is installed — and fetches that exact binary into a temp
+#      prefix if needed, so it runs whether or not CC is installed and never
+#      touches your global install,
 #   2. unpacks the CC native binary to its JS bundle          (vendored native I/O),
 #   3. extracts a fresh prompt catalog, seeded with our previous one
 #      so unchanged/reworded prompts keep their ids           (vendored extractor),
@@ -25,7 +28,12 @@
 # the new layout.
 #
 # USAGE
-#   ./upgrade.sh [--version X.Y.Z] [--force] [--no-patch-verify] [--yes]
+#   ./upgrade.sh [--version X.Y.Z] [--force] [--no-patch-verify] [--benchmark[=N]] [--yes]
+#
+# --benchmark[=N]: after a clean upgrade, run the SWE-bench harness on the STOCK
+#   and just-PATCHED binaries and update the accuracy bar chart in README.md
+#   (default N=10). OPT-IN and HEAVY: needs Docker + ~50GB disk + hours; it is
+#   best-effort and never fails the upgrade. See scripts/benchmark.mjs.
 #
 set -euo pipefail
 
@@ -38,12 +46,14 @@ LIB_DIR="$REPO/lib"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
-FORCE=0; PATCH_VERIFY=1; ASSUME_YES=0; WANT_VERSION=""
+FORCE=0; PATCH_VERIFY=1; ASSUME_YES=0; WANT_VERSION=""; BENCHMARK=0; BENCH_N=10
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) WANT_VERSION="$2"; shift 2;;
     --force) FORCE=1; shift;;
     --no-patch-verify) PATCH_VERIFY=0; shift;;
+    --benchmark) BENCHMARK=1; shift;;
+    --benchmark=*) BENCHMARK=1; BENCH_N="${1#*=}"; shift;;
     --yes|-y) ASSUME_YES=1; shift;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "unknown arg: $1" >&2; exit 2;;
@@ -69,61 +79,103 @@ bun_incompatible() {
 # --- preconditions ----------------------------------------------------------
 command -v node >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
-command -v claude  >/dev/null || die "the 'claude' CLI is required for relabeling"
+# NOTE: `claude` is NOT required to be installed — we fetch the target binary
+# ourselves (see below). It's only used, if present, for the semantic relabel
+# step; otherwise the freshly-fetched binary stands in.
 [ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
 if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
   log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
   ( cd "$LIB_DIR" && npm install )
 fi
 
-# --- resolve the claude native binary --------------------------------------
-log "Resolving Claude Code binary"
-CLAUDE_LAUNCHER="$(command -v claude)"
-CC_BIN="$(readlink -f "$CLAUDE_LAUNCHER" 2>/dev/null || echo "$CLAUDE_LAUNCHER")"
-# The launcher usually symlinks to .../bin/claude.exe (native binary).
-[ -f "$CC_BIN" ] || die "could not resolve the claude binary from $CLAUDE_LAUNCHER"
-CC_VERSION="${WANT_VERSION:-$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)}"
-[ -n "$CC_VERSION" ] || die "could not determine installed CC version"
-ok "binary: $CC_BIN (v$CC_VERSION)"
-
-# --- find our previous catalog ---------------------------------------------
+# --- resolve the TARGET version (works whether or not CC is installed) ------
+# upgrade.sh's job is to ADD un-nerf support for the newest Claude Code, so the
+# target is the newest AVAILABLE release (npm) — not whatever happens to be
+# installed — unless --version pins one. We fetch that exact version's binary
+# ourselves below, so nothing needs to be installed first.
+log "Resolving target Claude Code version"
 mkdir -p "$PROMPTS_DIR"
+
+# Newest version we already ship a catalog for (also the id carry-forward seed).
 PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | sort -V | tail -1 || true)"
-if [ -z "$PREV_CATALOG" ]; then
-  warn "no previous catalog in $PROMPTS_DIR — this is a first run (no id carry-forward)."
-else
-  PREV_VERSION="$(basename "$PREV_CATALOG" | sed -E 's/prompts-(.*)\.json/\1/')"
-  ok "previous catalog: v$PREV_VERSION"
-  if [ "$CC_VERSION" = "$PREV_VERSION" ] && [ "$FORCE" -eq 0 ]; then
-    ok "already at v$CC_VERSION — nothing to do (use --force to regenerate)."
-    exit 0
-  fi
+SUPPORTED_LATEST=""
+[ -n "$PREV_CATALOG" ] && SUPPORTED_LATEST="$(basename "$PREV_CATALOG" | sed -E 's/prompts-(.*)\.json/\1/')"
+
+# Newest published CC (best-effort; network).
+NPM_LATEST="$(npm view @anthropic-ai/claude-code version 2>/dev/null | tail -1 || true)"
+
+# Currently-installed CC, if any (reused as-is when it already matches target).
+INSTALLED_VERSION=""
+if command -v claude >/dev/null 2>&1; then
+  INSTALLED_VERSION="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
 fi
 
-# --- check npm for a newer CC release than the one we're about to patch -----
-log "Checking npm for a newer Claude Code release"
-NPM_LATEST="$(npm view @anthropic-ai/claude-code version 2>/dev/null | tail -1 || true)"
-if [ -n "$NPM_LATEST" ]; then
-  newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$2" ]; }
-  if newer "$CC_VERSION" "$NPM_LATEST"; then
-    warn "a newer Claude Code is available: installed v$CC_VERSION, npm latest v$NPM_LATEST."
-    warn "  upgrade.sh patches the INSTALLED version. To move to v$NPM_LATEST, install it first:"
-    warn "    npm install -g @anthropic-ai/claude-code@$NPM_LATEST   # then re-run ./upgrade.sh"
-    if [ "$ASSUME_YES" -eq 0 ]; then
-      printf '  Continue processing the installed v%s anyway? [y/N] ' "$CC_VERSION"
-      read -r ans; case "$ans" in [yY]*) : ;; *) die "stopped — install the newer CC first, then re-run";; esac
-    fi
-  else
-    ok "installed v$CC_VERSION is the latest on npm (v$NPM_LATEST)"
-  fi
+# Target: --version wins; else the newest available on npm; else (offline) the
+# installed version.
+if [ -n "$WANT_VERSION" ]; then
+  CC_VERSION="$WANT_VERSION"
+elif [ -n "$NPM_LATEST" ]; then
+  CC_VERSION="$NPM_LATEST"
+elif [ -n "$INSTALLED_VERSION" ]; then
+  CC_VERSION="$INSTALLED_VERSION"
+  warn "could not query npm (offline?) — falling back to the installed v$CC_VERSION"
 else
-  warn "could not query npm for the latest CC version (offline?) — proceeding with installed v$CC_VERSION"
+  die "cannot determine a target version: npm unavailable and no Claude Code installed. Pass --version X.Y.Z."
+fi
+
+[ -n "$SUPPORTED_LATEST" ] && ok "newest catalog we ship: v$SUPPORTED_LATEST" \
+                           || warn "no existing catalog in $PROMPTS_DIR — first run (no id carry-forward)."
+[ -n "$NPM_LATEST" ] && ok "newest on npm: v$NPM_LATEST"
+[ -n "$INSTALLED_VERSION" ] && ok "installed: v$INSTALLED_VERSION"
+ok "target version: v$CC_VERSION"
+
+# Nothing-to-do: we already have a catalog for the target and no --force.
+if [ -f "$PROMPTS_DIR/prompts-$CC_VERSION.json" ] && [ "$FORCE" -eq 0 ]; then
+  ok "already support v$CC_VERSION — nothing to do (use --force to regenerate, or --version to target another release)."
+  exit 0
+fi
+if [ -n "$SUPPORTED_LATEST" ] && [ "$CC_VERSION" != "$SUPPORTED_LATEST" ]; then
+  newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]; }
+  newer "$CC_VERSION" "$SUPPORTED_LATEST" \
+    && log "adding support for v$CC_VERSION (newer than our latest v$SUPPORTED_LATEST)" \
+    || warn "target v$CC_VERSION is OLDER than our latest catalog v$SUPPORTED_LATEST — regenerating it anyway"
 fi
 
 NEW_CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-upgrade-$CC_VERSION-XXXX")"
 CLI_JS="$WORK/cli.js"
 trap 'rm -rf "$WORK"' EXIT
+
+# --- obtain the target native binary ---------------------------------------
+# Reuse an already-installed binary at the target version; otherwise fetch that
+# EXACT version into a temp prefix under $WORK — the maintainer's global install
+# is never touched (install.cjs's postinstall materializes bin/claude.exe from
+# the platform-matching optional dep).
+log "Resolving the v$CC_VERSION native binary"
+CC_BIN=""
+if [ "$INSTALLED_VERSION" = "$CC_VERSION" ] && command -v claude >/dev/null 2>&1; then
+  LAUNCHER="$(command -v claude)"
+  CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
+  [ -f "$CC_BIN" ] && ok "using installed binary: $CC_BIN (v$CC_VERSION)" || CC_BIN=""
+fi
+if [ -z "$CC_BIN" ]; then
+  command -v npm >/dev/null || die "need the v$CC_VERSION binary but npm is unavailable to fetch it"
+  log "Fetching Claude Code v$CC_VERSION (temp prefix — your global install is untouched)"
+  DL="$WORK/cc"; mkdir -p "$DL"
+  npm install --prefix "$DL" "@anthropic-ai/claude-code@$CC_VERSION" \
+      --no-audit --no-fund --loglevel=error \
+    || die "npm could not fetch @anthropic-ai/claude-code@$CC_VERSION"
+  CC_BIN="$DL/node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+  [ -f "$CC_BIN" ] || die "fetched the package but the native binary is missing at $CC_BIN (postinstall may have failed — unsupported platform?)"
+  RES="$("$CC_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)"
+  [ "$RES" = "$CC_VERSION" ] || warn "fetched binary reports v$RES (expected v$CC_VERSION) — continuing"
+  ok "fetched binary: $CC_BIN (v${RES:-?})"
+fi
+
+# A working `claude` for the semantic relabel step: the installed one if present,
+# else the binary we just fetched (stock CC — fine for an AI relabel call; it
+# shares ~/.claude auth).
+CLAUDE_FOR_RELABEL="$(command -v claude 2>/dev/null || echo "$CC_BIN")"
 
 # --- 1. unpack the binary (Bun-format-change aware) ------------------------
 log "Unpacking JS bundle from the native binary"
@@ -175,7 +227,7 @@ if [ -n "${PREV_CATALOG:-}" ]; then
       printf '  Launch \033[1mclaude\033[0m to semantically label %s fragment(s)? [Y/n] ' "$N"
       read -r ans; case "$ans" in [nN]*) die "aborted before relabel";; esac
     fi
-    ( cd "$RL_WORK" && claude -p --dangerously-skip-permissions \
+    ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
         "Read LABELING-TASK.md in this directory and follow it EXACTLY. The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Read worklist.json ($N items), assign a label to each per the conventions, and WRITE the result as labels.json in this directory (a JSON array of $N objects, one per ref). Do not ask questions; complete the task and write the file." )
     [ -f "$RL_WORK/labels.json" ] || die "claude did not produce labels.json"
     log "Merging labels into the catalog"
@@ -256,6 +308,23 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   [ $MISS -eq 0 ] && ok "un-nerf sentinels present in patched binary"
 else
   warn "skipping patch-verify (${PATCH_CLI##*/} not built or --no-patch-verify)"
+fi
+
+# --- 7. OPTIONAL benchmark (--benchmark) -----------------------------------
+# Stock vs patched accuracy on SWE-bench. OPT-IN and HEAVY (Docker + hours);
+# best-effort — a benchmark failure never fails the upgrade. Runs on the binaries
+# built above (both live in $WORK until this script exits); benchmark.mjs copies
+# them to a stable path first.
+if [ "$BENCHMARK" -eq 1 ]; then
+  if [ "$PATCH_VERIFY" -eq 1 ] && [ -n "${PATCHED_BIN:-}" ] && [ -f "$PATCHED_BIN" ]; then
+    log "Benchmarking stock vs patched v$CC_VERSION (SWE-bench, n=$BENCH_N) — this is slow"
+    node "$REPO/scripts/benchmark.mjs" "$CC_BIN" "$PATCHED_BIN" "$CC_VERSION" "$BENCH_N" \
+      || warn "benchmark step did not complete — the upgrade itself is unaffected (see data/benchmark/*.log)"
+  else
+    warn "--benchmark needs the patched binary from patch-verify — don't combine it with --no-patch-verify."
+  fi
+else
+  log "Benchmark skipped. To compare stock vs patched accuracy: ./upgrade.sh --benchmark[=N]  (heavy: Docker + hours)"
 fi
 
 # --- done -------------------------------------------------------------------

@@ -6,9 +6,10 @@
  *
  * WHY SEED-DRIVEN
  * ---------------
- * Our minimal extractor (lib/extract-prompts.mjs) favors recall: it emits every
- * prompt-like literal (~9k), including error/log/library strings. Rather than
- * chase precision (tweakcc uses an LLM cache for that), we anchor the catalog to
+ * Our minimal extractor (lib/extract-prompts.mjs), run in `--all` mode, favors
+ * recall: it emits every non-blob literal (incl. error/log/library strings and
+ * short structural ones). Rather than chase precision (tweakcc uses an LLM cache
+ * for that), we anchor the catalog to
  * the PREVIOUS one: for each seed prompt we find its CURRENT form in the fresh
  * extraction and carry its id/name/description forward. This keeps the committed
  * catalog clean, stable-sized, and id-stable (our apply-unnerfs rules are keyed
@@ -63,7 +64,13 @@ try {
   copyFileSync(cliJs, workCli);
   writeFileSync(join(work, "package.json"), JSON.stringify({ version }));
   const freshPath = join(work, "fresh.json");
-  const r = spawnSync("node", [EXTRACTOR, workCli, freshPath], {
+  // `--all`: emit EVERY non-blob literal (not just the >=24-char prose set), so
+  // short/structural seed prompts ("[Thinking removed]", "<bash-input>${}…",
+  // "No files found") are present in the fresh set and CARRY by exact identity
+  // hash. Without this they miss extraction AND the bundle-text safety net
+  // (short / em-dash-broken runs), and get spuriously reported REMOVED — which
+  // trips validate-catalog's ">50 removed" gate on an ordinary version bump.
+  const r = spawnSync("node", [EXTRACTOR, workCli, freshPath, "--all"], {
     stdio: ["ignore", "inherit", "inherit"], maxBuffer: 512 * 1024 * 1024,
   });
   if (r.status !== 0) die(`extractor exited ${r.status}`, r.status || 1);

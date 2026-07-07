@@ -376,7 +376,7 @@ eyeball this — run the **exhaustive sibling audit**: import `RULES`, and for e
 rule grep its `stock` across every stock `.md`; any match in a file that *isn't*
 the rule's own key is an un-ruled sibling to flip (unless the match is
 example/reference content — e.g. a sample prompt quoted inside a guide, which
-stays). The current audit (over the full 1,401-file catalog) finds
+stays). The current audit (over the full 1,388-file catalog) finds
 **0 un-ruled siblings**: every cross-file `stock` match is already ruled in both
 files. One non-obvious sibling this covers is the plan-specificity cap in
 `system-prompt-remote-planning-session` (the same nerf `ultraplan` flips), which
@@ -483,23 +483,23 @@ binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
 ([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
 format changes ([BACKGROUND.md](BACKGROUND.md)).
 
-## Part 9 — Current state (v2.1.201)
+## Part 9 — Current state (v2.1.202)
 
 We track **only the latest** Claude Code version, generating the prompt catalog
 ourselves from the installed binary each sync (`gen-catalog.mjs`). Replace this
 snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.201** — the latest CC release (1,513 sites /
-  **1,401 unique prompts** — duplicate-id sites collapse to their first
+- **Version:** built from **v2.1.202** — the latest CC release (1,500 sites /
+  **1,388 unique prompts** — duplicate-id sites collapse to their first
   occurrence in our own `gen-catalog.mjs` extractor; note the *splicer* still
   patches every identical call-site of a reused prompt, see Part 7).
-- **Scale:** **123 un-nerf rules across 79 files**, 1,401 prompts, `--check`
+- **Scale:** **123 un-nerf rules across 79 files**, 1,388 prompts, `--check`
   clean, orphan-variable guard passing. All **123 rules re-apply byte-exactly**
   (`Rules applied: 123, FAILED: 0, Missing: 0`; `--check` → `123 skipped, 0
   FAILED, 0 missing`), and all 5 install.sh verify sentinels are present. The
   un-nerfs touch only the brevity/thoroughness posture (engineering depth and
   human-facing reporting); no protection-class or functional string is flipped.
-- **Sibling audit:** over the full 1,401-prompt catalog, **0 un-ruled siblings**
+- **Sibling audit:** over the full 1,388-prompt catalog, **0 un-ruled siblings**
   — every cross-file `stock` match is already ruled in both files (Part 6). The
   only remaining cross-file matches are intentional stock keeps in
   `skill-model-migration-guide`: two directive sentences (`act-when-ready`,
@@ -518,7 +518,7 @@ snapshot each sync rather than appending history.
   what you launched" launch-note flips
   (`tool-description-cloud-agent-launched-result`,
   `tool-result-cloud-agent-launched-notify-user`) remain reachable and applied.
-- **Binary check (Part 7):** our catalog is extracted from the installed v2.1.201
+- **Binary check (Part 7):** our catalog is extracted from the installed v2.1.202
   binary, and `install.sh` verifies the un-nerf sentinels land on every install.
 - **Not yet audited:** the `system-reminder-*` per-turn injections that never
   surface as named prompts — a future full-sweep surface (Part 5).
@@ -535,10 +535,10 @@ already-prompt-patched bundle. It **can never block the prompt un-nerfs**:
 `install.sh` / `upgrade.sh` run it after the prompt patch, and any failure is
 reported while the prompt un-nerfs ship regardless.
 
-**The nerfs (confirmed in v2.1.201 by reading the bundle):**
+**The nerfs (confirmed in v2.1.202 by reading the bundle):**
 - **Mid-tier model default.** Effort resolves from a data field `default_effort`
   per model in the catalog; the resolver is `…?.default_effort??"high"`. In
-  v2.1.201 the catalog carries **four** `default_effort` sites: **Fable 5**,
+  v2.1.202 the catalog carries **four** `default_effort` sites: **Fable 5**,
   **Opus 4.8** and **Sonnet 5** all ship `"high"` (the *middle* of
   `["low","medium","high","xhigh","max"]`); **Opus 4.7** ships `"xhigh"`. Every
   one of these models also carries the `max_effort` capability, so none of them
@@ -561,7 +561,7 @@ max-support from a **capability** on the model's catalog entry
 (`capabilities.includes("max_effort")`, functions `NDe`/`Coe`) plus an explicit
 *old-model blocklist* — never a hardcoded id of a current model. So a brand-new
 model (the next Opus, the next Fable) inherits the floor the moment Anthropic
-ships it, with no change here. This was **verified against the real v2.1.201
+ships it, with no change here. This was **verified against the real v2.1.202
 bundle**: Fable 5 and Opus 4.8 each end up at a genuine `max`.
 
 **The patches (P0–P3), anchored on string-literal contracts — never minified

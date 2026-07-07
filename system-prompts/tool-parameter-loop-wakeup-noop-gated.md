@@ -3,6 +3,6 @@ name: Loop wake-up noop param (gated variant)
 description: >-
   Conditionally-included noop field of the /loop scheduled wake-up tool INPUT
   schema; its .describe() serializes into the tool definition sent to the model.
-ccVersion: 2.1.199
+ccVersion: 2.1.202
 -->
-true = nothing changed (you checked and there is nothing to report). false = something happened worth keeping (edited a file, posted a message, advanced state, surfaced a finding). Consecutive noop:true ticks fold into one context entry.
+true = nothing changed (you checked and there is nothing to report). false = something happened worth keeping (edited a file, posted a message, advanced state, surfaced a finding). Consecutive noop:true ticks fold into one context entry. Required unless `stop` is true.

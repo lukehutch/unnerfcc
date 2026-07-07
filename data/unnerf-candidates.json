@@ -90,6 +90,16 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u2265min(files,4) findings`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncomm",
+  "notes": "process/impl brevity: one pass, no verify, no subagents, capped findings",
+  "ccFirstSeen": "2.1.202"
+ },
+ {
+  "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
+  "notes": "chat/report brevity: 'keep your review concise'",
+  "ccFirstSeen": "2.1.202"
+ },
+ {
   "sample": "Notes:\n${\"- Agent threads always have their cwd reset between bash calls, as a result please only use absolute file paths.\"}\n- In your final response, share file paths (always absolute, never relative",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -153,6 +163,11 @@
   "sample": "Generate a concise, sentence-case title (3-7 words) that captures the main topic or goal of this coding session. The title should be clear enough that the user recognizes the session in a list. Use se",
   "notes": "concise title generation with word limit",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "The committed diff (@{upstream}...HEAD) is about ${} lines. Uncommitted changes aren't counted here, so treat this as a floor \u2014 start with about ${} finder subagents (min 2, max 8) and scale up if Pha",
+  "notes": "caps finder subagents at max 8 (agent-count thoroughness cap), though framed as a floor to scale up",
+  "ccFirstSeen": "2.1.202"
  },
  {
   "sample": "Execute autonomously, minimize interruptions, prefer action over planning.",
@@ -330,6 +345,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "The user changed their workflow size guideline in /config: ${()}. ${()}",
+  "notes": "injects a subagent-count cap into context",
+  "ccFirstSeen": "2.1.202"
+ },
+ {
   "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -380,6 +400,11 @@
   "ccFirstSeen": "2.1.201"
  },
  {
+  "sample": "${} (aim for <${} agents)",
+  "notes": "process brevity: caps subagent count",
+  "ccFirstSeen": "2.1.202"
+ },
+ {
   "sample": "one short sentence naming the finished deliverable \u2014 no sub-clauses or bullet summaries",
   "notes": "format constraint directive capping response to 'one short sentence'",
   "ccFirstSeen": "2.1.199"
@@ -393,6 +418,11 @@
   "sample": "Analyze this Claude Code usage data and identify what's working well for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence of context\",\n  \"impressi",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${} \u2014 keep workflows under ${[e]} agents",
+  "notes": "process brevity: caps subagent count",
+  "ccFirstSeen": "2.1.202"
  },
  {
   "sample": "post a one-line \"launched X\" via your comms tool",
@@ -565,6 +595,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "This diff is about ${} lines. Spawn about ${} finder subagents (min 2, max 8) \u2014 scale your investigation depth to the diff size rather than using a fixed large fleet.\n\n",
+  "notes": "process cap: 'min 2, max 8 ... rather than using a fixed large fleet' limits investigation breadth",
+  "ccFirstSeen": "2.1.202"
+ },
+ {
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -588,6 +623,11 @@
   "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nFor simple commands (git, npm, standard",
   "notes": "requires concise/brief descriptions (5-10 words)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n\nThe user has configured a workflow size guideline in /config: ${()}. ${()}",
+  "notes": "injects a subagent-count cap into system prompt",
+  "ccFirstSeen": "2.1.202"
  },
  {
   "sample": "## Output\n\nCall the ${} tool once to report this review's results\nwith \\`{level, findings}\\`. \\`findings\\` is at most ${} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary",

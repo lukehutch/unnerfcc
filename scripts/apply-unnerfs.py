@@ -1179,10 +1179,16 @@ RULES: dict[str, list[Rule]] = {
         ),
     ],
     "agent-prompt-review-pr-slash-command.md": [
+        # v2.1.202: upstream restructured /review-pr into a classic bullet review
+        # and DROPPED the old "a 2-3 sentence overview of what the PR does" cap on
+        # its own (the overview bullet is now uncapped). The residual brevity nerf
+        # is "Keep your review concise but thorough" — flip the "concise" cap: a
+        # code review is depth work, not a place to compress. ("provide a thorough
+        # code review" already leads the section; this removes the walk-back.)
         Rule(
-            stock="a 2-3 sentence overview of what the PR does",
-            unnerf="an overview of what the PR does",
-            description="review-pr: drop the 2-3 sentence cap on the overview (findings list already uncapped)",
+            stock="Keep your review concise but thorough. Focus on:",
+            unnerf="Keep your review thorough and complete. Focus on:",
+            description="review-pr: drop the 'concise' review cap (keep it thorough); upstream already dropped the 2-3-sentence overview cap",
         ),
     ],
     # insights UI-card body slots — lift the length caps. JSON string length does
