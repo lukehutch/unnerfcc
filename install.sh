@@ -37,6 +37,7 @@ cd "$REPO"
 NATIVE_CLI="$REPO/lib/bun-binary.mjs"
 PATCH_CLI="$REPO/lib/patch-prompts.mjs"
 LIB_DIR="$REPO/lib"
+SCRIPTS_DIR="$REPO/scripts"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
@@ -75,6 +76,12 @@ command -v python3 >/dev/null || die "python3 not found"
 if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
   log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
   run "( cd '$LIB_DIR' && npm install )"
+fi
+
+# Install scripts/ deps on first run (gray-matter, used by sync-version.mjs).
+if [ ! -d "$SCRIPTS_DIR/node_modules/gray-matter" ]; then
+  log "Installing scripts/ dependencies (first run: gray-matter)"
+  run "( cd '$SCRIPTS_DIR' && npm install --ignore-scripts --save-exact )"
 fi
 
 # --- choose the CC version to target ---------------------------------------
