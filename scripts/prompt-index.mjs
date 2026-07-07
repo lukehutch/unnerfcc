@@ -40,7 +40,8 @@
  */
 
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 export const HASH_ALGO = "sha256";
 export const sha256 = (text) =>
@@ -196,6 +197,9 @@ function main(argv) {
   return 2;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// realpath argv[1] before comparing — import.meta.url is symlink-resolved by
+// Node's loader, argv[1] isn't (e.g. macOS's /tmp -> /private/tmp), so a raw
+// comparison silently skips main() while still exiting 0 when run through one.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   process.exit(main(process.argv.slice(2)));
 }
