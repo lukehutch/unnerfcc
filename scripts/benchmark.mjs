@@ -209,6 +209,20 @@ try {
   else warn("could not find the 600s generation timeout in claude_interface.py (harness changed?) — runs may be cut off at 600s");
 } catch { warn("could not patch the harness generation timeout"); }
 
+// Raise the harness's 2h TOTAL-inference cap (run_benchmark_with_eval.py kills
+// the whole generation phase after 7200s regardless of per-instance progress) —
+// a 50-instance high-effort run blows past it (each instance is minutes). Scale
+// to N × the per-instance budget so a legit run is never prematurely killed.
+try {
+  const rbPath = join(REPO_DIR, "run_benchmark_with_eval.py");
+  sh("git", ["-C", REPO_DIR, "checkout", "--", "run_benchmark_with_eval.py"]);
+  const rb = readFileSync(rbPath, "utf8");
+  const total = N * GEN_TIMEOUT + 1800;
+  const bumped = rb.replace(/timeout=7200\b/g, `timeout=${total}`);
+  if (bumped !== rb) { writeFileSync(rbPath, bumped); ok(`raised total-inference cap 7200s → ${total}s (~${(total / 3600).toFixed(1)}h) for ${N} instance(s)`); }
+  else warn("could not find the 7200s total-inference cap in run_benchmark_with_eval.py — a long run may be cut off at 2h");
+} catch { warn("could not patch the total-inference timeout"); }
+
 // Teach the harness to run an EXPLICIT instance-id set (env BENCH_INSTANCE_IDS,
 // comma-separated) instead of the first-N of the dataset — so we can benchmark a
 // curated "hardest for Opus" list. Idempotent (restore from git, then patch).
@@ -353,6 +367,13 @@ const results = { version, n: N, date: stamp, metric, effort: EFFORT, stock, pat
   dataset: INSTANCE_IDS.length ? "SWE-bench-lite (hardest-for-Claude subset)" : "SWE-bench-lite", instances: INSTANCE_IDS };
 writeFileSync(join(CACHE, `results-${version}.json`), JSON.stringify(results, null, 2));
 
+// A real (non --no-eval) run that produced NO eval score for a binary FAILED
+// (generation crash / timeout) — its gen=0% must NOT clobber a good committed
+// chart. Bail non-zero and leave README/docs untouched.
+if (!noEval && (stock.eval == null || patched.eval == null)) {
+  warn(`run FAILED to produce an evaluation score (stock eval=${stock.eval ?? "n/a"}, patched eval=${patched.eval ?? "n/a"}) — likely a generation crash or timeout. NOT touching the chart. See data/benchmark/run-*.log`);
+  process.exit(1);
+}
 if (sVal == null || pVal == null) {
   warn("no comparable score for both binaries — not updating the README chart. See data/benchmark/*.log");
   process.exit(0);
