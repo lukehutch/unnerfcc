@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="448" viewBox="0 0 720 448" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <rect x="0" y="0" width="720" height="448" rx="10" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="360" y="34" text-anchor="middle" font-size="19" font-weight="700" fill="#111827">Un-nerf effect on SWE-bench-lite — Claude Code v2.1.202</text>
+  <text x="360" y="56" text-anchor="middle" font-size="13" fill="#6b7280">evaluation accuracy (issues actually fixed) · both at --effort high · hardest-for-Opus set</text>
+  <line x1="64" y1="348" x2="688" y2="348" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="352" text-anchor="end" font-size="12" fill="#6b7280">0%</text>
+  <line x1="64" y1="334.10526315789474" x2="688" y2="334.10526315789474" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="338.10526315789474" text-anchor="end" font-size="12" fill="#6b7280">5%</text>
+  <line x1="64" y1="320.2105263157895" x2="688" y2="320.2105263157895" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="324.2105263157895" text-anchor="end" font-size="12" fill="#6b7280">10%</text>
+  <line x1="64" y1="306.3157894736842" x2="688" y2="306.3157894736842" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="310.3157894736842" text-anchor="end" font-size="12" fill="#6b7280">15%</text>
+  <line x1="64" y1="292.42105263157896" x2="688" y2="292.42105263157896" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="296.42105263157896" text-anchor="end" font-size="12" fill="#6b7280">20%</text>
+  <line x1="64" y1="278.5263157894737" x2="688" y2="278.5263157894737" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="282.5263157894737" text-anchor="end" font-size="12" fill="#6b7280">25%</text>
+  <line x1="64" y1="264.63157894736844" x2="688" y2="264.63157894736844" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="268.63157894736844" text-anchor="end" font-size="12" fill="#6b7280">30%</text>
+  <line x1="64" y1="250.73684210526318" x2="688" y2="250.73684210526318" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="254.73684210526318" text-anchor="end" font-size="12" fill="#6b7280">35%</text>
+  <line x1="64" y1="236.84210526315792" x2="688" y2="236.84210526315792" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="240.84210526315792" text-anchor="end" font-size="12" fill="#6b7280">40%</text>
+  <line x1="64" y1="222.94736842105266" x2="688" y2="222.94736842105266" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="226.94736842105266" text-anchor="end" font-size="12" fill="#6b7280">45%</text>
+  <line x1="64" y1="209.05263157894737" x2="688" y2="209.05263157894737" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="213.05263157894737" text-anchor="end" font-size="12" fill="#6b7280">50%</text>
+  <line x1="64" y1="195.1578947368421" x2="688" y2="195.1578947368421" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="199.1578947368421" text-anchor="end" font-size="12" fill="#6b7280">55%</text>
+  <line x1="64" y1="181.26315789473685" x2="688" y2="181.26315789473685" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="185.26315789473685" text-anchor="end" font-size="12" fill="#6b7280">60%</text>
+  <line x1="64" y1="167.36842105263156" x2="688" y2="167.36842105263156" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="171.36842105263156" text-anchor="end" font-size="12" fill="#6b7280">65%</text>
+  <line x1="64" y1="153.47368421052633" x2="688" y2="153.47368421052633" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="157.47368421052633" text-anchor="end" font-size="12" fill="#6b7280">70%</text>
+  <line x1="64" y1="139.57894736842104" x2="688" y2="139.57894736842104" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="143.57894736842104" text-anchor="end" font-size="12" fill="#6b7280">75%</text>
+  <line x1="64" y1="125.68421052631581" x2="688" y2="125.68421052631581" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="129.6842105263158" text-anchor="end" font-size="12" fill="#6b7280">80%</text>
+  <line x1="64" y1="111.78947368421052" x2="688" y2="111.78947368421052" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="115.78947368421052" text-anchor="end" font-size="12" fill="#6b7280">85%</text>
+  <line x1="64" y1="97.89473684210529" x2="688" y2="97.89473684210529" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="101.89473684210529" text-anchor="end" font-size="12" fill="#6b7280">90%</text>
+  <line x1="64" y1="84" x2="688" y2="84" stroke="#e2e6ec" stroke-width="1"/>
+  <text x="54" y="88" text-anchor="end" font-size="12" fill="#6b7280">95%</text>
+  <rect x="196" y="125.68421052631581" width="120" height="222.3157894736842" rx="4" fill="#8a94a6"/><text x="256" y="115.68421052631581" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">80.0%</text><text x="256" y="372" text-anchor="middle" font-size="15" font-weight="600" fill="#374151">stock</text>
+  <rect x="436" y="97.89473684210529" width="120" height="250.1052631578947" rx="4" fill="#2f9e6b"/><text x="496" y="87.89473684210529" text-anchor="middle" font-size="20" font-weight="700" fill="#111827">90.0%</text><text x="496" y="372" text-anchor="middle" font-size="15" font-weight="600" fill="#374151">patched</text>
+  <text x="360" y="394" text-anchor="middle" font-size="13" fill="#374151">stock 80.0%  →  patched 90.0%   (+10.0 pts)   ·   stock 8/10 · patched 9/10 resolved</text>
+  <text x="360" y="415" text-anchor="middle" font-size="12" fill="#6b7280">avg runtime/instance:  stock 2m 44s  ·  patched 3m 20s  (1.2× slower)</text>
+  <text x="360" y="434" text-anchor="middle" font-size="11" fill="#9ca3af">n=10 instances · 2026-07-07 · small n is noisy — treat as indicative, not significant</text>
+</svg>

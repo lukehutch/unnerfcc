@@ -81,6 +81,21 @@ The pattern holds throughout: stock leads with the prohibition and caps work at 
 
 
 
+<!-- BENCHMARK:START -->
+## Benchmark: does un-nerfing help?
+
+Measured with the [SWE-bench harness](https://github.com/jimmc414/claudecode_gemini_and_codex_swebench) — the **stock** vs the **un-nerfed** build of the *same* Claude Code version, so the only variable is the prompt patch. **Both builds run at `--effort high`** (apples-to-apples: the effort un-nerf is *not* exercised here, so this isolates the prompt rewrites), each under a fresh `CLAUDE_CONFIG_DIR` so local `settings.json` can't skew it, and with no `--model` (each uses the version's default model). Instances are the **10 hardest-for-Opus** SWE-bench-lite cases — ones Claude-3-Opus failed and only 1/84 leaderboard submissions solved — chosen so there's headroom to see a difference (easy cases both builds already ace).
+
+![Un-nerf effect on SWE-bench-lite](docs/benchmark.svg)
+
+| Build | evaluation accuracy (issues actually resolved, Docker-verified) | avg runtime / instance |
+|---|---|---|
+| Stock v2.1.202 | **80.0%** (8/10 resolved) | 2m 44s |
+| Un-nerfed v2.1.202 | **90.0%** (9/10 resolved) (+10.0 pts) | 3m 20s (1.2× slower) |
+
+10 hardest-for-Opus instances, both at `--effort high`, 2026-07-07. Runtime is model generation time per instance (Docker eval excluded; per-instance generation cap 1200s). **Caveat:** at n=10 the accuracy is *indicative, not statistically significant* — each instance is worth 10 points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with `./upgrade.sh --benchmark=N`.
+<!-- BENCHMARK:END -->
+
 ## Repo layout
 
 ```
