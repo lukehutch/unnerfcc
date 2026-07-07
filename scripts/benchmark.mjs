@@ -119,7 +119,22 @@ const noEval = argv.includes("--no-eval");
 // running the harness — for previewing/testing the output shape only.
 const mockArg = argv.find((a) => a.startsWith("--mock="))?.slice(7);
 const [stockBin, patchedBin, version, nRaw] = argv.filter((a) => !a.startsWith("--"));
-const N = parseInt(nRaw || "10", 10);
+
+// Effort: BOTH binaries run at the SAME effort (default "high") so the
+// comparison is apples-to-apples and isolates the PROMPT un-nerfs — the effort
+// un-nerf (default→max) is deliberately NOT exercised here. Injected via the shim.
+const EFFORT = (process.env.BENCH_EFFORT || "high").trim();
+// Explicit instance set (one id per line, '#' comments ok): $BENCH_INSTANCES, or
+// the committed default curated "hardest-for-Opus" list. When present, these
+// exact instances run (not the first-N of the dataset) and n is their count.
+const DEFAULT_INSTANCES = join(REPO, "data", "swebench-hardest-for-opus.txt");
+const instancesFile = (process.env.BENCH_INSTANCES && existsSync(process.env.BENCH_INSTANCES))
+  ? process.env.BENCH_INSTANCES : (existsSync(DEFAULT_INSTANCES) ? DEFAULT_INSTANCES : null);
+let INSTANCE_IDS = [];
+if (instancesFile) {
+  INSTANCE_IDS = readFileSync(instancesFile, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"));
+}
+const N = INSTANCE_IDS.length || parseInt(nRaw || "10", 10);
 if (!version) {
   console.error("usage: node scripts/benchmark.mjs <stockBin> <patchedBin> <version> [n=10] [--no-eval] [--mock=S,P]");
   process.exit(2);
@@ -194,6 +209,25 @@ try {
   else warn("could not find the 600s generation timeout in claude_interface.py (harness changed?) — runs may be cut off at 600s");
 } catch { warn("could not patch the harness generation timeout"); }
 
+// Teach the harness to run an EXPLICIT instance-id set (env BENCH_INSTANCE_IDS,
+// comma-separated) instead of the first-N of the dataset — so we can benchmark a
+// curated "hardest for Opus" list. Idempotent (restore from git, then patch).
+if (INSTANCE_IDS.length) {
+  try {
+    const agentPath = join(REPO_DIR, "code_swe_agent.py");
+    sh("git", ["-C", REPO_DIR, "checkout", "--", "code_swe_agent.py"]);
+    const src = readFileSync(agentPath, "utf8");
+    const anchor = "        if limit:\n            dataset = dataset.select(range(min(limit, len(dataset))))";
+    const repl = "        _want = [i for i in os.environ.get(\"BENCH_INSTANCE_IDS\", \"\").split(\",\") if i]\n" +
+                 "        if _want:\n" +
+                 "            dataset = dataset.filter(lambda x: x[\"instance_id\"] in set(_want))\n" +
+                 "        elif limit:\n" +
+                 "            dataset = dataset.select(range(min(limit, len(dataset))))";
+    if (src.includes(anchor)) { writeFileSync(agentPath, src.replace(anchor, repl)); ok(`harness will run ${INSTANCE_IDS.length} explicit instance(s)`); }
+    else warn("could not find the dataset-limit anchor in code_swe_agent.py — falling back to first-N");
+  } catch { warn("could not patch code_swe_agent.py for explicit instances"); }
+}
+
 // --- 2. python venv + deps --------------------------------------------------
 log("Preparing Python venv (cached)");
 const venvPy = join(VENV, "bin", "python");
@@ -232,9 +266,12 @@ function prepareBinary(label, srcBin) {
   const shim = join(shimDir, "claude");
   writeFileSync(shim,
     `#!/usr/bin/env bash\n` +
-    `# unnerfcc benchmark shim (${label}) — default settings, fresh session, authed.\n` +
+    `# unnerfcc benchmark shim (${label}) — fresh config (defaults), authed, effort pinned.\n` +
     `export CLAUDE_CONFIG_DIR=${JSON.stringify(cfg)}\n` +
-    `exec ${JSON.stringify(bin)} "$@"\n`);
+    // Pin BOTH builds to the same effort (--effort ${EFFORT}) so the comparison
+    // isolates the prompt un-nerfs. Placed before "$@" so the harness's own flags
+    // still apply; an explicit --effort here overrides the binary's default.
+    `exec ${JSON.stringify(bin)} --effort ${JSON.stringify(EFFORT)} "$@"\n`);
   chmodSync(shim, 0o755);
 
   // Sanity: confirm the shim resolves to the intended version before a long run.
@@ -282,7 +319,7 @@ async function runOne(label, srcBin) {
 
   const runArgs = ["swe_bench.py", "run", "--limit", String(N), "--backend", "claude"];
   if (noEval) runArgs.push("--no-eval");
-  const env = { ...process.env, PATH: `${shimDir}:${process.env.PATH}`, TMPDIR: tmp };
+  const env = { ...process.env, PATH: `${shimDir}:${process.env.PATH}`, TMPDIR: tmp, BENCH_INSTANCE_IDS: INSTANCE_IDS.join(",") };
   const r = await shAsync(venvPy, runArgs, { cwd: runRepo, env, stdio: ["ignore", "pipe", "pipe"] });
   const out = (r.stdout || "") + "\n" + (r.stderr || "");
   writeFileSync(join(CACHE, `run-${label}-${version}.log`), out);
@@ -304,7 +341,7 @@ async function runOne(label, srcBin) {
 
 // --- 3. run both IN PARALLEL (isolated config + temp dirs) ------------------
 if (!noEval) dockerUsed = true; // eval touches Docker → clean up on exit
-log(`Running stock + patched CONCURRENTLY (n=${N} each) — halves wall time; each has its own config + temp dir`);
+log(`Running stock + patched CONCURRENTLY (n=${N} each) at --effort ${EFFORT}${INSTANCE_IDS.length ? " on the curated hard-instance set" : ""} — isolated config + temp dir`);
 const [stock, patched] = await Promise.all([runOne("stock", stockBin), runOne("patched", patchedBin)]);
 
 // The headline metric is the evaluation score (issues actually fixed); fall
@@ -312,7 +349,8 @@ const [stock, patched] = await Promise.all([runOne("stock", stockBin), runOne("p
 const metric = (stock.eval != null && patched.eval != null) ? "eval" : "gen";
 const sVal = stock[metric], pVal = patched[metric];
 const stamp = new Date().toISOString().slice(0, 10);
-const results = { version, n: N, date: stamp, metric, stock, patched, dataset: "SWE-bench-lite" };
+const results = { version, n: N, date: stamp, metric, effort: EFFORT, stock, patched,
+  dataset: INSTANCE_IDS.length ? "SWE-bench-lite (hardest-for-Opus subset)" : "SWE-bench-lite", instances: INSTANCE_IDS };
 writeFileSync(join(CACHE, `results-${version}.json`), JSON.stringify(results, null, 2));
 
 if (sVal == null || pVal == null) {
@@ -354,7 +392,8 @@ function renderSvg({ version, n, date, metric, sVal, pVal, stock, patched }) {
   const counts = (metric === "eval" && stock?.tested != null && patched?.tested != null)
     ? `stock ${stock.resolved}/${stock.tested} · patched ${patched.resolved}/${patched.tested} resolved`
     : "";
-  const metricName = metric === "eval" ? "evaluation accuracy (issues actually fixed)" : "generation rate (patches produced) — EVAL SKIPPED";
+  const metricBase = metric === "eval" ? "evaluation accuracy (issues actually fixed)" : "generation rate (patches produced) — EVAL SKIPPED";
+  const metricName = `${metricBase} · both at --effort ${EFFORT}${INSTANCE_IDS.length ? " · hardest-for-Opus set" : ""}`;
   const rt = (stock?.avgGen != null && patched?.avgGen != null)
     ? `avg runtime/instance:  stock ${fmtDur(stock.avgGen)}  ·  patched ${fmtDur(patched.avgGen)}${stock.avgGen > 0 ? `  (${(patched.avgGen / stock.avgGen).toFixed(1)}× slower)` : ""}`
     : "";
@@ -381,7 +420,7 @@ function updateReadme({ version, n, date, metric, sVal, pVal, stock, patched }) 
   const block = `${MARK_START}
 ## Benchmark: does un-nerfing help?
 
-Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the **un-nerfed** build of the *same* Claude Code version, so the only variable is the patch. Both run at their own defaults (the patched build's lifted effort/model defaults count too), each under a fresh \`CLAUDE_CONFIG_DIR\` so local \`settings.json\` can't skew it.
+Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the **un-nerfed** build of the *same* Claude Code version, so the only variable is the prompt patch. **Both builds run at \`--effort ${EFFORT}\`** (apples-to-apples: the effort un-nerf is *not* exercised here, so this isolates the prompt rewrites), each under a fresh \`CLAUDE_CONFIG_DIR\` so local \`settings.json\` can't skew it, and with no \`--model\` (each uses the version's default model).${INSTANCE_IDS.length ? ` Instances are the **${n} hardest-for-Opus** SWE-bench-lite cases — ones Claude-3-Opus failed and only 1/84 leaderboard submissions solved — chosen so there's headroom to see a difference (easy cases both builds already ace).` : ""}
 
 ![Un-nerf effect on SWE-bench-lite](docs/benchmark.svg)
 
@@ -390,7 +429,7 @@ Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the *
 | Stock v${version} | **${sVal.toFixed(1)}%**${sCount} | ${sRt} |
 | Un-nerfed v${version} | **${pVal.toFixed(1)}%**${pCount} (${delta >= 0 ? "+" : ""}${delta} pts) | ${pRt}${slower} |
 
-SWE-bench-lite, **n=${n}**, ${date}. Runtime is model generation time per instance (Docker eval excluded); the un-nerfed build defaults to **max** effort so it runs longer — the per-instance generation cap is raised to ${GEN_TIMEOUT}s so it isn't cut off. **Caveat:** at this n the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(0)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run at a larger n for a real number: \`./upgrade.sh --benchmark=50\`.
+${INSTANCE_IDS.length ? `${n} hardest-for-Opus` : "SWE-bench-lite"} instances, both at \`--effort ${EFFORT}\`, ${date}. Runtime is model generation time per instance (Docker eval excluded; per-instance generation cap ${GEN_TIMEOUT}s). **Caveat:** at n=${n} the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(0)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with \`./upgrade.sh --benchmark=N\`.
 ${MARK_END}`;
 
   let md = readFileSync(README, "utf8");
