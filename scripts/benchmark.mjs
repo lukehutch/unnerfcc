@@ -37,7 +37,7 @@
  * exits 0 so a --benchmark upgrade is never failed by the benchmark step.
  */
 
-import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync, chmodSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync, chmodSync, readdirSync } from "node:fs";
 import { spawnSync, spawn } from "node:child_process";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,7 +60,16 @@ const MARK_END = "<!-- BENCHMARK:END -->";
 // both builds finish naturally and the timings are real. (Generation only — the
 // Docker eval keeps its own --timeout.)
 const GEN_TIMEOUT = parseInt(process.env.BENCH_GEN_TIMEOUT || "1200", 10);
+// Failed-generation retries: an instance whose patch comes back EMPTY (a
+// transient rate-limit / overload / crash — NOT a real "couldn't solve it") is
+// re-run up to RETRIES more times, with RETRY_DELAY s between, so infra hiccups
+// don't corrupt the accuracy number. A patch that stays empty after retries is
+// counted as a genuine failure.
+const RETRIES = parseInt(process.env.BENCH_RETRIES || "2", 10);
+const RETRY_DELAY = parseInt(process.env.BENCH_RETRY_DELAY || "60", 10);
 const fmtDur = (s) => (s == null ? "n/a" : s < 60 ? `${Math.round(s)}s` : `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`);
+const pad2 = (n) => String(n).padStart(2, "0");
+function tstamp() { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`; }
 
 const c = { cyan: "\x1b[1;36m", green: "\x1b[1;32m", yellow: "\x1b[1;33m", red: "\x1b[1;31m", off: "\x1b[0m" };
 const log = (m) => console.log(`${c.cyan}==>${c.off} ${m}`);
@@ -101,10 +110,20 @@ function cleanupDocker() {
     sh("bash", ["-lc", "docker ps -aq --filter name=sweb.eval | xargs -r docker rm -f >/dev/null 2>&1"]);
     sh("bash", ["-lc", "docker images -q --filter=reference='sweb.*' | sort -u | xargs -r docker rmi -f >/dev/null 2>&1"]);
     sh("bash", ["-lc", "docker container prune -f >/dev/null 2>&1; docker builder prune -f >/dev/null 2>&1"]);
-    // drop the isolated per-run scratch: instance checkouts ($CACHE/tmp/tmp-*),
-    // config/shim dirs, and the per-run harness copies.
+    // PRESERVE the small evidence (predictions/, results/, benchmark_scores.log)
+    // before deleting the per-run harness copies — needed to diagnose asymmetries
+    // like empty patches. The big instance checkouts ($CACHE/tmp) are pure scratch.
+    for (const l of ["stock", "patched"]) {
+      const src = join(CACHE, `harness-${l}`), dst = join(CACHE, `evidence-${l}`);
+      rmSync(dst, { recursive: true, force: true });
+      if (existsSync(src)) {
+        mkdirSync(dst, { recursive: true });
+        for (const keep of ["predictions", "results", "benchmark_scores.log"])
+          if (existsSync(join(src, keep))) sh("cp", ["-a", join(src, keep), dst]);
+      }
+      rmSync(src, { recursive: true, force: true });
+    }
     rmSync(join(CACHE, "tmp"), { recursive: true, force: true });
-    for (const l of ["stock", "patched"]) rmSync(join(CACHE, `harness-${l}`), { recursive: true, force: true });
   } catch { /* best-effort */ }
 }
 process.on("exit", cleanupDocker);
@@ -295,34 +314,70 @@ function prepareBinary(label, srcBin) {
   return { shimDir, cfg, bin };
 }
 
-function parseScore(out) {
-  const gen = out.match(/Generation Score:\s*([\d.]+)%/);
-  // NB: the harness's printed "Evaluation Score" divides resolved instances by
-  // the FULL SWE-bench-lite size (300), not by how many were actually run — so
-  // it under-reports badly for n<300 (e.g. 1 resolved of 1 tested prints 0.33%).
-  // Compute the true per-run accuracy from resolved/tested ourselves.
-  const resolved = out.match(/Instances resolved:\s*(\d+)/);
-  const tested = out.match(/Instances tested:\s*(\d+)/);
-  let ev = null;
-  if (resolved && tested && parseInt(tested[1], 10) > 0) {
-    ev = (100 * parseInt(resolved[1], 10)) / parseInt(tested[1], 10);
-  } else {
-    const m = out.match(/Evaluation Score:\s*([\d.]+)%/);
-    ev = m ? parseFloat(m[1]) : null;
+// --- generation/eval plumbing (separated so failed generations can be retried
+//     before a single final eval over the merged predictions) -----------------
+
+// Predictions schema is {instance_id, model, prediction} (patch in `prediction`).
+function readPreds(predFile) {
+  const m = new Map();
+  if (!predFile || !existsSync(predFile)) return m;
+  for (const line of readFileSync(predFile, "utf8").trim().split("\n")) {
+    if (!line) continue;
+    try { const j = JSON.parse(line); m.set(j.instance_id, (j.prediction ?? j.model_patch ?? "").trim()); } catch { /* skip */ }
   }
-  return { eval: ev, gen: gen ? parseFloat(gen[1]) : null, resolved: resolved ? +resolved[1] : null, tested: tested ? +tested[1] : null };
+  return m;
+}
+const emptyIdsOf = (map, ids) => ids.filter((id) => !map.get(id));
+// Newest real predictions file (the harness names them predictions_<ts>.jsonl).
+function newestPred(runRepo) {
+  try {
+    const dir = join(runRepo, "predictions");
+    const fs = readdirSync(dir).filter((f) => /^predictions_\d{8}_\d{6}\.jsonl$/.test(f)).sort();
+    return fs.length ? join(dir, fs[fs.length - 1]) : null;
+  } catch { return null; }
+}
+// One generation pass over `ids` (no eval); returns {predFile, wall}.
+async function runGen(label, runRepo, shimDir, tmp, ids, tag) {
+  const env = { ...process.env, PATH: `${shimDir}:${process.env.PATH}`, TMPDIR: tmp, BENCH_INSTANCE_IDS: ids.join(",") };
+  const args = ["swe_bench.py", "run", "--limit", String(ids.length), "--backend", "claude", "--no-eval"];
+  const t0 = Date.now();
+  const r = await shAsync(venvPy, args, { cwd: runRepo, env, stdio: ["ignore", "pipe", "pipe"] });
+  writeFileSync(join(CACHE, `gen-${label}-${tag}-${version}.log`), (r.stdout || "") + "\n" + (r.stderr || ""));
+  return { predFile: newestPred(runRepo), wall: (Date.now() - t0) / 1000 };
+}
+// Per-instance debug (status + failure reason) from the harness's results/*.json.
+function collectDebug(label, runRepo, predMap, ids) {
+  const byInst = {};
+  try {
+    const dir = join(runRepo, "results");
+    for (const f of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
+      try { const j = JSON.parse(readFileSync(join(dir, f), "utf8")); byInst[j.instance_id] = j; } catch { /* skip */ }
+    }
+  } catch { /* no results dir */ }
+  const rows = ids.map((id) => {
+    const patch = predMap.get(id) || "";
+    const co = (byInst[id] || {}).claude_output || {};
+    const blob = `${co.stderr || ""}\n${co.stdout || ""}`;
+    let status = patch ? "ok" : "EMPTY";
+    if (!patch) {
+      if (/rate.?limit|\b429\b|overloaded|too many requests/i.test(blob)) status = "RATE_LIMIT";
+      else if (/usage limit|quota|insufficient|balance|402\b/i.test(blob)) status = "USAGE_LIMIT";
+      else if (typeof co.returncode === "number" && co.returncode !== 0) status = `EXIT_${co.returncode}`;
+      else if ((co.stdout || "").length === 0) status = "NO_OUTPUT";
+    }
+    return { id, status, patchLen: patch.length, rc: co.returncode ?? null, stdoutLen: (co.stdout || "").length,
+             errTail: status === "ok" ? "" : (co.stderr || "").trim().slice(-400) || (co.stdout || "").slice(-200) };
+  });
+  writeFileSync(join(CACHE, `debug-${label}-${version}.json`), JSON.stringify(rows, null, 2));
+  return rows;
 }
 
 async function runOne(label, srcBin) {
   const { shimDir } = prepareBinary(label, srcBin);
-  // FULL isolation for parallel runs:
-  //  - own TMPDIR: the harness clones each instance to
-  //    `${gettempdir()}/swe_bench_<instance>` and rmtree's it if present, so two
-  //    runs on the same instances would clobber each other's checkout. TMPDIR
-  //    steers gettempdir().
-  //  - own copy of the (888K) harness: predictions/, results/,
-  //    benchmark_scores.log are named by SECOND-granularity timestamp, so two
-  //    runs starting the same second would collide on those shared files.
+  // FULL isolation for parallel runs: own TMPDIR (the harness clones each
+  // instance to `${gettempdir()}/swe_bench_<instance>` and rmtree's it) and own
+  // copy of the (888K) harness (predictions/results/scores are timestamp-named
+  // and would collide across two concurrent runs).
   const tmp = join(CACHE, "tmp", `tmp-${label}`);
   mkdirSync(tmp, { recursive: true });
   const runRepo = join(CACHE, `harness-${label}`);
@@ -331,25 +386,57 @@ async function runOne(label, srcBin) {
   for (const d of ["predictions", "results", "evaluation_results", "logs"]) rmSync(join(runRepo, d), { recursive: true, force: true });
   rmSync(join(runRepo, "benchmark_scores.log"), { force: true });
 
-  const runArgs = ["swe_bench.py", "run", "--limit", String(N), "--backend", "claude"];
-  if (noEval) runArgs.push("--no-eval");
-  const env = { ...process.env, PATH: `${shimDir}:${process.env.PATH}`, TMPDIR: tmp, BENCH_INSTANCE_IDS: INSTANCE_IDS.join(",") };
-  const r = await shAsync(venvPy, runArgs, { cwd: runRepo, env, stdio: ["ignore", "pipe", "pipe"] });
-  const out = (r.stdout || "") + "\n" + (r.stderr || "");
-  writeFileSync(join(CACHE, `run-${label}-${version}.log`), out);
-  const sc = parseScore(out);
-  // Own benchmark_scores.log → last line IS this run's. avg = generation_time / n
-  // (Docker eval time excluded — it's binary-independent).
-  try {
-    const lines = readFileSync(join(runRepo, "benchmark_scores.log"), "utf8").trim().split("\n");
-    const last = JSON.parse(lines[lines.length - 1]);
-    sc.genTime = typeof last.generation_time === "number" ? last.generation_time : null;
-    sc.nInst = last.num_instances || N;
-    sc.avgGen = sc.genTime != null && sc.nInst > 0 ? sc.genTime / sc.nInst : null;
-  } catch { sc.avgGen = null; }
-  if (r.status !== 0 && sc.eval == null && sc.gen == null)
-    warn(`${label} run exited ${r.status} with no parseable score — see data/benchmark/run-${label}-${version}.log`);
-  ok(`${label}: eval=${sc.eval ?? "n/a"}%  gen=${sc.gen ?? "n/a"}%  avg ${fmtDur(sc.avgGen)}/instance`);
+  // --- generation, with retry of empty-patch instances ----------------------
+  const g0 = await runGen(label, runRepo, shimDir, tmp, INSTANCE_IDS.length ? INSTANCE_IDS : [], "gen");
+  const predMap = readPreds(g0.predFile);
+  const ids = INSTANCE_IDS.length ? INSTANCE_IDS.slice() : [...predMap.keys()];
+  let totalWall = g0.wall;
+  let empties = emptyIdsOf(predMap, ids);
+  const retryLog = [{ attempt: 0, ran: ids.length, empty: empties.length }];
+  for (let r = 1; r <= RETRIES && empties.length; r++) {
+    warn(`${label}: ${empties.length}/${ids.length} empty after attempt ${r - 1} — retry ${r}/${RETRIES} of just those: ${empties.join(", ")}`);
+    if (RETRY_DELAY) await new Promise((res) => setTimeout(res, RETRY_DELAY * 1000));
+    const gr = await runGen(label, runRepo, shimDir, tmp, empties, `retry${r}`);
+    totalWall += gr.wall;
+    const rm = readPreds(gr.predFile);
+    for (const id of empties) { const p = rm.get(id); if (p) predMap.set(id, p); }
+    const before = empties.length; empties = emptyIdsOf(predMap, ids);
+    retryLog.push({ attempt: r, ran: before, recovered: before - empties.length, empty: empties.length });
+  }
+
+  // --- debug summary --------------------------------------------------------
+  const dbg = collectDebug(label, runRepo, predMap, ids);
+  const okCount = ids.length - empties.length;
+  ok(`${label}: generation ${okCount}/${ids.length} patches${retryLog.length > 1 ? ` (after ${retryLog.length - 1} retr${retryLog.length - 1 === 1 ? "y" : "ies"})` : ""}`);
+  for (const f of dbg.filter((d) => d.status !== "ok"))
+    warn(`  ${label} still-empty ${f.id} [${f.status}] rc=${f.rc} stdout=${f.stdoutLen}b :: ${(f.errTail || "").replace(/\s+/g, " ").slice(0, 160)}`);
+
+  // --- write merged predictions (harness-recognized name + schema) ----------
+  const mergedName = `predictions_${tstamp()}.jsonl`;
+  const mergedFile = join(runRepo, "predictions", mergedName);
+  writeFileSync(mergedFile, ids.map((id) =>
+    JSON.stringify({ instance_id: id, model: `claude-${label}`, prediction: predMap.get(id) || "" })).join("\n") + "\n");
+
+  const genPct = ids.length ? (100 * okCount) / ids.length : null;
+  const avgGen = ids.length ? totalWall / ids.length : null; // wall/instance incl. retries + per-instance clone
+  const base = { gen: genPct, resolved: null, tested: ids.length, avgGen, debug: dbg, retryLog, stillEmpty: empties };
+
+  if (noEval) { ok(`${label}: gen=${genPct?.toFixed(0)}% (eval skipped)  avg ${fmtDur(avgGen)}/inst`); return { ...base, eval: null }; }
+
+  // --- single eval over the merged predictions ------------------------------
+  const ev = await shAsync(venvPy, ["swe_bench.py", "eval", "--file", mergedName, "--dataset", "princeton-nlp/SWE-bench_Lite", "--max-workers", "4", "--force"],
+    { cwd: runRepo, env: { ...process.env, TMPDIR: tmp }, stdio: ["ignore", "pipe", "pipe"] });
+  const eout = (ev.stdout || "") + "\n" + (ev.stderr || "");
+  writeFileSync(join(CACHE, `eval-${label}-${version}.log`), eout);
+  // The eval subcommand's printed "Evaluation Score: X% (R/300)" divides by the
+  // FULL dataset (300), so take the RESOLVED COUNT and divide by how many we
+  // actually evaluated (N). Prefer the "Instances resolved: N" line; fall back
+  // to the numerator of the (R/total) fraction.
+  const rm = eout.match(/Instances resolved:\s*(\d+)/) || eout.match(/Evaluation Score:\s*[\d.]+%\s*\((\d+)\s*\//);
+  const sc = { ...base };
+  if (rm) { sc.resolved = +rm[1]; sc.eval = sc.tested ? (100 * sc.resolved) / sc.tested : null; }
+  else { sc.eval = null; warn(`${label}: could not parse eval score — see data/benchmark/eval-${label}-${version}.log`); }
+  ok(`${label}: eval=${sc.eval != null ? sc.eval.toFixed(0) : "n/a"}% (${sc.resolved ?? "?"}/${sc.tested}) gen=${genPct?.toFixed(0)}% avg ${fmtDur(avgGen)}/inst`);
   return sc;
 }
 
@@ -363,7 +450,13 @@ const [stock, patched] = await Promise.all([runOne("stock", stockBin), runOne("p
 const metric = (stock.eval != null && patched.eval != null) ? "eval" : "gen";
 const sVal = stock[metric], pVal = patched[metric];
 const stamp = new Date().toISOString().slice(0, 10);
-const results = { version, n: N, date: stamp, metric, effort: EFFORT, stock, patched,
+// Compact view for results.json — full per-instance debug stays in
+// debug-<label>-<version>.json (heavy errTail strings don't belong here).
+const compact = (s) => ({ eval: s.eval, gen: s.gen, resolved: s.resolved, tested: s.tested, avgGen: s.avgGen,
+  retryLog: s.retryLog, stillEmpty: s.stillEmpty,
+  failures: (s.debug || []).filter((d) => d.status !== "ok").map((d) => ({ id: d.id, status: d.status, rc: d.rc })) });
+const results = { version, n: N, date: stamp, metric, effort: EFFORT, retries: RETRIES,
+  stock: compact(stock), patched: compact(patched),
   dataset: INSTANCE_IDS.length ? "SWE-bench-lite (hardest-for-Claude subset)" : "SWE-bench-lite", instances: INSTANCE_IDS };
 writeFileSync(join(CACHE, `results-${version}.json`), JSON.stringify(results, null, 2));
 
@@ -450,7 +543,7 @@ Measured with the [SWE-bench harness](${HARNESS_URL}) — the **stock** vs the *
 | Stock v${version} | **${sVal.toFixed(1)}%**${sCount} | ${sRt} |
 | Un-nerfed v${version} | **${pVal.toFixed(1)}%**${pCount} (${delta >= 0 ? "+" : ""}${delta} pts) | ${pRt}${slower} |
 
-${INSTANCE_IDS.length ? `${n} hardest-for-Claude` : "SWE-bench-lite"} instances, both at \`--effort ${EFFORT}\`, ${date}. Runtime is model generation time per instance (Docker eval excluded; per-instance generation cap ${GEN_TIMEOUT}s). **Caveat:** at n=${n} the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(0)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with \`./upgrade.sh --benchmark=N\`.
+${INSTANCE_IDS.length ? `${n} hardest-for-Claude` : "SWE-bench-lite"} instances, both at \`--effort ${EFFORT}\`, ${date}. Runtime is wall-clock per instance (repo clone + generation + retries; Docker eval excluded). Empty-patch generations (transient rate-limit / overload) are auto-retried up to ${RETRIES}× before counting as a failure${(stock?.stillEmpty?.length || patched?.stillEmpty?.length) ? ` — this run still had ${stock?.stillEmpty?.length || 0} stock / ${patched?.stillEmpty?.length || 0} patched left empty after retries` : ""}. **Caveat:** at n=${n} the accuracy is *indicative, not statistically significant* — each instance is worth ${(100 / n).toFixed(1)} points and the model is nondeterministic, so a few-point swing (either direction) is within the noise. Re-run larger with \`./upgrade.sh --benchmark=N\`.
 ${MARK_END}`;
 
   let md = readFileSync(README, "utf8");
