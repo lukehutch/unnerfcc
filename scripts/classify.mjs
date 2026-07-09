@@ -31,16 +31,35 @@
  * So the expensive work happens once; each new CC release only classifies its
  * genuinely-new strings, and a policy bump only re-touches prompt strings.
  *
+ * ONE JOB, NOT MANY (maintainer policy, 2026-07-09)
+ * -------------------------------------------------
+ * A new release often has >500 new fragments. We do NOT fan those out into many
+ * separate Opus jobs. All work items are written to a SINGLE batch.json and ONE
+ * Opus job classifies the whole file, told to skip none. Then we VERIFY: any ref
+ * the job dropped is re-sent as a small top-up job (same single-file shape) until
+ * none remain — so the happy path is exactly one job, and extra jobs only ever
+ * cover strings a prior pass skipped. If it can't complete (a round makes no
+ * progress), the run exits non-zero and lists what's still unclassified.
+ *
+ * We also flag UN-NERF STATUS CHANGES: when a reworded prompt's `unnerf` flag
+ * flips vs its pre-reword form, upstream added/removed a nerf → data/unnerf-
+ * status-changes.json + a warning (the apply-unnerfs rule must be re-checked).
+ *
  * USAGE
  *   node classify.mjs <cliJs> <ccVersion> [--limit N] [--batch N] [--dry-run]
  *     --limit N          classify at most N work items (testing / incremental)
- *     --batch N          strings per Claude call (default 100)
+ *     --batch N          strings per Claude call (default 0 = ALL in one file;
+ *                        set N>0 only to chunk for testing / an oversized bootstrap)
+ *     --max-rounds N     top-up rounds before giving up on skipped refs (default 8)
  *     --model M          classifier model (default opus; bootstrap used haiku)
  *     --shard I --shards N --shard-out F   run disjoint slices in parallel,
  *                        each writing its own file; then `merge` into the store
  *     --content-file F   classify an explicit [{hash,content}] list, not a bundle
  *     --force            (re)classify every item even if already in the store
  *     --dry-run          report the work to do; don't call Claude or write
+ *   Test seam: env CLASSIFY_CLAUDE_CMD, if set, is run (sh -c) in the work dir
+ *   instead of spawning claude (it must read batch.json → write result.json) —
+ *   lets the top-up/completeness loop be exercised without Opus.
  */
 
 import { readFileSync, writeFileSync, mkdtempSync, existsSync, copyFileSync } from "node:fs";
@@ -69,7 +88,10 @@ const argv = process.argv.slice(2);
 const cliJs = argv[0], ccVersion = argv[1];
 const opt = (name, def) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : def; };
 const LIMIT = parseInt(opt("--limit", "0"), 10) || Infinity;
-const BATCH = parseInt(opt("--batch", "100"), 10);
+// Default 0 = put ALL work items in one file / one Opus job (see "ONE JOB" note).
+// --batch N>0 chunks within a round, for testing or an oversized bootstrap.
+const BATCH = parseInt(opt("--batch", "0"), 10);
+const MAX_ROUNDS = parseInt(opt("--max-rounds", "8"), 10);
 // Model. The one-time bootstrap used Haiku (cheap, mostly non-prompts). But the
 // un-nerf judgment needs real reasoning — a recall check against the existing
 // rules showed Haiku caught only obvious brevity caps and missed the subtler
@@ -143,10 +165,13 @@ console.error(`to classify: ${work.length} (${nNew} new, ${nStale} policy-stale)
 if (DRY) { console.log(JSON.stringify({ distinct: byHash.size, toClassify: work.length, nNew, nStale })); process.exit(0); }
 if (!work.length) { console.error("nothing to classify — store is current"); process.exit(0); }
 
-// --- 3. classify the work in batches via Claude -----------------------------
+// --- 3. classify the work: ONE file / ONE Opus job, then top up any skips ----
 // Shard first (disjoint slice per worker), then apply --limit.
 let todo = SHARD >= 0 ? work.filter((_, i) => i % SHARDS === SHARD) : work;
 todo = todo.slice(0, LIMIT === Infinity ? todo.length : LIMIT);
+// Stable ref per item (index in `todo`) — the classifier echoes it back, so a
+// top-up round can carry an arbitrary sparse subset of refs unambiguously.
+todo.forEach((w, i) => { w.ref = i; });
 // Write to the shard file when sharding (no store race); else the main store.
 const outPath = SHARD_OUT || STORE_PATH;
 const outStore = SHARD_OUT ? { algo: "sha256", strings: {} } : store;
@@ -159,49 +184,96 @@ const { rmSync } = await import("node:fs");
 // --content-file mode there's no bundle — the worker classifies text alone.
 const HAS_BUNDLE = !CONTENT_FILE && existsSync(cliJs);
 if (HAS_BUNDLE) copyFileSync(cliJs, join(workDir, "cli.js"));
-let done = 0;
-for (let i = 0; i < todo.length; i += BATCH) {
-  const batch = todo.slice(i, i + BATCH);
-  const items = batch.map((w, j) => ({ ref: j, text: w.content.slice(0, 16000) }));
-  writeFileSync(join(workDir, "batch.json"), JSON.stringify(items, null, 1));
-  writeFileSync(join(workDir, "TASK.md"), classifyInstructions(batch.length, HAS_BUNDLE));
-  try { rmSync(join(workDir, "result.json")); } catch {} // no stale result on a failed batch
+// Default: ALL items in one file / one job. --batch N>0 chunks within a round.
+const CHUNK = BATCH > 0 ? BATCH : todo.length || 1;
 
+// Run ONE Opus classification over `batch`, returning a Map ref->result for
+// whatever it actually classified. Tolerant of a partial/absent result.json (a
+// timeout or a skip): the missing refs are simply topped up in a later round.
+function classifyBatch(batch, rtag) {
+  const items = batch.map((w) => ({ ref: w.ref, text: w.content.slice(0, 16000) }));
+  writeFileSync(join(workDir, "batch.json"), JSON.stringify(items, null, 1));
+  writeFileSync(join(workDir, "TASK.md"), classifyInstructions(items.length, HAS_BUNDLE));
+  try { rmSync(join(workDir, "result.json")); } catch {} // no stale result from a prior job
   const prompt =
-    `Read TASK.md in this directory and follow it EXACTLY. Classify the ${batch.length} strings in batch.json ` +
-    `and WRITE result.json (a JSON array of ${batch.length} objects, one per ref). Do not ask questions.`;
-  const r = spawnSync("claude", ["-p", "--model", MODEL, "--dangerously-skip-permissions", prompt], {
-    cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 15 * 60 * 1000,
-  });
-  if (r.status !== 0 && !existsSync(join(workDir, "result.json"))) die(`claude exited ${r.status} on batch ${i / BATCH}`);
+    `Read TASK.md in this directory and follow it EXACTLY. batch.json holds ${items.length} strings. ` +
+    `Classify EVERY one of them — skip none — and WRITE result.json: a JSON array of exactly ${items.length} ` +
+    `objects, one per ref (echo each ref unchanged). Do not ask questions.`;
+  // Test seam: CLASSIFY_CLAUDE_CMD, if set, runs (sh -c) in workDir instead of
+  // claude — it must read batch.json → write result.json (see USAGE).
+  const fake = process.env.CLASSIFY_CLAUDE_CMD;
+  const r = fake
+    ? spawnSync("sh", ["-c", fake], { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 })
+    : spawnSync("claude", ["-p", "--model", MODEL, "--dangerously-skip-permissions", prompt],
+        { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 });
+  if (!existsSync(join(workDir, "result.json"))) {
+    console.error(`  ${rtag}no result.json (claude status ${r.status}) — will retry any missing`);
+    return new Map();
+  }
   let results;
   try { results = JSON.parse(readFileSync(join(workDir, "result.json"), "utf8")); }
-  catch (e) { die(`could not parse result.json for batch ${i / BATCH}: ${e.message}`); }
-  const byRef = new Map(results.map((x) => [x.ref, x]));
+  catch (e) { console.error(`  ${rtag}could not parse result.json (${e.message}) — will retry`); return new Map(); }
+  if (!Array.isArray(results)) return new Map();
+  return new Map(results.filter((x) => x && Number.isInteger(x.ref)).map((x) => [x.ref, x]));
+}
 
-  for (let j = 0; j < batch.length; j++) {
-    const w = batch[j];
-    const res = byRef.get(j) || {};
-    const cls = res.class === "prompt" ? "prompt" : "non-prompt";
-    outStore.strings[w.hash] = {
-      class: cls,
-      unnerf: cls === "prompt" ? !!res.unnerf : false,
-      // PROPOSED identity + slot audit (skrabe: propose names, maintainer signs
-      // off). Only meaningful for prompts; carried to gen-catalog candidates.
-      proposedName: cls === "prompt" ? (res.name || "").slice(0, 80) : "",
-      proposedDescription: cls === "prompt" ? (res.description || "").slice(0, 200) : "",
-      slots: cls === "prompt" ? (res.slots || "").slice(0, 300) : "",
-      notes: (res.notes || "").slice(0, 200),
-      policyVersion,
-      ccFirstSeen: store.strings[w.hash]?.ccFirstSeen || CCV,
-      sample: w.content.slice(0, 200),
-    };
+function storeRecord(w, res) {
+  const cls = res.class === "prompt" ? "prompt" : "non-prompt";
+  outStore.strings[w.hash] = {
+    class: cls,
+    unnerf: cls === "prompt" ? !!res.unnerf : false,
+    // PROPOSED identity + slot audit (skrabe: propose names, maintainer signs
+    // off). Only meaningful for prompts; carried to gen-catalog candidates.
+    proposedName: cls === "prompt" ? (res.name || "").slice(0, 80) : "",
+    proposedDescription: cls === "prompt" ? (res.description || "").slice(0, 200) : "",
+    slots: cls === "prompt" ? (res.slots || "").slice(0, 300) : "",
+    notes: (res.notes || "").slice(0, 200),
+    policyVersion,
+    ccFirstSeen: store.strings[w.hash]?.ccFirstSeen || CCV,
+    sample: w.content.slice(0, 200),
+  };
+}
+
+// Round loop: pass 1 classifies ALL items in one job; later passes top up only
+// the refs a prior pass skipped. Stop when none remain, or a round makes no
+// progress (claude keeps dropping the same refs — surfaced by the gate below).
+const doneRefs = new Set();
+let remaining = todo.slice();
+let stalled = false;
+for (let round = 1; remaining.length && round <= MAX_ROUNDS; round++) {
+  const rtag = `${tag}round ${round}: `;
+  let got = 0;
+  for (let i = 0; i < remaining.length; i += CHUNK) {
+    const batch = remaining.slice(i, i + CHUNK);
+    const byRef = classifyBatch(batch, rtag);
+    for (const w of batch) {
+      const res = byRef.get(w.ref);
+      if (!res) continue; // skipped this pass — retry next round
+      storeRecord(w, res);
+      doneRefs.add(w.ref);
+      got++;
+    }
+    // Persist after every job so the (expensive) work is resumable.
+    outStore.strings = Object.fromEntries(Object.entries(outStore.strings).sort());
+    writeFileSync(outPath, asciiSafe(outStore) + "\n");
   }
-  done += batch.length;
-  // Persist after every batch so the (expensive) work is resumable.
-  outStore.strings = Object.fromEntries(Object.entries(outStore.strings).sort());
-  writeFileSync(outPath, asciiSafe(outStore) + "\n");
-  console.error(`  ${tag}classified ${done}/${todo.length}`);
+  const before = remaining.length;
+  remaining = remaining.filter((w) => !doneRefs.has(w.ref));
+  console.error(`  ${tag}round ${round}: classified ${before - remaining.length}/${before}, ${remaining.length} still missing`);
+  if (remaining.length && got === 0) { stalled = true; break; } // no progress → stop
+}
+
+// --- 3b. completeness gate — the maintainer's "were ALL classified?" check ---
+if (remaining.length) {
+  console.error(
+    `  ${tag}✗ INCOMPLETE: ${remaining.length}/${todo.length} unclassified` +
+    (stalled ? " (a round classified none — claude kept skipping them)" : ` after ${MAX_ROUNDS} round(s)`) + ":"
+  );
+  for (const w of remaining.slice(0, 20)) console.error(`      ${w.hash.slice(0, 12)} ${JSON.stringify(w.content.slice(0, 60))}`);
+  if (remaining.length > 20) console.error(`      … and ${remaining.length - 20} more`);
+  process.exitCode = 1;
+} else if (todo.length) {
+  console.error(`  ${tag}✓ all ${todo.length} strings classified`);
 }
 
 // --- 4. report + surface the un-nerf candidates -----------------------------
@@ -218,6 +290,10 @@ const candPath = join(REPO, "data", "unnerf-candidates.json");
 writeFileSync(candPath, asciiSafe(
   unnerf.map((r) => ({ sample: r.sample, notes: r.notes, ccFirstSeen: r.ccFirstSeen }))) + "\n");
 console.error(`un-nerf candidates → ${candPath} (${unnerf.length})`);
+// The un-nerf STATUS-CHANGE check (did a reworded prompt gain/lose a nerf?) runs
+// as a separate post-gen-catalog step — scripts/unnerf-status.mjs — because it
+// pairs the PREV and NEW catalogs by id, and the new catalog doesn't exist yet
+// at classify time.
 console.log(STORE_PATH);
 
 function classifyInstructions(n, hasBundle) {
@@ -226,12 +302,18 @@ function classifyInstructions(n, hasBundle) {
 You are classifying **${n} string literals** extracted from the Claude Code
 binary. These are the GENUINELY NEW or reshaped fragments for this release —
 unchanged prompts already kept their names by content match, so what reaches you
-is the small supervised set. Your names here feed a maintainer sign-off, so be
-precise. For each string, decide the fields below.
+is the supervised set. Your names here feed a maintainer sign-off, so be precise.
+For each string, decide the fields below.
+
+**Classify ALL ${n} strings. Skip NONE.** This is a single batch of every new
+fragment in the release — there is no second pass that will pick up the ones you
+leave out. Your \`result.json\` MUST contain exactly ${n} objects, one per ref.
 
 ## Read
 - \`batch.json\` — an array of \`{ ref, text }\`. \`text\` is the string's content
   (interpolations show as \`\${...}\` or \`\${}\`). Echo each \`ref\` back unchanged.
+  It may be large: if it exceeds a single read, page through it (offset/limit)
+  and classify EVERY ref — do not stop at the first chunk you read.
 ${hasBundle ? `- \`cli.js\` — the full Claude Code bundle is in this directory. For a string
   whose class or purpose is AMBIGUOUS from its text alone, grep \`cli.js\` for a
   distinctive run of the string to read its surrounding code — how it's assigned,
@@ -285,5 +367,9 @@ Write \`result.json\` in THIS directory: a JSON array of exactly ${n} objects:
   "name": "<kebab-id or ''>", "description": "<one line or ''>",
   "slots": "<per-slot binding or ''>", "notes": "<one clause>" }
 \`\`\`
-One object per input ref; echo every ref; no extra commentary.`;
+One object per input ref; echo every ref; no extra commentary.
+
+**Before you finish, verify: the array length is exactly ${n}, every ref from
+\`batch.json\` appears once, and none is missing.** If your first draft is short,
+go back and classify the refs you skipped until all ${n} are present.`;
 }

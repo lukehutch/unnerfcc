@@ -184,10 +184,22 @@ python3 scripts/apply-unnerfs.py --check   # gate: 0 FAILED, 0 missing
 
 Classification of new strings runs on **Opus** (the one-time bootstrap over the
 whole bundle used Haiku; incremental per-release runs use Opus for un-nerf
-recall). For each new prompt Claude proposes a `name` + `description` and a
-per-`${…}`-slot binding audit — a pre-labeled worklist surfaced in
-`<catalog>.candidates.json`, which the maintainer confirms before promoting into
-the catalog with a real id.
+recall). A release often has **>500 new fragments**; rather than fan those out
+into many separate Opus jobs, `classify.mjs` writes them ALL to a single
+`batch.json` and runs **one** Opus job over the whole set, told to skip none.
+It then **verifies completeness**: any ref the job dropped is re-sent as a small
+top-up job until none remain, and if it can't finish, the run exits non-zero
+listing what's still unclassified. For each new prompt Claude proposes a `name` +
+`description` and a per-`${…}`-slot binding audit — a pre-labeled worklist
+surfaced in `<catalog>.candidates.json`, which the maintainer confirms before
+promoting into the catalog with a real id.
+
+After the catalog is generated, **`scripts/unnerf-status.mjs`** pairs the previous
+and new catalogs by `id` and reports every **reworded prompt whose un-nerf status
+flipped** (upstream added or removed a brevity/effort nerf) →
+`data/unnerf-status-changes.json` — a re-check worklist for the apply-unnerfs
+rules, complementing `apply-unnerfs.py --check` (which only covers prompts that
+already have a rule).
 
 Then the maintainer's judgment step (this guide's reason to exist): for each
 prompt Claude flags as un-nerf-worthy (`data/unnerf-candidates.json`) or that

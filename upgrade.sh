@@ -217,16 +217,17 @@ if [ -n "${PREV_CATALOG:-}" ]; then
   log "SHA-256 diff vs previous catalog"
   node "$REPO/scripts/prompt-index.mjs" diff "$PREV_CATALOG" "$NEW_CATALOG" | sed 's/^/  /'
 
+  # Did any reworded prompt gain/lose a brevity/effort nerf? Pairs prev vs new
+  # catalog by id and compares each changed prompt's classified un-nerf status.
+  log "Checking un-nerf status changes on reworded prompts"
+  node "$REPO/scripts/unnerf-status.mjs" changes "$PREV_CATALOG" "$NEW_CATALOG" 2>&1 | sed 's/^/  /' || warn "un-nerf status check failed (non-fatal)"
+
   log "Preparing relabel worklist"
   RL_WORK="$WORK/relabel"
   N=$(node "$REPO/scripts/relabel.mjs" prepare "$PREV_CATALOG" "$NEW_CATALOG" "$RL_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
 
   if [ "${N:-0}" -gt 0 ]; then
     log "Launching Claude Code to label $N new/changed fragment(s)"
-    if [ "$ASSUME_YES" -eq 0 ]; then
-      printf '  Launch \033[1mclaude\033[0m to semantically label %s fragment(s)? [Y/n] ' "$N"
-      read -r ans; case "$ans" in [nN]*) die "aborted before relabel";; esac
-    fi
     ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
         "Read LABELING-TASK.md in this directory and follow it EXACTLY. The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Read worklist.json ($N items), assign a label to each per the conventions, and WRITE the result as labels.json in this directory (a JSON array of $N objects, one per ref). Do not ask questions; complete the task and write the file." )
     [ -f "$RL_WORK/labels.json" ] || die "claude did not produce labels.json"
