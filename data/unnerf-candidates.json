@@ -155,6 +155,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Writing commit messages and PR descriptions\n\nWrite for a reader with zero context who was not part of this session:\n- Say what the change is in plain words before any mechanism or implementation det",
+  "notes": "brevity cap: 'Short beats complete' trades completeness for terseness",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
   "sample": "Default: NO `/schedule` offer \u2014 most tasks just end. Offer ONLY when this turn's work left a named artifact with a future obligation you can quote verbatim: a flag/gate/experiment key with a stated ra",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -255,6 +260,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "<1-2 lines: what you verified and how (commands run, behavior observed); note anything unverified>",
+  "notes": "brevity cap: '1-2 lines' limits the test-plan length",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
   "sample": "Merge duplicates, rank, cap the report",
   "notes": "instruction to cap findings",
   "ccFirstSeen": "2.1.199"
@@ -268,6 +278,11 @@
   "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>Forking this \u2014 it's a survey question. I want the punch list, not the git output in my context.</t",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "<1-2 plain sentences: what this change does and why>",
+  "notes": "brevity cap: '1-2 plain sentences' limits the summary length",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "<${}>\nYou are a worker fork. The transcript above is the parent's history \u2014 inherited reference, not your situation. You are NOT a continuation of that agent. Execute ONE directive, then stop.\n\nHard r",
@@ -298,6 +313,11 @@
   "sample": "\\`${} effort \u2192 5+5 angles \u00d7 8 candidates \u2192 1-vote verify \u2192 sweep \u2192 \u226415 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "In the test plan, state what you actually verified and how \u2014 the command you ran and the behavior you observed, in 1-2 lines; name anything left unverified. Never emit a checklist of unchecked TODO bo",
+  "notes": "brevity cap: state verification 'in 1-2 lines'",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "\n\n## Applying fixes (--fix)\n\nThe \\`--fix\\` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly \u2014 correct",
@@ -338,6 +358,11 @@
   "sample": "Analyze this Claude Code usage data and describe the user's interaction style.\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"narrative\": \"2-3 paragraphs analyzing HOW the user interacts with Claude Cod",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Keep the whole body under 250 words: what changed, why now / what was broken without it, how you verified it, and anything deliberately out of scope. Define project-specific shorthand the first time i",
+  "notes": "length cap: 'keep the whole body under 250 words' (stylistic, not a UI/parser limit)",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "Don't add error handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and framework guarantees. Only validate at system boundaries (user input, external APIs). Don't ",
@@ -413,6 +438,11 @@
   "sample": "showing lines 1-${} of ${} total (${.tokenCount} tokens, cap ${}). Call ${} with offset=${+1} limit=${} for the next page, or ${} to find a specific section. Do NOT answer from this page alone if the ",
   "notes": "instructs model not to answer from incomplete data",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, b",
+  "notes": "process-brevity cap: 'respond with a concise report ... only needs the essentials'",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "Analyze this Claude Code usage data and identify what's working well for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence of context\",\n  \"impressi",
@@ -510,6 +540,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "You are the Claude guide agent. Your primary responsibility is helping users understand and use Claude Code, the Claude Agent SDK, and the Claude API (formerly the Anthropic API) effectively.\n\n**Your ",
+  "notes": "agent system prompt; caps output via 'Keep responses concise and actionable'",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
   "sample": "Don't implement \u2014 save plan and return",
   "notes": "model instruction to minimize effort: skip implementation",
   "ccFirstSeen": "2.1.199"
@@ -518,6 +553,16 @@
   "sample": "${} The conversation transcript is available at: ${}\nYou can read this file to analyze the conversation history if needed.\n\nUse the available tools to inspect the codebase and verify the condition.\nUs",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${.commit?`# Git\n- Never use git commands with the -i flag (like git rebase -i or git add -i) since they require interactive input which is not supported.\n- Only commit when the user explicitly asks. ",
+  "notes": "brevity cap: 'Draft a concise (1-2 sentences) commit message'",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
+  "sample": "Give the user a brief summary, then start implementing.",
+  "notes": "'brief summary' caps chat/summary thoroughness",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
@@ -575,6 +620,16 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
+  "notes": "skill markdown body read as guidance; unnerf: 'Start simple / default to the simplest tier / least code you own / stay at a simpler tier' is implementation-brevity minimalism steer",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
+  "sample": "Open the body with 1-2 plain sentences saying what the change does and why \u2014 a reader who was not part of this session and has not read the diff should understand the change from those alone. Never op",
+  "notes": "brevity cap: 'open with 1-2 plain sentences' constrains the opening length",
+  "ccFirstSeen": "2.1.205"
+ },
+ {
   "sample": "\n## Insights\nIn order to encourage learning, before and after writing code, always provide brief educational explanations about implementation choices using (with backticks):\n\"\\`${.star} Insight \u2500\u2500\u2500\u2500\u2500",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -583,6 +638,11 @@
   "sample": "${}## Context\n\n- \\`SAFEUSER\\`: ${}\n- \\`whoami\\`: ${}\n- \\`git status\\`: !\\`git status\\`\n- \\`git diff HEAD\\`: !\\`git diff HEAD\\`\n- \\`git branch --show-current\\`: !\\`git branch --show-current\\`\n- \\`git d",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Finish with a brief summary of what was fixed\nand what was skipped.",
+  "notes": "process brevity: 'brief summary'",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "You are a subagent spawned by a workflow orchestration script. Use the tools available to complete the task.\n\nCRITICAL: Your final text response is returned **verbatim** as a string to the calling scr",
@@ -623,6 +683,11 @@
   "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nFor simple commands (git, npm, standard",
   "notes": "requires concise/brief descriptions (5-10 words)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\n\n## Applying fixes (--fix)\n\nThe \\`--fix\\` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly \u2014 correct",
+  "notes": "skill/command body; else-branch 'Finish with a brief summary of what was fixed and what was skipped' caps report",
+  "ccFirstSeen": "2.1.205"
  },
  {
   "sample": "\n\nThe user has configured a workflow size guideline in /config: ${()}. ${()}",

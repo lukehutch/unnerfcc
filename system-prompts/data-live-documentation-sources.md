@@ -3,7 +3,7 @@ name: 'Data: Live documentation sources'
 description: >-
   WebFetch URLs for fetching current Claude API and Agent SDK documentation from
   official sources
-ccVersion: 2.1.172
+ccVersion: 2.1.205
 -->
 # Live Documentation Sources
 
@@ -113,7 +113,7 @@ Use these when a managed-agents binding, behavior, or wire-level detail isn't co
 
 ### Anthropic CLI
 
-The \`ant\` CLI provides terminal access to the Claude API. Every API resource is exposed as a subcommand. It is one convenient way to create agents, environments, sessions, and other resources from version-controlled YAML, and to inspect responses interactively.
+The \`ant\` CLI provides terminal access to the Claude API. Every API resource is exposed as a subcommand. It is the recommended way to create agents and environments from version-controlled YAML (\`ant beta:agents create < agent.yaml\` — see \`shared/anthropic-cli.md\`), and also exposes sessions and every other API resource for scripting and interactive inspection.
 
 | Topic         | URL                                                     | Extraction Prompt                                                                                  |
 | ------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |

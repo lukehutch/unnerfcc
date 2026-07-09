@@ -3,7 +3,7 @@ name: 'Data: Streaming reference — Python'
 description: >-
   Python streaming reference including sync/async streaming and handling
   different content types
-ccVersion: 2.1.175
+ccVersion: 2.1.205
 -->
 # Streaming — Python
 
@@ -80,7 +80,7 @@ with client.messages.stream(
 
 ## Streaming with Tool Use
 
-The Python tool runner currently returns complete messages. Use streaming for individual API calls within a manual loop if you need per-token streaming with tools:
+The Python tool runner supports streaming: pass \`stream=True\` to \`client.beta.messages.tool_runner(...)\` and each iteration yields a stream you consume event-by-event, with \`get_final_message()\` for the accumulated message per turn (see \`shared/tool-use-concepts.md\` → Tool Runner vs Manual Loop). Use the manual-loop pattern below only when you're not using the tool runner and need per-token streaming with tools:
 
 \`\`\`python
 with client.messages.stream(

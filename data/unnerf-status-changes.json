@@ -1,0 +1,44 @@
+{
+ "from": "2.1.202",
+ "to": "2.1.205",
+ "changes": [
+  {
+   "id": "skill-building-llm-powered-applications-with-claude",
+   "name": "Skill: Building LLM-powered applications with Claude",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "24a05b86cdf8",
+   "newHash": "e3f2b50acb51",
+   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
+  },
+  {
+   "id": "agent-prompt-quick-pr-creation",
+   "name": "Agent Prompt: Quick PR creation",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "e55c4de948a5",
+   "newHash": "4302335fb2b3",
+   "sample": "${}## Context\n\n- \\`SAFEUSER\\`: ${}\n- \\`whoami\\`: ${}\n- \\`git status\\`: !\\`git status\\`\n- \\`git diff HEAD\\`: !\\`git diff HEAD\\`\n- \\`git branch --show-current\\`: !\\`git branch --show-current\\`\n- \\`git d"
+  },
+  {
+   "id": "skill-verify",
+   "name": "Skill: verify",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "50376b11449d",
+   "newHash": "377693783ee5",
+   "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior — drive the affected flow, not just tests or typecheck. R"
+  }
+ ],
+ "unverifiable": [
+  {
+   "id": "agent-prompt-conversation-summarization",
+   "name": "Agent Prompt: Conversation summarization",
+   "reason": "old form not classified",
+   "sample": "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.\nThis summary should be thorough in capturing tec"
+  }
+ ]
+}

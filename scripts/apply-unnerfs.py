@@ -1017,32 +1017,16 @@ RULES: dict[str, list[Rule]] = {
             description='agent tool: spawn for parallel/fan-out investigation (brief them well)',
         ),
     ],
-    "tool-description-bash-git-commit-and-pr-creation-instructions.md": [
-        Rule(
-            stock='<1-3 bullet points>',
-            unnerf='<bullet points covering all notable changes — as many as the work warrants>',
-            description='PR summary: as many bullets as the work warrants',
-        ),
-    ],
-    # Sibling of the bash-git-commit PR-summary rule above (found via the v2.1.190
-    # exhaustive sibling audit). The /quick-pr command emits the SAME PR body
-    # template but in two arms (IS_BASH_ENV_FN ? bash-heredoc : pwsh-here-string),
-    # so "<1-3 bullet points>" appears TWICE. The matcher replaces only the first
-    # occurrence per rule (content.replace(stock, unnerf, 1)), so flip each arm
-    # with its own rule, each anchored on the distinguishing "--body" prefix to
-    # stay byte-unique. Same flip/text as the sibling above, for consistency.
-    "agent-prompt-quick-pr-creation.md": [
-        Rule(
-            stock="--body \"$(cat <<'EOF'\n## Summary\n<1-3 bullet points>",
-            unnerf="--body \"$(cat <<'EOF'\n## Summary\n<bullet points covering all notable changes — as many as the work warrants>",
-            description="quick-pr summary (bash arm): as many bullets as the work warrants",
-        ),
-        Rule(
-            stock="--body @'\n## Summary\n<1-3 bullet points>",
-            unnerf="--body @'\n## Summary\n<bullet points covering all notable changes — as many as the work warrants>",
-            description="quick-pr summary (pwsh arm): as many bullets as the work warrants",
-        ),
-    ],
+    # RETIRED (v2.1.205): the PR-summary "<1-3 bullet points>" cap lived here as
+    # three prompt rules — one for tool-description-bash-git-commit-and-pr-creation-
+    # instructions.md and two arms (bash heredoc / pwsh here-string) for
+    # agent-prompt-quick-pr-creation.md. Upstream v2.1.205 refactored the PR body
+    # template: the inline "<1-3 bullet points>" became a `${PR_SUMMARY_CONTENT()}`
+    # slot whose JS generator (function S7t) RETURNS "<1-3 bullet points>". The cap
+    # is no longer in any prompt/.md — it is now a code string, unreachable by the
+    # prompt layer. These rules are retired and the un-nerf is RETARGETED to the
+    # code layer: see lib/apply-code-patches.mjs P4 (lift-pr-summary-bullet-cap),
+    # which lifts the same cap with the same replacement text.
     "tool-description-workflow.md": [
         Rule(
             stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the Agent tool for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',

@@ -7,7 +7,7 @@ description: >-
   changes. Don't invoke it on a diff that only touches tests, docs, or other
   code with no runtime surface to drive (a change to product source always has
   one) — there's nothing to observe.
-ccVersion: 2.1.201
+ccVersion: 2.1.205
 -->
 ---
 name: verify
@@ -114,7 +114,10 @@ ls <touched-dir>/.claude/skills/      # each dir level the diff names
   build/launch/drive recipe that worked, so the next session skips
   this cold start. Keep it short: the commands that worked, the
   flows worth driving, any gotchas. A project verify skill already
-  exists → fold new learnings into it instead of duplicating.
+  exists → edit it only when it steered you wrong: a documented
+  command failed or turned out wrong, or a needed step it doesn't
+  cover. Routine learnings don't warrant an edit, and never rewrite
+  or reorganize existing content for style.
 
 ## Drive it
 

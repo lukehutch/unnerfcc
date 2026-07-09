@@ -4,7 +4,7 @@ description: >-
   Reference documentation covering the Managed Agents SDK's tool types (agent
   toolset, MCP, custom), permission policies, vault credential management, and
   skills API for building specialized agents
-ccVersion: 2.1.197
+ccVersion: 2.1.205
 -->
 # Managed Agents — Tools & Skills
 
@@ -213,7 +213,7 @@ Vaults store credentials; those credentials **never enter the sandbox**. This is
 
 - **MCP tool calls** are routed through an Anthropic-side proxy that fetches the credential from the vault and adds it to the outbound request.
 - **Git operations on attached GitHub repositories** (`git pull`, `git push`, GitHub REST calls) are routed through a git proxy that injects the `github_repository` resource's `authorization_token` the same way.
-- **Environment-variable credentials** appear in the sandbox as an opaque placeholder; the real value replaces the placeholder at egress, on requests to the credential's allowed hosts only.
+- **Environment-variable credentials** appear in the sandbox as an opaque placeholder; the real value replaces the placeholder at egress, on requests to the credential's allowed hosts only. Substitution covers request **headers and body only** — a secret embedded in the **URL path** is never substituted, so path-secret endpoints (e.g. Slack incoming-webhook URLs) can't be vaulted; use header-based auth instead (for Slack: a bot token in `Authorization` via `chat.postMessage`).
 
 **When vault credentials don't fit** (e.g. self-hosted sandboxes — `environment_variable` is not yet supported there), **register a custom tool:** the agent emits `agent.custom_tool_use`, your orchestrator (which already holds the credential) executes the call and returns `user.custom_tool_result` over the same authenticated event stream. No public endpoint is exposed; the sandbox never sees the secret. See `shared/managed-agents-client-patterns.md` → Pattern 9.
 

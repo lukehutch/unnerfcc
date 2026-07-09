@@ -3,16 +3,20 @@ name: 'Agent Prompt: Quick PR creation'
 description: >-
   Streamlined prompt for creating a commit and pull request with pre-populated
   context
-ccVersion: 2.1.118
+ccVersion: 2.1.205
 variables:
   - PREAMBLE_BLOCK
   - SAFE_USER_VALUE
   - WHOAMI_VALUE
   - DEFAULT_BRANCH
   - IS_BASH_ENV_FN
+  - CONTEXT_ADDENDUM
   - HAS_PR_ATTRIBUTION_TEXT_FN
   - PR_EDIT_OPTIONS_NOTE
   - PR_CREATE_OPTIONS_NOTE
+  - EMBEDDED_CONTEXT_GUIDANCE
+  - PR_SUMMARY_CONTENT
+  - PR_TEST_PLAN_CONTENT
   - PR_BODY_EXTRA_SECTIONS
   - PR_ATTRIBUTION_TEXT
   - ADDITIONAL_INSTRUCTIONS_NOTE
@@ -25,7 +29,7 @@ ${PREAMBLE_BLOCK}## Context
 - \`git diff HEAD\`: !\`git diff HEAD\`
 - \`git branch --show-current\`: !\`git branch --show-current\`
 - \`git diff ${DEFAULT_BRANCH}...HEAD\`: !\`git diff ${DEFAULT_BRANCH}...HEAD\`
-- \`gh pr view --json number\`: !\`${IS_BASH_ENV_FN()?"gh pr view --json number 2>/dev/null || true":'gh pr view --json number 2>$null; if (-not $?) { "" }'}\`
+- \`gh pr view --json number\`: !\`${IS_BASH_ENV_FN()?"gh pr view --json number 2>/dev/null || true":'gh pr view --json number 2>$null; if (-not $?) { "" }'}\`${CONTEXT_ADDENDUM}
 
 ## Git Safety Protocol
 
@@ -60,14 +64,14 @@ ${HAS_PR_ATTRIBUTION_TEXT_FN}`:""}
 The closing \`'@\` MUST be at column 0 with no leading whitespace.`}
 3. Push the branch to origin
 4. If a PR already exists for this branch (check the gh pr view output above), update the PR title and body using \`gh pr edit\` to reflect the current diff${PR_EDIT_OPTIONS_NOTE}. Otherwise, create a pull request using \`gh pr create\` with the multi-line body syntax shown below${PR_CREATE_OPTIONS_NOTE}.
-   - IMPORTANT: Keep PR titles short (under 70 characters). Use the body for details.
+   - IMPORTANT: Keep PR titles short (under 70 characters). Use the body for details.${EMBEDDED_CONTEXT_GUIDANCE(CONTEXT_ADDENDUM?"embedded_context":null)}
 ${IS_BASH_ENV_FN()?`\`\`\`
 gh pr create --title "Short, descriptive title" --body "$(cat <<'EOF'
 ## Summary
-<bullet points covering all notable changes — as many as the work warrants>
+${PR_SUMMARY_CONTENT()}
 
 ## Test plan
-[Bulleted markdown checklist of TODOs for testing the pull request...]${PR_BODY_EXTRA_SECTIONS}${PR_ATTRIBUTION_TEXT?`
+${PR_TEST_PLAN_CONTENT()}${PR_BODY_EXTRA_SECTIONS}${PR_ATTRIBUTION_TEXT?`
 
 ${PR_ATTRIBUTION_TEXT}`:""}
 EOF
@@ -75,10 +79,10 @@ EOF
 \`\`\``:`\`\`\`
 gh pr create --title "Short, descriptive title" --body @'
 ## Summary
-<bullet points covering all notable changes — as many as the work warrants>
+${PR_SUMMARY_CONTENT()}
 
 ## Test plan
-[Bulleted markdown checklist of TODOs for testing the pull request...]${PR_BODY_EXTRA_SECTIONS}${PR_ATTRIBUTION_TEXT?`
+${PR_TEST_PLAN_CONTENT()}${PR_BODY_EXTRA_SECTIONS}${PR_ATTRIBUTION_TEXT?`
 
 ${PR_ATTRIBUTION_TEXT}`:""}
 '@

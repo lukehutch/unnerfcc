@@ -4,7 +4,7 @@ description: >-
   Bash-tool git commit + PR creation instructions (now wrapped in a ${.commit?…}
   conditional) — the git safety protocol, commit-only-when-asked rule, and the
   numbered parallel-command commit/PR workflow
-ccVersion: 2.1.178
+ccVersion: 2.1.205
 variables:
   - LOADED_COMMANDS_CONTEXT
   - COMMIT_CO_AUTHORED_BY_CLAUDE_CODE
@@ -13,6 +13,8 @@ variables:
   - TASK_TOOL_NAME
   - PR_INSTRUCTIONS_PREFIX
   - EMPTY_STRING
+  - PR_SUMMARY_CONTENT
+  - PR_TEST_PLAN_CONTENT
   - PR_GENERATED_WITH_CLAUDE_CODE
   - PR_COMMON_OPERATIONS_NOTE
 -->
@@ -93,10 +95,10 @@ IMPORTANT: When the user asks you to create a pull request, follow these steps c
 <example>
 gh pr create --title "the pr title" --body "$(cat <<'EOF'
 ## Summary
-<bullet points covering all notable changes — as many as the work warrants>
+${PR_SUMMARY_CONTENT()}
 
 ## Test plan
-[Bulleted markdown checklist of TODOs for testing the pull request...]${PR_GENERATED_WITH_CLAUDE_CODE?`
+${PR_TEST_PLAN_CONTENT()}${PR_GENERATED_WITH_CLAUDE_CODE?`
 
 ${PR_GENERATED_WITH_CLAUDE_CODE}`:""}
 EOF

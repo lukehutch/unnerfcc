@@ -3,11 +3,13 @@ name: 'Data: Managed Agents endpoint reference'
 description: >-
   Comprehensive reference for Managed Agents API endpoints, SDK methods,
   request/response schemas, error handling, and rate limits
-ccVersion: 2.1.197
+ccVersion: 2.1.205
 -->
 # Managed Agents — Endpoint Reference
 
 All endpoints require `x-api-key` and `anthropic-version: 2023-06-01` headers. Managed Agents endpoints additionally require the `anthropic-beta` header.
+
+> Most users should define agents and environments as version-controlled YAML applied with the `ant` CLI — see `shared/anthropic-cli.md`. The endpoints below are the underlying API that the CLI and SDKs drive.
 
 ## Beta Headers
 

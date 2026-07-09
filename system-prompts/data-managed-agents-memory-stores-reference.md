@@ -4,7 +4,7 @@ description: >-
   Reference documentation for Managed Agents memory stores, including store
   creation, session attachment, FUSE mounts, memory CRUD, concurrency, versions,
   redaction, and endpoint paths
-ccVersion: 2.1.141
+ccVersion: 2.1.205
 -->
 # Managed Agents — Memory Stores
 
@@ -13,6 +13,8 @@ ccVersion: 2.1.141
 Sessions are ephemeral by default — when one ends, anything the agent learned is gone. A **memory store** is a workspace-scoped collection of small text documents that persists across sessions. When a store is attached to a session (via `resources[]`), it is mounted into the container as a filesystem directory; the agent reads and writes it with the ordinary file tools, and a system-prompt note tells it the mount is there.
 
 Every mutation to a memory produces an immutable **memory version** (`memver_...`), giving you an audit trail and point-in-time rollback/redact.
+
+> ⚠️ **Never store credentials, API keys, or tokens in memory stores.** Memories persist across sessions and are returned verbatim into future contexts — a key written once is replayed into every later session that mounts the store. Use vault `environment_variable` credentials instead (`shared/managed-agents-tools.md` → Vaults). If a secret has already been written, delete the memory and redact the affected versions (see "Redact a version" below).
 
 ## Object model
 

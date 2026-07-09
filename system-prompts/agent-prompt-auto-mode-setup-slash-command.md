@@ -3,11 +3,11 @@ name: 'Command Prompt: Auto-mode Setup & Customisation'
 description: >-
   Prompt body for the /auto-mode-setup command that guides the model through
   configuring auto-mode environment and rules in settings.json
-ccVersion: 2.1.201
+ccVersion: 2.1.205
 variables:
-  - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_0
-  - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_1
-  - AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_2
+  - EXTRA_ENV_DETECTION_SIGNAL
+  - TASK_TOOL_NAME
+  - SHIPPED_DEFAULTS_LIST
 -->
 # Auto Mode Setup & Customisation
 
@@ -81,7 +81,7 @@ Before asking, do a quick (~1s) pre-check to guess posture:
   open-source
 - Presence of \`.github/CODEOWNERS\`, CI config, k8s/terraform dirs,
   or a CLAUDE.md → nudges enterprise
-- ${AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_0}
+- ${EXTRA_ENV_DETECTION_SIGNAL}
 
 Then list the best-guess option first and mark it with "(looks like
 this one)" in its description. Don't block on this — if the check is
@@ -177,7 +177,7 @@ and
 Also skim \`.gitignore\` for patterns that look sensitive — paths
 deliberately excluded from commits are often the sensitive ones.
 
-**3. Dispatch Explore subagents now** — via the **${AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_1}** tool with
+**3. Dispatch Explore subagents now** — via the **${TASK_TOOL_NAME}** tool with
 \`subagent_type: 'Explore'\`. These run in the background while you
 do steps 4–6. Pass what you've filled so far so they fill gaps rather
 than re-finding the same things. If EVERY in-scope repo (the cwd, plus
@@ -554,7 +554,7 @@ or left empty, write that slot's shipped default verbatim from this list
 the **Sensitive data locations & audiences** slot — never write that
 slot's default alongside them):
 
-${AGENT_PROMPT_AUTO_MODE_SETUP_SLASH_COMMAND_VAR_2()}
+${SHIPPED_DEFAULTS_LIST()}
 
 After the structured slots, append any freeform bullets from Phase 3 — the
 environment section is read as prose by the classifier, so anything that
@@ -711,14 +711,17 @@ that (a) the user ran ≥5× and (b) matches a default soft block. Prefer
 one you just wrote an allow rule for; if Phase 6b mapped audiences,
 prefer a command touching a mapped source, so the example shows the
 audience limits in action. If no real command fits, fall back
-to \`git push origin main\` vs the "Git Push to Default Branch"
-soft block. Render it as a fenced block shaped like:
+to \`gh pr merge\` vs the "Merge Without Review" soft block (do
+NOT use \`git push origin main\` as the fallback: session-authored
+routine work pushed to the repo's own default branch is outside
+the push rule entirely, and when the rule does fire, "go ahead
+and push" does not clear it). Render it as a fenced block shaped like:
 
 \`\`\`
   You ran  <command>  <N>× recently.
   By default that's a soft block (<Rule Label>). Three ways past it:
 
-    say so in chat   "go ahead and <verb>"          → clears this turn
+    say so in chat   name what the block flagged    → clears this turn
     allow rule       autoMode.allow =
                      ["$defaults", "<Label>: …"]     → never asks again
                      (I added one above ↑, if so)
