@@ -1,44 +1,117 @@
 {
- "from": "2.1.202",
- "to": "2.1.205",
+ "from": "2.1.205",
+ "to": "2.1.217",
  "changes": [
   {
-   "id": "skill-building-llm-powered-applications-with-claude",
-   "name": "Skill: Building LLM-powered applications with Claude",
+   "id": "skill-setup-cowork-role-selection",
+   "name": "Skill: Setup Cowork role selection",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "24a05b86cdf8",
-   "newHash": "e3f2b50acb51",
-   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
+   "oldHash": "6c193b17b12d",
+   "newHash": "b5169e6335b6",
+   "sample": "## Step 1 — Role\n\nYour initial message should frame what Cowork is: it autonomously handles tasks like reading your email, searching your docs, drafting reports, etc. Educate the user on _Skills_, reu"
   },
   {
-   "id": "agent-prompt-quick-pr-creation",
-   "name": "Agent Prompt: Quick PR creation",
+   "id": "agent-prompt-background-job-agent-instructions",
+   "name": "Agent Prompt: Background job agent instructions",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "e55c4de948a5",
-   "newHash": "4302335fb2b3",
-   "sample": "${}## Context\n\n- \\`SAFEUSER\\`: ${}\n- \\`whoami\\`: ${}\n- \\`git status\\`: !\\`git status\\`\n- \\`git diff HEAD\\`: !\\`git diff HEAD\\`\n- \\`git branch --show-current\\`: !\\`git branch --show-current\\`\n- \\`git d"
+   "oldHash": "69bc140a3ea7",
+   "newHash": "0ce602cc80ea",
+   "sample": "This session is a background job. The user may be live or away — respond naturally either way. A classifier reads only your message text (not tool output, subagent reports, or human replies) to track "
   },
   {
-   "id": "skill-verify",
-   "name": "Skill: verify",
+   "id": "skill-code-review-applying-fixes",
+   "name": "Skill: Code Review (--fix applying fixes)",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "50376b11449d",
-   "newHash": "377693783ee5",
-   "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior — drive the affected flow, not just tests or typecheck. R"
+   "oldHash": "f49b5ec9c72d",
+   "newHash": "d35e0cf9bff0",
+   "sample": "\n\n## Applying fixes (--fix)\n\nThe \\`--fix\\` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly — correct"
+  },
+  {
+   "id": "skill-code-review-effort-high",
+   "name": "Skill: Code Review (high effort)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "1c2fb741d247",
+   "newHash": "591f22539a97",
+   "sample": "\\`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings\\`\n\nYou are reviewing for **recall** at high effort: catch every real bug a careful\nreviewer would catch in one "
+  },
+  {
+   "id": "skill-code-review-effort-max",
+   "name": "Skill: Code Review (max / xhigh effort)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "6c8fbf93072c",
+   "newHash": "1fa99b99e15c",
+   "sample": "\\`${} effort → 5+5 angles × 8 candidates → 1-vote verify → sweep → ≤15 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c"
+  },
+  {
+   "id": "skill-code-review-effort-medium",
+   "name": "Skill: Code Review (medium effort)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "6bcef0b5f25c",
+   "newHash": "a240bb6eaa09",
+   "sample": "\\`medium effort → 3+5 angles × 6 candidates → 1-vote verify → ≤8 findings\\`\n\nYou are reviewing for **precision** at medium effort: every finding you surface\nshould be one a maintainer would act on.\n\n$"
+  },
+  {
+   "id": "skill-code-review-output-format",
+   "name": "Skill: Code Review (findings JSON output)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "6b25dc26bd2e",
+   "newHash": "e99cbd4a5cf5",
+   "sample": "## Output\n\nReturn findings as a JSON array of at most ${} objects:\n\n\\`\\`\\`json\n[\n  {\n    \"file\": \"path/to/file.ext\",\n    \"line\": 123,\n    \"summary\": \"one-sentence statement of the bug\",\n    \"failure_s"
+  },
+  {
+   "id": "skill-code-review-output-report-findings",
+   "name": "Code Review: ReportFindings Output Instructions",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "f8b97c8cdc44",
+   "newHash": "6e02ceff3830",
+   "sample": "## Output\n\nCall the ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_0} tool once to report this review's results\nwith \\`{level, findings}\\`. \\`findings\\` is at most ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FI"
+  },
+  {
+   "id": "tool-description-cloud-agent-launched-result",
+   "name": "Tool Result: Cloud Agent Launched",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "08627b4002e9",
+   "newHash": "e8ba0737858b",
+   "sample": "Cloud agent launched. (This tool result is internal metadata — never quote or paste any part of it, including the ID below, into a user-facing reply.)\ntaskId: ${TOOL_DESCRIPTION_CLOUD_AGENT_LAUNCHED_R"
+  },
+  {
+   "id": "tool-description-workflow",
+   "name": "Tool Description: Workflow",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "07d4354bcf57",
+   "newHash": "ee3525fe3a6a",
+   "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background — this tool returns immediately with a task ID, and a <task-notification> arrives when"
+  },
+  {
+   "id": "tool-result-cloud-agent-launched-notify-user",
+   "name": "Cloud Agent Launched — Notify User (Quiet Variant)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "deb065d4bdd8",
+   "newHash": "0d86d888856b",
+   "sample": "In your own words, briefly tell the user what you launched — do not echo this tool result. Agent results will arrive in a subsequent message. If the user asks for progress, say the agent is still runn"
   }
  ],
- "unverifiable": [
-  {
-   "id": "agent-prompt-conversation-summarization",
-   "name": "Agent Prompt: Conversation summarization",
-   "reason": "old form not classified",
-   "sample": "Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.\nThis summary should be thorough in capturing tec"
-  }
- ]
+ "unverifiable": []
 }

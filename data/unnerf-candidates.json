@@ -50,6 +50,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "You are a worker agent executing a task assigned by the coordinator.\n\n## Environment\n\n- Other workers may be making changes on this branch. If you encounter confusing file state, unexpected changes, o",
+  "notes": "scope cap: 'Complete exactly what was asked', 'Limit changes to what your task requires'",
+  "ccFirstSeen": "2.1.217"
+ },
+ {
   "sample": "You are an expert reviewer of auto mode classifier rules for Claude Code.\n\nClaude Code has an \"auto mode\" that uses an AI classifier to decide whether tool calls should be auto-approved or require use",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -73,6 +78,11 @@
   "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Setup Cowork\n\nHelp the user get Cowork configured for their work. Six steps \u2014 role, plugins, connectors, try a skill, writing voice, wrap.\n\n## Step 0 \u2014 Checklist\n\nBefore your first user-facing messa",
+  "notes": "chat brevity: 'Keep each message short ... not a wall'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "For exploratory questions (\"what could we do about X?\", \"how should we approach this?\", \"what do you think?\"), respond in 2-3 sentences with a recommendation and the main tradeoff. Present it as somet",
@@ -153,6 +163,11 @@
   "sample": "\n\n**Do not spawn agents unless the user asks.** Each spawn starts cold and re-derives context you already have \u2014 it's the expensive path on this plan. A task with \"multiple angles,\" \"thorough,\" or sev",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u2265min(files,4) findings\\`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and un",
+  "notes": "'1 diff pass -> no verify', 'No subagents, no full-file reads'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "# Writing commit messages and PR descriptions\n\nWrite for a reader with zero context who was not part of this session:\n- Say what the change is in plain words before any mechanism or implementation det",
@@ -250,6 +265,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "## Delegating to subagents\n\nSubagents multiply cost and time: each one re-establishes context, re-explores, and reports back, and you then re-read its report. Delegate only when the payoff clearly exc",
+  "notes": "caps thoroughness via subagent fan-out ('keep spawn counts low', do the minimum)",
+  "ccFirstSeen": "2.1.217"
+ },
+ {
   "sample": "CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.\n\n- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.\n- You already have all the context you need in the conversation above.\n- ",
   "notes": "system prompt with tool-use restriction",
   "ccFirstSeen": "2.1.199"
@@ -278,6 +298,11 @@
   "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>Forking this \u2014 it's a survey question. I want the punch list, not the git output in my context.</t",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u22644 findings\\`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and uncommitted c",
+  "notes": "process brevity: '1 diff pass -> no verify', 'No subagents, no full-file reads'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "<1-2 plain sentences: what this change does and why>",
@@ -338,6 +363,11 @@
   "sample": "You are an interactive CLI tool that helps users with software engineering tasks. You should work proactively and autonomously, executing immediately and minimizing interruptions.\n\n# Proactive Style A",
   "notes": "system prompt with 'executing immediately' directive",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u22648 findings\\`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and uncommitted c",
+  "notes": "caps effort: 'No subagents, no full-file reads', <=8 findings",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "Schedule when to resume work in /loop dynamic mode \u2014 the user invoked /loop without an interval, asking you to self-pace iterations of a specific task.\n\nDo NOT schedule a short-interval wakeup to poll",
@@ -440,6 +470,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Show me where this session's tokens went.\n\nThe transcript is a *.jsonl file at `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/`. Break the usage into groups (approximate is fine): Claude's instructio",
+  "notes": "chat brevity: 'explain it briefly ... a few short bullet points, not paragraphs'",
+  "ccFirstSeen": "2.1.217"
+ },
+ {
   "sample": "${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, b",
   "notes": "process-brevity cap: 'respond with a concise report ... only needs the essentials'",
   "ccFirstSeen": "2.1.205"
@@ -480,6 +515,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
+  "notes": "example caps report: 'Under 200 words', 'short report'",
+  "ccFirstSeen": "2.1.217"
+ },
+ {
   "sample": "\nReview the classification process and follow it carefully, making sure you deny actions that should be blocked. As a reminder, explicit (not suggestive or implicit) user confirmation is required to o",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -488,6 +528,11 @@
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
   "notes": "caps verbosity: 'concise report', 'essentials'",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
+  "notes": "example caps report: 'Under 200 words'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.",
@@ -503,6 +548,11 @@
   "sample": "You have been working on the task described above but have not yet completed it. Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently in a futu",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "## Step 1 \u2014 Role\n\nYour initial message should frame what Cowork is: it autonomously handles tasks like reading your email, searching your docs, drafting reports, etc. Educate the user on _Skills_, reu",
+  "notes": "chat brevity: framing message 'Two or three sentences'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "Describe your most recent action in 3-5 words using present tense (-ing). Name the file or function, not the branch. Do not use tools.\n${?`\nPrevious: \"${}\" \u2014 say something NEW.\n`:\"\"}\nGood: \"Reading ru",
@@ -528,6 +578,11 @@
   "sample": "### Phase 1: Initial Understanding\nGoal: Gain a comprehensive understanding of the user's request by reading through code and asking them questions. Critical: In this phase you should only use the ${.",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "[Usage limit reached \u2014 grace window active. Wrap up: finish or checkpoint; don't start subagents or long work.]",
+  "notes": "caps process: 'Wrap up... don't start subagents or long work'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "1. Only include contexts the user wants to change (minimal overrides)",
@@ -573,6 +628,11 @@
   "sample": "The report to deliver to the observed agent. Be concise and specific.",
   "notes": "'Be concise and specific' \u2014 process/output brevity cap in a .describe() schema",
   "ccFirstSeen": "2.1.201"
+ },
+ {
+  "sample": "# Dream: Memory Consolidation\n\nYou are performing a dream \u2014 a reflective pass over your memory files. Synthesize what you've learned recently into durable, well-organized memories so that future sessi",
+  "notes": "'don't exhaustively read', 'Return a brief summary'",
+  "ccFirstSeen": "2.1.217"
  },
  {
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
