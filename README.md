@@ -11,7 +11,7 @@ This repo reads every prompt out of the Claude Code binary, lifts those two clas
 This is the live set I run daily — not cleaned up for public consumption, in-progress un-nerfs and all.
 
 > [!NOTE]
-> **Built for Claude Code v2.1.205** — 120 un-nerf rules across 77 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The un-nerfs touch only the brevity/thoroughness posture — engineering depth and human-facing reporting — never protection-class or functional strings. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
+> **Built for Claude Code v2.1.218** — 121 un-nerf rules across 76 files, `--check` clean, applied end-to-end against a real stock binary (patched → boots → runs). Extract, classify, patch, and re-package are all our own code in [`lib/`](lib) + [`scripts/`](scripts). The un-nerfs touch only the brevity/thoroughness posture — engineering depth and human-facing reporting — never protection-class or functional strings. Full record: [UNNERF-GUIDE.md](UNNERF-GUIDE.md).
 
 **Docs:** [Un-nerf guide](UNNERF-GUIDE.md) (objectives + rules) · [Upgrade](UPGRADE.md) (the release playbook) · [Maintenance](MAINTENANCE.md) (script flags) · [Background](BACKGROUND.md) (how it works)
 
@@ -116,7 +116,7 @@ Measured with the [SWE-bench harness](https://github.com/jimmc414/claudecode_gem
 │   ├── beautify.mjs              #   un-minify the bundle for study (babel + prettier)
 │   ├── extract-prompts.mjs       #   parse the bundle → prompt catalog (babel)
 │   └── patch-prompts.mjs         #   splice edited prompts into every matching call-site (lost un-nerf ⇒ exit 3)
-└── system-prompts/               # 1,378 markdown files (Claude Code v2.1.205)
+└── system-prompts/               # 1,303 markdown files (Claude Code v2.1.218)
 ```
 
 `system-prompts/` holds the un-nerfed prompts (`tool-description-*`, `system-prompt-*`, `system-reminder-*`, `data-*`, `agent-prompt-*`, `skill-*`, `tool-parameter-*`, `tool-result-*`, `workflow-*`). The checksum manifest fingerprints **stock**, not the un-nerfed files — so on a version bump `sync-version.mjs` reports exactly what Anthropic changed, uncoloured by the un-nerfs.
@@ -127,7 +127,7 @@ Measured with the [SWE-bench harness](https://github.com/jimmc414/claudecode_gem
 
 ## Compatibility
 
-- **Claude Code:** built for v2.1.205 (the latest release). Per-prompt `ccVersion:` frontmatter records when each prompt last changed. Upgrade playbook: [UPGRADE.md](UPGRADE.md).
+- **Claude Code:** built for v2.1.218 (the latest release). Per-prompt `ccVersion:` frontmatter records when each prompt last changed. Upgrade playbook: [UPGRADE.md](UPGRADE.md).
 - **Models:** tuned for current Claude (Opus 4.8 / Sonnet 4.6 / Haiku 4.5). Older or smaller models may over-explain trivial asks.
 - **Watch for over-verbosity** — the main failure mode. If Claude writes essays for "what time is it?", start with `system-prompt-communication-style.md` and `system-prompt-tone-concise-output-short.md`. Thorough output also costs more tokens; plan accordingly.
 

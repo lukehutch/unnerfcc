@@ -1,19 +1,15 @@
 <!--
 name: 'Skill: Code Review (high effort)'
 description: >-
-  Effort-tier prompt for high code review — 3 angles, uncapped candidate reporting,
-  recall-biased, all qualifying findings
-ccVersion: 2.1.178
+  Effort-tier prompt for high code review — 8 finder angles, uncapped candidate
+  reporting, recall-biased, all qualifying findings
+ccVersion: 2.1.218
 variables:
   - PHASE_0_GATHER_DIFF
   - AGENT_TOOL_NAME
+  - PHASE_1_FINDER_NOTE
   - ANGLES_LINE_BY_LINE
-  - ANGLE_REUSE
-  - ANGLE_SIMPLIFICATION
-  - ANGLE_EFFICIENCY
-  - ANGLE_ALTITUDE
-  - ANGLE_CONVENTIONS
-  - CLEANUP_CANDIDATES_NOTE
+  - CLEANUP_ANGLES
   - PHASE_2_VERIFY_RECALL_BIASED
   - OUTPUT_FORMAT_FN
 -->
@@ -28,15 +24,10 @@ ${PHASE_0_GATHER_DIFF}
 
 Run **8 independent finder angles** via the ${AGENT_TOOL_NAME} tool. Each
 surfaces every candidate finding with \`file\`, \`line\`, a one-line
-\`summary\`, and a concrete \`failure_scenario\`.
+\`summary\`, and a concrete \`failure_scenario\`. ${PHASE_1_FINDER_NOTE}
 
 ${ANGLES_LINE_BY_LINE}
-${ANGLE_REUSE}
-${ANGLE_SIMPLIFICATION}
-${ANGLE_EFFICIENCY}
-${ANGLE_ALTITUDE}
-${ANGLE_CONVENTIONS}
-${CLEANUP_CANDIDATES_NOTE}
+${CLEANUP_ANGLES}
 Pass every candidate with a nameable failure scenario through — finders that
 silently drop half-believed candidates bypass the verify step and are the
 dominant cause of misses.

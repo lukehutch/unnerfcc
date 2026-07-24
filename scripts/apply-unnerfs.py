@@ -290,17 +290,31 @@ RULES: dict[str, list[Rule]] = {
             description="/loop scheduling confirm: thorough with rounding rationale",
         ),
     ],
-
-    # -------------------------------------------------------------------------
-    # skill-schedule-recurring-cron-and-execute-immediately-compact.md
-    # -------------------------------------------------------------------------
-    "skill-schedule-recurring-cron-and-execute-immediately-compact.md": [
+    # Dynamic-mode /loop carries the SAME "Briefly confirm" text but with its own
+    # variables (RECURRING_EXPIRY_DAYS / SCHEDULE_CONFIRM_NOTE_FN vs the
+    # fixed-interval CANCEL_TIMEFRAME_DAYS / ADDITIONAL_INFO_FN) and "the user can
+    # cancel" vs "they can cancel" — a separate spliceable node, so it needs its
+    # own rule to get the same "Confirm thoroughly" flip.
+    "skill-loop-slash-command-dynamic-mode.md": [
         Rule(
-            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${CANCEL_TIMEFRAME_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).${ADDITIONAL_INFO_FN()}",
-            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding applied and why, that recurring tasks auto-expire after ${CANCEL_TIMEFRAME_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user full context so they understand exactly what will run and when.${ADDITIONAL_INFO_FN()}",
-            description="cron-compact confirm: thorough with rounding rationale",
+            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).${SCHEDULE_CONFIRM_NOTE_FN()}",
+            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.${SCHEDULE_CONFIRM_NOTE_FN()}",
+            description="/loop dynamic-mode scheduling confirm: thorough with rounding rationale (mirrors skill-loop-slash-command.md)",
         ),
     ],
+
+    # -------------------------------------------------------------------------
+    # skill-schedule-recurring-cron-and-execute-immediately-compact.md:
+    # RETIRED in the v2.1.218 sync. Upstream MERGED the standalone compact-cron
+    # flow ("1. Call … 2. Briefly confirm … 3. Then immediately execute …") into
+    # the two /loop prompts — no standalone binary site remains (grep-verified:
+    # zero sites whose text begins "1. Call" in the v2.1.218 bundle). The
+    # confirm-brevity flip this rule made ("Briefly confirm" → "Confirm
+    # thoroughly") is preserved by skill-loop-slash-command.md's equivalent rule
+    # (above), which still splices. The .md and catalog entry are removed.
+    # (The same "Briefly confirm" text in skill-loop-slash-command-dynamic-mode.md
+    # is now covered by its own rule — see below.)
+    # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
     # skill-schedule-recurring-cron-and-run-immediately.md
@@ -616,13 +630,27 @@ RULES: dict[str, list[Rule]] = {
     # "system-reminder-thinking-frequency-tuning.md": RETIRED in v2.1.179 — Anthropic deleted the 'avoid unnecessary thinking' reminder entirely; no nerf remains to flip
 
     # -------------------------------------------------------------------------
-    # tool-description-agent-usage-notes.md — thorough relay of agent findings
+    # tool-description-agent-simple-usage-notes.md — thorough relay of agent findings
+    # (retargeted at the v2.1.218 sync: upstream deleted the verbose
+    # tool-description-agent-usage-notes.md prompt; the surviving relay
+    # instruction now lives in this shorter "simple usage notes" fragment as
+    # "relay what matters" — bucket-3 process brevity, flipped to thorough relay.)
     # -------------------------------------------------------------------------
-    "tool-description-agent-usage-notes.md": [
+    "tool-description-agent-simple-usage-notes.md": [
+        # v2.1.218: upstream split the relay-what-matters line into a ternary
+        # ${VARIANT ? "…report…" : "…message…tool result…"}; the leading "- "
+        # bullet is now outside the interpolation, so the stock no longer starts
+        # with "- ". Both branch literals carry the same brevity nerf — flip both
+        # so the un-nerf holds regardless of which branch renders at runtime.
         Rule(
-            stock="- When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user with a concise summary of the result.",
-            unnerf="- When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user that thoroughly relays the agent's findings, reasoning, and any relevant detail — do not strip out useful information the agent surfaced. Summarize only as much as needed to make the agent's output readable; preserve substance.",
-            description="agent-usage: thoroughly relay agent findings to user",
+            stock="The agent's final message is returned to you as the tool result; it is not shown to the user — relay what matters.",
+            unnerf="The agent's final message is returned to you as the tool result; it is not shown to the user — relay the agent's findings, reasoning, and any relevant detail thoroughly, rather than stripping it down; summarize only as much as needed to keep it readable, and preserve substance.",
+            description="agent-usage: thoroughly relay agent findings to user (tool-result variant)",
+        ),
+        Rule(
+            stock="The agent's final report is not shown to the user — relay what matters.",
+            unnerf="The agent's final report is not shown to the user — relay the agent's findings, reasoning, and any relevant detail thoroughly, rather than stripping it down; summarize only as much as needed to keep it readable, and preserve substance.",
+            description="agent-usage: thoroughly relay agent findings to user (report variant)",
         ),
     ],
 
@@ -647,8 +675,8 @@ RULES: dict[str, list[Rule]] = {
     # renamed at the tweakcc-fixed switch (was agent-prompt-code-review-part-2-low-effort-mode)
     "skill-code-review-effort-medium.md": [
         Rule(
-            stock='Effort-tier prompt for medium code review — 3 angles, up to 6 candidates,\n  precision-biased, up to 8 findings',
-            unnerf='Effort-tier prompt for medium code review — 3 angles, uncapped candidate reporting,\n  precision-biased, all qualifying findings',
+            stock='Effort-tier prompt for medium code review — 8 finder angles, up to 6\n  candidates each, precision-biased, up to 8 findings',
+            unnerf='Effort-tier prompt for medium code review — 8 finder angles, uncapped candidate\n  reporting, precision-biased, all qualifying findings',
             description='code-review medium frontmatter: drop candidate/finding caps',
         ),
         Rule(
@@ -669,8 +697,8 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-code-review-effort-high.md": [
         Rule(
-            stock='Effort-tier prompt for high code review — 3 angles, up to 6 candidates,\n  recall-biased, up to 10 findings',
-            unnerf='Effort-tier prompt for high code review — 3 angles, uncapped candidate reporting,\n  recall-biased, all qualifying findings',
+            stock='Effort-tier prompt for high code review — 8 finder angles, up to 6 candidates\n  each, recall-biased, up to 10 findings',
+            unnerf='Effort-tier prompt for high code review — 8 finder angles, uncapped candidate\n  reporting, recall-biased, all qualifying findings',
             description='code-review high frontmatter: drop candidate/finding caps',
         ),
         Rule(
@@ -691,8 +719,8 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-code-review-effort-max.md": [
         Rule(
-            stock='Effort-tier prompt for max and xhigh code review — 5 angles, up to 8\n  candidates, recall-biased, up to 15 findings',
-            unnerf='Effort-tier prompt for max and xhigh code review — 5 angles, uncapped\n  candidate reporting, recall-biased, all qualifying findings',
+            stock='Effort-tier prompt for max and xhigh code review — 10 finder angles, up to 8\n  candidates each, recall-biased, up to 15 findings',
+            unnerf='Effort-tier prompt for max and xhigh code review — 10 finder angles, uncapped\n  candidate reporting, recall-biased, all qualifying findings',
             description='code-review max frontmatter: drop candidate/finding caps',
         ),
         Rule(
@@ -727,6 +755,17 @@ RULES: dict[str, list[Rule]] = {
             unnerf='low effort → 1 diff pass → no verify → all qualifying findings',
             description='code-review low-effort tier line: drop the ≤4 cap (matches the findings-output flip)',
         ),
+        # v2.1.218 reworded the ReportFindings-tool branch of the low-effort
+        # ternary from "Output at most **4 findings** … one line each" (the
+        # else-branch, still lifted above) to "Report at most **4 findings** …
+        # in one <tool> call" — a NEW verb/shape the else-branch rule doesn't
+        # match, so this structured-output path still capped low reviews at 4
+        # while every sibling path already reports all qualifying findings.
+        Rule(
+            stock='Report at most **4 findings**, most-severe first, in one',
+            unnerf='Report every qualifying finding, most-severe first, in one',
+            description='code-review low-effort ReportFindings branch: lift the 4-findings cap (matches the else-branch flip)',
+        ),
     ],
     "skill-code-review-output-format.md": [
         Rule(
@@ -742,13 +781,13 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-code-review-output-report-findings.md": [
         Rule(
-            stock='with \\`{level, findings}\\`. \\`findings\\` is at most ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
+            stock='with \\`{level, findings}\\`. \\`findings\\` is at most ${MAX_FINDINGS} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
             unnerf='with \\`{level, findings}\\`. \\`findings\\` includes every surviving entry ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
             description='ReportFindings output: report every surviving finding',
         ),
         Rule(
-            stock='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. If more than ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} survive, keep the ${SKILL_CODE_REVIEW_OUTPUT_REPORT_FINDINGS_VAR_1} most severe. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text.',
-            unnerf='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. Include all surviving findings. If nothing survives verification,\ncall it with an empty array. Do not also print the findings as text.',
+            stock='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most severe. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text, and do not create or publish an artifact of the review -\nthe tool call is the report.',
+            unnerf='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. Include all surviving findings. If nothing survives verification,\ncall it with an empty array. Do not also print the findings as text, and do not\ncreate or publish an artifact of the review - the tool call is the report.',
             description='ReportFindings output: drop final findings cap',
         ),
     ],
@@ -990,10 +1029,30 @@ RULES: dict[str, list[Rule]] = {
             unnerf="Report a thorough punch list — done vs. missing, with specifics (file paths, line numbers) for each item. Prioritize completeness over brevity; don't drop a real blocker to hit a word count.",
             description='subagent-prompt example: complete punch list, not a 200-word cap',
         ),
+        # v2.1.218 nerfed the commentary too: in v2.1.217 it read "specifies the
+        # report format (a complete done-vs-missing punch list) without
+        # artificially capping its length"; v2.1.218 replaced that with "caps the
+        # response length" — a brevity framing that also contradicts the
+        # un-nerfed example body directly above ("Prioritize completeness over
+        # brevity"). Restore upstream's own prior wording. The clause is shared
+        # verbatim by the background arm (this entry) and the self-contained arm
+        # (below), so both carry the same rule.
         Rule(
-            stock='The prompt is self-contained: it states the goal, lists what to check, and caps the response length.',
-            unnerf='The prompt is self-contained: it states the goal, lists what to check, and specifies the report format (a complete done-vs-missing punch list) without artificially capping its length.',
-            description='subagent-prompt example: value report completeness, not length-capping',
+            stock='it states the goal, lists what to check, and caps the response length',
+            unnerf='it states the goal, lists what to check, and specifies the report format (a complete done-vs-missing punch list) without artificially capping its length',
+            description='subagent-prompt commentary: restore "without capping its length" (v2.1.218 nerfed it)',
+        ),
+    ],
+    "system-prompt-subagent-prompt-writing-examples-selfcontained.md": [
+        Rule(
+            stock='Report a punch list — done vs. missing. Under 200 words.',
+            unnerf="Report a thorough punch list — done vs. missing, with specifics (file paths, line numbers) for each item. Prioritize completeness over brevity; don't drop a real blocker to hit a word count.",
+            description='subagent-prompt example (self-contained branch): complete punch list, not a 200-word cap',
+        ),
+        Rule(
+            stock='it states the goal, lists what to check, and caps the response length',
+            unnerf='it states the goal, lists what to check, and specifies the report format (a complete done-vs-missing punch list) without artificially capping its length',
+            description='subagent-prompt commentary (self-contained branch): restore "without capping its length" (v2.1.218 nerfed it)',
         ),
     ],
     "system-reminder-file-summary-completeness-disclosure.md": [
@@ -1029,8 +1088,8 @@ RULES: dict[str, list[Rule]] = {
     # which lifts the same cap with the same replacement text.
     "tool-description-workflow.md": [
         Rule(
-            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the Agent tool for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
-            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the Agent tool for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
+            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
+            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
             description='workflow: keep opt-in gate, but surface beneficial parallelism proactively',
         ),
     ],
@@ -1194,25 +1253,12 @@ RULES: dict[str, list[Rule]] = {
             description="insights what-works description slot: lift the 2-3 sentence cap",
         ),
     ],
-    "system-prompt-proactive-schedule-offer-after-natural-future-follow-up.md": [
-        Rule(
-            stock="Instructs the agent to offer a one-line /schedule follow-up after completed\n  work when there is a likely one-time or recurring future action",
-            unnerf="Instructs the agent to offer a /schedule follow-up after completed work\n  when there is a likely one-time or recurring future action",
-            description="schedule offer frontmatter: drop one-line cap",
-        ),
-        Rule(
-            stock='you can end your reply with a one-line offer to `/schedule` a background agent to do it.',
-            unnerf='you can end your reply with an offer to `/schedule` a background agent to do it.',
-            description="schedule offer body: drop one-line cap",
-        ),
-    ],
-    "system-prompt-strict-proactive-schedule-offer-gate.md": [
-        Rule(
-            stock='Quote the artifact in a one-line offer and derive timing from it',
-            unnerf='Quote the artifact in the offer and derive timing from it',
-            description="strict schedule offer: drop one-line cap",
-        ),
-    ],
+    # NOTE (v2.1.218 sync): removed the rules for
+    # system-prompt-proactive-schedule-offer-after-natural-future-follow-up.md and
+    # system-prompt-strict-proactive-schedule-offer-gate.md — upstream deleted both
+    # prompts in v2.1.218 (the proactive /schedule-offer feature is gone from the
+    # binary; grep of the v2.1.218 bundle finds neither "background agent to do it"
+    # nor "Quote the artifact"). -3 rules total from the two files.
 }
 
 

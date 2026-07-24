@@ -25,8 +25,21 @@
 import { readFileSync } from "node:fs";
 import { identityHash, reconstruct } from "./prompt-index.mjs";
 
-const args = process.argv.slice(2).filter((a) => a !== "--strict");
-const strict = process.argv.includes("--strict");
+const raw = process.argv.slice(2);
+const strict = raw.includes("--strict");
+// --ack-removed <N>: an operator who has manually verified that a large id-removal
+// is genuine upstream deletion (not an extraction miss) passes the EXACT removed
+// count to downgrade gate 6 from failure to warning. Requiring an exact-count match
+// keeps the safety net: a future run whose removal count differs still fails.
+let ackRemoved = null;
+const args = [];
+for (let i = 0; i < raw.length; i++) {
+  const a = raw[i];
+  if (a === "--strict") continue;
+  if (a === "--ack-removed") { ackRemoved = Number(raw[++i]); continue; }
+  if (a.startsWith("--ack-removed=")) { ackRemoved = Number(a.slice("--ack-removed=".length)); continue; }
+  args.push(a);
+}
 const [catalogPath, prevPath] = args;
 if (!catalogPath) {
   console.error("usage: node validate-catalog.mjs <catalog.json> [<prevCatalog.json>] [--strict]");
@@ -97,7 +110,16 @@ if (prevPath) {
   const added = [...nids].filter((x) => !pids.has(x));
   const removed = [...pids].filter((x) => !nids.has(x));
   warn.push(`vs prev: +${added.length} ids, -${removed.length} ids`);
-  if (removed.length > 50) issues.push(`${removed.length} ids removed vs prev — suspiciously large; verify upstream really deleted them`);
+  if (removed.length > 50) {
+    if (ackRemoved !== null && ackRemoved === removed.length) {
+      warn.push(`${removed.length} ids removed vs prev — acknowledged via --ack-removed ${ackRemoved} (operator verified genuine upstream deletions)`);
+    } else {
+      issues.push(
+        `${removed.length} ids removed vs prev — suspiciously large; verify upstream really deleted them, ` +
+          `then re-run with --ack-removed ${removed.length}`
+      );
+    }
+  }
 }
 
 console.log(`catalog ${catalogPath}: ${prompts.length} prompts, version ${catalog.version}`);

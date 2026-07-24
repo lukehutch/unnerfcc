@@ -381,6 +381,7 @@ FAILs).
 | Upstream **replaced** brevity with neutral/pro-thorough text | Retire the rule — the nerf is gone. |
 | A prompt was **renamed** | **Retarget**: move the rule to the new filename key (e.g. `skill-simplify.md` → `agent-prompt-simplify-slash-command.md`). |
 | The extractor **re-fragmented** a prompt (our extractor splits shared constants and phase bodies into their own fragments) | **Retarget** to the fragment that carries the passage, respelling any `${VARS}` to the fragment's own placeholder names. If the passage now exists in two fragments and one already has a rule flipping it, retire the duplicate rather than double-ruling the same binary text. |
+| Upstream split one prompt into a runtime **ternary** (`cond ? A : B : C`) so it now extracts as **N distinct nodes** | **Rule each branch.** v2.1.218 split the subagent-prompt example into a fork/background/self-contained ternary → three nodes (`...prompt-writing-examples`, `...-selfcontained`, and the delegation sibling); each needs its own copy of the flip. Grep the shared distinctive phrase to enumerate every branch before writing rules, and confirm the sibling audit (above) covers all of them. |
 
 Confirm the same flip isn't needed in a **sibling** prompt — Claude Code often
 duplicates a sentence across related prompts, and rules are per-file. Don't
@@ -495,25 +496,40 @@ binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
 ([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
 format changes ([BACKGROUND.md](BACKGROUND.md)).
 
-## Part 9 — Current state (v2.1.202)
+## Part 9 — Current state (v2.1.218)
 
 We track **only the latest** Claude Code version, generating the prompt catalog
 ourselves from the installed binary each sync (`gen-catalog.mjs`). Replace this
 snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.202** — the latest CC release (1,500 sites /
-  **1,388 unique prompts** — duplicate-id sites collapse to their first
-  occurrence in our own `gen-catalog.mjs` extractor; note the *splicer* still
-  patches every identical call-site of a reused prompt, see Part 7).
-- **Scale:** **123 un-nerf rules across 79 files**, 1,388 prompts, `--check`
-  clean, orphan-variable guard passing. All **123 rules re-apply byte-exactly**
-  (`Rules applied: 123, FAILED: 0, Missing: 0`; `--check` → `123 skipped, 0
-  FAILED, 0 missing`), and all 5 install.sh verify sentinels are present. The
-  un-nerfs touch only the brevity/thoroughness posture (engineering depth and
+- **Version:** built from **v2.1.218** — the latest CC release. Catalog holds
+  **1,412 unique prompts**; the splicer patches **1,303 call-sites** in the
+  binary (76 un-nerfed + 1,227 unchanged, `patched=76 lost=0`), one `.md` per
+  reconstructed prompt (duplicate-id sites collapse to their first occurrence in
+  `gen-catalog.mjs`; the splicer still patches every identical call-site, Part 7).
+- **Scale:** **121 un-nerf rules across 76 files**, `--check` clean. All **121
+  rules re-apply byte-exactly** (`--check` → `Files processed: 76, Rules skipped:
+  121, FAILED: 0, Missing: 0`), and all 5 install.sh verify sentinels are present.
+  The un-nerfs touch only the brevity/thoroughness posture (engineering depth and
   human-facing reporting); no protection-class or functional string is flipped.
-- **Sibling audit:** over the full 1,388-prompt catalog, **0 un-ruled siblings**
-  — every cross-file `stock` match is already ruled in both files (Part 6). The
-  only remaining cross-file matches are intentional stock keeps in
+- **Known catalog recall gap (deferred fix):** the v2.1.217→218 sync dropped 77
+  prompts from the catalog. 54 are genuine upstream removals (no surviving prose
+  in the binary — the context-tip feature, model-description blobs, framing tags);
+  **13 are reworded-but-still-present** and were dropped in error by
+  `gen-catalog.mjs`'s carry-forward recall gap (`bundleHasSeed`/`distinctiveRun`
+  fingerprint on only the **single longest** pure-ASCII run, which fails when the
+  rewording lands in that run or the prompt is em-dash-heavy so its ASCII islands
+  are short); the remaining 10 are pure-`${interpolation}`/data blobs with no
+  testable prose (status not individually confirmed). **None of the 13 are
+  un-nerf targets, so the patched binary is unaffected** — but the catalog is
+  incomplete for those 13. The permanent fix (per-literal exact-replace matching
+  that carries a reworded prompt with its *fresh* pieces via any surviving
+  distinctive run, not just the longest) is tracked as the next matching-engine
+  task; a stale-text carry would be worse than the drop, so it is not a stopgap.
+- **Sibling audit:** *(carried from v2.1.202 — re-confirm on the next full audit;
+  no sibling-audit script exists yet.)* Over the v2.1.202 catalog, **0 un-ruled
+  siblings** — every cross-file `stock` match was already ruled in both files
+  (Part 6). The only known cross-file matches are intentional stock keeps in
   `skill-model-migration-guide`: two directive sentences (`act-when-ready`,
   `no-unnecessary-error-handling`) quoted inside `>` blockquotes as reference
   material, not directives to Claude.

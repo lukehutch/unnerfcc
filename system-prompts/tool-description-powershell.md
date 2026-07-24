@@ -4,7 +4,7 @@ description: >-
   Describes the PowerShell command execution tool with syntax guidance, timeout
   settings, and instructions to prefer specialized tools over PowerShell for
   file operations
-ccVersion: 2.1.199
+ccVersion: 2.1.217
 variables:
   - RENDER_COMMAND_NOTES_FN
   - COMMAND_NOTES
@@ -63,7 +63,7 @@ Unix commands that DO NOT exist in PowerShell — use the equivalent instead:
 
 Exit-code note: \`-ErrorAction SilentlyContinue\` suppresses error OUTPUT but the cmdlet failure still causes this tool to report exit 1. To make a cmdlet failure truly non-fatal, promote it to terminating and swallow it: \`try { Cmdlet ... -ErrorAction Stop } catch {}\` (without \`-ErrorAction Stop\`, non-terminating errors skip the \`catch\` and still exit 1).
 
-Interactive and blocking commands (will hang — this tool runs with -NonInteractive):
+Interactive and blocking commands (this tool runs with -NonInteractive and stdin attached to the null device — console prompts read EOF or error immediately; GUI prompts can still block until timeout):
    - NEVER use \`Read-Host\`, \`Get-Credential\`, \`Out-GridView\`, \`$Host.UI.PromptForChoice\`, or \`pause\`
    - Destructive cmdlets (\`Remove-Item\`, \`Stop-Process\`, \`Clear-Content\`, etc.) may prompt for confirmation. Add \`-Confirm:$false\` when you intend the action to proceed. Use \`-Force\` for read-only/hidden items.
    - Never use \`git rebase -i\`, \`git add -i\`, or other commands that open an interactive editor

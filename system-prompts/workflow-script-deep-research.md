@@ -3,7 +3,7 @@ name: 'Workflow Script: deep-research'
 description: >-
   Bundled deep-research workflow — a scoped search pipeline with URL dedup,
   fetch/extract, and vote-based verification
-ccVersion: 2.1.196
+ccVersion: 2.1.217
 variables:
   - WORKFLOW_NAME
   - WORKFLOW_DESCRIPTION
@@ -125,11 +125,45 @@ log("Q: " + QUESTION.slice(0, 80) + (QUESTION.length > 80 ? "…" : ""))
 log("Decomposed into " + scope.angles.length + " angles: " + scope.angles.map(a => a.label).join(", "))
 
 // ─── Dedup state — accumulates across searchers as they complete ───
+// The workflow sandbox is a bare ECMAScript realm — no URL global — so
+// hostname/path come from a regex: captures (1) hostname (userinfo, www.,
+// and port stripped) and (2) pathname. Neither userinfo nor host admits
+// \\: WHATWG URL treats \\ as a path separator for http(s), so a laxer
+// class would label evil.com\\@trusted.com as trusted.com while WebFetch
+// actually goes to evil.com. Userinfo DOES admit @ — WHATWG splits the
+// authority at the LAST @ before the host, so greedy matching must too;
+// stopping at the first @ would label x@trusted.com@evil.com as
+// trusted.com while the fetch contacts evil.com. The host class still
+// excludes @, so the userinfo group consumes every @ up to the last one.
+const URL_HOST_PATTERN = /^[a-z][a-z0-9+.-]*:\\/\\/(?:[^/?#\\\\]*@)?(?:www\\.)?([^/:?#@\\\\]+)(?::\\d+)?([^?#]*)/i
 const normURL = u => {
-  try {
-    const p = new URL(u)
-    return (p.hostname.replace(/^www\\./, "") + p.pathname.replace(/\\/$/, "")).toLowerCase()
-  } catch { return u.toLowerCase() }
+  const m = String(u).match(URL_HOST_PATTERN)
+  return m ? (m[1] + m[2].replace(/\\/$/, "")).toLowerCase() : String(u).toLowerCase()
+}
+// Host and title both come from web content and reach the terminal via the
+// progress label. Two hazards: forging a trusted hostname, and smuggling
+// terminal control sequences or invisible reordering chars. LABEL_STRIP
+// deletes what must never render — C0/C1 controls (incl. ESC/CSI, the ANSI
+// introducers), Unicode bidi overrides/isolates and zero-width format chars
+// (U+200B-200F, U+202A-202E, U+2066-2069, U+FEFF — they visually reorder or
+// hide label text), and the WHOLE double-quote lookalike family (ASCII " plus
+// U+201C-201F, U+2033, U+2036, U+275D, U+275E, U+301D, U+301E, U+FF02 — any of
+// which would visually close the quoted fallback early and forge host-shaped
+// text after it). STRICT_HOST is the strict registrable-hostname charset a
+// bare label must match (dot-separated LDH labels). normURL keeps the raw
+// capture: dedup keys are never rendered, and stripping there could collide
+// distinct URLs.
+const LABEL_CAP = 40
+const LABEL_STRIP = /[\\x00-\\x1f\\x7f-\\x9f\\u200b-\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff\\u0022\\u201c-\\u201f\\u2033\\u2036\\u275d\\u275e\\u301d\\u301e\\uff02]/g
+const STRICT_HOST = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/
+const stripLabelChars = s => String(s).replace(LABEL_STRIP, "")
+// Render a web-controlled value as a clearly-untrusted quoted label: strip
+// dangerous chars, cap at LABEL_CAP code points (Array.from so a surrogate
+// pair never splits), and when the cap actually truncated the value, append …
+// INSIDE the quotes so a shortened string can never pass for the whole thing.
+const quotedLabel = s => {
+  const cps = Array.from(stripLabelChars(s))
+  return '"' + cps.slice(0, LABEL_CAP).join("").trim() + (cps.length > LABEL_CAP ? "\\u2026" : "") + '"'
 }
 const seen = new Map()
 const dupes = []
@@ -211,10 +245,25 @@ const searchResults = await pipeline(
     }
     return parallel(
       novel.map(source => () => {
-        let host = "unknown"
-        try { host = new URL(source.url).hostname.replace(/^www\\./, "") } catch {}
+        // A bare fetch:<host> label asserts the real fetch host, so emit it
+        // ONLY when the captured host is a verbatim, complete, un-truncated,
+        // strict-ASCII hostname that sanitization left untouched. Any
+        // deviation routes through the same quoted+ellipsis helper as the
+        // title fallback, so a lossy display value can never masquerade as the
+        // true host: non-ASCII (an IDN homograph like Cyrillic "аmazon.com",
+        // which WebFetch resolves via punycode unavailable in this realm),
+        // invalid host chars, a host long enough to need truncation (a bare
+        // prefix could show a trusted-looking domain while the real host
+        // differs), or a host sanitize altered (deleting a control char would
+        // turn exa<ctrl>mple.com into example.com, which is not the real host).
+        const capturedHost = String(source.url).match(URL_HOST_PATTERN)?.[1] ?? ""
+        const host = capturedHost.toLowerCase()
+        const cleanHost = stripLabelChars(host)
+        const isCleanBareHost = cleanHost === host && host !== "" && Array.from(host).length <= LABEL_CAP && STRICT_HOST.test(host)
+        const hostLabel = cleanHost === "" ? "" : isCleanBareHost ? host : quotedLabel(host)
+        const sourceLabel = hostLabel || (stripLabelChars(source.title).trim() && quotedLabel(source.title)) || "unknown"
         return agent(FETCH_PROMPT(source, searchResult.angle), {
-          label: "fetch:" + host,
+          label: "fetch:" + sourceLabel,
           phase: "Fetch",
           schema: EXTRACT_SCHEMA,
         }).then(ext => {

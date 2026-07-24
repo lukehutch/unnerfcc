@@ -3,9 +3,10 @@ name: 'Tool Description: EnterPlanMode'
 description: >-
   Tool description for entering plan mode to explore and design implementation
   approaches
-ccVersion: 2.1.199
+ccVersion: 2.1.217
 variables:
   - ASK_USER_QUESTION_TOOL_NAME
+  - ADDITIONAL_SKIP_CASES_NOTE
   - CONDITIONAL_WHAT_HAPPENS_NOTE_FN
 -->
 Use this tool proactively when you're about to start a non-trivial implementation task. Getting user sign-off on your approach before writing code prevents wasted effort and ensures alignment. This tool transitions you into plan mode where you can explore the codebase and design an implementation approach for user approval.
@@ -48,7 +49,7 @@ Only skip EnterPlanMode for simple tasks:
 - Single-line or few-line fixes (typos, obvious bugs, small tweaks)
 - Adding a single function with clear requirements
 - Tasks where the user has given very specific, detailed instructions
-- Pure research/exploration tasks (use the Agent tool instead)
+- Pure research/exploration tasks${ADDITIONAL_SKIP_CASES_NOTE}
 
 ${CONDITIONAL_WHAT_HAPPENS_NOTE_FN()}## Examples
 

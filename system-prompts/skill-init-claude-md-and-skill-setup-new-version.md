@@ -4,7 +4,10 @@ description: >-
   A comprehensive onboarding flow for setting up CLAUDE.md and related
   skills/hooks in the current repository, including codebase exploration, user
   interviews, and iterative proposal refinement.
-ccVersion: 2.1.162
+ccVersion: 2.1.217
+variables:
+  - HAS_OTHER_AGENT_CONFIGS_FN
+  - OTHER_AGENT_CONFIGS_GUIDANCE
 -->
 Set up a minimal CLAUDE.md (and optionally skills and hooks) for this repo. CLAUDE.md is loaded into every Claude Code session, so it must be concise — only include what Claude would get wrong without it.
 
@@ -51,7 +54,13 @@ Before the first question, print this primer as normal assistant text so first-t
 ## Phase 2: Explore the codebase
 
 Launch a subagent to survey the codebase, and ask it to read key files to understand the project: manifest files (package.json, Cargo.toml, pyproject.toml, go.mod, pom.xml, etc.), README, Makefile/build configs, CI config, existing CLAUDE.md, .claude/rules/, AGENTS.md, .cursor/rules or .cursorrules, .github/copilot-instructions.md, .devin/rules/ or .windsurf/rules/ or .windsurfrules, .clinerules, .mcp.json.
+${HAS_OTHER_AGENT_CONFIGS_FN()?`
+Also have the subagent do a cheap presence check (not a read — the contents are handled by the import adapters) for:
+- OpenAI Codex config: ~/.codex/config.toml or ./.codex/
+- Gemini CLI config: ~/.gemini/settings.json, ./.gemini/, or a GEMINI.md at project root
 
+Record which of these exist — Phase 8 uses it.
+`:""}
 Detect:
 - Build, test, and lint commands (especially non-standard ones)
 - Languages, frameworks, and package manager
@@ -223,7 +232,8 @@ Recap what was set up — which files were written and the key points included i
 
 Then tell the user that you'll be introducing a few more suggestions for optimizing their codebase and Claude Code setup based on what you found. Present these as a single, well-formatted to-do list where every item is relevant to this repo. Put the most impactful items first.
 
-When building the list, work through these checks and include only what applies:
+When building the list, work through these checks and include only what applies:${HAS_OTHER_AGENT_CONFIGS_FN()?`
+- If Phase 2 found Codex or Gemini CLI config: ${OTHER_AGENT_CONFIGS_GUIDANCE} Put this first — it saves re-entering config they already have.`:""}
 - If frontend code was detected (React, Vue, Svelte, etc.): \`/plugin install frontend-design@claude-plugins-official\` gives Claude design principles and component patterns so it produces polished UI; \`/plugin install playwright@claude-plugins-official\` lets Claude launch a real browser, screenshot what it built, and fix visual bugs itself.
 - If you found gaps in Phase 7 (missing GitHub CLI, missing linting) and the user said no: list them here with a one-line reason why each helps.
 - If tests are missing or sparse: suggest setting up a test framework so Claude can verify its own changes.

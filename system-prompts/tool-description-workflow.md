@@ -4,8 +4,9 @@ description: >-
   Describes the Workflow tool (alias RunWorkflow) — runs a deterministic
   JavaScript workflow script that orchestrates subagents via
   agent()/parallel()/pipeline()/phase(); env-gated behind CLAUDE_CODE_WORKFLOWS
-ccVersion: 2.1.199
+ccVersion: 2.1.217
 variables:
+  - AGENT_TOOL_NAME
   - WORKFLOW_TOOL_NAME
   - WORKFLOW_SCRIPT_PATH_NOTE
   - WORKFLOW_AGENT_ISOLATION_OPTION
@@ -23,7 +24,7 @@ ONLY call this tool when the user has explicitly opted into multi-agent orchestr
 - The user invoked a skill or slash command whose instructions tell you to call Workflow.
 - The user asked you to run a specific named or saved workflow.
 
-For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the Agent tool for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it. Mention they can ask for one with "use a workflow" in a future message to skip the ask.
+For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it. Mention they can ask for one with "use a workflow" in a future message to skip the ask.
 
 When you do call it, the right move is often **hybrid**: scout inline first (list the files, find the channels, scope the diff) to discover the work-list, then call Workflow to pipeline over it. You don't need to know the shape before the *task* — only before the *orchestration step*.
 

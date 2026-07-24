@@ -1,20 +1,16 @@
 <!--
 name: 'Skill: Code Review (max / xhigh effort)'
 description: >-
-  Effort-tier prompt for max and xhigh code review — 5 angles, uncapped
+  Effort-tier prompt for max and xhigh code review — 10 finder angles, uncapped
   candidate reporting, recall-biased, all qualifying findings
-ccVersion: 2.1.178
+ccVersion: 2.1.218
 variables:
   - EFFORT_LEVEL
   - PHASE_0_GATHER_DIFF
   - AGENT_TOOL_NAME
+  - PHASE_1_FINDER_NOTE
   - HIGH_EFFORT_ANGLES
-  - ANGLE_REUSE
-  - ANGLE_SIMPLIFICATION
-  - ANGLE_EFFICIENCY
-  - ANGLE_ALTITUDE
-  - ANGLE_CONVENTIONS
-  - CLEANUP_CANDIDATES_NOTE
+  - CLEANUP_ANGLES
   - PHASE_2_VERIFY_3_STATE
   - PHASE_3_SWEEP
   - OUTPUT_FORMAT_FN
@@ -31,15 +27,10 @@ ${PHASE_0_GATHER_DIFF}
 Run **10 independent finder angles** via the ${AGENT_TOOL_NAME} tool. Each
 surfaces every candidate finding. Do NOT let one angle's conclusions
 suppress another's — if two angles flag the same line for different reasons,
-record both.
+record both. ${PHASE_1_FINDER_NOTE}
 
 ${HIGH_EFFORT_ANGLES}
-${ANGLE_REUSE}
-${ANGLE_SIMPLIFICATION}
-${ANGLE_EFFICIENCY}
-${ANGLE_ALTITUDE}
-${ANGLE_CONVENTIONS}
-${CLEANUP_CANDIDATES_NOTE}
+${CLEANUP_ANGLES}
 ${PHASE_2_VERIFY_3_STATE}
 This is recall mode — a single non-REFUTED vote carries the finding. Do NOT
 drop on uncertainty.

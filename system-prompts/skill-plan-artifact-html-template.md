@@ -5,26 +5,54 @@ description: >-
   (registered as SKILL_FILES + PLAN_TEMPLATE) - the title/eyebrow/summary +
   section-run HTML/CSS scaffold the SKILL.md tells the model to copy and fill by
   hand, and that the auto-publish path fills mechanically.
-fill contract: >-
-  the automatic publish path (src/frame/planArtifactHtml.ts) fills this
-  mechanically — {{TITLE}}, {{TAB_TITLE}}, {{EYEBROW}}, and {{SUMMARY}} are
-  replaced by a fixed regex ({{TAB_TITLE}} is the <title> element; .md-file
-  publishes keep the filename there while the h1 shows the document heading),
-  and everything from the first <section> through the LAST </section> is
-  replaced wholesale by the rendered plan body. Keep those four slots and the
-  section run, and put nothing after the last </section> except </article>;
-  tests in test/frame/planArtifactHtml.test.ts assert this shape.
-style: >-
-  tokens come from @ant/cds's own vanilla export, embedded verbatim (a published
-  artifact is standalone, so the generated tokens.vanilla.css is vendored and
-  inlined rather than imported; a drift test keeps it canonical). Typography is
-  deliberately a plain system stack — no Anthropic brand fonts and no serif
-  voice — and the light background is white rather than the CDS cream surface-0;
-  those are the deliberate deviations from CDS values. Dark mode keys off
-  prefers-color-scheme (the standalone equivalent of CDS data-mode).
-ccVersion: 2.1.199
+ccVersion: 2.1.217
+-->
+<!--
+name: plan
+description: Implementation plans, technical designs, RFCs, and architecture proposals — a phased document with context, approach, and verification sections.
+fill contract: the automatic publish path (src/frame/planArtifactHtml.ts) fills this
+  mechanically — {{TITLE}}, {{TAB_TITLE}}, {{EYEBROW}}, and {{SUMMARY}} are replaced
+  by a fixed regex ({{TAB_TITLE}} is the <title> element; .md-file publishes keep the
+  filename there while the h1 shows the document heading),
+  and everything from the first <section> through the LAST </section> is replaced
+  wholesale by the rendered plan body. Keep those four slots and the section run, and
+  put nothing after the last </section> except </article>; tests in
+  test/frame/planArtifactHtml.test.ts assert this shape.
+style: tokens come from @ant/cds's own vanilla export, embedded verbatim
+  (a published artifact is standalone, so the generated tokens.vanilla.css is
+  vendored and inlined rather than imported; a drift test keeps it canonical).
+  Typography is deliberately a plain system stack — no Anthropic brand fonts
+  and no serif voice — and the light background is white rather than the
+  CDS cream surface-0; those are the deliberate deviations from CDS values.
+  Dark mode keys off both theme axes: prefers-color-scheme, and the viewer
+  toggle's data-theme root stamp (mirrored onto data-mode by the script
+  below so the vendored token block's own toggle selectors serve it).
 -->
 <title>{{TAB_TITLE}}</title>
+<script>
+  /* The viewer toggle stamps data-theme on the root element; the vendored
+     CDS token block below keys its toggle axis on data-mode (the CDS
+     convention) and cannot be edited (provenance-tested byte-identical).
+     Mirroring the attribute lets that block serve the viewer toggle with
+     its own precedence rules — toggle beats OS in both directions. Static,
+     no author bytes. Without JS the toggle axis is inert and the OS axis
+     (pure CSS) still themes the page. */
+  (function () {
+    var root = document.documentElement;
+    var sync = function () {
+      var t = root.getAttribute('data-theme');
+      if (t) root.setAttribute('data-mode', t);
+      else root.removeAttribute('data-mode');
+    };
+    sync();
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(sync).observe(root, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+    }
+  })();
+</script>
 <style>
   /* ===== BEGIN vendored @ant/cds tokens (src/frame/cdsTokens.vanilla.generated.css) =====
      Byte-identical to that file (drift-tested in test/frame/planArtifactHtml.test.ts).
@@ -842,9 +870,13 @@ ccVersion: 2.1.199
   }
   /* Dark re-overrides: the white-surface deviation above is light-only,
      and source order would otherwise beat the vendored dark block (equal
-     :root specificity), so dark restores the canonical surface here. */
+     :root specificity), so dark restores the canonical surface here —
+     under both axes, mirroring the vendored block's own structure: the
+     media block carries the same :where() zero-specificity guard so an
+     explicit light stamp beats OS-dark, and the attribute block forces
+     dark on an OS-light machine. */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:where(:not([data-mode="light"])) {
       --surface-0: var(--gray-890);
       --hl-keyword: var(--violet-300);
       --hl-string: var(--green-300);
@@ -852,6 +884,41 @@ ccVersion: 2.1.199
       --hl-title: var(--blue-300);
       --hl-attr: var(--aqua-300);
       --hl-deletion: var(--red-300);
+    }
+  }
+  :root[data-mode="dark"] {
+    color-scheme: dark;
+    --surface-0: var(--gray-890);
+    --hl-keyword: var(--violet-300);
+    --hl-string: var(--green-300);
+    --hl-number: var(--magenta-300);
+    --hl-title: var(--blue-300);
+    --hl-attr: var(--aqua-300);
+    --hl-deletion: var(--red-300);
+  }
+  :root[data-mode="light"] { color-scheme: light; }
+  /* Print is always light, regardless of the OS scheme or the toggle stamp
+     (browsers don't print backgrounds by default). The vendored dark block
+     cannot be switched off in print, so this re-pins — as literals — every
+     token this template's element rules actually paint with; the selector
+     list ties the attribute-dark scope and wins by source order. */
+  @media print {
+    :root, :root[data-mode="dark"] {
+      color-scheme: light;
+      --surface-0: #ffffff;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-accent: #184f95;
+      --border: rgba(11, 11, 11, 0.1);
+      --border-strong: rgba(11, 11, 11, 0.2);
+      --border-stronger: rgba(11, 11, 11, 0.4);
+      --fill-control: rgba(11, 11, 11, 0.1);
+      --hl-keyword: #4a3aa7;
+      --hl-string: #006300;
+      --hl-number: #862a4c;
+      --hl-title: #184f95;
+      --hl-attr: #065f49;
+      --hl-deletion: #8e2626;
     }
   }
 
@@ -927,9 +994,10 @@ ccVersion: 2.1.199
     margin: 0;
   }
   pre code { background: none; padding: 0; font: inherit; }
-  /* Syntax-highlight theme for the hljs-* spans the build-time fill emits.
-     Colors are @ant/cds base-palette stops (600s light / 300s dark) — the
-     hue families CDS derives its role colors from. */
+  /* Syntax-highlight theme for the hljs-* spans the injected client-side
+     runtime (hljsHighlight.ts) emits. Colors are @ant/cds base-palette
+     stops (600s light / 300s dark) — the hue families CDS derives its role
+     colors from. */
   .hljs-comment, .hljs-quote, .hljs-meta { color: var(--hl-comment); font-style: italic; }
   .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-type, .hljs-doctag { color: var(--hl-keyword); }
   .hljs-string, .hljs-regexp, .hljs-addition { color: var(--hl-string); }

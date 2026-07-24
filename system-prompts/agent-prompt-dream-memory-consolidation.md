@@ -4,7 +4,7 @@ description: >-
   Instructs an agent to perform a multi-phase memory consolidation pass —
   orienting on existing memories, gathering recent signal from logs and
   transcripts, merging updates into topic files, and pruning the index
-ccVersion: 2.1.120
+ccVersion: 2.1.217
 variables:
   - MEMORY_DIR
   - MEMORY_DIR_CONTEXT
@@ -12,10 +12,9 @@ variables:
   - HAS_TRANSCRIPT_SOURCE_NOTE
   - TRANSCRIPT_SOURCE_NOTE
   - INDEX_FILE
-  - POST_GATHER_FN
+  - OMIT_TYPE_CONVENTIONS
   - INDEX_MAX_LINES
   - CLAUDE_MD_RECONCILIATION_BLOCK
-  - ADDITIONAL_DREAM_GUIDANCE_FN
   - ADDITIONAL_CONTEXT
 -->
 # Dream: Memory Consolidation
@@ -48,10 +47,10 @@ Look for new information worth persisting. Sources in rough priority order:
    \`grep -rn "<narrow term>" ${TRANSCRIPTS_DIR}/ --include="*.jsonl" | tail -50\`
 
 Don't exhaustively read transcripts. Look only for things you already suspect matter.
-${POST_GATHER_FN()}
+
 ## Phase 3 — Consolidate
 
-For each thing worth remembering, write or update a memory file at the top level of the memory directory. Use the memory file format and type conventions from your system prompt's auto-memory section — it's the source of truth for what to save, how to structure it, and what NOT to save.
+For each thing worth remembering, write or update a memory file at the top level of the memory directory. Use the memory file format${OMIT_TYPE_CONVENTIONS?"":" and type conventions"} from your system prompt's auto-memory section — it's the source of truth for what to save, how to structure it, and what NOT to save.
 
 Focus on:
 - Merging new signal into existing topic files rather than creating near-duplicates
@@ -68,7 +67,7 @@ Update \`${INDEX_FILE}\` so it stays under ${INDEX_MAX_LINES} lines AND under ~2
 - Resolve contradictions — if two files disagree, fix the wrong one
 
 ${CLAUDE_MD_RECONCILIATION_BLOCK}
-${ADDITIONAL_DREAM_GUIDANCE_FN()}
+
 ---
 
 Summarize thoroughly what you consolidated, updated, or pruned: which files changed, what signal drove each change, and any patterns you noticed. If nothing changed, say so and describe what you reviewed.${ADDITIONAL_CONTEXT?`

@@ -132,7 +132,18 @@ function generateMarkdownFromPrompt(prompt) {
     frontmatterData.variables = variables;
   }
 
-  return matter.stringify(content, frontmatterData, {
+  // Pass an explicit file OBJECT, not a raw string. gray-matter's
+  // `matter.stringify(str, …)` first re-parses `str` for existing frontmatter
+  // (index.js: `if (typeof file === 'string') file = matter(file, options)`).
+  // With our `<!--`/`-->` delimiters, a body that itself begins with an HTML
+  // comment (only skill-plan-artifact-html-template does) gets its leading
+  // comment mis-read as frontmatter — silently hoisting body text into the
+  // frontmatter block when that text is valid YAML, and throwing a YAMLException
+  // when it isn't (upstream reworded it non-YAML in 2.1.217). Passing `{content}`
+  // skips the re-parse, preserving the body verbatim. For every other prompt
+  // (body never starts with `<!--`) the re-parse was already a no-op, so output
+  // is byte-identical there.
+  return matter.stringify({ content }, frontmatterData, {
     delimiters: ["<!--", "-->"],
   });
 }

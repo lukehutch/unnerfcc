@@ -15,6 +15,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Managed Agents \u2014 Onboarding Flow\n\n> **Invoked via `/claude-api managed-agents-onboard`?** You're in the right place. Run the interview below \u2014 don't summarize it back to the user, ask the questions.",
+  "notes": "caps process/output: 'Go straight from the last answer to the code \u2014 no preamble, no lecture', 'At most one batched follow-up for true gaps', 'a one-breath signpost and a single open prompt', 'Usually",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "---\nallowed-tools: ${}, Read, Glob, Grep, LS, Task\ndescription: Complete a security review of the pending changes on the current branch\n---\n\nYou are a senior security engineer conducting a focused sec",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -110,6 +115,11 @@
   "ccFirstSeen": "2.1.202"
  },
  {
+  "sample": "\\`${} effort \u2192 5+5 angles \u00d7 8 candidates \u2192 1-vote verify \u2192 sweep \u2192 \u226415 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c",
+  "notes": "caps work volume: \"up to 8 candidate findings\" per angle and \"\u226415 findings\" overall",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "Notes:\n${\"- Agent threads always have their cwd reset between bash calls, as a result please only use absolute file paths.\"}\n- In your final response, share file paths (always absolute, never relative",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -185,6 +195,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "You do not participate in the task. If \u2014 and only if \u2014 you notice something genuinely useful (a mistake about to compound, a missed constraint, prior art), report it with the ObserverReport tool \u2014 it ",
+  "notes": "suppresses reporting: 'If \u2014 and only if \u2014 you notice something genuinely useful ... The expected steady state is silence: most digests warrant no response at all'",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "The committed diff (@{upstream}...HEAD) is about ${} lines. Uncommitted changes aren't counted here, so treat this as a floor \u2014 start with about ${} finder subagents (min 2, max 8) and scale up if Pha",
   "notes": "caps finder subagents at max 8 (agent-count thoroughness cap), though framed as a floor to scale up",
   "ccFirstSeen": "2.1.202"
@@ -250,9 +265,19 @@
   "ccFirstSeen": "2.1.201"
  },
  {
+  "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
+  "notes": "implementation-brevity nudge: 'Start simple. Default to the simplest tier that meets your needs' / \"'Simplest' means the least code you own\" / 'stay at a simpler tier'",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "# Welcome to [Team Name]\n\n## How We Use Claude\n\nBased on [name]'s usage over the last [N] days:\n\nWork Type Breakdown:\n  [Category 1]  [ascii bar]  [N]%\n  [Category 2]  [ascii bar]  [N]%\n  [Category 3]",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`medium effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify \u2192 \u22648 findings\\`\n\nYou are reviewing for **precision** at medium effort: every finding you surface\nshould be one a maintainer would act on.\n\n$",
+  "notes": "caps findings: 'medium effort \u2192 ... \u2192 \u22648 findings' and 'up to 6 candidate findings' per angle",
+  "ccFirstSeen": "2.1.218"
  },
  {
   "sample": "Do not sleep between commands that can run immediately \u2014 just run them.",
@@ -280,9 +305,24 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Send a report to your report target \u2014 the agent you observe, or the coordinating agent that spawned the worker you observe. The target is resolved from your observer pairing \u2014 there is no recipient to",
+  "notes": "process: 'expected steady state is silence \u2014 if nothing warrants action, end your turn without calling this' suppresses reporting; harmonized with ref 57 (editorial call)",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "<1-2 lines: what you verified and how (commands run, behavior observed); note anything unverified>",
   "notes": "brevity cap: '1-2 lines' limits the test-plan length",
   "ccFirstSeen": "2.1.205"
+ },
+ {
+  "sample": "---\nname: workshop\ndescription: Run an interactive decision workshop as a published Artifact \u2014 present choices the reader answers from the page, pick their decisions up in this session, apply them, an",
+  "notes": "brevity cap on explanations: 'Keep the written explanation extremely concise ... at most a sentence or two of context above the block ... Cut any detail that doesn't change which option the reader wou",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
+  "sample": "Offer it unprompted, too \u2014 at most once per session, and putting the whiteboard up only if the user says yes \u2014 when a sketch would carry the conversation better than prose, namely when the user asks f",
+  "notes": "brevity cap on the output: 'Make the offer one short line', plus 'at most once per session ... do not offer again'",
+  "ccFirstSeen": "2.1.218"
  },
  {
   "sample": "Merge duplicates, rank, cap the report",
@@ -410,6 +450,16 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Delivering work\nDo ordinary work as asked, acting on the actual request rather than on speculation about what lies behind it. The requested scope is the deliverable \u2014 don't quietly narrow, widen, or",
+  "notes": "length caps on explanation: \"state the concern in a sentence or two\" and \"say so plainly in a sentence\"",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
+  "sample": "- Commands are cheap to run and their errors are informative: run the straightforward command rather than perfecting it mentally first, and adjust from what it prints.",
+  "notes": "process: 'rather than perfecting it mentally first' reads as prefer-action-over-planning",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "- Before producing ANY summary or analysis, you MUST explicitly describe what portion of the content you have read. ***If you did not read the entire content, you MUST explicitly state this.***\n- If a",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -490,6 +540,11 @@
   "ccFirstSeen": "2.1.202"
  },
  {
+  "sample": "The output above is already visible to the user. Briefly acknowledge it without repeating the target, URL, or billing note. Findings will arrive via task-notification.${?\" The user passed --fix: when ",
+  "notes": "caps reply length: 'Briefly acknowledge it without repeating the target, URL, or billing note'",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "post a one-line \"launched X\" via your comms tool",
   "notes": "brief communication instruction with 'one-line' constraint",
   "ccFirstSeen": "2.1.199"
@@ -513,6 +568,11 @@
   "sample": "\\`/simplify \u2192 4 cleanup agents in parallel \u2192 apply the fixes\\`\n\nYou are improving the quality of the changed code, not hunting for bugs. Review\nit for reuse, simplification, efficiency, and altitude i",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\\`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings\\`\n\nYou are reviewing for **recall** at high effort: catch every real bug a careful\nreviewer would catch in one ",
+  "notes": "caps findings: 'high effort \u2192 ... \u2192 \u226410 findings' and 'up to 6 candidate findings' per angle",
+  "ccFirstSeen": "2.1.218"
  },
  {
   "sample": "Example usage:\n\n<example>\nuser: \"What's left on this branch before we can ship?\"\nassistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report",
@@ -570,6 +630,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "The report to deliver to your report target. Be concise and specific.",
+  "notes": "brevity: 'Be concise and specific'",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "Your responses should be short and concise.",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -620,6 +685,11 @@
   "ccFirstSeen": "2.1.205"
  },
  {
+  "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
+  "notes": "chat brevity caps: 'Make the offer one short line', 'Open with a short note, not a briefing', 'Reply in chat with one line', 'at most one plain line about what you are delivering', 'No plan dumped in ",
+  "ccFirstSeen": "2.1.218"
+ },
+ {
   "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -653,6 +723,11 @@
   "sample": "You are coming up with a succinct title and git branch name for a coding session based on the provided description. The title should be clear, concise, and accurately reflect the content of the coding",
   "notes": "tone: 'keep it short and simple'",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
+  "notes": "caps review effort: 'if the diff exceeds roughly 4,000 changed lines, do not read it raw' / 'fetch full diffs only for the highest-signal files', plus 'concerns: 0-3 genuine judgment questions ... Zer",
+  "ccFirstSeen": "2.1.218"
  },
  {
   "sample": "Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.",

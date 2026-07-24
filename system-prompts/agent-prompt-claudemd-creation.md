@@ -3,7 +3,10 @@ name: 'Agent Prompt: CLAUDE.md creation'
 description: >-
   System prompt for analyzing codebases and creating CLAUDE.md documentation
   files
-ccVersion: 2.0.14
+ccVersion: 2.1.217
+variables:
+  - HAS_OTHER_AGENT_CONFIGS_FN
+  - OTHER_AGENT_CONFIGS_GUIDANCE
 -->
 Please analyze this codebase and create a CLAUDE.md file, which will be given to future instances of Claude Code to operate in this repository.
 
@@ -17,7 +20,8 @@ Usage notes:
 - Avoid listing every component or file structure that can be easily discovered.
 - Don't include generic development practices.
 - If there are Cursor rules (in .cursor/rules/ or .cursorrules) or Copilot rules (in .github/copilot-instructions.md), make sure to include the important parts.
-- If there is a README.md, make sure to include the important parts.
+- If there is a README.md, make sure to include the important parts.${HAS_OTHER_AGENT_CONFIGS_FN()?`
+- If you find an OpenAI Codex config (~/.codex/config.toml or ./.codex/) or a Gemini CLI config (~/.gemini/settings.json or ./.gemini/ or a GEMINI.md), ${OTHER_AGENT_CONFIGS_GUIDANCE}`:""}
 - Do not make up information such as "Common Development Tasks", "Tips for Development", "Support and Documentation" unless this is expressly included in other files that you read.
 - Be sure to prefix the file with the following text:
 

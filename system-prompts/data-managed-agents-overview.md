@@ -4,7 +4,7 @@ description: >-
   Provides the agent with a comprehensive overview of the Managed Agents API
   architecture, mandatory agent-then-session flow, beta headers, documentation
   reading guide, and common pitfalls
-ccVersion: 2.1.205
+ccVersion: 2.1.218
 -->
 # Managed Agents — Overview
 
@@ -37,7 +37,7 @@ Managed Agents is in beta. The SDK sets required beta headers automatically:
 | \`skills-2025-10-02\`            | Skills API (for managing custom skill definitions)   |
 | \`files-api-2025-04-14\`         | Files API for file uploads                           |
 
-**Which beta header goes where:** The SDK sets \`managed-agents-2026-04-01\` automatically on \`client.beta.{agents,environments,sessions,vaults,memory_stores,deployments,deployment_runs}.*\` calls, and \`files-api-2025-04-14\` / \`skills-2025-10-02\` automatically on \`client.beta.files.*\` / \`client.beta.skills.*\` calls. You do NOT need to add the Skills or Files beta header when calling Managed Agents endpoints. **Exception — session-scoped file listing:** \`client.beta.files.list({scope_id: session.id})\` is a Files endpoint that takes a Managed Agents parameter, so it needs **both** headers. Pass \`betas: ["managed-agents-2026-04-01"]\` explicitly on that call (the SDK adds the Files header; you add the Managed Agents one). See \`shared/managed-agents-environments.md\` → Session outputs.
+**Which beta header goes where:** The SDK sets \`managed-agents-2026-04-01\` automatically on \`client.beta.{agents,environments,sessions,vaults,memory_stores,deployments,deployment_runs}.*\` calls, and \`files-api-2025-04-14\` / \`skills-2025-10-02\` automatically on \`client.beta.files.*\` / \`client.beta.skills.*\` calls. You do NOT need to add the Skills or Files beta header when calling Managed Agents endpoints. On raw HTTP the Managed Agents header **grants Files API access on its own**, so uploading a file for use as a session resource does not need \`files-api-2025-04-14\` alongside it. (Direct Skills API calls over cURL do still need \`skills-2025-10-02\`; the \`ant\` CLI and the SDKs send it for you.) **Exception — session-scoped file listing:** \`client.beta.files.list({scope_id: session.id})\` is a Files endpoint that takes a Managed Agents parameter, so it needs **both** headers. Pass \`betas: ["managed-agents-2026-04-01"]\` explicitly on that call (the SDK adds the Files header; you add the Managed Agents one). See \`shared/managed-agents-environments.md\` → Session outputs.
 
 
 ## Reading Guide

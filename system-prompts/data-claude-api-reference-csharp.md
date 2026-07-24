@@ -3,7 +3,7 @@ name: 'Data: Claude API reference — C#'
 description: >-
   C# SDK reference including installation, client initialization, basic
   requests, streaming, and tool use
-ccVersion: 2.1.183
+ccVersion: 2.1.217
 -->
 # Claude API — C#
 
@@ -52,7 +52,7 @@ Note that `strings` will not surface wire-format snake_case field names (`output
 
 ### Minimal working skeleton
 
-**Write a plain `Program.cs` body** — `using` statements followed by top-level statements, as below. Do **not** add a `#!/usr/bin/env dotnet` shebang or `#:package Anthropic@*` directive: those are .NET file-based-app syntax and fail with `CS1024: Preprocessor directive expected` when the file is compiled via an existing `.csproj`. The standard project setup (per the [C# quickstart](https://docs.claude.com/en/docs/get-started): `dotnet new console` → `dotnet add package Anthropic` → edit `Program.cs` → `dotnet run`) provides the `.csproj` and package reference.
+**Write a plain `Program.cs` body** — `using` statements followed by top-level statements, as below. Do **not** add a `#!/usr/bin/env dotnet` shebang or `#:package Anthropic@*` directive: those are .NET file-based-app syntax and fail with `CS1024: Preprocessor directive expected` when the file is compiled via an existing `.csproj`. The standard project setup (per the [C# quickstart](https://platform.claude.com/docs/en/get-started): `dotnet new console` → `dotnet add package Anthropic` → edit `Program.cs` → `dotnet run`) provides the `.csproj` and package reference.
 
 Start from this — it compiles as-is. Fill in the feature-specific fields; do not spend turns running reflection or XML-doc inspection to discover type names first.
 

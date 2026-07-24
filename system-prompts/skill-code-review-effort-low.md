@@ -3,7 +3,10 @@ name: 'Skill: Code Review (low effort)'
 description: >-
   Effort-tier prompt for low code review — single diff pass, no verify, all
   qualifying findings
-ccVersion: 2.1.152
+ccVersion: 2.1.217
+variables:
+  - USES_REPORT_FINDINGS_TOOL
+  - REPORT_FINDINGS_TOOL_NAME
 -->
 \`low effort → 1 diff pass → no verify → all qualifying findings\`
 
@@ -28,6 +31,13 @@ helper visible in the diff context, and dead code the diff leaves behind.
 Do **not** flag style, naming, perf, missing tests, or anything outside the
 hunk.
 
-Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them):
+${USES_REPORT_FINDINGS_TOOL?`Report every qualifying finding, most-severe first, in one
+${REPORT_FINDINGS_TOOL_NAME} call with \`{level, findings}\` — each entry has
+\`file\`, \`line\`, \`summary\`, \`short_summary\` (≤60 characters), and
+\`failure_scenario\`. If nothing qualifies, call it with an empty findings
+array. Do not also print the findings as text.
+`:`Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them):
 \`path/to/file.ext:123 — what's wrong and the concrete failure\`. If nothing
-qualifies, output exactly \`(none)\`.
+qualifies, output exactly \`(none)\`. Do not call the
+${REPORT_FINDINGS_TOOL_NAME} tool even if it is available.
+`}

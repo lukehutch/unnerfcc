@@ -240,8 +240,15 @@ if [ -n "${PREV_CATALOG:-}" ]; then
 fi
 
 # --- 4. validate catalog ----------------------------------------------------
+# ACK_REMOVED=<N>: after manually verifying that a large id-removal is genuine
+# upstream deletion (see validate-catalog gate 6), re-run with ACK_REMOVED set to
+# the exact removed count to let the pipeline proceed. Any other count still fails.
 log "Validating catalog (structural gates)"
-node "$REPO/scripts/validate-catalog.mjs" "$NEW_CATALOG" "${PREV_CATALOG:-}" --strict
+if [ -n "${ACK_REMOVED:-}" ]; then
+  node "$REPO/scripts/validate-catalog.mjs" "$NEW_CATALOG" "${PREV_CATALOG:-}" --strict --ack-removed "$ACK_REMOVED"
+else
+  node "$REPO/scripts/validate-catalog.mjs" "$NEW_CATALOG" "${PREV_CATALOG:-}" --strict
+fi
 ok "catalog gates pass"
 
 # --- 4b. prune superseded catalogs (ship only the latest) ------------------
