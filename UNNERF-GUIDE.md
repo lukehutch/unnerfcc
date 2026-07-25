@@ -771,25 +771,56 @@ a renamed field or restructured enum surfaces as a loud worklist (update the
 anchors in `apply-code-patches.mjs`), the same idea as the Part 4 checksum
 manifest. Flags: `node lib/apply-code-patches.mjs {apply <in> <out>|posture <in>|verify <in>}`.
 
-**Idempotency trap — never put a non-ASCII character in a code-patch replacement.**
-These patches run on the **output of the AST patcher**, whose generator is
-ASCII-safe: it rewrites every literal non-ASCII character to a `\uXXXX` escape.
-So a replacement written with a literal `—` lands as a literal em dash on the
-first run, and comes back as the six characters `—` on the second. A patch
-whose already-applied check searches for the *literal* spelling then matches
-neither the stock anchor (already consumed) nor its own output, and falls through
-to a **false `anchor MISSING` failure** — which reads exactly like an upstream
-regression and will send you hunting for a change that never happened. This bit
-P4 at v2.1.220, on a plain re-run of `install.sh` over an already-patched binary.
-Two rules, and apply both:
+**Idempotency trap — a raw-text stage must borrow the AST stage's canonicaliser.**
+The in-code patches run on the **output of the AST patcher**, but they are a
+**raw-text** stage: they `String.replace` on generated source and never go through
+an AST. That asymmetry is the whole bug. The generator is ASCII-safe — it respells
+every literal non-ASCII character as a `\uXXXX` escape — so a replacement
+written with a literal em dash lands as one byte-wise on the first run and comes
+back as the six characters `\u2014` on the second. A patch whose already-applied check
+searches for the *literal* spelling then matches neither the stock anchor (already
+consumed) nor its own output, and falls through to a **false `anchor MISSING`
+failure** — which reads exactly like an upstream regression and will send you
+hunting for a change that never happened. This bit P4 at v2.1.220, on a plain
+re-run of `install.sh` over an already-patched binary.
 
-- **Emit the `\uXXXX` escape, not the character.** The bundle stays pure ASCII
-  (which the splicer already asserts) and the inserted bytes survive an AST
-  round-trip unchanged, so the text is byte-stable across runs.
+**Do not fix this by escaping by hand in each patch.** `normalize-ast.mjs` already
+exports the canonicaliser whose spelling the generator agrees with, and it has no
+imports of its own, so a text stage can share it for free:
+
+```js
+import { encodeQuoted } from "./normalize-ast.mjs";
+// emits "<... \u2014 ...>" — delimiters and escaping supplied, pure ASCII
+const unnerf = encodeQuoted("<bullet points covering all notable changes — as many as the work warrants>");
+```
+
+Write the text naturally and let `encodeQuoted()` (whole literal, delimiters
+included) or `escapeCommon()` (bare text) spell it. What you insert is then
+byte-for-byte what a regenerated bundle would hold, so it survives the next run's
+parse → generate untouched. Two supporting guards:
+
+- **`applyCodePatches()` enforces an ASCII invariant** after *every* patch and
+  names the offender: `[FAILED] <patch>/ascii-invariant: this patch inserted a
+  non-ASCII character (...)`. Per-patch, so blame is attributed rather than merely
+  detected; and only when the input was clean, so a dirty input is reported once as
+  its own fault instead of pinned on the first patch to run. The invariant is
+  load-bearing twice over — Bun also refuses to boot a standalone container holding
+  a raw non-ASCII byte.
 - **Detect on an ASCII-only substring.** Anchor the already-applied check on a
-  byte-unique prefix that is identical in both spellings (for P4:
+  byte-unique prefix identical in every spelling (for P4:
   `"<bullet points covering all notable changes `), never on the full
   replacement string.
+
+**Note what is NOT the fix.** Unicode normal forms (NFC/NFD) are a different thing
+and would be actively harmful here. `\u2014` and an em dash are the *same code point*,
+so the AST stage already collapses them — both spellings parse to identical
+`canonicalText` — and there is nothing for NFC to repair. Applying NFC across the
+bundle would instead mutate real strings: 9 of the stock bundle's 246,748 are not
+already NFC, and they are **Unicode character-class regex sources** (identifier and
+combining-mark ranges), where normalising silently rewrites what the program
+matches. It would also break byte-identity against stock, which the catalog's
+identity hashes and the `residual=` gate both depend on. The canonical direction is
+likewise not a choice: escapes must win, because Bun rejects the raw bytes.
 
 The general gate: applying the **whole pipeline** twice — splice → code patches,
 then splice → code patches again — must report every patch `[ALREADY]` on the
@@ -803,7 +834,9 @@ Pass 2 over pass 1's output: `patched=0 couldNotFind=86 residual=0` (every promp
 already un-nerfed, so nothing left to find), all five `[ALREADY]`, and the two
 bundles `cmp` byte-identical. That triple — every prompt already present, every
 patch `[ALREADY]`, bytes identical — is the pass condition to re-check after
-touching either stage.
+touching either stage. Re-run after moving P4 onto `encodeQuoted()`: identical
+result, and the emitted bundle is byte-identical to the hand-escaped version it
+replaced — so sharing the canonicaliser is a pure refactor at the byte level.
 
 **Honest limit.** Model downgrades pushed via Anthropic's **server-side** Statsig
 config (e.g. `tengu_auto_mode_config` routing the auto-mode classifier to a small
