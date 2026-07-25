@@ -1361,6 +1361,17 @@
    "ccFirstSeen": "2.1.199",
    "sample": "${await ()}c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
   },
+  "011790fd35b1e114db0d53d118eb87a3f5ecf0d2b900e0405e0070634741abd0": {
+   "class": "non-prompt",
+   "unnerf": false,
+   "proposedName": "",
+   "proposedDescription": "",
+   "slots": "",
+   "notes": "warn-level runtime log about dropping a rejected beta header",
+   "policyVersion": 1,
+   "ccFirstSeen": "2.1.220",
+   "sample": "Auto mode classifier: ${} beta rejected (HTTP 400) and the retry without it succeeded \u2014 dropping the beta for the rest of the session"
+  },
   "011792dab65fd24ca995adfe144b238176e667fdeb774129cd1febd645fd9394": {
    "class": "non-prompt",
    "unnerf": false,
