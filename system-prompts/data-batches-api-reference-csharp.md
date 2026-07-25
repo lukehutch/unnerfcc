@@ -1,13 +1,13 @@
 <!--
 name: 'Data: Message Batches API reference — C#'
 description: Message Batches API reference doc (C# bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Message Batches — C#
 
 ## Message Batches API
 
-\`\`\`csharp
+```csharp
 var batch = await client.Messages.Batches.Create(new() {
     Requests = [
         new() { CustomID = "req-1", Params = new() { Model = "{{OPUS_ID}}", MaxTokens = 1024, Messages = [...] } },
@@ -15,5 +15,5 @@ var batch = await client.Messages.Batches.Create(new() {
 });
 // Poll client.Messages.Batches.Retrieve(batch.ID) until ProcessingStatus == "ended",
 // then iterate client.Messages.Batches.Results(batch.ID).
-\`\`\`
+```
 

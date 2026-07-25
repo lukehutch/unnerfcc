@@ -1,10 +1,10 @@
 <!--
-name: 'Slash command description: /design hub'
+name: 'Slash Command: /design hub'
 description: >-
-  Model-facing description of the /design command (installed via oPe getter,
-  surfaced to the model in command listings such as the claude-code-guide
-  agent's 'Available custom skills') explaining it routes sync/login and maps
-  import/export/status to the Claude Design tools.
-ccVersion: 2.1.199
+  Describes the /design hub command that routes sync and login to their own
+  commands and maps everything else onto the native Claude Design tool.
+ccVersion: 2.1.219
+variables:
+  - CLAUDE_DESIGN_TOOL_NAME
 -->
-. Always fetches the live Claude Design instructions via `
+Hub for Claude Design (claude.ai/design): routes `sync`/`login` to their dedicated commands and maps `import`/`export`/`status`/free-form prompts to the native `${CLAUDE_DESIGN_TOOL_NAME}` tool. Always fetches the live Claude Design instructions via `

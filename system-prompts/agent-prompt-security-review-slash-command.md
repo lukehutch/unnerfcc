@@ -3,7 +3,7 @@ name: 'Agent Prompt: /security-review slash command'
 description: >-
   Comprehensive security review prompt for analyzing code changes with focus on
   exploitable vulnerabilities
-ccVersion: 2.1.120
+ccVersion: 2.1.219
 variables:
   - ALLOWED_TOOLS
 -->
@@ -16,27 +16,27 @@ You are a senior security engineer conducting a focused security review of the c
 
 GIT STATUS:
 
-\`\`\`
-!\`git status\`
-\`\`\`
+```
+!`git status`
+```
 
 FILES MODIFIED:
 
-\`\`\`
-!\`git diff --name-only origin/HEAD...\`
-\`\`\`
+```
+!`git diff --name-only origin/HEAD...`
+```
 
 COMMITS:
 
-\`\`\`
-!\`git log --no-decorate origin/HEAD...\`
-\`\`\`
+```
+!`git log --no-decorate origin/HEAD...`
+```
 
 DIFF CONTENT:
 
-\`\`\`
-!\`git diff origin/HEAD...\`
-\`\`\`
+```
+!`git diff origin/HEAD...`
+```
 
 Review the complete diff above. This contains all code changes in the PR.
 
@@ -115,14 +115,14 @@ Phase 3 - Vulnerability Assessment:
 
 REQUIRED OUTPUT FORMAT:
 
-You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. \`sql_injection\` or \`xss\`), description, exploit scenario, and fix recommendation.
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
 
 For example:
 
-# Vuln 1: XSS: \`foo.py:42\`
+# Vuln 1: XSS: `foo.py:42`
 
 * Severity: High
-* Description: User input from \`username\` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
 * Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
 * Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
 

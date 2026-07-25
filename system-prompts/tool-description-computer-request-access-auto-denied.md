@@ -1,10 +1,9 @@
 <!--
 name: 'Tool Description: Computer Request Access Auto-Denied'
 description: >-
-  computer-use access guidance returned to the model when requested apps are on
-  the user's auto-deny list
-ccVersion: 2.1.178
-variables:
-  - TOOL_DESCRIPTION_COMPUTER_REQUEST_ACCESS_AUTO_DENIED_VAR_0
+  computer-use access guidance returned when requested apps are automatically
+  denied regardless of user approval, with no Settings override, so the model
+  must tell the user it cannot access them.
+ccVersion: 2.1.219
 -->
-Requests for ${TOOL_DESCRIPTION_COMPUTER_REQUEST_ACCESS_AUTO_DENIED_VAR_0?"this app":"these apps"} are automatically denied. If you need access for this task, ask the user to remove ${TOOL_DESCRIPTION_COMPUTER_REQUEST_ACCESS_AUTO_DENIED_VAR_0?"it":"them"} from their 
+ are automatically denied regardless of what the user has approved. There is no Settings override. Inform the user that you cannot access 

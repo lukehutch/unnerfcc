@@ -60,6 +60,7 @@ import {
   hasDrift,
   DEFAULT_MANIFEST,
 } from "./prompt-checksums.mjs";
+import { reconstruct } from "./prompt-index.mjs";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -76,30 +77,21 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const DEFAULT_TARGET = path.join(REPO_ROOT, "system-prompts");
 
 // ---------------------------------------------------------------------------
-// Prompt reconstruction (mirrors tweakcc-fixed's systemPromptSync.ts verbatim)
+// Prompt reconstruction
 // ---------------------------------------------------------------------------
-
-/**
- * Re-stitch a prompt body from its tokenized pieces. After each piece (except
- * possibly the last), `identifiers[i]` indexes into `identifierMap` to give
- * the human-readable variable name that goes between the pieces. The `${`
- * and `}` wrapping a placeholder are already split into the surrounding
- * pieces by tweakcc-fixed's extractor.
- *
- * Verbatim copy of tweakcc-fixed's reconstructContentFromPieces.
- */
+// This used to be a verbatim copy of tweakcc-fixed's reconstructContentFromPieces,
+// which appended the BARE variable name between pieces because its extractor split
+// a prompt at the variable-name boundary INSIDE an interpolation, leaving the `${`
+// on the end of one piece and the `}` on the front of the next. That is why the
+// shipped .md files leak raw JS — `${VAR?"a":"b"}` reaches the file as prose.
+//
+// Our extractor splits at the INTERPOLATION boundary, so the pieces are pure
+// literal text and the `${`/`}` have to be written here. There is exactly one
+// spelling of a slot in this repo (scripts/prompt-index.mjs `renderSlot`), and
+// patch-prompts.mjs splits an edited body back apart on that same spelling, so
+// this delegates rather than re-implementing it.
 function reconstructContentFromPieces(pieces, identifiers, identifierMap) {
-  let result = "";
-  for (let i = 0; i < pieces.length; i++) {
-    result += pieces[i];
-    if (i < identifiers.length) {
-      const labelIndex = identifiers[i];
-      const humanName =
-        identifierMap[String(labelIndex)] || `UNKNOWN_${labelIndex}`;
-      result += humanName;
-    }
-  }
-  return result;
+  return reconstruct({ pieces, identifiers, identifierMap });
 }
 
 /**
@@ -330,6 +322,22 @@ async function main(argv) {
   // (un-nerfs run later, in apply-unnerfs.py), so it's also what we fingerprint.
   // Duplicate ids (same prompt at multiple binary sites): keep the FIRST entry,
   // matching tweakcc-fixed's syncPrompt (create on first sight, skip the rest).
+  // An entry with no id would be written as a file literally named ".md", and
+  // every later id-less entry would then collide on "" and be silently counted
+  // as a duplicate site — i.e. real prompts vanish with no error. relabel's
+  // merge is supposed to make this unreachable; fail loudly if it ever isn't.
+  const unnamed = prompts.filter((p) => !p.id);
+  if (unnamed.length > 0) {
+    const sample = unnamed
+      .slice(0, 3)
+      .map((p) => `  ${JSON.stringify(reconstruct(p).slice(0, 80))}`)
+      .join("\n");
+    throw new SystemExit(
+      `error: ${unnamed.length} prompt(s) have no id; refusing to write ".md".\n` +
+        `Run the relabel pass to name them. First few:\n${sample}`,
+    );
+  }
+
   const seenIds = new Set();
   const entries = [];
   let dupSites = 0;

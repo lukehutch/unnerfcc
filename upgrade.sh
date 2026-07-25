@@ -83,8 +83,13 @@ command -v python3 >/dev/null || die "python3 not found"
 # ourselves (see below). It's only used, if present, for the semantic relabel
 # step; otherwise the freshly-fetched binary stands in.
 [ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
-if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
-  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
+# Check EVERY load-bearing dep, not just the first one ever added: a repo cloned
+# (or last upgraded) before @babel/generator became required has a populated
+# node_modules that a node-lief-only test would wrongly call complete, and the
+# patcher would then die mid-run. @babel/generator is what writes the patched AST
+# back out to source, so it is as load-bearing as the parser.
+if [ ! -d "$LIB_DIR/node_modules/node-lief" ] || [ ! -d "$LIB_DIR/node_modules/@babel/generator" ]; then
+  log "Installing lib/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
   ( cd "$LIB_DIR" && npm install )
 fi
 
@@ -96,8 +101,12 @@ fi
 log "Resolving target Claude Code version"
 mkdir -p "$PROMPTS_DIR"
 
-# Newest version we already ship a catalog for (also the id carry-forward seed).
-PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | sort -V | tail -1 || true)"
+# Newest version we already ship a catalog for. (The carry-forward seed is
+# re-resolved below, once CC_VERSION is known — see PREV_CATALOG there.)
+# `.candidates.json` sidecars live in the same dir and match the same glob, so
+# they must be filtered out or `sort -V | tail -1` can select one and yield a
+# bogus SUPPORTED_LATEST like "2.1.219.candidates".
+PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candidates\.json$' | sort -V | tail -1 || true)"
 SUPPORTED_LATEST=""
 [ -n "$PREV_CATALOG" ] && SUPPORTED_LATEST="$(basename "$PREV_CATALOG" | sed -E 's/prompts-(.*)\.json/\1/')"
 
@@ -142,9 +151,23 @@ if [ -n "$SUPPORTED_LATEST" ] && [ "$CC_VERSION" != "$SUPPORTED_LATEST" ]; then
 fi
 
 NEW_CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
+
+# The carry-forward seed must never be the TARGET's own catalog. An interrupted
+# run (or a --force regenerate) leaves prompts-$CC_VERSION.json on disk, and the
+# glob above then selects it as PREV_CATALOG — which silently destroys the sync:
+# every id is "carried" from a catalog whose new entries are still anonymous, so
+# the diff reports `removed 0`, relabel's removed-id pool comes back EMPTY, and
+# the whole curated-id reuse path is skipped. Re-resolve excluding the target.
+PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candidates\.json$' | grep -v "/prompts-$CC_VERSION\.json$" | sort -V | tail -1 || true)"
+[ -n "$PREV_CATALOG" ] && ok "carry-forward seed: $(basename "$PREV_CATALOG")"
+
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-upgrade-$CC_VERSION-XXXX")"
 CLI_JS="$WORK/cli.js"
-trap 'rm -rf "$WORK"' EXIT
+# Only discard the work dir on SUCCESS. It holds the relabel chunks and the
+# Claude-authored labels-*.json — hours of model output that cannot be
+# regenerated cheaply. Wiping it on a failed run turns a recoverable validation
+# error (e.g. "N prompt(s) still anonymous" out of 1500) into a full re-label.
+trap 'st=$?; if [ "$st" -eq 0 ]; then rm -rf "$WORK"; else warn "work dir PRESERVED for recovery: $WORK"; fi' EXIT
 
 # --- obtain the target native binary ---------------------------------------
 # Reuse an already-installed binary at the target version; otherwise fetch that
@@ -176,6 +199,10 @@ fi
 # else the binary we just fetched (stock CC — fine for an AI relabel call; it
 # shares ~/.claude auth).
 CLAUDE_FOR_RELABEL="$(command -v claude 2>/dev/null || echo "$CC_BIN")"
+# Pinned, not inherited: relabel decides the `<id>.md` filenames every un-nerf
+# rule is keyed to, so it gets the same model as classification. Leaving this to
+# whatever default is configured would silently degrade the run.
+RELABEL_MODEL="${RELABEL_MODEL:-claude-opus-5}"
 
 # --- 1. unpack the binary (Bun-format-change aware) ------------------------
 log "Unpacking JS bundle from the native binary"
@@ -217,26 +244,59 @@ if [ -n "${PREV_CATALOG:-}" ]; then
   log "SHA-256 diff vs previous catalog"
   node "$REPO/scripts/prompt-index.mjs" diff "$PREV_CATALOG" "$NEW_CATALOG" | sed 's/^/  /'
 
-  # Did any reworded prompt gain/lose a brevity/effort nerf? Pairs prev vs new
-  # catalog by id and compares each changed prompt's classified un-nerf status.
-  log "Checking un-nerf status changes on reworded prompts"
-  node "$REPO/scripts/unnerf-status.mjs" changes "$PREV_CATALOG" "$NEW_CATALOG" 2>&1 | sed 's/^/  /' || warn "un-nerf status check failed (non-fatal)"
-
   log "Preparing relabel worklist"
   RL_WORK="$WORK/relabel"
   N=$(node "$REPO/scripts/relabel.mjs" prepare "$PREV_CATALOG" "$NEW_CATALOG" "$RL_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
 
   if [ "${N:-0}" -gt 0 ]; then
-    log "Launching Claude Code to label $N new/changed fragment(s)"
-    ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
-        "Read LABELING-TASK.md in this directory and follow it EXACTLY. The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Read worklist.json ($N items), assign a label to each per the conventions, and WRITE the result as labels.json in this directory (a JSON array of $N objects, one per ref). Do not ask questions; complete the task and write the file." )
-    [ -f "$RL_WORK/labels.json" ] || die "claude did not produce labels.json"
+    # ONE job per chunk. A single job asked to emit ~1000 objects truncates and
+    # the merge then hard-fails on missing refs; `collect` re-checks every ref
+    # and we re-run only the chunks that came back short. Pin the model — the
+    # relabel quality bar is the same as classification's, and inheriting
+    # whatever default is configured would silently degrade it.
+    log "Launching Claude Code to label $N new/changed fragment(s) in $(ls "$RL_WORK"/chunk-*.json | wc -l) chunk(s)"
+    for attempt in 1 2 3; do
+      for chunk in "$RL_WORK"/chunk-*.json; do
+        cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+        [ -f "$RL_WORK/labels-$cn.json" ] && continue   # already labeled (earlier attempt)
+        log "  labeling chunk $cn (attempt $attempt)"
+        ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
+            --model "$RELABEL_MODEL" \
+            "Read LABELING-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your labels to labels-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Also read removed.json (ids that vanished this release — a reworded prompt appears as a removed id plus a new worklist item, and you MUST re-use its id verbatim or its un-nerf rule is orphaned). Do not ask questions; complete the task and write the file." ) || true
+      done
+      if node "$REPO/scripts/relabel.mjs" collect "$RL_WORK" "$NEW_CATALOG"; then break; fi
+      [ "$attempt" = 3 ] && die "relabel incomplete after 3 attempts (see $RL_WORK)"
+      log "  re-running short chunks"
+      # Drop any labels file that is short/malformed so the loop retries it.
+      for chunk in "$RL_WORK"/chunk-*.json; do
+        cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+        node -e '
+          const fs=require("fs");
+          const [c,l]=process.argv.slice(1);
+          if(!fs.existsSync(l)) process.exit(0);
+          try{
+            const want=JSON.parse(fs.readFileSync(c,"utf8")).map(i=>i.ref).sort((a,b)=>a-b);
+            const got=[...new Set(JSON.parse(fs.readFileSync(l,"utf8")).map(o=>o.ref))].sort((a,b)=>a-b);
+            if(JSON.stringify(want)!==JSON.stringify(got)) fs.unlinkSync(l);
+          }catch{ fs.unlinkSync(l); }
+        ' "$chunk" "$RL_WORK/labels-$cn.json"
+      done
+    done
+    [ -f "$RL_WORK/labels.json" ] || die "relabel did not produce labels.json"
     log "Merging labels into the catalog"
     node "$REPO/scripts/relabel.mjs" merge "$NEW_CATALOG" "$RL_WORK/labels.json" "$NEW_CATALOG"
     ok "relabeled + merged $N fragment(s)"
   else
     ok "no fragments need relabeling (extractor identified everything)"
   fi
+
+  # Did any reworded prompt gain/lose a brevity/effort nerf? Pairs prev vs new
+  # catalog BY ID and compares each changed prompt's classified un-nerf status.
+  # MUST run AFTER the relabel merge: matching is by exact hash, so a reworded
+  # prompt has no entry in the new catalog until relabel re-attaches its old id.
+  # Run before that and every reword is invisible — the check silently passes.
+  log "Checking un-nerf status changes on reworded prompts"
+  node "$REPO/scripts/unnerf-status.mjs" changes "$PREV_CATALOG" "$NEW_CATALOG" 2>&1 | sed 's/^/  /' || warn "un-nerf status check failed (non-fatal)"
 fi
 
 # --- 4. validate catalog ----------------------------------------------------

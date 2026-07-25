@@ -3,11 +3,10 @@ name: 'Tool Description: EnterPlanMode'
 description: >-
   Tool description for entering plan mode to explore and design implementation
   approaches
-ccVersion: 2.1.217
+ccVersion: 2.1.219
 variables:
   - ASK_USER_QUESTION_TOOL_NAME
   - ADDITIONAL_SKIP_CASES_NOTE
-  - CONDITIONAL_WHAT_HAPPENS_NOTE_FN
 -->
 Use this tool proactively when you're about to start a non-trivial implementation task. Getting user sign-off on your approach before writing code prevents wasted effort and ensures alignment. This tool transitions you into plan mode where you can explore the codebase and design an implementation approach for user approval.
 
@@ -51,36 +50,3 @@ Only skip EnterPlanMode for simple tasks:
 - Tasks where the user has given very specific, detailed instructions
 - Pure research/exploration tasks${ADDITIONAL_SKIP_CASES_NOTE}
 
-${CONDITIONAL_WHAT_HAPPENS_NOTE_FN()}## Examples
-
-### GOOD - Use EnterPlanMode:
-User: "Add user authentication to the app"
-- Requires architectural decisions (session vs JWT, where to store tokens, middleware structure)
-
-User: "Optimize the database queries"
-- Multiple approaches possible, need to profile first, significant impact
-
-User: "Implement dark mode"
-- Architectural decision on theme system, affects many components
-
-User: "Add a delete button to the user profile"
-- Seems simple but involves: where to place it, confirmation dialog, API call, error handling, state updates
-
-User: "Update the error handling in the API"
-- Affects multiple files, user should approve the approach
-
-### BAD - Don't use EnterPlanMode:
-User: "Fix the typo in the README"
-- Straightforward, no planning needed
-
-User: "Add a console.log to debug this function"
-- Simple, obvious implementation
-
-User: "What files handle routing?"
-- Research task, not implementation planning
-
-## Important Notes
-
-- This tool REQUIRES user approval - they must consent to entering plan mode
-- If unsure whether to use it, err on the side of planning - it's better to get alignment upfront than to redo work
-- Users appreciate being consulted before significant changes are made to their codebase

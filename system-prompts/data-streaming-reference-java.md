@@ -1,13 +1,13 @@
 <!--
 name: 'Data: Streaming reference — Java'
 description: Streaming API reference doc (Java bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Streaming — Java
 
 ## Streaming
 
-\`\`\`java
+```java
 import com.anthropic.core.http.StreamResponse;
 import com.anthropic.models.messages.RawMessageStreamEvent;
 
@@ -23,7 +23,7 @@ try (StreamResponse<RawMessageStreamEvent> streamResponse = client.messages().cr
         .flatMap(deltaEvent -> deltaEvent.delta().text().stream())
         .forEach(textDelta -> System.out.print(textDelta.text()));
 }
-\`\`\`
+```
 
 ---
 

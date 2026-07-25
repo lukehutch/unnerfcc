@@ -4,7 +4,7 @@ description: >-
   Reference guide for sending and receiving events on managed agent sessions,
   including streaming, polling, reconnection, message queuing, interrupts, and
   event payload details
-ccVersion: 2.1.218
+ccVersion: 2.1.219
 -->
 # Managed Agents — Events & Steering
 
@@ -43,7 +43,7 @@ client.beta.sessions.events.send(
 
 Constraints:
 
-- **Model-gated: {{OPUS_NAME}}, {{SONNET_NAME}}, {{FABLE_NAME}}, and {{MYTHOS_NAME}}.** Only the agent's **primary** model is checked — `system.message` lands on the primary thread only, so subagent models are not considered. On an unsupported primary model the event is rejected with a `model_does_not_support_mid_conversation_system` validation error.
+- **Model-gated: {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{SONNET_NAME}}, {{FABLE_NAME}}, and {{MYTHOS_NAME}}.** Only the agent's **primary** model is checked — `system.message` lands on the primary thread only, so subagent models are not considered. On an unsupported primary model the event is rejected with a `model_does_not_support_mid_conversation_system` validation error.
 - **While the session is idle with `stop_reason: requires_action`** (blocked on `user.custom_tool_result` / `user.tool_confirmation`), a `system.message` is accepted **only when it trails a tool result event in the same request**. Sent on its own — or alongside a `user.message` — it is rejected until the pending tool events are resolved.
 - `content` accepts 1–1000 text items.
 
@@ -59,7 +59,7 @@ All **persisted** events carry `id`, `type`, and `processed_at` (ISO 8601), set 
 
 > ⚠️ **Robust polling (raw HTTP).** If you bypass the SDK and roll your own poll loop, don't rely on `requests` or `httpx` timeouts as wall-clock caps — they're **per-chunk** read timeouts, reset every time a byte arrives. A trickling response (heartbeats, a wedged chunked-encoding body, a misbehaving proxy) can keep the call blocked indefinitely even with `timeout=(5, 60)` or `httpx.Timeout(120)`. Neither library has a "total wall-clock" timeout built in. For a hard deadline: track `time.monotonic()` at the loop level and break/cancel if a single request exceeds your budget (e.g. via a watchdog thread, or `asyncio.wait_for()` around async httpx). **Prefer the SDK** — `client.beta.sessions.events.stream()` and `client.beta.sessions.events.list()` handle timeout + retry sanely.
 >
-> If `GET /v1/sessions/{id}/events` (paginated) ever hangs after headers, you've likely hit `GET /v1/sessions/{id}/events` by mistake or a server-side stall — report it; don't treat it as a client-config problem.
+> If `GET /v1/sessions/{id}/events` (paginated) ever hangs after headers, you've likely hit `GET /v1/sessions/{id}/events/stream` by mistake or a server-side stall — report it; don't treat it as a client-config problem.
 
 ### Event Types (Received)
 

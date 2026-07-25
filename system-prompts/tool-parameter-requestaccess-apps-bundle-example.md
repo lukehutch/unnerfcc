@@ -1,8 +1,10 @@
 <!--
 name: 'Tool Description: request_access apps param (with bundle example)'
 description: >-
-  Param description for the request_access 'apps' array — display names or
-  bundle identifiers, resolved case-insensitively
-ccVersion: 2.1.178
+  Param description for the request_access apps array — display names or bundle
+  identifiers, resolved case-insensitively against installed apps.
+ccVersion: 2.1.219
+variables:
+  - ADDITIONAL_APPS_PARAM_NOTE
 -->
-Application display names (e.g. "Slack", "Calendar") or bundle identifiers (e.g. "com.tinyspeck.slackmacgap"). Display names are resolved case-insensitively against installed apps.
+Application display names (e.g. "Slack", "Calendar") or bundle identifiers (e.g. "com.tinyspeck.slackmacgap"). Display names are resolved case-insensitively against installed apps.${ADDITIONAL_APPS_PARAM_NOTE}

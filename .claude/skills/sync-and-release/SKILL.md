@@ -226,6 +226,18 @@ analysis that appears in both the commit body and the release body.
 ],
 ```
 
+**Slot contract — keep every `${...}` placeholder, in the same order.** The
+`unnerf` text must contain exactly the same sequence of `${NAME}` placeholders as
+its `stock` text: same names, same order, same repetitions. A string's identity
+hash is blind to variable names (a slot hashes as a bare `${}`, so minifier
+renames don't churn the catalog), which means the splicer rebinds slots **by
+position** — the i-th placeholder in the edited body becomes the i-th
+interpolation the stock string already had. Drop or reorder one and the whole
+prompt is reported LOST; add one and it ships as literal `${FOO}` text.
+`apply-unnerfs.py`'s slot-sequence guard fails the rule at apply time rather than
+letting either through. Rewrite the *prose* around a placeholder, never the
+placeholder itself. (UNNERF-GUIDE.md → Part 6 → Adding a rule.)
+
 After editing:
 
 ```bash

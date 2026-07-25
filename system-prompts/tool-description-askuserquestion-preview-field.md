@@ -4,11 +4,11 @@ description: >-
   Instructions for using the HTML preview field on single-select question
   options to display visual artifacts like UI mockups, code snippets, and
   diagrams
-ccVersion: 2.1.69
+ccVersion: 2.1.219
 -->
 
 Preview feature:
-Use the optional \`preview\` field on options when presenting concrete artifacts that users need to visually compare:
+Use the optional `preview` field on options when presenting concrete artifacts that users need to visually compare:
 - HTML mockups of UI layouts or components
 - Formatted code snippets showing different implementations
 - Visual comparisons or diagrams

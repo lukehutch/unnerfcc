@@ -1,13 +1,13 @@
 <!--
 name: 'Data: Streaming reference — Go'
 description: Streaming API reference doc (Go bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Streaming — Go
 
 ## Streaming
 
-\`\`\`go
+```go
 stream := client.Messages.NewStreaming(context.Background(), anthropic.MessageNewParams{
     Model:     anthropic.ModelClaudeOpus4_8,
     MaxTokens: 64000,
@@ -29,11 +29,11 @@ for stream.Next() {
 if err := stream.Err(); err != nil {
     log.Fatal(err)
 }
-\`\`\`
+```
 
-**Accumulating the final message** (there is no \`GetFinalMessage()\` on the stream):
+**Accumulating the final message** (there is no `GetFinalMessage()` on the stream):
 
-\`\`\`go
+```go
 stream := client.Messages.NewStreaming(ctx, params)
 message := anthropic.Message{}
 for stream.Next() {
@@ -41,7 +41,7 @@ for stream.Next() {
 }
 if err := stream.Err(); err != nil { log.Fatal(err) }
 // message.Content now has the complete response
-\`\`\`
+```
 
 
 ---

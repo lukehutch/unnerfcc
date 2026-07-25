@@ -3,7 +3,7 @@ name: 'Skill Reference: Data-viz Choosing a Form'
 description: >-
   Data-viz skill reference file (references/choosing-a-form.md) on picking the
   right chart form for the data's job
-ccVersion: 2.1.217
+ccVersion: 2.1.219
 -->
 # Choosing a form
 
@@ -46,8 +46,8 @@ If a chart *is* right, pick the type by the job:
 - **Emphasis** = the most underused form. One series in the accent hue, the rest in
   the de-emphasis gray. Often the honest answer to "make this chart clearer."
 - **Texture is an opt-in expression, not a default form.** It earns its place only
-  for accessibility (full CVD), print/export, and \`forced-colors\`. Never decorative.
-  → see \`marks-and-anatomy.md\`.
+  for accessibility (full CVD), print/export, and `forced-colors`. Never decorative.
+  → see `marks-and-anatomy.md`.
 
 ## Series-count ladder (categorical)
 

@@ -179,7 +179,7 @@ RULES: dict[str, list[Rule]] = {
     # which is *good* and we leave alone — only re-apply the final-summary
     # un-nerf that was wiped.)
     # -------------------------------------------------------------------------
-    "agent-prompt-dream-memory-consolidation.md": [
+    "agent-prompt-dream-memory-consolidation-prune-index.md": [
         Rule(
             stock="Return a brief summary of what you consolidated, updated, or pruned. If nothing changed (memories are already tight), say so.",
             unnerf="Summarize thoroughly what you consolidated, updated, or pruned: which files changed, what signal drove each change, and any patterns you noticed. If nothing changed, say so and describe what you reviewed.",
@@ -190,7 +190,7 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     # agent-prompt-explore.md — biggest un-nerf: exhaustive exploration
     # -------------------------------------------------------------------------
-    "agent-prompt-explore.md": [
+    "agent-prompt-explore-speed-and-report.md": [
         Rule(
             stock="NOTE: You are meant to be a fast agent that returns output as quickly as possible. In order to achieve this you must:\n- Make efficient use of the tools that you have at your disposal: be smart about how you search for files and implementations\n- Wherever possible you should try to spawn multiple parallel tool calls for grepping and reading files",
             unnerf="NOTE: Explore exhaustively. Completeness beats speed — a missed file costs more than the extra search time:\n- Search across multiple naming conventions, directory structures, and file types\n- Spawn parallel tool calls to grep and read files, covering more ground at once\n- Follow leads, cross-references, and related patterns wherever they go — don't stop at the first match\n- Read full files when relevant, not just snippets\n- Exhaust every reasonable search strategy before reporting back",
@@ -208,8 +208,8 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "agent-prompt-general-purpose.md": [
         Rule(
-            stock="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done.\"} When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.",
-            unnerf="${\"You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly, to a careful senior developer's standard — handle edge cases and fix obviously related issues you find. Don't add cosmetic or speculative changes unrelated to the task.\"} When done, report thoroughly: what you did, every key finding, the reasoning behind decisions, edge cases considered, and related observations. The caller acts on your report without re-investigating — include what that takes.",
+            stock="You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done. When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.",
+            unnerf="You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully and thoroughly, to a careful senior developer's standard — handle edge cases and fix obviously related issues you find. Don't add cosmetic or speculative changes unrelated to the task. When done, report thoroughly: what you did, every key finding, the reasoning behind decisions, edge cases considered, and related observations. The caller acts on your report without re-investigating — include what that takes.",
             description="general-purpose: senior-dev completeness + thorough final report",
         ),
     ],
@@ -234,11 +234,23 @@ RULES: dict[str, list[Rule]] = {
     # Template-literal with `${IS_TRUSTED_DOMAIN?...:...}` ternary; both arms
     # need un-nerfing.
     # -------------------------------------------------------------------------
+    # The summarizer prompt is a ternary on IS_TRUSTED_DOMAIN. The old single rule
+    # spanned the whole `${cond?"A":`B`}` expression as one string — which only
+    # worked while the extractor emitted raw source text. The normalized AST splits
+    # a non-bare interpolation into DISJOINT sibling nodes, so each arm is now its
+    # own spliceable node with its own file. Same two flips, one rule per arm.
+    "agent-prompt-webfetch-summarizer-trusted-domain.md": [
+        Rule(
+            stock="Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.",
+            unnerf="Respond thoroughly based on the content above. Include every relevant detail, code example, documentation excerpt, configuration option, and caveat the caller needs. Surface everything useful from the fetched content.",
+            description="webfetch summarizer (trusted arm): thorough over concise",
+        ),
+    ],
     "agent-prompt-webfetch-summarizer.md": [
         Rule(
-            stock="${IS_TRUSTED_DOMAIN?\"Provide a concise response based on the content above. Include relevant details, code examples, and documentation excerpts as needed.\":`Provide a concise response based only on the content above. In your response:",
-            unnerf="${IS_TRUSTED_DOMAIN?\"Respond thoroughly based on the content above. Include every relevant detail, code example, documentation excerpt, configuration option, and caveat the caller needs. Surface everything useful from the fetched content.\":`Respond thoroughly based only on the content above, surfacing every relevant detail, code example, and context the caller needs. In your response:",
-            description="webfetch summarizer: thorough over concise, both template arms",
+            stock="Provide a concise response based only on the content above. In your response:",
+            unnerf="Respond thoroughly based only on the content above, surfacing every relevant detail, code example, and context the caller needs. In your response:",
+            description="webfetch summarizer (untrusted arm): thorough over concise",
         ),
     ],
 
@@ -283,10 +295,13 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     # skill-loop-slash-command.md — thorough /loop scheduling confirmation
     # -------------------------------------------------------------------------
-    "skill-loop-slash-command.md": [
+    "skill-loop-interval-to-cron-and-schedule.md": [
         Rule(
-            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${CANCEL_TIMEFRAME_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).${ADDITIONAL_INFO_FN()}",
-            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${CANCEL_TIMEFRAME_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.${ADDITIONAL_INFO_FN()}",
+            # v2.1.219 renamed the slot CANCEL_TIMEFRAME_DAYS -> RECURRING_EXPIRY_DAYS.
+            # Same slot name as the dynamic-mode rule below, but still a distinct node
+            # ("they can cancel" vs "the user can cancel").
+            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).",
+            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.",
             description="/loop scheduling confirm: thorough with rounding rationale",
         ),
     ],
@@ -295,10 +310,10 @@ RULES: dict[str, list[Rule]] = {
     # fixed-interval CANCEL_TIMEFRAME_DAYS / ADDITIONAL_INFO_FN) and "the user can
     # cancel" vs "they can cancel" — a separate spliceable node, so it needs its
     # own rule to get the same "Confirm thoroughly" flip.
-    "skill-loop-slash-command-dynamic-mode.md": [
+    "skill-loop-slash-command-dynamic-mode-2.md": [
         Rule(
-            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).${SCHEDULE_CONFIRM_NOTE_FN()}",
-            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.${SCHEDULE_CONFIRM_NOTE_FN()}",
+            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).",
+            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that the user can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.",
             description="/loop dynamic-mode scheduling confirm: thorough with rounding rationale (mirrors skill-loop-slash-command.md)",
         ),
     ],
@@ -321,8 +336,9 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "skill-schedule-recurring-cron-and-run-immediately.md": [
         Rule(
-            stock="3. Briefly confirm: ${CONFIRMATION_MESSAGE}",
-            unnerf="3. Confirm thoroughly: ${CONFIRMATION_MESSAGE} Cover the cadence, any rounding applied, and what to expect so the user understands exactly what's scheduled.",
+            # v2.1.219 renamed the slot CONFIRMATION_MESSAGE -> CONFIRMATION_TEXT.
+            stock="3. Briefly confirm: ${CONFIRMATION_TEXT}",
+            unnerf="3. Confirm thoroughly: ${CONFIRMATION_TEXT} Cover the cadence, any rounding applied, and what to expect so the user understands exactly what's scheduled.",
             description="cron-run-immediately confirm: thorough, explain cadence",
         ),
     ],
@@ -498,12 +514,15 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     # system-prompt-learning-mode-insights.md — thorough educational explanations
     # -------------------------------------------------------------------------
-    "system-prompt-learning-mode-insights.md": [
+    "system-prompt-learning-mode-insights-format.md": [
         Rule(
             stock="In order to encourage learning, before and after writing code, always provide brief educational explanations about implementation choices using (with backticks):",
             unnerf="In order to encourage learning, before and after writing code, always provide thorough educational explanations about implementation choices using (with backticks):",
             description="learning mode: thorough not brief",
         ),
+    ],
+
+    "system-prompt-learning-mode-insights.md": [
         Rule(
             stock="[2-3 key educational points]",
             unnerf="[Detailed educational points — explain the concept, why it matters, related patterns, and any tradeoffs worth knowing. Use as much space as the teaching genuinely warrants.]",
@@ -597,10 +616,18 @@ RULES: dict[str, list[Rule]] = {
     # names that Piebald's coarser 5-phase prompt used. Same stock sentence, new
     # placeholder spelling — both stock and unnerf had their variables renamed.
     # -------------------------------------------------------------------------
+    # `${agentSpec.agentType}` is a MEMBER expression, not a bare identifier, so the
+    # normalizer splits the Phase-1 block into disjoint siblings at that point: the
+    # prefix ("… 2. **Launch up to ${EXPLORE_AGENT_COUNT}", now in the -2 file) and
+    # the tail (this file, starting mid-sentence at "agents IN PARALLEL**"). The old
+    # rule spanned both halves plus the interpolation and could never splice again.
+    # Every brevity directive ("Quality over quantity", "usually just 1") lives in
+    # the tail, so the whole flip re-anchors here — the prefix stays stock.
+    # The surviving slot was also renamed VAR_1 -> MAX_AGENTS.
     "system-reminder-plan-mode-phase-1-understanding-parallel-agents.md": [
         Rule(
-            stock="2. **Launch up to ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0.agentType} agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.\n   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or you're making a small targeted change.\n   - Use multiple agents when: the scope is uncertain, multiple areas of the codebase are involved, or you need to understand existing patterns before planning.\n   - Quality over quantity - ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} agents maximum, but you should try to use the minimum number of agents necessary (usually just 1)\n   - If using multiple agents: Provide each agent with a specific search focus or area to explore. Example: One agent searches for existing implementations, another explores related components, a third investigating testing patterns",
-            unnerf="2. **Launch up to ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_1} ${SYSTEM_REMINDER_PLAN_MODE_PHASE_1_UNDERSTANDING_PARALLEL_AGENTS_VAR_0.agentType} agents IN PARALLEL** (single message, multiple tool calls) to explore the codebase thoroughly. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.\n   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.\n   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.\n   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.",
+            stock="agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.\n   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or you're making a small targeted change.\n   - Use multiple agents when: the scope is uncertain, multiple areas of the codebase are involved, or you need to understand existing patterns before planning.\n   - Quality over quantity - ${MAX_AGENTS} agents maximum, but you should try to use the minimum number of agents necessary (usually just 1)\n   - If using multiple agents: Provide each agent with a specific search focus or area to explore. Example: One agent searches for existing implementations, another explores related components, a third investigating testing patterns",
+            unnerf="agents IN PARALLEL** (single message, multiple tool calls) to explore the codebase thoroughly. Lean toward more agents, not fewer — parallel exploration is cheap context-wise and produces a more thorough picture.\n   - Multi-agent is the default: spin up several agents with distinct, focused search briefs (existing implementations, related components, testing patterns, edge cases, adjacent systems, call sites) whenever there's any real scope to the task.\n   - Single agent is fine for truly isolated changes where the user named the exact file and the work is narrow.\n   - When using multiple agents: give each one a specific, non-overlapping focus or area to explore so their results compose cleanly.\n   - Treat ${MAX_AGENTS} as the budget you're expected to spend, not a limit to stay under — when in doubt, launch more rather than fewer.",
             description="plan-mode phase-1 explore: aggressive, multi-agent default",
         ),
     ],
@@ -611,7 +638,7 @@ RULES: dict[str, list[Rule]] = {
     # per-phase split; renamed from system-reminder-plan-mode-phase-2-design at
     # the tweakcc-fixed switch. Stock text unchanged — a straight retarget.)
     # -------------------------------------------------------------------------
-    "system-reminder-plan-mode-phase-2-design-multi-agent.md": [
+    "system-reminder-plan-mode-phase-2-design-multi-agent-2.md": [
         Rule(
             stock="- **Default**: Launch at least 1 Plan agent for most tasks - it helps validate your understanding and consider alternatives\n- **Skip agents**: Only for truly trivial tasks (typo fixes, single-line changes, simple renames)",
             unnerf="- **Default**: Launch one or more Plan agents for almost every task — they validate your understanding, consider alternatives, and surface issues you'd miss solo. Err on the side of launching them.\n- **Skip agents**: Only for genuinely trivial tasks (typo fixes, single-line changes, simple renames) where there's nothing to design",
@@ -630,23 +657,26 @@ RULES: dict[str, list[Rule]] = {
     # "system-reminder-thinking-frequency-tuning.md": RETIRED in v2.1.179 — Anthropic deleted the 'avoid unnecessary thinking' reminder entirely; no nerf remains to flip
 
     # -------------------------------------------------------------------------
-    # tool-description-agent-simple-usage-notes.md — thorough relay of agent findings
-    # (retargeted at the v2.1.218 sync: upstream deleted the verbose
-    # tool-description-agent-usage-notes.md prompt; the surviving relay
-    # instruction now lives in this shorter "simple usage notes" fragment as
-    # "relay what matters" — bucket-3 process brevity, flipped to thorough relay.)
+    # Thorough relay of agent findings — bucket-3 process brevity ("relay what
+    # matters"), flipped to thorough relay.
+    #
+    # This un-nerf has been chased across three shapes. v2.1.218: upstream deleted
+    # the verbose tool-description-agent-usage-notes.md and folded the line into
+    # tool-description-agent-simple-usage-notes.md as a ternary
+    # ${VARIANT ? "…report…" : "…message…tool result…"}. v2.1.219: the normalized
+    # extractor splits that ternary's arms into DISJOINT sites, so each arm is now
+    # its own prompt with its own .md. One rule per arm, so the un-nerf holds
+    # whichever branch renders at runtime.
     # -------------------------------------------------------------------------
-    "tool-description-agent-simple-usage-notes.md": [
-        # v2.1.218: upstream split the relay-what-matters line into a ternary
-        # ${VARIANT ? "…report…" : "…message…tool result…"}; the leading "- "
-        # bullet is now outside the interpolation, so the stock no longer starts
-        # with "- ". Both branch literals carry the same brevity nerf — flip both
-        # so the un-nerf holds regardless of which branch renders at runtime.
+    "tool-description-agent-final-message-relay.md": [
         Rule(
             stock="The agent's final message is returned to you as the tool result; it is not shown to the user — relay what matters.",
             unnerf="The agent's final message is returned to you as the tool result; it is not shown to the user — relay the agent's findings, reasoning, and any relevant detail thoroughly, rather than stripping it down; summarize only as much as needed to keep it readable, and preserve substance.",
             description="agent-usage: thoroughly relay agent findings to user (tool-result variant)",
         ),
+    ],
+
+    "tool-description-agent-relay-final-report.md": [
         Rule(
             stock="The agent's final report is not shown to the user — relay what matters.",
             unnerf="The agent's final report is not shown to the user — relay the agent's findings, reasoning, and any relevant detail thoroughly, rather than stripping it down; summarize only as much as needed to keep it readable, and preserve substance.",
@@ -680,8 +710,8 @@ RULES: dict[str, list[Rule]] = {
             description='code-review medium frontmatter: drop candidate/finding caps',
         ),
         Rule(
-            stock='\\`medium effort → 3+5 angles × 6 candidates → 1-vote verify → ≤8 findings\\`',
-            unnerf='\\`medium effort → 3+5 angles → 1-vote verify → all qualifying findings\\`',
+            stock='`medium effort → 3+5 angles × 6 candidates → 1-vote verify → ≤8 findings`',
+            unnerf='`medium effort → 3+5 angles → 1-vote verify → all qualifying findings`',
             description='code-review medium tier line: all qualifying findings',
         ),
         Rule(
@@ -690,8 +720,8 @@ RULES: dict[str, list[Rule]] = {
             description='code-review medium phase heading: drop per-angle cap',
         ),
         Rule(
-            stock='surfaces **up to 6 candidate findings** with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
-            unnerf='surfaces every candidate finding with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            stock='surfaces **up to 6 candidate findings** with `file`, `line`, a one-line\n`summary`, and a concrete `failure_scenario`.',
+            unnerf='surfaces every candidate finding with `file`, `line`, a one-line\n`summary`, and a concrete `failure_scenario`.',
             description='code-review medium finders: surface every candidate',
         ),
     ],
@@ -702,8 +732,8 @@ RULES: dict[str, list[Rule]] = {
             description='code-review high frontmatter: drop candidate/finding caps',
         ),
         Rule(
-            stock='\\`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings\\`',
-            unnerf='\\`high effort → 3+5 angles → 1-vote verify (recall-biased) → all qualifying findings\\`',
+            stock='`high effort → 3+5 angles × 6 candidates → 1-vote verify (recall-biased) → ≤10 findings`',
+            unnerf='`high effort → 3+5 angles → 1-vote verify (recall-biased) → all qualifying findings`',
             description='code-review high tier line: all qualifying findings',
         ),
         Rule(
@@ -712,8 +742,8 @@ RULES: dict[str, list[Rule]] = {
             description='code-review high phase heading: drop per-angle cap',
         ),
         Rule(
-            stock='surfaces **up to 6 candidate findings** with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
-            unnerf='surfaces every candidate finding with \\`file\\`, \\`line\\`, a one-line\n\\`summary\\`, and a concrete \\`failure_scenario\\`.',
+            stock='surfaces **up to 6 candidate findings** with `file`, `line`, a one-line\n`summary`, and a concrete `failure_scenario`.',
+            unnerf='surfaces every candidate finding with `file`, `line`, a one-line\n`summary`, and a concrete `failure_scenario`.',
             description='code-review high finders: surface every candidate',
         ),
     ],
@@ -722,11 +752,6 @@ RULES: dict[str, list[Rule]] = {
             stock='Effort-tier prompt for max and xhigh code review — 10 finder angles, up to 8\n  candidates each, recall-biased, up to 15 findings',
             unnerf='Effort-tier prompt for max and xhigh code review — 10 finder angles, uncapped\n  candidate reporting, recall-biased, all qualifying findings',
             description='code-review max frontmatter: drop candidate/finding caps',
-        ),
-        Rule(
-            stock='\\`${EFFORT_LEVEL} effort → 5+5 angles × 8 candidates → 1-vote verify → sweep → ≤15 findings\\`',
-            unnerf='\\`${EFFORT_LEVEL} effort → 5+5 angles → 1-vote verify → sweep → all qualifying findings\\`',
-            description='code-review max tier line: all qualifying findings',
         ),
         Rule(
             stock='## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 8 each)',
@@ -739,6 +764,17 @@ RULES: dict[str, list[Rule]] = {
             description='code-review max finders: surface every candidate',
         ),
     ],
+
+    # The tier line moved to its own fragment at v2.1.219 (the header run split
+    # off from the body of skill-code-review-effort-max.md).
+    "skill-code-review-effort-max-header.md": [
+        Rule(
+            stock='`${EFFORT_LEVEL} effort → 5+5 angles × 8 candidates → 1-vote verify → sweep → ≤15 findings`',
+            unnerf='`${EFFORT_LEVEL} effort → 5+5 angles → 1-vote verify → sweep → all qualifying findings`',
+            description='code-review max tier line: all qualifying findings',
+        ),
+    ],
+
     "skill-code-review-effort-low.md": [
         Rule(
             stock='Effort-tier prompt for low code review — single diff pass, no verify, up to 4\n  findings',
@@ -746,48 +782,64 @@ RULES: dict[str, list[Rule]] = {
             description='code-review low frontmatter: match the already-lifted body (drop "up to 4")',
         ),
         Rule(
-            stock='Output at most **4 findings**, most-severe first, one line each',
-            unnerf='Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them)',
-            description="code-review low-effort: output every qualifying finding (cap lifted)",
-        ),
-        Rule(
             stock='low effort → 1 diff pass → no verify → ≤4 findings',
             unnerf='low effort → 1 diff pass → no verify → all qualifying findings',
             description='code-review low-effort tier line: drop the ≤4 cap (matches the findings-output flip)',
         ),
-        # v2.1.218 reworded the ReportFindings-tool branch of the low-effort
-        # ternary from "Output at most **4 findings** … one line each" (the
-        # else-branch, still lifted above) to "Report at most **4 findings** …
-        # in one <tool> call" — a NEW verb/shape the else-branch rule doesn't
-        # match, so this structured-output path still capped low reviews at 4
-        # while every sibling path already reports all qualifying findings.
+    ],
+
+    # v2.1.219 split the low-effort tier prompt into three separate sites: the
+    # tier header + turn-by-turn body (above), the plain-text findings-output
+    # block (here), and the ReportFindings-tool branch (below). Each is its own
+    # spliceable node now, so each needs its own key.
+    "skill-code-review-low-effort-output-cap.md": [
+        Rule(
+            stock='Output at most **4 findings**, most-severe first, one line each',
+            unnerf='Output every qualifying finding, most-severe first, one line each (if you found more than a handful, lead with the most serious and note how many more remain rather than silently dropping them)',
+            description="code-review low-effort: output every qualifying finding (cap lifted)",
+        ),
+    ],
+
+    # v2.1.218 reworded the ReportFindings-tool branch of the low-effort
+    # ternary from "Output at most **4 findings** … one line each" (the
+    # else-branch, lifted above) to "Report at most **4 findings** … in one
+    # <tool> call" — a NEW verb/shape the else-branch rule doesn't match, so
+    # this structured-output path still capped low reviews at 4 while every
+    # sibling path already reports all qualifying findings. At v2.1.219 it
+    # became its own node.
+    "skill-code-review-effort-low-2.md": [
         Rule(
             stock='Report at most **4 findings**, most-severe first, in one',
             unnerf='Report every qualifying finding, most-severe first, in one',
             description='code-review low-effort ReportFindings branch: lift the 4-findings cap (matches the else-branch flip)',
         ),
+        Rule(
+            stock='Effort-tier prompt for low code review — single diff pass, no verify, up to 4\n  findings reported in one ReportFindings call',
+            unnerf='Effort-tier prompt for low code review — single diff pass, no verify, all\n  qualifying findings reported in one ReportFindings call',
+            description='code-review low-2 frontmatter: match the lifted body (drop "up to 4")',
+        ),
     ],
     "skill-code-review-output-format.md": [
         Rule(
             stock='Return findings as a JSON array of at most ${MAX_FINDINGS} objects:',
-            unnerf='Return every surviving finding as a JSON array:',
+            unnerf='Return every surviving finding as a JSON array — ${MAX_FINDINGS} is a floor, not a ceiling; never drop a qualifying finding to stay under it:',
             description='code-review JSON output: report every surviving finding',
         ),
         Rule(
-            stock='Ranked most-severe first. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most\nsevere. If nothing survives verification, return \\`[]\\`.',
-            unnerf='Rank findings most-severe first. Include every verified surviving finding. If nothing survives verification, return \\`[]\\`.',
+            stock='Ranked most-severe first. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most\nsevere. If nothing survives verification, return `[]`.',
+            unnerf='Ranked most-severe first. If more than ${MAX_FINDINGS} survive, report them all —\n${MAX_FINDINGS} is a floor, not a cap. If nothing survives verification, return `[]`.',
             description='code-review JSON output: drop final findings cap',
         ),
     ],
     "skill-code-review-output-report-findings.md": [
         Rule(
-            stock='with \\`{level, findings}\\`. \\`findings\\` is at most ${MAX_FINDINGS} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
-            unnerf='with \\`{level, findings}\\`. \\`findings\\` includes every surviving entry ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary\\`,',
+            stock='with `{level, findings}`. `findings` is at most ${MAX_FINDINGS} entries ranked\nmost-severe first; each entry has `file`, `line`, `summary`,',
+            unnerf='with `{level, findings}`. `findings` includes every surviving entry — at least\n${MAX_FINDINGS} when that many qualify, and more when more do — ranked\nmost-severe first; each entry has `file`, `line`, `summary`,',
             description='ReportFindings output: report every surviving finding',
         ),
         Rule(
-            stock='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most severe. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text, and do not create or publish an artifact of the review -\nthe tool call is the report.',
-            unnerf='\\`test-coverage\\` when one fits better) — plus \\`verdict\\` when a verify pass\nproduced one. Include all surviving findings. If nothing survives verification,\ncall it with an empty array. Do not also print the findings as text, and do not\ncreate or publish an artifact of the review - the tool call is the report.',
+            stock='`test-coverage` when one fits better) — plus `verdict` when a verify pass\nproduced one. If more than ${MAX_FINDINGS} survive, keep the ${MAX_FINDINGS} most severe. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text, and do not create or publish an artifact of the review -\nthe tool call is the report.',
+            unnerf='`test-coverage` when one fits better) — plus `verdict` when a verify pass\nproduced one. If more than ${MAX_FINDINGS} survive, report all of them —\n${MAX_FINDINGS} is a floor, not a ceiling. If\nnothing survives verification, call it with an empty array. Do not also print\nthe findings as text, and do not create or publish an artifact of the review -\nthe tool call is the report.',
             description='ReportFindings output: drop final findings cap',
         ),
     ],
@@ -824,6 +876,14 @@ RULES: dict[str, list[Rule]] = {
             unnerf='"Surface every candidate finding, each with file, line',
             description='/code-review workflow finder prompt: surface every candidate',
         ),
+    ],
+
+    # v2.1.219 split the workflow script into three spliceable nodes: the tier
+    # header comment block (workflow-script-code-review-2.md), the
+    # find/verify/sweep + synthesize/assemble body (this key), and the ingest +
+    # finder-prompt head (workflow-script-code-review.md, above). Same rules,
+    # re-keyed to the node each one actually lives in now.
+    "workflow-script-code-review-find-verify-sweep.md": [
         Rule(
             stock='"Surface up to " + SWEEP_MAX + " additional candidates. If nothing new, return an empty list — do not pad.',
             unnerf='"Surface every additional candidate. If nothing new, return an empty list — do not pad.',
@@ -848,11 +908,6 @@ RULES: dict[str, list[Rule]] = {
         ),
         # Comments that would otherwise claim findings are still capped.
         Rule(
-            stock='//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings',
-            unnerf='//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings',
-            description='/code-review workflow tier comment: reflect uncapped output',
-        ),
-        Rule(
             stock='// ─── Synthesize: rank, merge semantic dupes, cap ───',
             unnerf='// ─── Synthesize: rank, merge semantic dupes (uncapped — report all) ───',
             description='/code-review workflow synthesize header comment: uncapped',
@@ -866,6 +921,13 @@ RULES: dict[str, list[Rule]] = {
             stock='//   1. No silent drops while there is room: every verified finding either appears\n//      (as primary or merge note) or is omitted only because the cap is full.',
             unnerf='//   1. No silent drops: every verified finding appears\n//      (as primary or merge note).',
             description='/code-review workflow assembler-invariant comment: no cap',
+        ),
+    ],
+    "workflow-script-code-review-2.md": [
+        Rule(
+            stock='//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings',
+            unnerf='//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings',
+            description='/code-review workflow tier comment: reflect uncapped output',
         ),
     ],
     # This file targets the STANDALONE general-purpose fallback constant (`BCa` in
@@ -952,13 +1014,18 @@ RULES: dict[str, list[Rule]] = {
             description='clarify-first: investigate until specific, not a one-minute time-box',
         ),
     ],
-    # renamed at the tweakcc-fixed switch (was system-prompt-coordinator-worker-instructions)
-    "system-prompt-worker-agent.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-coordinator-worker-instructions).
+    # v2.1.219 split the worker-agent prompt into three nodes; both rules moved out
+    # of system-prompt-worker-agent.md, which now holds only the (un-nerfed) fan-out
+    # bullet, so that key is retired.
+    "agent-prompt-worker-environment-and-scope.md": [
         Rule(
             stock="Complete exactly what was asked. Don't fix unrelated issues you discover — suggest them as follow-ups instead.",
             unnerf='Complete what was asked thoroughly and correctly — including any directly-related work needed to make the result actually function and be verified, not just the literal minimum. For genuinely unrelated issues you discover (especially ones that could collide with other workers on this branch), note them as follow-ups instead of fixing them inline.',
             description='coordinator-worker: finish+verify the task fully (coordination guard kept)',
         ),
+    ],
+    "system-prompt-worker-agent-resumed-and-output.md": [
         Rule(
             stock='Limit changes to what your task requires',
             unnerf='Make all the changes your task genuinely requires to be complete, correct, and verified — without expanding into unrelated areas other workers may own',
@@ -988,13 +1055,22 @@ RULES: dict[str, list[Rule]] = {
             description='exploratory questions: full options+tradeoffs analysis, not 2-3 sentences',
         ),
     ],
-    # renamed at the tweakcc-fixed switch (was system-prompt-outcome-first-communication-style)
-    "system-prompt-communicating-with-the-user.md": [
+    # renamed at the tweakcc-fixed switch (was system-prompt-outcome-first-communication-style).
+    # v2.1.219 split the "Communicating with the user" section into separate nodes;
+    # both rules moved out of system-prompt-communicating-with-the-user.md, which now
+    # holds only the one-line lede, so that key is retired.
+    #
+    # NOTE: both stock texts ALSO appear in skill-model-migration-guide.md — a 174 KB
+    # documentation blob that QUOTES the real system prompt. Never target that file:
+    # un-nerfing a doc's quotation rewrites documentation, not behavior.
+    "system-prompt-communicating-with-the-user-lead-with-outcome.md": [
         Rule(
             stock="Only write a code comment to state a constraint the code itself can't show",
             unnerf="Write a code comment whenever it captures something the code itself can't show — a constraint, a non-obvious invariant, or the reasoning behind a subtle choice",
             description='outcome-first: comment constraints, invariants, and subtle reasoning',
         ),
+    ],
+    "system-prompt-communicating-with-the-user-write-for-a-teammate.md": [
         Rule(
             stock="say in a sentence what you're about to do; while working, give brief updates when you find something load-bearing or change direction",
             unnerf="explain what you're about to do; while working, give substantive updates when you find something load-bearing or change direction",
@@ -1101,7 +1177,7 @@ RULES: dict[str, list[Rule]] = {
     # (process brevity): they suppress substantive status/explanation to a human.
     # -------------------------------------------------------------------------
     # renamed at the tweakcc-fixed switch (was agent-prompt-code-review-part-9-fix-application)
-    "skill-code-review-applying-fixes.md": [
+    "skill-code-review-fix-closing-summary.md": [
         Rule(
             # Same sentence as agent-prompt-simplify-slash-command.md (already
             # un-nerfed). --fix has just mutated the user's working tree; the
@@ -1221,7 +1297,7 @@ RULES: dict[str, list[Rule]] = {
             description="lift the local anti-malicious refusal reminder (server-side enforcement unaffected)",
         ),
     ],
-    "agent-prompt-review-pr-slash-command.md": [
+    "agent-prompt-review-pr-slash-command-2.md": [
         # v2.1.202: upstream restructured /review-pr into a classic bullet review
         # and DROPPED the old "a 2-3 sentence overview of what the PR does" cap on
         # its own (the overview bullet is now uncapped). The residual brevity nerf
@@ -1281,32 +1357,29 @@ def apply_rules(
             continue
 
         path = prompts_dir / filename
-        # Orphan-variable guard. A ${NAME} placeholder in an un-nerf that isn't
-        # in the target prompt's identifierMap is emitted into the binary's
-        # template literal verbatim; at launch the JS engine tries to resolve it
-        # and Claude Code crashes with `ReferenceError: NAME is not defined` (or
-        # tweakcc-fixed's leak guard silently skips the whole prompt). Catch it
-        # at authoring time: a rule may only reference identifiers its own
-        # `stock` text already uses, or ones declared in the target file's
-        # `variables:` frontmatter.
-        fm_vars: set[str] = set()
-        if path.exists():
-            fm = re.match(r"<!--\n(.*?)-->", path.read_bytes().decode("utf-8"), re.S)
-            if fm:
-                fm_vars = {
-                    ln.strip()[2:].strip()
-                    for ln in fm.group(1).splitlines()
-                    if ln.strip().startswith("- ")
-                }
+        # Slot-sequence guard. The splicer (lib/patch-prompts.mjs) binds slots
+        # POSITIONALLY: it splits the edited body on the `${NAME}` markers in the
+        # order the prompt's `identifiers` list gives, and rebinds the i-th marker
+        # to the i-th interpolation the stock string already had, restoring the
+        # bundle's own variables in place. Identity hashing never sees a variable
+        # name (a slot hashes as a bare `${}`), so POSITION is the only binding
+        # there is. An edit must therefore keep every `${...}` placeholder, in the
+        # same order.
+        #
+        # Every way of violating that is a defect, and each fails differently:
+        #   dropped / reordered  the marker walk can't find it -> the whole prompt
+        #                        is reported LOST and never reaches the binary;
+        #   duplicated           the walk is ambiguous -> also LOST;
+        #   added (new name)     it isn't a marker, so it survives as LITERAL TEXT
+        #                        and the prompt ships reading `${FOO}` as prose.
+        # All three are caught here, at authoring time, instead of at splice time:
+        # the un-nerf's placeholder sequence must equal the stock's exactly.
         var_pat = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)")
         guard_failed = False
         for rule in rules:
-            orphans = (
-                set(var_pat.findall(rule.unnerf))
-                - set(var_pat.findall(rule.stock))
-                - fm_vars
-            )
-            if orphans:
+            stock_vars = var_pat.findall(rule.stock)
+            unnerf_vars = var_pat.findall(rule.unnerf)
+            if stock_vars != unnerf_vars:
                 guard_failed = True
                 results.append(
                     Result(
@@ -1314,13 +1387,13 @@ def apply_rules(
                         status="failed",
                         rule_description=rule.description,
                         detail=(
-                            f"ORPHAN VARIABLE GUARD: the un-nerf introduces "
-                            f"${{...}} identifiers not present in the rule's "
-                            f"stock text or the file's frontmatter variables: "
-                            f"{sorted(orphans)}. A placeholder outside the "
-                            f"prompt's identifierMap crashes Claude Code at "
-                            f"launch (ReferenceError). Fix the rule's `unnerf` "
-                            f"text before applying."
+                            f"SLOT SEQUENCE GUARD: the un-nerf must keep every "
+                            f"${{...}} placeholder of its stock text, in the same "
+                            f"order. stock={stock_vars} unnerf={unnerf_vars}. "
+                            f"The splicer rebinds slots by position, so a dropped "
+                            f"or reordered placeholder loses the whole prompt and "
+                            f"an added one ships as literal text. Fix the rule's "
+                            f"`unnerf` before applying."
                         ),
                     )
                 )

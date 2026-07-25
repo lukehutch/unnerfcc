@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Tool use reference — Ruby'
 description: Tool-use API reference doc (Ruby bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Tool Use — Ruby
 
@@ -13,7 +13,7 @@ The Ruby SDK supports tool use via raw JSON schema definitions and also provides
 
 ### Tool Runner (Beta)
 
-\`\`\`ruby
+```ruby
 class GetWeatherInput < Anthropic::BaseModel
   required :location, String, doc: "City and state, e.g. San Francisco, CA"
 end
@@ -36,7 +36,7 @@ client.beta.messages.tool_runner(
 ).each_message do |message|
   puts message.content
 end
-\`\`\`
+```
 
 ### Manual Loop
 

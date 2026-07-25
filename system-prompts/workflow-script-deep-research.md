@@ -3,19 +3,9 @@ name: 'Workflow Script: deep-research'
 description: >-
   Bundled deep-research workflow — a scoped search pipeline with URL dedup,
   fetch/extract, and vote-based verification
-ccVersion: 2.1.217
-variables:
-  - WORKFLOW_NAME
-  - WORKFLOW_DESCRIPTION
-  - WORKFLOW_WHEN_TO_USE
-  - JSON
-  - WORKFLOW_PHASES
+ccVersion: 2.1.219
 -->
-export const meta = {
-  name: '${WORKFLOW_NAME}',
-  description: '${WORKFLOW_DESCRIPTION}',
-  whenToUse: '${WORKFLOW_WHEN_TO_USE}',
-  phases: ${JSON.stringify(WORKFLOW_PHASES)},
+,
 }
 
 // deep-research: Scope → pipeline(Search → URL-dedup → Fetch+Extract) → 3-vote Verify → Synthesize
@@ -107,15 +97,15 @@ if (!QUESTION) {
   return { error: "No research question provided. Pass it as args: Workflow({name: 'deep-research', args: '<question>'})." }
 }
 const scope = await agent(
-  "Decompose this research question into complementary search angles.\\n\\n" +
-  "## Question\\n" + QUESTION + "\\n\\n" +
-  "## Task\\n" +
-  "Generate 5 distinct web search queries that together cover the question from different angles. Pick angles that suit the question's domain. Examples:\\n" +
-  "- broad/primary  · academic/technical  · recent news  · contrarian/skeptical  · practitioner/implementation\\n" +
-  "- For medical: anatomy · common causes · serious differentials · authoritative refs · red flags\\n" +
-  "- For tech: state-of-art · benchmarks · limitations · industry adoption · cost/tradeoffs\\n\\n" +
-  "Make queries specific enough to surface high-signal results. Avoid redundancy.\\n" +
-  "Return: the question (verbatim or lightly normalized), a 1-2 sentence decomposition strategy, and the angles.\\n\\nStructured output only.",
+  "Decompose this research question into complementary search angles.\n\n" +
+  "## Question\n" + QUESTION + "\n\n" +
+  "## Task\n" +
+  "Generate 5 distinct web search queries that together cover the question from different angles. Pick angles that suit the question's domain. Examples:\n" +
+  "- broad/primary  · academic/technical  · recent news  · contrarian/skeptical  · practitioner/implementation\n" +
+  "- For medical: anatomy · common causes · serious differentials · authoritative refs · red flags\n" +
+  "- For tech: state-of-art · benchmarks · limitations · industry adoption · cost/tradeoffs\n\n" +
+  "Make queries specific enough to surface high-signal results. Avoid redundancy.\n" +
+  "Return: the question (verbatim or lightly normalized), a 1-2 sentence decomposition strategy, and the angles.\n\nStructured output only.",
   { label: "scope", schema: SCOPE_SCHEMA }
 )
 if (!scope) {
@@ -128,17 +118,17 @@ log("Decomposed into " + scope.angles.length + " angles: " + scope.angles.map(a 
 // The workflow sandbox is a bare ECMAScript realm — no URL global — so
 // hostname/path come from a regex: captures (1) hostname (userinfo, www.,
 // and port stripped) and (2) pathname. Neither userinfo nor host admits
-// \\: WHATWG URL treats \\ as a path separator for http(s), so a laxer
-// class would label evil.com\\@trusted.com as trusted.com while WebFetch
+// \: WHATWG URL treats \ as a path separator for http(s), so a laxer
+// class would label evil.com\@trusted.com as trusted.com while WebFetch
 // actually goes to evil.com. Userinfo DOES admit @ — WHATWG splits the
 // authority at the LAST @ before the host, so greedy matching must too;
 // stopping at the first @ would label x@trusted.com@evil.com as
 // trusted.com while the fetch contacts evil.com. The host class still
 // excludes @, so the userinfo group consumes every @ up to the last one.
-const URL_HOST_PATTERN = /^[a-z][a-z0-9+.-]*:\\/\\/(?:[^/?#\\\\]*@)?(?:www\\.)?([^/:?#@\\\\]+)(?::\\d+)?([^?#]*)/i
+const URL_HOST_PATTERN = /^[a-z][a-z0-9+.-]*:\/\/(?:[^/?#\\]*@)?(?:www\.)?([^/:?#@\\]+)(?::\d+)?([^?#]*)/i
 const normURL = u => {
   const m = String(u).match(URL_HOST_PATTERN)
-  return m ? (m[1] + m[2].replace(/\\/$/, "")).toLowerCase() : String(u).toLowerCase()
+  return m ? (m[1] + m[2].replace(/\/$/, "")).toLowerCase() : String(u).toLowerCase()
 }
 // Host and title both come from web content and reach the terminal via the
 // progress label. Two hazards: forging a trusted hostname, and smuggling
@@ -154,8 +144,8 @@ const normURL = u => {
 // capture: dedup keys are never rendered, and stripping there could collide
 // distinct URLs.
 const LABEL_CAP = 40
-const LABEL_STRIP = /[\\x00-\\x1f\\x7f-\\x9f\\u200b-\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff\\u0022\\u201c-\\u201f\\u2033\\u2036\\u275d\\u275e\\u301d\\u301e\\uff02]/g
-const STRICT_HOST = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/
+const LABEL_STRIP = /[\x00-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff\u0022\u201c-\u201f\u2033\u2036\u275d\u275e\u301d\u301e\uff02]/g
+const STRICT_HOST = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/
 const stripLabelChars = s => String(s).replace(LABEL_STRIP, "")
 // Render a web-controlled value as a clearly-untrusted quoted label: strip
 // dangerous chars, cap at LABEL_CAP code points (Array.from so a surrogate
@@ -163,7 +153,7 @@ const stripLabelChars = s => String(s).replace(LABEL_STRIP, "")
 // INSIDE the quotes so a shortened string can never pass for the whole thing.
 const quotedLabel = s => {
   const cps = Array.from(stripLabelChars(s))
-  return '"' + cps.slice(0, LABEL_CAP).join("").trim() + (cps.length > LABEL_CAP ? "\\u2026" : "") + '"'
+  return '"' + cps.slice(0, LABEL_CAP).join("").trim() + (cps.length > LABEL_CAP ? "\u2026" : "") + '"'
 }
 const seen = new Map()
 const dupes = []
@@ -173,44 +163,44 @@ let fetchSlots = MAX_FETCH
 
 // ─── Prompts ───
 const SEARCH_PROMPT = (angle) =>
-  "## Web Searcher: " + angle.label + "\\n\\n" +
-  "Research question: \\"" + QUESTION + "\\"\\n\\n" +
-  "Your angle: **" + angle.label + "** — " + (angle.rationale || "") + "\\n" +
-  "Search query: \`" + angle.query + "\`\\n\\n" +
-  "## Task\\nUse WebSearch with the query above (or a refined version). Return the top 4-6 most relevant results.\\n" +
-  "Rank by relevance to the ORIGINAL question, not just the search query. Skip obvious SEO spam/content farms.\\n" +
-  "Include a short snippet capturing why each result is relevant.\\n\\nStructured output only."
+  "## Web Searcher: " + angle.label + "\n\n" +
+  "Research question: \"" + QUESTION + "\"\n\n" +
+  "Your angle: **" + angle.label + "** — " + (angle.rationale || "") + "\n" +
+  "Search query: `" + angle.query + "`\n\n" +
+  "## Task\nUse WebSearch with the query above (or a refined version). Return the top 4-6 most relevant results.\n" +
+  "Rank by relevance to the ORIGINAL question, not just the search query. Skip obvious SEO spam/content farms.\n" +
+  "Include a short snippet capturing why each result is relevant.\n\nStructured output only."
 
 const FETCH_PROMPT = (source, angle) =>
-  "## Source Extractor\\n\\n" +
-  "Research question: \\"" + QUESTION + "\\"\\n\\n" +
-  "Fetch and extract key claims from this source:\\n" +
-  "**URL:** " + source.url + "\\n**Title:** " + source.title + "\\n**Found via:** " + angle + " search\\n\\n" +
-  "## Task\\n1. Use WebFetch to retrieve the page content.\\n" +
-  "2. Assess source quality: primary research/institution? secondary reporting? blog/opinion? forum? unreliable?\\n" +
-  "3. Extract 2-5 FALSIFIABLE claims that bear on the research question. Each claim must:\\n" +
-  "   - be a concrete, checkable statement (not vague generalities)\\n" +
-  "   - include a direct quote from the source as support\\n" +
-  "   - be rated central/supporting/tangential to the research question\\n" +
-  "4. Note publish date if available.\\n\\n" +
-  "If the fetch fails or the page is irrelevant/paywalled, return claims: [] and sourceQuality: \\"unreliable\\".\\n\\nStructured output only."
+  "## Source Extractor\n\n" +
+  "Research question: \"" + QUESTION + "\"\n\n" +
+  "Fetch and extract key claims from this source:\n" +
+  "**URL:** " + source.url + "\n**Title:** " + source.title + "\n**Found via:** " + angle + " search\n\n" +
+  "## Task\n1. Use WebFetch to retrieve the page content.\n" +
+  "2. Assess source quality: primary research/institution? secondary reporting? blog/opinion? forum? unreliable?\n" +
+  "3. Extract 2-5 FALSIFIABLE claims that bear on the research question. Each claim must:\n" +
+  "   - be a concrete, checkable statement (not vague generalities)\n" +
+  "   - include a direct quote from the source as support\n" +
+  "   - be rated central/supporting/tangential to the research question\n" +
+  "4. Note publish date if available.\n\n" +
+  "If the fetch fails or the page is irrelevant/paywalled, return claims: [] and sourceQuality: \"unreliable\".\n\nStructured output only."
 
 const VERIFY_PROMPT = (claim, v) =>
-  "## Adversarial Claim Verifier (voter " + (v + 1) + "/" + VOTES_PER_CLAIM + ")\\n\\n" +
-  "Be SKEPTICAL. Try to REFUTE this claim. ≥" + REFUTATIONS_REQUIRED + "/" + VOTES_PER_CLAIM + " refutations kill it.\\n\\n" +
-  "## Research question\\n" + QUESTION + "\\n\\n" +
-  "## Claim under review\\n\\"" + claim.claim + "\\"\\n\\n" +
-  "**Source:** " + claim.sourceUrl + " (" + claim.sourceQuality + ")\\n" +
-  "**Supporting quote:** \\"" + claim.quote + "\\"\\n\\n" +
-  "## Checklist\\n" +
-  "1. Is the claim actually supported by the quote, or is it an overreach/misread?\\n" +
-  "2. WebSearch for contradicting evidence — does any credible source dispute or heavily qualify this?\\n" +
-  "3. Is the source quality sufficient for the claim's strength? (extraordinary claims need primary sources)\\n" +
-  "4. Is the claim outdated? (check dates — old claims about fast-moving fields are suspect)\\n" +
-  "5. Is this a marketing claim / press release / cherry-picked benchmark / forum speculation?\\n\\n" +
-  "**refuted=true** if: unsupported by quote / contradicted / low-quality source for strong claim / outdated / marketing fluff.\\n" +
-  "**refuted=false** ONLY if: claim is well-supported, current, and source quality matches claim strength.\\n" +
-  "Default to refuted=true if uncertain.\\n\\nStructured output only. Evidence MUST be specific."
+  "## Adversarial Claim Verifier (voter " + (v + 1) + "/" + VOTES_PER_CLAIM + ")\n\n" +
+  "Be SKEPTICAL. Try to REFUTE this claim. ≥" + REFUTATIONS_REQUIRED + "/" + VOTES_PER_CLAIM + " refutations kill it.\n\n" +
+  "## Research question\n" + QUESTION + "\n\n" +
+  "## Claim under review\n\"" + claim.claim + "\"\n\n" +
+  "**Source:** " + claim.sourceUrl + " (" + claim.sourceQuality + ")\n" +
+  "**Supporting quote:** \"" + claim.quote + "\"\n\n" +
+  "## Checklist\n" +
+  "1. Is the claim actually supported by the quote, or is it an overreach/misread?\n" +
+  "2. WebSearch for contradicting evidence — does any credible source dispute or heavily qualify this?\n" +
+  "3. Is the source quality sufficient for the claim's strength? (extraordinary claims need primary sources)\n" +
+  "4. Is the claim outdated? (check dates — old claims about fast-moving fields are suspect)\n" +
+  "5. Is this a marketing claim / press release / cherry-picked benchmark / forum speculation?\n\n" +
+  "**refuted=true** if: unsupported by quote / contradicted / low-quality source for strong claim / outdated / marketing fluff.\n" +
+  "**refuted=false** ONLY if: claim is well-supported, current, and source quality matches claim strength.\n" +
+  "Default to refuted=true if uncertain.\n\nStructured output only. Evidence MUST be specific."
 
 // ─── Pipeline: search → dedup → fetch+extract (no barrier) ───
 const searchResults = await pipeline(
@@ -329,7 +319,7 @@ const voted = (await parallel(
       const survives = valid.length >= REFUTATIONS_REQUIRED && refuted < REFUTATIONS_REQUIRED
       const isRefuted = refuted >= REFUTATIONS_REQUIRED
       const mark = survives ? "✓" : isRefuted ? "✗" : "?"
-      log("\\"" + claim.claim.slice(0, 50) + "…\\": " + (valid.length - refuted) + "-" + refuted + (errored > 0 ? " (" + errored + " errored)" : "") + " " + mark)
+      log("\"" + claim.claim.slice(0, 50) + "…\": " + (valid.length - refuted) + "-" + refuted + (errored > 0 ? " (" + errored + " errored)" : "") + " " + mark)
       return { ...claim, verdicts: valid, refutedVotes: refuted, erroredVotes: errored, survives, isRefuted }
     })
   )
@@ -372,34 +362,34 @@ phase("Synthesize")
 const confRank = { high: 0, medium: 1, low: 2 }
 const block = confirmed.map((c, i) => {
   const best = c.verdicts.filter(v => !v.refuted).sort((a, b) => confRank[a.confidence] - confRank[b.confidence])[0]
-  return "### [" + i + "] " + c.claim + "\\n" +
-    "Vote: " + (c.verdicts.length - c.refutedVotes) + "-" + c.refutedVotes + " · Source: " + c.sourceUrl + " (" + c.sourceQuality + ")\\n" +
-    "Quote: \\"" + c.quote + "\\"\\nVerifier evidence (" + best.confidence + "): " + best.evidence + "\\n"
-}).join("\\n")
+  return "### [" + i + "] " + c.claim + "\n" +
+    "Vote: " + (c.verdicts.length - c.refutedVotes) + "-" + c.refutedVotes + " · Source: " + c.sourceUrl + " (" + c.sourceQuality + ")\n" +
+    "Quote: \"" + c.quote + "\"\nVerifier evidence (" + best.confidence + "): " + best.evidence + "\n"
+}).join("\n")
 
 const killedBlock = killed.length > 0
-  ? "\\n## Refuted claims (for transparency)\\n" +
-    killed.map(c => "- \\"" + c.claim + "\\" (" + c.sourceUrl + ", vote " + (c.verdicts.length - c.refutedVotes) + "-" + c.refutedVotes + ")").join("\\n")
+  ? "\n## Refuted claims (for transparency)\n" +
+    killed.map(c => "- \"" + c.claim + "\" (" + c.sourceUrl + ", vote " + (c.verdicts.length - c.refutedVotes) + "-" + c.refutedVotes + ")").join("\n")
   : ""
 
 const unverifiedBlock = unverified.length > 0
-  ? "\\n## Unverified claims (" + unverified.length + " — verifier agents failed; neither confirmed nor refuted)\\n" +
-    unverified.map(c => "- \\"" + c.claim + "\\" (" + c.sourceUrl + ", " + c.erroredVotes + "/" + VOTES_PER_CLAIM + " votes errored)").join("\\n") +
-    "\\n\\nMention in caveats that " + unverified.length + " claim(s) could not be verified due to infrastructure errors."
+  ? "\n## Unverified claims (" + unverified.length + " — verifier agents failed; neither confirmed nor refuted)\n" +
+    unverified.map(c => "- \"" + c.claim + "\" (" + c.sourceUrl + ", " + c.erroredVotes + "/" + VOTES_PER_CLAIM + " votes errored)").join("\n") +
+    "\n\nMention in caveats that " + unverified.length + " claim(s) could not be verified due to infrastructure errors."
   : ""
 
 const report = await agent(
-  "## Synthesis: research report\\n\\n" +
-  "**Question:** " + QUESTION + "\\n\\n" +
-  confirmed.length + " claims survived " + VOTES_PER_CLAIM + "-vote adversarial verification. Merge semantic duplicates and synthesize.\\n\\n" +
-  "## Confirmed claims\\n" + block + "\\n" + killedBlock + unverifiedBlock + "\\n\\n" +
-  "## Instructions\\n" +
-  "1. Identify claims that say the same thing — merge them, combine their sources.\\n" +
-  "2. Group related claims into coherent findings. Each finding should directly address the research question.\\n" +
-  "3. Assign confidence per finding: high (multiple primary sources, unanimous votes), medium (secondary sources or split votes), low (single source or blog-quality).\\n" +
-  "4. Write a 3-5 sentence executive summary answering the research question.\\n" +
-  "5. Note caveats: what's uncertain, what sources were weak, what time-sensitivity applies.\\n" +
-  "6. List 2-4 open questions that emerged but weren't answered.\\n\\nStructured output only.",
+  "## Synthesis: research report\n\n" +
+  "**Question:** " + QUESTION + "\n\n" +
+  confirmed.length + " claims survived " + VOTES_PER_CLAIM + "-vote adversarial verification. Merge semantic duplicates and synthesize.\n\n" +
+  "## Confirmed claims\n" + block + "\n" + killedBlock + unverifiedBlock + "\n\n" +
+  "## Instructions\n" +
+  "1. Identify claims that say the same thing — merge them, combine their sources.\n" +
+  "2. Group related claims into coherent findings. Each finding should directly address the research question.\n" +
+  "3. Assign confidence per finding: high (multiple primary sources, unanimous votes), medium (secondary sources or split votes), low (single source or blog-quality).\n" +
+  "4. Write a 3-5 sentence executive summary answering the research question.\n" +
+  "5. Note caveats: what's uncertain, what sources were weak, what time-sensitivity applies.\n" +
+  "6. List 2-4 open questions that emerged but weren't answered.\n\nStructured output only.",
   { label: "synthesize", schema: REPORT_SCHEMA }
 )
 

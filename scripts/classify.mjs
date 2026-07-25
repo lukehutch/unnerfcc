@@ -7,8 +7,11 @@
  * DESIGN
  * ------
  * We do not guess which literals are prompts. We SHA-256-fingerprint every
- * string (by its content = pieces.join(''), so a minified-var change doesn't
- * churn the hash) and keep a persistent store `data/string-catalog.json`:
+ * string by its canonical text — literal runs interleaved with bare `${}` slot
+ * markers, carrying neither a variable name nor a slot index, so neither a
+ * minifier renaming a variable nor one reusing a variable across two slots can
+ * churn the hash (see scripts/prompt-index.mjs) — and keep a persistent store
+ * `data/string-catalog.json`:
  *
  *   sha256 -> {
  *     class:               "prompt" | "non-prompt",
@@ -51,7 +54,8 @@
  *     --batch N          strings per Claude call (default 0 = ALL in one file;
  *                        set N>0 only to chunk for testing / an oversized bootstrap)
  *     --max-rounds N     top-up rounds before giving up on skipped refs (default 8)
- *     --model M          classifier model (default opus; bootstrap used haiku)
+ *     --model M          classifier model (default claude-opus-5; bootstrap used haiku)
+ *     --effort E         reasoning effort: low|medium|high|xhigh|max (default medium)
  *     --shard I --shards N --shard-out F   run disjoint slices in parallel,
  *                        each writing its own file; then `merge` into the store
  *     --content-file F   classify an explicit [{hash,content}] list, not a bundle
@@ -95,9 +99,14 @@ const MAX_ROUNDS = parseInt(opt("--max-rounds", "8"), 10);
 // Model. The one-time bootstrap used Haiku (cheap, mostly non-prompts). But the
 // un-nerf judgment needs real reasoning — a recall check against the existing
 // rules showed Haiku caught only obvious brevity caps and missed the subtler
-// implementation/process-brevity nerfs. So the DEFAULT is now Opus (latest), and
-// the intended use going forward is Opus on only the NEW strings per CC release.
-const MODEL = opt("--model", "opus");
+// implementation/process-brevity nerfs. So the DEFAULT is Opus 5 pinned by exact
+// model id (not the "opus" alias, which floats to whatever the CLI maps it to),
+// and the intended use going forward is Opus on only the NEW strings per release.
+const MODEL = opt("--model", "claude-opus-5");
+// Reasoning effort for the classifier job. Medium is the deliberate default:
+// classification is a bounded judgment per string, and the volume per release is
+// a few hundred strings in ONE job. Valid: low|medium|high|xhigh|max.
+const EFFORT = opt("--effort", "medium");
 const DRY = argv.includes("--dry-run");
 // Sharding: run several workers in parallel over disjoint slices of the work,
 // each writing to its OWN --shard-out file (no store race); merge afterward.
@@ -142,9 +151,14 @@ if (CONTENT_FILE) {
   }
   console.error(`content-file: ${byHash.size} distinct strings`);
 } else {
-  const entries = extract(readFileSync(cliJs, "utf8"), CCV, { includeAll: true });
+  // The extractor's DEFAULT: a purely STRUCTURAL pre-filter (long enough, has
+  // whitespace, not a blob/URL/path). It must not pre-judge what a prompt is —
+  // that is exactly the question we are paying Opus to answer — it only drops
+  // what definitionally cannot be one. (This is the same set the store was
+  // built under; `--all` is gen-catalog's seed-matching mode, not this one.)
+  const entries = extract(readFileSync(cliJs, "utf8"), CCV);
   for (const e of entries) {
-    const h = identityHash(e); // sha256(pieces.join(''))
+    const h = identityHash(e); // sha256 over the canonical text — see prompt-index.mjs
     if (!byHash.has(h)) byHash.set(h, { hash: h, content: reconstruct(e) });
   }
   console.error(`extracted ${entries.length} literals → ${byHash.size} distinct strings`);
@@ -204,7 +218,7 @@ function classifyBatch(batch, rtag) {
   const fake = process.env.CLASSIFY_CLAUDE_CMD;
   const r = fake
     ? spawnSync("sh", ["-c", fake], { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 })
-    : spawnSync("claude", ["-p", "--model", MODEL, "--dangerously-skip-permissions", prompt],
+    : spawnSync("claude", ["-p", "--model", MODEL, "--effort", EFFORT, "--dangerously-skip-permissions", prompt],
         { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 });
   if (!existsSync(join(workDir, "result.json"))) {
     console.error(`  ${rtag}no result.json (claude status ${r.status}) — will retry any missing`);
@@ -310,8 +324,9 @@ fragment in the release — there is no second pass that will pick up the ones y
 leave out. Your \`result.json\` MUST contain exactly ${n} objects, one per ref.
 
 ## Read
-- \`batch.json\` — an array of \`{ ref, text }\`. \`text\` is the string's content
-  (interpolations show as \`\${...}\` or \`\${}\`). Echo each \`ref\` back unchanged.
+- \`batch.json\` — an array of \`{ ref, text }\`. \`text\` is the string's content;
+  every runtime interpolation shows as a bare \`\${}\` (the variable name is
+  deliberately not part of a string's identity). Echo each \`ref\` back unchanged.
   It may be large: if it exceeds a single read, page through it (offset/limit)
   and classify EVERY ref — do not stop at the first chunk you read.
 ${hasBundle ? `- \`cli.js\` — the full Claude Code bundle is in this directory. For a string
@@ -355,9 +370,12 @@ ${hasBundle ? `- \`cli.js\` — the full Claude Code bundle is in this directory
 4. **description** (prompts only; \`""\` otherwise): one editorial line — what
    Claude Code uses this prompt FOR.
 5. **slots** (prompts only; \`""\` if no interpolation): be SLOT-AWARE. For each
-   \`\${...}\` placeholder, in order, say what it binds to (e.g.
-   "slot 1 = tool name, slot 2 = file path"). Flag any slot whose role is
-   unclear — a mis-bound placeholder corrupts the patch, so ambiguity matters.
+   \`\${}\` placeholder, in order, say what it binds to (e.g. "slot 1 = tool name,
+   slot 2 = file path"); infer it from the surrounding prose, and from \`cli.js\`
+   if that is inconclusive. Flag any slot whose role is unclear. This audit is
+   load-bearing: an un-nerf edit must keep every placeholder in the same order,
+   because the patcher rebinds slots BY POSITION — so a maintainer needs to know
+   what each position means before rewriting the prose around it.
 6. **notes**: one short clause — why (e.g. "tone: 'short and concise'").
 
 ## Output

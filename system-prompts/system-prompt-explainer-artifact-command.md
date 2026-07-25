@@ -5,14 +5,13 @@ description: >-
   interactive-explainer slash command, instructing the model to produce a
   self-contained HTML explainer page for a file/dir/PR target and publish it via
   the artifact tool.
-ccVersion: 2.1.199
+ccVersion: 2.1.219
 variables:
-  - SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_0
-  - SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_1
-  - SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_2
-  - SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_3
+  - ARTIFACT_TOOL_NAME
+  - DATAVIZ_SKILL_NAME
+  - FOOTER_LINE
 -->
-${SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_0===""?"No target was given. Ask the user which file, directory, or PR they want explained — one short question — and stop until they answer.":`Walkthrough target: \`${SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_0}\``}
+
 
 ## Goal
 
@@ -31,8 +30,8 @@ understanding.
 
 ## Structure of the artifact
 
-Write an HTML file and publish it with the ${SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_1} tool. Load
-the \`${SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_2}\` skill first and give the page a
+Write an HTML file and publish it with the ${ARTIFACT_TOOL_NAME} tool. Load
+the `${DATAVIZ_SKILL_NAME}` skill first and give the page a
 utilitarian treatment — this is a document, not a landing page.
 
 The page should contain, in this order:
@@ -41,7 +40,7 @@ The page should contain, in this order:
 2. **Map** — a short list or simple diagram of the main pieces and how they
    connect. For a single file this is the key functions/types; for a
    directory it's the files; for a PR it's the before→after.
-3. **Walkthrough sections** — one \`<details>\` block per piece from the map.
+3. **Walkthrough sections** — one `<details>` block per piece from the map.
    Inside each:
    - A plain-language explanation of what this piece does.
    - An **annotated code snippet**: the real code (trimmed to the relevant
@@ -54,7 +53,7 @@ The page should contain, in this order:
 End the page body with this line verbatim so the reader can bring the
 artifact back into Claude Code to keep iterating:
 
-> ${SYSTEM_PROMPT_EXPLAINER_ARTIFACT_COMMAND_VAR_3}
+> ${FOOTER_LINE}
 
 ## Keep it honest
 

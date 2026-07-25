@@ -4,20 +4,13 @@ description: >-
   Slash-command prompt body for the shareable-PR-walkthrough command,
   instructing the model to produce a self-contained HTML PR walkthrough page and
   publish it via the artifact tool.
-ccVersion: 2.1.202
+ccVersion: 2.1.219
 variables:
-  - PR_ARGUMENT
-  - DEFAULT_EXPLAIN_PROMPT
-  - BUILD_PR_PROMPT_FN
-  - USER_GUIDANCE
   - ARTIFACT_TOOL_NAME
   - DATAVIZ_SKILL_NAME
   - FOOTER_LINE
 -->
-${PR_ARGUMENT===""?DEFAULT_EXPLAIN_PROMPT:BUILD_PR_PROMPT_FN(PR_ARGUMENT)}
-${USER_GUIDANCE?`
-Additional guidance from the user: ${USER_GUIDANCE}
-`:""}
+
 ## Goal
 
 Produce a **shareable PR walkthrough artifact** — a self-contained HTML page a
@@ -41,7 +34,7 @@ alternatives were considered") instead of inventing an answer.
 ## Structure of the artifact
 
 Write an HTML file and publish it with the ${ARTIFACT_TOOL_NAME} tool. Load
-the \`${DATAVIZ_SKILL_NAME}\` skill first and give the page a
+the `${DATAVIZ_SKILL_NAME}` skill first and give the page a
 utilitarian treatment.
 
 1. **What and why** — two or three sentences: what this PR changes and the
@@ -49,7 +42,7 @@ utilitarian treatment.
 2. **Before / After** — a short side-by-side showing the user-observable
    change (behavior, API shape, or output). Skip if the change has no
    observable surface.
-3. **Tour of the diff** — one \`<details>\` block per logical piece of the
+3. **Tour of the diff** — one `<details>` block per logical piece of the
    change. Inside each: the relevant code snippet (trimmed), a plain-language
    explanation of what it does, and anything a reviewer should look closely
    at.

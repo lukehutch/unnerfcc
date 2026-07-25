@@ -3,7 +3,7 @@ name: 'Data: Claude API reference — Java'
 description: >-
   Java SDK reference including installation, client initialization, basic
   requests, streaming, and beta tool use
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Claude API — Java
 
@@ -40,7 +40,7 @@ Write from this table instead of `javap`/jar inspection. Endpoint column tells y
 | Strict tool use | non-beta | `Tool`, `Tool.InputSchema` |
 | Task budgets | beta | `.outputConfig(BetaOutputConfig.builder().taskBudget(BetaTokenTaskBudget.builder()...))` |
 | Tool search | non-beta | `.addTool(ToolSearchToolRegex20251119.builder()...)` from `com.anthropic.models.messages` |
-| Web search | non-beta | `WebSearchTool20260209` from `com.anthropic.models.messages` — the latest variant with dynamic filtering (Opus 4.8/4.7/4.6 + Sonnet 4.6). For older models or Vertex, use `WebSearchTool20250305` |
+| Web search | non-beta | `WebSearchTool20260209` from `com.anthropic.models.messages` — the latest variant with dynamic filtering ({{FABLE_NAME}} + {{OPUS_NAME}} + Opus 4.8/4.7/4.6 + {{SONNET_NAME}} + Sonnet 4.6). For older models or Vertex, use `WebSearchTool20250305` |
 
 ### Discovering type and member names
 
@@ -86,10 +86,9 @@ AnthropicClient client = AnthropicOkHttpClient.builder()
 ```java
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.Model;
 
 MessageCreateParams params = MessageCreateParams.builder()
-    .model(Model.CLAUDE_OPUS_4_8)
+    .model("{{OPUS_ID}}")  // .model(String) overload — use it for ids with no typed Model constant yet
     .maxTokens(16000L)
     .addUserMessage("What is the capital of France?")
     .build();
@@ -106,7 +105,8 @@ response.content().stream()
 
 **Adaptive thinking is the recommended mode for Claude 4.6+ models.** Claude decides dynamically when and how much to think. The builder has a direct `.thinking(ThinkingConfigAdaptive)` overload — no manual union wrapping.
 
-> **Fable 5, Opus 4.8, Opus 4.7, Opus 4.6, and Sonnet 4.6:** Use adaptive thinking (below). `ThinkingConfigEnabled.builder().budgetTokens(N)` is removed on Fable 5, Opus 4.8, and 4.7 (400 if sent); deprecated on Opus 4.6 and Sonnet 4.6.
+> **Fable 5, {{OPUS_NAME}}, Opus 4.8, Opus 4.7, Opus 4.6, and Sonnet 4.6:** Use adaptive thinking (below). `ThinkingConfigEnabled.builder().budgetTokens(N)` is removed on Fable 5, {{OPUS_NAME}}, Opus 4.8, and 4.7 (400 if sent); deprecated on Opus 4.6 and Sonnet 4.6.
+> **{{OPUS_NAME}}:** thinking is on by default — omitting `.thinking(...)` runs adaptive (`ThinkingConfigAdaptive` is equivalent), unlike Opus 4.8/4.7 where omitting it meant no thinking. `ThinkingConfigDisabled` is accepted only at effort `HIGH` or lower; pairing it with `XHIGH`/`MAX` returns a 400.
 > **Older models:** Use `.thinking(ThinkingConfigEnabled.builder().budgetTokens(N).build())` (budget must be < `maxTokens`, min 1024).
 
 ```java
@@ -140,7 +140,7 @@ Effort is nested inside `OutputConfig` — there is NO `.effort()` directly on `
 import com.anthropic.models.messages.OutputConfig;
 
 .outputConfig(OutputConfig.builder()
-    .effort(OutputConfig.Effort.HIGH)  // or LOW, MEDIUM, MAX
+    .effort(OutputConfig.Effort.HIGH)  // or LOW, MEDIUM, XHIGH, MAX
     .build())
 ```
 
@@ -223,7 +223,7 @@ response.stopDetails().ifPresent(details -> {
 });
 ```
 
-**Refusal fallbacks ({{FABLE_NAME}}) — opt in by default.** Fallbacks are opt-in: without them a refused request simply stops. New `{{FABLE_ID}}` code should include the server-side `fallbacks` parameter (beta header `server-side-fallback-2026-06-01`, fallback model `{{OPUS_ID}}`, on the beta messages call) by default. The exact Java builder methods (and the client-side middleware for providers without server-side support) are not documented here — WebFetch the Java SDK repo's `examples/` from `shared/live-sources.md`; full semantics in `shared/model-migration.md` → Migrating to {{FABLE_NAME}} → `refusal` stop reason.
+**Refusal fallbacks ({{FABLE_NAME}}) — opt in by default.** Fallbacks are opt-in: without them a refused request simply stops. New `{{FABLE_ID}}` code should include the server-side `fallbacks` parameter (beta header `server-side-fallback-2026-06-01`, fallback model `{{PREV_OPUS_ID}}`, on the beta messages call) by default. The exact Java builder methods (and the client-side middleware for providers without server-side support) are not documented here — WebFetch the Java SDK repo's `examples/` from `shared/live-sources.md`; full semantics in `shared/model-migration.md` → Migrating to {{FABLE_NAME}} → `refusal` stop reason.
 
 ---
 

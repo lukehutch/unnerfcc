@@ -1,13 +1,11 @@
 <!--
 name: 'Data: Command modified read files reminder'
 description: >-
-  Content block warning the model that a command changed previously-read files;
-  must Read before editing.
-ccVersion: 2.1.178
+  Content block warning the model that a command changed files it had previously
+  read, so it must Read them again before editing.
+ccVersion: 2.1.219
 variables:
-  - DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_0
-  - DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_1
-  - DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_2
-  - DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_3
+  - FILE_LIST
+  - MORE_FILES_SUFFIX
 -->
-[This command modified ${DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_0.length} ${DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_1(DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_0.length,"file")} you've previously read: ${DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_2}${DATA_COMMAND_MODIFIED_READ_FILES_REMINDER_VAR_3}. Call Read before editing.]
+ you've previously read: ${FILE_LIST}${MORE_FILES_SUFFIX}. Call Read before editing.]

@@ -3,7 +3,7 @@ name: 'Skill Reference: Data-viz Color Formula'
 description: >-
   Data-viz skill reference file (references/color-formula.md) defining the four
   color jobs and six palette-validation checks
-ccVersion: 2.1.217
+ccVersion: 2.1.219
 -->
 # Color formula
 
@@ -50,11 +50,11 @@ Every categorical color — current or proposed — must pass all six.
    This floor is a hard gate — secondary encoding does not excuse it.
    (This floor is what forced the first of the July 2026 re-orders of the
    documented default palette — same hues and steps, re-ordered; the current
-   default clears it at 19.6 light / 19.3 dark; see \`palette.md\`.)
+   default clears it at 19.6 light / 19.3 dark; see `palette.md`.)
    *Adjacent* pairs for
    stacks/bars/lines (only neighbors touch — assignment never skips); **all pairs for
    scatter, bubble, choropleth, and small-multiples**, where any two marks can sit side
-   by side — pass \`--pairs all\` there or a real collapse stays hidden. All-pairs is
+   by side — pass `--pairs all` there or a real collapse stays hidden. All-pairs is
    a strictly harder test, and it caps how many series those chart forms can carry:
    the documented default validates all-pairs with its **first three slots** in both
    modes, and no ordering of the full eight can pass (the all-pairs pairlist doesn't
@@ -63,36 +63,36 @@ Every categorical color — current or proposed — must pass all six.
 5. **Contrast vs surface.** ≥ 3:1 for marks; conditionally relaxed where values are
    readable another way (visible labels or the table view). *(validator)*
 6. **Documented palette only.** Every slot is a hex from the instance file
-   (\`palette.md\` or its equivalent) — no eyeballed values. *(structural; for a
+   (`palette.md` or its equivalent) — no eyeballed values. *(structural; for a
    customer's ramps, snap to nearest — below)*
 
 ## Run the checks — never eyeball them
 
-\`\`\`
-node scripts/validate_palette.js \\
+```
+node scripts/validate_palette.js \
   "#2a78d6,#eb6834,#1baf7a,#eda100,#e87ba4,#008300,#4a3aa7,#e34948" --mode light
-\`\`\`
+```
 
-(\`scripts/\` is relative to this skill's base directory, shown at the top of the prompt.)
+(`scripts/` is relative to this skill's base directory, shown at the top of the prompt.)
 
-(or load it as \`<script type="module">\` in the chart's own page — it reads
-\`data-palette\` off \`<body>\` and logs a \`console.table\` report)
+(or load it as `<script type="module">` in the chart's own page — it reads
+`data-palette` off `<body>` and logs a `console.table` report)
 
 Reports each computable check (2–5) with PASS / WARN / FAIL plus the worst CVD pair.
 Exit 0 = no hard FAIL (WARN bands — floor-band CVD 6–8 and sub-3:1 contrast
 relief — still exit 0 and require secondary encoding); exit 1 on any FAIL,
 including a normal-vision floor below 15, which is a hard gate. Run once per mode
-(\`--mode dark --surface "#1a1a19"\`), and add
-\`--pairs all\` for scatter / bubble / map / small-multiples charts (where any two marks
+(`--mode dark --surface "#1a1a19"`), and add
+`--pairs all` for scatter / bubble / map / small-multiples charts (where any two marks
 can be neighbors — the default adjacent check would hide a collapse). For an
-**ordinal** ramp pass \`--ordinal\` — it switches to the ramp checks (monotone L,
+**ordinal** ramp pass `--ordinal` — it switches to the ramp checks (monotone L,
 adjacent ΔL ≥ 0.06, light-end contrast ≥ 2.0:1, single hue) instead of the
 categorical six.
 A WARN on CVD (6–8 floor) is legal **only** if you also ship secondary encoding
 (direct labels, gaps, or texture). A FAIL on the normal-vision floor says
 full-color readers will struggle to tell the flagged neighbors apart.
 On the *adjacent* pairlist, re-step one of the pair; secondary encoding does
-not excuse this one. On \`--pairs all\`, a floor FAIL over many series is the
+not excuse this one. On `--pairs all`, a floor FAIL over many series is the
 series cap binding (check 4): cut the series count, facet, or switch chart
 form — re-ordering or re-stepping cannot make eight colors pairwise-distinct
 at this floor. A WARN on contrast is **not dismissable** — it
@@ -102,8 +102,8 @@ sub-3:1 fill with neither is a fail.
 **Scope — what the validator does and doesn't cover.** These six checks validate a
 *categorical* palette (series identity). They do **not** judge a lone status/text
 color or a sequential ramp. For a single status or text color, run a WCAG *text*-
-contrast check (4.5:1 normal, 3:1 large) — \`validate_palette.js\` exports
-\`contrast(a, b)\` for exactly this. For sequential/diverging, the check is lightness
+contrast check (4.5:1 normal, 3:1 large) — `validate_palette.js` exports
+`contrast(a, b)` for exactly this. For sequential/diverging, the check is lightness
 monotonicity across the ramp, not adjacency CVD — running the categorical validator on
 a sequential ramp **will FAIL by design** (it spans the band; steps sit close), which
 is expected, not a real failure; don't "fix" a good ramp to satisfy it.
@@ -122,12 +122,12 @@ Given a customer's ramps and a desired order:
 The slot **order** is a separable, named choice — a *theme* — on the same hues and
 the same six checks. Each design system names a default order and any alternates;
 swapping themes tunes the mood without touching the method. A surface adopts one
-theme and freezes it; never mix themes within a dashboard. (See \`palette.md\`.)
+theme and freezes it; never mix themes within a dashboard. (See `palette.md`.)
 
 **Deriving an order when a system has no theme yet:** don't guess. Enumerate candidate
 orderings of the system's hues, run the validator on each, and pick the one that
 maximizes the *minimum adjacent* CVD ΔE. (Seeding from a known-good order by hue-family
-analogy, then optimizing, is fine — the default in \`palette.md\` came out of
+analogy, then optimizing, is fine — the default in `palette.md` came out of
 exactly that enumeration, as one of the tied top orders under the gates,
 picked among them for its opening.)
 
@@ -137,5 +137,5 @@ Status never follows the theme — it is a small fixed scale (good → warning �
 → critical) with reserved meaning, on steps deliberately distinct from the categorical
 slots so a status color never impersonates a series, and always paired with an
 icon + label (on a light surface warning and serious sit below 3:1 by design —
-the pairing is the mitigation). (Exact steps in \`palette.md\`.) The collision rule: when a series *means* good/bad (error rate, pass/fail) it wears
+the pairing is the mitigation). (Exact steps in `palette.md`.) The collision rule: when a series *means* good/bad (error rate, pass/fail) it wears
 status tokens; when it's just "series 4" it wears categorical — never both in one chart.

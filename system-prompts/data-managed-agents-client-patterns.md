@@ -4,13 +4,13 @@ description: >-
   Reference guide of common client-side patterns for driving Managed Agent
   sessions, including stream reconnection, idle-break gating, tool
   confirmations, interrupts, and custom tools
-ccVersion: 2.1.218
+ccVersion: 2.1.219
 -->
 # Managed Agents — Common Client Patterns
 
 Patterns you'll write on the client side when driving a Managed Agent session, grounded in working SDK examples.
 
-Code samples are TypeScript — other languages follow the same shape; see \`{lang}/managed-agents/README.md\` (cURL and C#: \`curl/managed-agents.md\`) for equivalents.
+Code samples are TypeScript — other languages follow the same shape; see `{lang}/managed-agents/README.md` (cURL and C#: `curl/managed-agents.md`) for equivalents.
 
 ---
 
@@ -18,9 +18,9 @@ Code samples are TypeScript — other languages follow the same shape; see \`{la
 
 **Problem:** SSE has no replay. If the connection drops mid-session, a naive reconnect re-opens the stream from "now" and you silently miss every event emitted in between.
 
-**Solution:** on reconnect, fetch the full event history via \`events.list()\` *before* consuming the live stream, and dedupe on event ID as the live stream catches up.
+**Solution:** on reconnect, fetch the full event history via `events.list()` *before* consuming the live stream, and dedupe on event ID as the live stream catches up.
 
-\`\`\`ts
+```ts
 const seenEventIds = new Set<string>()
 const stream = await client.beta.sessions.events.stream(session.id)
 
@@ -32,7 +32,7 @@ for await (const event of client.beta.sessions.events.list(session.id)) {
 
 // Tail the live stream. Dedupe only gates handle() — terminal checks must run
 // even for already-seen events, or a terminal event that was in the history
-// response gets skipped by \`continue\` and the loop never exits.
+// response gets skipped by `continue` and the loop never exits.
 for await (const event of stream) {
   if (!seenEventIds.has(event.id)) {
     seenEventIds.add(event.id)
@@ -41,34 +41,34 @@ for await (const event of stream) {
   if (event.type === 'session.status_terminated') break
   if (event.type === 'session.status_idle' && event.stop_reason.type !== 'requires_action') break
 }
-\`\`\`
+```
 
 ---
 
-## 2. \`processed_at\` — queued vs processed
+## 2. `processed_at` — queued vs processed
 
-Every event on the stream carries \`processed_at\` (ISO 8601), set when the event finishes processing. For client-sent events (\`user.message\`, \`user.interrupt\`, \`user.tool_confirmation\`) it's \`null\` while the event is queued behind earlier ones, and populated once the agent processes it — so the same event appears on the stream twice, once with \`null\` and once with a timestamp.
+Every event on the stream carries `processed_at` (ISO 8601), set when the event finishes processing. For client-sent events (`user.message`, `user.interrupt`, `user.tool_confirmation`) it's `null` while the event is queued behind earlier ones, and populated once the agent processes it — so the same event appears on the stream twice, once with `null` and once with a timestamp.
 
-**Three event types skip the queued phase:** \`user.define_outcome\`, \`user.custom_tool_result\`, and \`user.tool_result\` are processed on receipt and echoed back with \`processed_at\` already populated. A pending → acknowledged UI that assumes "first sighting is always \`null\`" will never clear for these — treat a populated \`processed_at\` on first sighting as immediately acknowledged.
+**Three event types skip the queued phase:** `user.define_outcome`, `user.custom_tool_result`, and `user.tool_result` are processed on receipt and echoed back with `processed_at` already populated. A pending → acknowledged UI that assumes "first sighting is always `null`" will never clear for these — treat a populated `processed_at` on first sighting as immediately acknowledged.
 
-\`\`\`ts
+```ts
 for await (const event of stream) {
   if (event.type === 'user.message') {
     if (event.processed_at == null) onQueued(event.id)
     else onProcessed(event.id, event.processed_at)
   }
 }
-\`\`\`
+```
 
-Use this to drive pending → acknowledged UI state for anything you send. How you map a locally-rendered optimistic message to the server-assigned \`event.id\` is application-specific (typically via the return value of \`events.send()\` or FIFO ordering).
+Use this to drive pending → acknowledged UI state for anything you send. How you map a locally-rendered optimistic message to the server-assigned `event.id` is application-specific (typically via the return value of `events.send()` or FIFO ordering).
 
 ---
 
 ## 3. Interrupt a running session
 
-Send \`user.interrupt\` as a normal event. The session keeps running until it reaches a safe boundary, then goes idle.
+Send `user.interrupt` as a normal event. The session keeps running until it reaches a safe boundary, then goes idle.
 
-\`\`\`ts
+```ts
 await client.beta.sessions.events.send(session.id, {
   events: [{ type: 'user.interrupt' }],
 })
@@ -81,17 +81,17 @@ for await (const event of stream) {
     event.stop_reason.type !== 'requires_action'
   ) break
 }
-\`\`\`
+```
 
-Reference: \`interrupt.ts\` — sends the interrupt the moment it sees \`span.model_request_start\`, drains to idle, then verifies via \`sessions.retrieve()\`.
+Reference: `interrupt.ts` — sends the interrupt the moment it sees `span.model_request_start`, drains to idle, then verifies via `sessions.retrieve()`.
 
 ---
 
-## 4. \`tool_confirmation\` round-trip
+## 4. `tool_confirmation` round-trip
 
-When the agent has \`permission_policy: { type: 'always_ask' }\`, any call to that tool fires an \`agent.tool_use\` event with \`evaluated_permission === 'ask'\` and the session goes idle waiting for a decision. Respond with \`user.tool_confirmation\`.
+When the agent has `permission_policy: { type: 'always_ask' }`, any call to that tool fires an `agent.tool_use` event with `evaluated_permission === 'ask'` and the session goes idle waiting for a decision. Respond with `user.tool_confirmation`.
 
-\`\`\`ts
+```ts
 for await (const event of stream) {
   if (event.type === 'agent.tool_use' && event.evaluated_permission === 'ask') {
     await client.beta.sessions.events.send(session.id, {
@@ -104,22 +104,22 @@ for await (const event of stream) {
     })
   }
 }
-\`\`\`
+```
 
 Key points:
-- \`tool_use_id\` is \`event.id\` (typically \`sevt_...\`), **not** a \`toolu_...\` ID.
-- \`result\` is \`'allow' | 'deny'\`. Use \`deny_message\` to tell the model *why* you denied — it gets surfaced back to the agent.
-- Multiple pending tools: respond once per \`agent.tool_use\` event with \`evaluated_permission === 'ask'\`.
+- `tool_use_id` is `event.id` (typically `sevt_...`), **not** a `toolu_...` ID.
+- `result` is `'allow' | 'deny'`. Use `deny_message` to tell the model *why* you denied — it gets surfaced back to the agent.
+- Multiple pending tools: respond once per `agent.tool_use` event with `evaluated_permission === 'ask'`.
 
-Reference: \`tool-permissions.ts\`.
+Reference: `tool-permissions.ts`.
 
 ---
 
 ## 5. Correct idle-break gate
 
-Do not break on \`session.status_idle\` alone. The session goes idle transiently — e.g. between parallel tool executions, while waiting for a \`user.tool_confirmation\`, or while awaiting a \`user.custom_tool_result\`. Break when idle with a terminal \`stop_reason\`, or on \`session.status_terminated\`.
+Do not break on `session.status_idle` alone. The session goes idle transiently — e.g. between parallel tool executions, while waiting for a `user.tool_confirmation`, or while awaiting a `user.custom_tool_result`. Break when idle with a terminal `stop_reason`, or on `session.status_terminated`.
 
-\`\`\`ts
+```ts
 for await (const event of stream) {
   handle(event)
   if (event.type === 'session.status_terminated') break
@@ -128,22 +128,22 @@ for await (const event of stream) {
     break // end_turn or retries_exhausted — both terminal
   }
 }
-\`\`\`
+```
 
-\`stop_reason.type\` values on \`session.status_idle\`:
-- \`requires_action\` — agent is waiting on a client-side event (tool confirmation, custom tool result). Handle it, don't break.
-- \`retries_exhausted\` — terminal failure. Break, then check \`sessions.retrieve()\` for the error state.
-- \`end_turn\` — normal completion.
+`stop_reason.type` values on `session.status_idle`:
+- `requires_action` — agent is waiting on a client-side event (tool confirmation, custom tool result). Handle it, don't break.
+- `retries_exhausted` — terminal failure. Break, then check `sessions.retrieve()` for the error state.
+- `end_turn` — normal completion.
 
 ---
 
 ## 6. Post-idle status-write race
 
-The SSE stream emits \`session.status_idle\` slightly before the session's queryable status reflects it. Clients that break on idle and immediately call \`sessions.delete()\` or \`sessions.archive()\` will intermittently 400 with "cannot delete/archive while running."
+The SSE stream emits `session.status_idle` slightly before the session's queryable status reflects it. Clients that break on idle and immediately call `sessions.delete()` or `sessions.archive()` will intermittently 400 with "cannot delete/archive while running."
 
 Poll before cleanup:
 
-\`\`\`ts
+```ts
 let s
 for (let i = 0; i < 10; i++) {
   s = await client.beta.sessions.retrieve(session.id)
@@ -153,7 +153,7 @@ for (let i = 0; i < 10; i++) {
 if (s?.status !== 'running') {
   await client.beta.sessions.archive(session.id)
 } // else: still running after 2s — don't archive, let it settle or escalate
-\`\`\`
+```
 
 ---
 
@@ -161,23 +161,23 @@ if (s?.status !== 'running') {
 
 Always open the stream **before** sending the kickoff event. Otherwise the agent may process the event and emit the first events before your consumer is attached, and you'll miss them.
 
-\`\`\`ts
+```ts
 const stream = await client.beta.sessions.events.stream(session.id)
 await client.beta.sessions.events.send(session.id, {
   events: [{ type: 'user.message', content: [{ type: 'text', text: 'Hello' }] }],
 })
 for await (const event of stream) { /* ... */ }
-\`\`\`
+```
 
-The \`Promise.all([stream, send])\` shape works too, but stream-first is simpler and has the same effect — the stream starts buffering the moment it's opened.
+The `Promise.all([stream, send])` shape works too, but stream-first is simpler and has the same effect — the stream starts buffering the moment it's opened.
 
 ---
 
 ## 8. File-mount gotchas
 
-**The mounted resource has a different \`file_id\` than the file you uploaded.** Session creation makes a session-scoped copy.
+**The mounted resource has a different `file_id` than the file you uploaded.** Session creation makes a session-scoped copy.
 
-\`\`\`ts
+```ts
 const uploaded = await client.beta.files.upload({ file, purpose: 'agent_resource' })
 // uploaded.id         → the original file
 const session = await client.beta.sessions.create({
@@ -185,9 +185,9 @@ const session = await client.beta.sessions.create({
   resources: [{ type: 'file', file_id: uploaded.id, mount_path: '/workspace/data.csv' }],
 })
 // session.resources[0].file_id !== uploaded.id  ← different IDs
-\`\`\`
+```
 
-Delete the original via \`files.delete(uploaded.id)\`; the session-scoped copy is garbage-collected with the session. \`mount_path\` must be absolute — see \`shared/managed-agents-environments.md\`.
+Delete the original via `files.delete(uploaded.id)`; the session-scoped copy is garbage-collected with the session. `mount_path` must be absolute — see `shared/managed-agents-environments.md`.
 
 ---
 
@@ -195,11 +195,11 @@ Delete the original via \`files.delete(uploaded.id)\`; the session-scoped copy i
 
 **Problem:** you want the agent to call a third-party API or run a CLI that needs a secret (API key, token, service-account credential), but you can't or don't want to hand the secret to a vault.
 
-**First check:** for cloud environments, the first-class answer is now a vault \`environment_variable\` credential — the agent's shell sees an opaque placeholder and the real secret is substituted at egress. See \`shared/managed-agents-tools.md\` → Vaults. Use this pattern instead when that doesn't fit: **self-hosted sandboxes** (env-var credentials not yet supported there), clients that reject the placeholder via local format validation, secrets that must never leave your infrastructure, or calls that need host-side binaries.
+**First check:** for cloud environments, the first-class answer is now a vault `environment_variable` credential — the agent's shell sees an opaque placeholder and the real secret is substituted at egress. See `shared/managed-agents-tools.md` → Vaults. Use this pattern instead when that doesn't fit: **self-hosted sandboxes** (env-var credentials not yet supported there), clients that reject the placeholder via local format validation, secrets that must never leave your infrastructure, or calls that need host-side binaries.
 
-**Solution:** move the authenticated call to your side. Declare a custom tool on the agent; when the agent emits \`agent.custom_tool_use\`, your orchestrator (the process reading the SSE stream) executes the call with its own credentials and responds with \`user.custom_tool_result\`. The container never sees the key.
+**Solution:** move the authenticated call to your side. Declare a custom tool on the agent; when the agent emits `agent.custom_tool_use`, your orchestrator (the process reading the SSE stream) executes the call with its own credentials and responds with `user.custom_tool_result`. The container never sees the key.
 
-\`\`\`ts
+```ts
 // Agent template: declare the tool, no credentials
 tools: [{ type: 'custom', name: 'linear_graphql', input_schema: { /* query, vars */ } }]
 
@@ -216,10 +216,10 @@ for await (const event of stream) {
     })
   }
 }
-\`\`\`
+```
 
-Same shape works for \`gh\` CLI, local eval scripts, or anything else that needs host-side auth or binaries.
+Same shape works for `gh` CLI, local eval scripts, or anything else that needs host-side auth or binaries.
 
-**Security note:** this does not expose a public endpoint. \`agent.custom_tool_use\` arrives on the SSE stream your orchestrator already holds open with your Anthropic API key, and \`user.custom_tool_result\` goes back via \`events.send()\` under the same key. Your orchestrator is a client, not a server — nothing unauthenticated is listening.
+**Security note:** this does not expose a public endpoint. `agent.custom_tool_use` arrives on the SSE stream your orchestrator already holds open with your Anthropic API key, and `user.custom_tool_result` goes back via `events.send()` under the same key. Your orchestrator is a client, not a server — nothing unauthenticated is listening.
 
-**Do not embed API keys in the system prompt or user messages as a workaround.** Prompts and messages are stored in the session's event history, returned by \`events.list()\`, and included in compaction summaries — a secret placed there is durably persisted and readable via the API for the life of the session.
+**Do not embed API keys in the system prompt or user messages as a workaround.** Prompts and messages are stored in the session's event history, returned by `events.list()`, and included in compaction summaries — a secret placed there is durably persisted and readable via the API for the life of the session.

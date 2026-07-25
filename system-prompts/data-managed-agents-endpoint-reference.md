@@ -3,7 +3,7 @@ name: 'Data: Managed Agents endpoint reference'
 description: >-
   Comprehensive reference for Managed Agents API endpoints, SDK methods,
   request/response schemas, error handling, and rate limits
-ccVersion: 2.1.218
+ccVersion: 2.1.219
 -->
 # Managed Agents — Endpoint Reference
 
@@ -51,7 +51,7 @@ All resources are under the `beta` namespace. Python and TypeScript share identi
 
 **Agent shorthand:** `agent` on session create accepts three forms — a bare string (`agent="agent_abc123"`, latest version), a pinned reference `{type: "agent", id, version}`, or `{type: "agent_with_overrides", id, version?, model?, system?, tools?, mcp_servers?, skills?}` to override those fields for this session only (see `shared/managed-agents-core.md` → Override agent configuration for a session).
 
-**Model shorthand:** `model` on agent create accepts either a bare string (`model="{{OPUS_ID}}"` — uses `standard` speed) or the full config object, which takes `speed` and `effort` alongside `id`: `{id: "{{OPUS_ID}}", speed: "fast"}`, `{id: "{{OPUS_ID}}", effort: "high"}`. `effort` accepts a level string (`low`/`medium`/`high`/`xhigh`/`max`) or `{type: "<level>"}`, and is **agent-configuration only** — an `effort` inside a per-session `model` override is ignored. See `shared/managed-agents-core.md` → Effort on the agent model. Note: `speed: "fast"` is supported only on Opus 4.8 and Opus 4.7. Opus 4.7 fast mode is deprecated; after removal, `speed: "fast"` on Opus 4.7 returns an error. Opus 4.8 is the durable fast-capable tier.
+**Model shorthand:** `model` on agent create accepts either a bare string (`model="{{OPUS_ID}}"` — uses `standard` speed) or the full config object, which takes `speed` and `effort` alongside `id`: `{id: "{{OPUS_ID}}", speed: "fast"}`, `{id: "{{OPUS_ID}}", effort: "high"}`. `effort` accepts a level string (`low`/`medium`/`high`/`xhigh`/`max`) or `{type: "<level>"}`, and is **agent-configuration only** — an `effort` inside a per-session `model` override is ignored. See `shared/managed-agents-core.md` → Effort on the agent model. Note: `speed: "fast"` is supported on {{OPUS_NAME}} and Opus 4.8 — on the Claude API only, which includes Managed Agents but not Amazon Bedrock, Google Cloud, or Microsoft Foundry. Opus 4.7 fast mode has been removed; `speed: "fast"` on Opus 4.7 returns an error.
 
 ---
 
@@ -191,7 +191,7 @@ Individual text documents inside a store (≤ 100KB each). `create` creates at a
 
 | Method   | Path                                                              | Operation      | Description                              |
 | -------- | ----------------------------------------------------------------- | -------------- | ---------------------------------------- |
-| `GET`    | `/v1/memory_stores/{memory_store_id}/memories`                    | ListMemories   | Returns `Memory \| MemoryPrefix`; filter by `path_prefix`, `depth`, `order_by`/`order` |
+| `GET`    | `/v1/memory_stores/{memory_store_id}/memories`                    | ListMemories   | Returns `Memory \| MemoryPrefix`; filter by `path_prefix`, `depth` |
 | `POST`   | `/v1/memory_stores/{memory_store_id}/memories`                    | CreateMemory   | Create at `path` (SDK: `memories.create`); `409 memory_path_conflict_error` if occupied |
 | `GET`    | `/v1/memory_stores/{memory_store_id}/memories/{memory_id}`        | GetMemory      | Read one memory (defaults to `view="full"`) |
 | `PATCH`  | `/v1/memory_stores/{memory_store_id}/memories/{memory_id}`        | UpdateMemory   | Change `content`, `path`, or both by ID; optional `precondition` |
@@ -361,7 +361,7 @@ Immutable per-mutation snapshots (`memver_...`) — the audit and rollback surfa
 }
 ```
 
-> `system.message` events (append system-level context for this turn and later ones) use the same envelope with `type: "system.message"` — supported on {{OPUS_NAME}}, {{SONNET_NAME}}, {{FABLE_NAME}}, and {{MYTHOS_NAME}}, checked against the agent's *primary* model only; see `shared/managed-agents-events.md` § Adding system context mid-session.
+> `system.message` events (append system-level context for this turn and later ones) use the same envelope with `type: "system.message"` — supported on {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{SONNET_NAME}}, {{FABLE_NAME}}, and {{MYTHOS_NAME}}, checked against the agent's *primary* model only; see `shared/managed-agents-events.md` § Adding system context mid-session.
 
 ### Define Outcome Event
 

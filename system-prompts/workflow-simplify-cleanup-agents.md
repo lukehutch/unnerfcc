@@ -1,36 +1,36 @@
 <!--
 name: 'Workflow: /simplify cleanup agents'
 description: 'Workflow: /simplify cleanup agents'
-ccVersion: 2.1.156
+ccVersion: 2.1.219
 variables:
-  - PROMPT_VAR_0
-  - PROMPT_VAR_1
-  - PROMPT_VAR_2
-  - PROMPT_VAR_3
-  - PROMPT_VAR_4
-  - PROMPT_VAR_5
+  - DIFF_SCOPE_PREAMBLE
+  - AGENT_TOOL_NAME
+  - REUSE_ANGLE
+  - SIMPLIFICATION_ANGLE
+  - EFFICIENCY_ANGLE
+  - ALTITUDE_ANGLE
 -->
-\`/simplify → 4 cleanup agents in parallel → apply the fixes\`
+`/simplify → 4 cleanup agents in parallel → apply the fixes`
 
 You are improving the quality of the changed code, not hunting for bugs. Review
 it for reuse, simplification, efficiency, and altitude issues, then fix what you
-find. Do not look for correctness bugs — that is what \`/code-review\` is for.
+find. Do not look for correctness bugs — that is what `/code-review` is for.
 
-${PROMPT_VAR_0}
+${DIFF_SCOPE_PREAMBLE}
 ## Phase 1 — Review (4 cleanup agents in parallel)
 
-Launch **4 independent review agents** via the ${PROMPT_VAR_1} tool, all in a
+Launch **4 independent review agents** via the ${AGENT_TOOL_NAME} tool, all in a
 single message so they run concurrently. Pass each agent the diff and one of
-the four angles below. Each returns its findings with \`file\`, \`line\`, a
-one-line \`summary\`, and the concrete cost (what is duplicated, wasted, or
+the four angles below. Each returns its findings with `file`, `line`, a
+one-line `summary`, and the concrete cost (what is duplicated, wasted, or
 harder to maintain).
 
 ### Reuse
 
-${PROMPT_VAR_2}
-${PROMPT_VAR_3}
-${PROMPT_VAR_4}
-${PROMPT_VAR_5}
+${REUSE_ANGLE}
+${SIMPLIFICATION_ANGLE}
+${EFFICIENCY_ANGLE}
+${ALTITUDE_ANGLE}
 ## Phase 2 — Apply the fixes
 
 Wait for all four agents to complete, dedup findings that point at the same

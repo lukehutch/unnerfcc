@@ -1,15 +1,15 @@
 <!--
 name: 'Data: Files API reference — C#'
 description: Files API reference doc (C# bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Files API — C#
 
 ## Files API (Beta)
 
-Files live under \`client.Beta.Files\` (namespace \`Anthropic.Models.Beta.Files\`). \`BinaryContent\` implicit-converts from \`Stream\` and \`byte[]\`.
+Files live under `client.Beta.Files` (namespace `Anthropic.Models.Beta.Files`). `BinaryContent` implicit-converts from `Stream` and `byte[]`.
 
-\`\`\`csharp
+```csharp
 using Anthropic.Models.Beta.Files;
 using Anthropic.Models.Beta.Messages;
 
@@ -20,9 +20,9 @@ FileMetadata meta = await client.Beta.Files.Upload(
 new BetaRequestDocumentBlock {
     Source = new BetaFileDocumentSource { FileID = meta.ID },
 }
-\`\`\`
+```
 
-The non-beta \`DocumentBlockParamSource\` union has no file-ID variant — file references need \`client.Beta.Messages.Create()\`.
+The non-beta `DocumentBlockParamSource` union has no file-ID variant — file references need `client.Beta.Messages.Create()`.
 
 ---
 

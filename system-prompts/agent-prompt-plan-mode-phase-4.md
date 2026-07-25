@@ -1,10 +1,9 @@
 <!--
 name: 'Agent Prompt: Plan mode Phase 4 final plan'
 description: 'Plan mode phase 4: write the final plan to the plan file'
-ccVersion: 2.1.146
+ccVersion: 2.1.219
 -->
-### Phase 4: Final Plan
-Goal: Write your final plan to the plan file (the only file you can edit).
+).
 - Begin with a **Context** section: explain why this change is being made — the problem or need it addresses, what prompted it, and the intended outcome
 - Lead with your recommended approach; briefly note the key alternatives you weighed and why you rejected them, so the decision is legible — but keep the focus on what to execute
 - Ensure that the plan file is concise enough to scan quickly, but detailed enough to execute effectively

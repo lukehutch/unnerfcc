@@ -1,11 +1,11 @@
 <!--
 name: 'System Prompt: Option previewer'
 description: System prompt for previewing UI options in a side-by-side layout
-ccVersion: 2.1.69
+ccVersion: 2.1.219
 -->
 
 Preview feature:
-Use the optional \`preview\` field on options when presenting concrete artifacts that users need to visually compare:
+Use the optional `preview` field on options when presenting concrete artifacts that users need to visually compare:
 - ASCII mockups of UI layouts or components
 - Code snippets showing different implementations
 - Diagram variations

@@ -3,13 +3,13 @@ name: 'Data: Files API reference — TypeScript'
 description: >-
   TypeScript Files API reference including file upload, listing, deletion, and
   usage in messages
-ccVersion: 2.1.78
+ccVersion: 2.1.219
 -->
 # Files API — TypeScript
 
-The Files API uploads files for use in Messages API requests. Reference files via \`file_id\` in content blocks, avoiding re-uploads across multiple API calls.
+The Files API uploads files for use in Messages API requests. Reference files via `file_id` in content blocks, avoiding re-uploads across multiple API calls.
 
-**Beta:** Pass \`betas: ["files-api-2025-04-14"]\` in your API calls (the SDK sets the required header automatically).
+**Beta:** Pass `betas: ["files-api-2025-04-14"]` in your API calls (the SDK sets the required header automatically).
 
 ## Key Facts
 
@@ -23,7 +23,7 @@ The Files API uploads files for use in Messages API requests. Reference files vi
 
 ## Upload a File
 
-\`\`\`typescript
+```typescript
 import Anthropic, { toFile } from "@anthropic-ai/sdk";
 import fs from "fs";
 
@@ -36,9 +36,9 @@ const uploaded = await client.beta.files.upload({
   betas: ["files-api-2025-04-14"],
 });
 
-console.log(\`File ID: \${uploaded.id}\`);
-console.log(\`Size: \${uploaded.size_bytes} bytes\`);
-\`\`\`
+console.log(`File ID: ${uploaded.id}`);
+console.log(`Size: ${uploaded.size_bytes} bytes`);
+```
 
 ---
 
@@ -46,7 +46,7 @@ console.log(\`Size: \${uploaded.size_bytes} bytes\`);
 
 ### PDF / Text Document
 
-\`\`\`typescript
+```typescript
 const response = await client.beta.messages.create({
   model: "{{OPUS_ID}}",
   max_tokens: 16000,
@@ -68,7 +68,7 @@ const response = await client.beta.messages.create({
 });
 
 console.log(response.content[0].text);
-\`\`\`
+```
 
 ---
 
@@ -76,30 +76,30 @@ console.log(response.content[0].text);
 
 ### List Files
 
-\`\`\`typescript
+```typescript
 const files = await client.beta.files.list({
   betas: ["files-api-2025-04-14"],
 });
 for (const f of files.data) {
-  console.log(\`\${f.id}: \${f.filename} (\${f.size_bytes} bytes)\`);
+  console.log(`${f.id}: ${f.filename} (${f.size_bytes} bytes)`);
 }
-\`\`\`
+```
 
 ### Delete a File
 
-\`\`\`typescript
+```typescript
 await client.beta.files.delete("file_011CNha8iCJcU1wXNR6q4V8w", {
   betas: ["files-api-2025-04-14"],
 });
-\`\`\`
+```
 
 ### Download a File
 
-\`\`\`typescript
+```typescript
 const response = await client.beta.files.download(
   "file_011CNha8iCJcU1wXNR6q4V8w",
   { betas: ["files-api-2025-04-14"] },
 );
 const content = Buffer.from(await response.arrayBuffer());
 await fs.promises.writeFile("output.txt", content);
-\`\`\`
+```

@@ -4,7 +4,7 @@ description: >-
   Reference documentation for Managed Agents memory stores, including store
   creation, session attachment, FUSE mounts, memory CRUD, concurrency, versions,
   redaction, and endpoint paths
-ccVersion: 2.1.205
+ccVersion: 2.1.219
 -->
 # Managed Agents — Memory Stores
 
@@ -92,7 +92,7 @@ Use these for review workflows, correcting bad memories, or seeding stores out-o
 
 ### List
 
-Returns `Memory | MemoryPrefix` entries — a `MemoryPrefix` (`type: "memory_prefix"`, just a `path`) is a directory-like node when listing hierarchically. Use `path_prefix` to scope (include a trailing slash: `"/notes/"` matches `/notes/a.md` but not `/notes_backup/old.md`) and `depth` to bound the tree walk. `order_by` / `order` sort the result. Pass `view="full"` to include `content` in each item; the default `"basic"` returns metadata only.
+Returns `Memory | MemoryPrefix` entries — a `MemoryPrefix` (`type: "memory_prefix"`, just a `path`) is a directory-like node when listing hierarchically. Use `path_prefix` to scope (include a trailing slash: `"/notes/"` matches `/notes/a.md` but not `/notes_backup/old.md`) and `depth` to bound the tree walk. Pass `view="full"` to include `content` in each item; the default `"basic"` returns metadata only.
 
 ```python
 for m in client.beta.memory_stores.memories.list(store.id, path_prefix="/"):

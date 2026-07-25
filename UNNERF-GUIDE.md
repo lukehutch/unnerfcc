@@ -182,9 +182,77 @@ Bun-format-change path) lives in **[UPGRADE.md](UPGRADE.md)**. In brief:
 python3 scripts/apply-unnerfs.py --check   # gate: 0 FAILED, 0 missing
 ```
 
-Classification of new strings runs on **Opus** (the one-time bootstrap over the
-whole bundle used Haiku; incremental per-release runs use Opus for un-nerf
-recall). A release often has **>500 new fragments**; rather than fan those out
+### Matching is pure hashing
+
+Every string's identity is one `sha256` over one string — no runs to re-align, no
+encoding table, no fuzzy tier.
+
+That is possible because the AST is **normalized in memory the moment it is
+parsed**, before anything is hashed (`lib/normalize-ast.mjs`). The bundle spells
+the same prompt differently from build to build — `"a"+x+"b"` one release,
+`` `a${x}b` `` the next, single quotes here, double quotes there, a `+` chain
+split at a different point. Normalization collapses all of it: every
+string-producing expression becomes a `TemplateLiteral` whose interpolations are
+bare variables, complex interpolations are hoisted out, so there is exactly **one
+kind of node to read and one string to hash**. (Quoted literals survive only where
+a backtick is a syntax error — on v2.1.219 that is 6,944 nodes, every one a
+property key.)
+
+The hashed form (`canonicalize` in `scripts/prompt-index.mjs`, byte-identical to
+`canonicalText(node)` straight off the live AST) is the node's literal runs
+interleaved with **bare `${}` markers**:
+
+```
+`Read ${path} (${n} lines)`   ->   Read ${} (${} lines)
+```
+
+No variable name and no slot index reaches the hash. That is deliberate: the
+bundle is minified, so a variable is `Wv` in one release and `q3` in the next, and
+a minifier may reuse one variable where the last build used two — none of which is
+a change to the prompt. What the hash keeps is the literal text and the number and
+position of the interpolations. The cost is that `` `${a}${b}` `` and
+`` `${a}${a}` `` hash equal; the literal text carries essentially all of a
+prompt's identity, so that is a good trade. A literal `${` inside the text is
+escaped, so a run can never forge a marker and the encoding stays injective.
+
+The consequence for **editing** is the slot contract in
+[Part 6](#adding-a-rule): with names out of the hash, the splicer binds slots by
+position, so an edit must keep every `${...}` placeholder in the same order.
+
+**There is no fuzzy matching, and that is deliberate.** A one-character edit is a
+hash miss, and a miss is never resolved by guessing at an ancestor:
+
+- The old carry-forward had a 100-char normalized-prefix fallback that adopted a
+  fresh prompt's text under an old prompt's id whenever the first 100 characters
+  still lined up. That silently mis-carried identity on prefix-sharing prompts
+  and made "is this the same prompt?" depend on an arbitrary window.
+- Now a reworded prompt is simply **REMOVED** (its old entry) plus **ADDED** (its
+  new wording), and re-identification is done by the labeler, which is told what
+  disappeared (`removed.json`) and instructed to re-use the id verbatim when it
+  recognizes a reword. Ids stay stable because a reader judged it, not because a
+  prefix happened to match.
+- There is no longer any non-hash net at all. `gen-catalog.mjs` used to keep one
+  (`bundleHasSeed`, an exact ≥25-char substring probe of the raw bundle) purely to
+  rescue prompts the old *extractor heuristic* dropped — 102 of 1,303 seed ids
+  vanished on an ordinary bump without it, tripping validate-catalog's
+  ">50 removed" gate. Normalization removed the cause: the extractor now sees
+  every string-producing node in one shape, so nothing to rescue, and the probe is
+  deleted rather than kept as a redundant second matcher.
+- Because a reword no longer carries forward, `gen-catalog.mjs` **auto-admits**
+  fresh strings that Claude classified `class:"prompt"` with
+  `ccFirstSeen == <this version>`. That is the readmission path: without it a
+  reworded prompt's `.md` would disappear and `apply-unnerfs.py --check` would
+  die. Admitted entries are anonymous; relabel names them.
+
+Consequence to expect each release: a handful of genuinely-removed ids, plus one
+newly-admitted entry per new-or-reworded prompt for the labeler to name.
+
+### Classification
+
+Classification of new strings runs on **Opus 5 at `--effort medium`** (pinned by
+exact model id, not the floating `opus` alias; the one-time bootstrap over the
+whole bundle used Haiku, but incremental per-release runs need real reasoning for
+un-nerf recall). A release often has **>500 new fragments**; rather than fan those out
 into many separate Opus jobs, `classify.mjs` writes them ALL to a single
 `batch.json` and runs **one** Opus job over the whole set, told to skip none.
 It then **verifies completeness**: any ref the job dropped is re-sent as a small
@@ -194,12 +262,15 @@ listing what's still unclassified. For each new prompt Claude proposes a `name` 
 surfaced in `<catalog>.candidates.json`, which the maintainer confirms before
 promoting into the catalog with a real id.
 
-After the catalog is generated, **`scripts/unnerf-status.mjs`** pairs the previous
-and new catalogs by `id` and reports every **reworded prompt whose un-nerf status
-flipped** (upstream added or removed a brevity/effort nerf) →
+After the catalog is generated **and relabeled**, **`scripts/unnerf-status.mjs`**
+pairs the previous and new catalogs by `id` and reports every **reworded prompt
+whose un-nerf status flipped** (upstream added or removed a brevity/effort nerf) →
 `data/unnerf-status-changes.json` — a re-check worklist for the apply-unnerfs
 rules, complementing `apply-unnerfs.py --check` (which only covers prompts that
-already have a rule).
+already have a rule). It **must** run after the relabel merge: pairing is by
+`id`, and under pure hashing a reworded prompt has no id in the new catalog until
+relabel re-attaches it — run earlier and every reword is invisible, so the check
+silently passes with nothing to report.
 
 Then the maintainer's judgment step (this guide's reason to exist): for each
 prompt Claude flags as un-nerf-worthy (`data/unnerf-candidates.json`) or that
@@ -356,20 +427,39 @@ FAILs).
 - **Quote/escape safety:** an un-nerf containing `"` inside a `${"..."}` literal
   can break things; non-idempotent rules where `unnerf` contains `stock` verbatim
   will re-apply forever — avoid both. Gate with `--check`.
-- **Orphan-variable guard (automatic):** `apply-unnerfs.py` refuses any rule
-  whose `unnerf` introduces a `${NAME}` identifier that isn't in the rule's own
-  `stock` text or the target file's `variables:` frontmatter. Such a placeholder
-  has no entry in the prompt's `identifierMap`, so it reaches the binary's
-  template literal unresolved and crashes Claude Code at launch
-  (`ReferenceError: NAME is not defined`) — or trips the splicer's leak guard
-  (`lib/patch-prompts.mjs`), which skips the prompt. The guard fails loudly at apply time
-  instead. (Lesson imported from lobotomized-claude-code's post-mortems.)
-  The guard is **one-directional** — it never objects to a rule that *removes* a
-  `${VAR}` reference. Dropping a verbosity/effort/count-cap variable (e.g.
-  `${MAX_FINDINGS}`) is a valid, encouraged un-nerf: repack is name-based, so the
-  orphaned `variables:` frontmatter entry is inert (the interpolation drops out of
-  the rebuilt template). Don't add a rule to strip the frontmatter line — it's
-  cosmetic, and stock re-extraction reintroduces it each sync anyway.
+- **Keep every `${...}` placeholder, in the same order.** This is the splicer's
+  hard contract, and `apply-unnerfs.py`'s **slot-sequence guard** enforces it: the
+  sequence of `${NAME}` placeholders in a rule's `unnerf` must equal the sequence
+  in its `stock`, exactly — same names, same order, same repetitions.
+
+  Why: identity hashing is deliberately blind to variable names (a slot hashes as
+  a bare `${}`, so a minifier renaming `Wv` to `q3` between releases can't churn
+  the catalog — see [Matching is pure hashing](#matching-is-pure-hashing)). With
+  the name out of the hash, **position is the only binding there is**.
+  `lib/patch-prompts.mjs` splits the edited body on the marker sequence the
+  prompt's `identifiers` list gives, then rebinds the i-th marker to the i-th
+  interpolation the stock string already had — restoring the bundle's own
+  variables in place. Each way of breaking that fails differently:
+
+  | Edit | What happens |
+  |---|---|
+  | Placeholder **dropped** or **reordered** | the marker walk can't find it → the whole prompt is reported **LOST** and never reaches the binary |
+  | Placeholder **duplicated** | the walk is ambiguous → also **LOST** |
+  | Placeholder **added** (a name the prompt doesn't have) | it isn't a marker, so it survives as **literal text** — the prompt ships reading `${FOO}` as prose |
+
+  The guard turns all three into a loud failure at apply time. (The earlier
+  one-directional "orphan variable" guard only caught the third case, and the
+  guide used to say dropping a count-cap variable like `${MAX_FINDINGS}` was
+  encouraged because "the interpolation drops out of the rebuilt template". That
+  was true of the old name-based repack and is **false** under node-mutating
+  splice — such a rule now silently loses its prompt. Upstream has since
+  literalized that particular cap anyway (`**4 findings**` in v2.1.219), so
+  nothing legitimate is blocked by the stricter rule.)
+
+  To neutralize a cap that is still a variable, rewrite the **prose** around it so
+  the number stops binding (`"Report at most ${N} findings"` →
+  `"Report every finding that survives verification; ${N} is a floor, not a
+  ceiling"`) rather than deleting the placeholder.
 
 ### Handling FAILs (drift) and structural changes
 
@@ -496,36 +586,76 @@ binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
 ([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
 format changes ([BACKGROUND.md](BACKGROUND.md)).
 
-## Part 9 — Current state (v2.1.218)
+## Part 9 — Current state (v2.1.219)
 
 We track **only the latest** Claude Code version, generating the prompt catalog
 ourselves from the installed binary each sync (`gen-catalog.mjs`). Replace this
 snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.218** — the latest CC release. Catalog holds
-  **1,412 unique prompts**; the splicer patches **1,303 call-sites** in the
-  binary (76 un-nerfed + 1,227 unchanged, `patched=76 lost=0`), one `.md` per
-  reconstructed prompt (duplicate-id sites collapse to their first occurrence in
-  `gen-catalog.mjs`; the splicer still patches every identical call-site, Part 7).
-- **Scale:** **121 un-nerf rules across 76 files**, `--check` clean. All **121
-  rules re-apply byte-exactly** (`--check` → `Files processed: 76, Rules skipped:
-  121, FAILED: 0, Missing: 0`), and all 5 install.sh verify sentinels are present.
+- **Version:** built from **v2.1.219** — the latest CC release. Catalog holds
+  **2,568 prompt entries / 2,463 distinct identity hashes**; the splicer patches
+  **2,462 call-sites** in the binary (86 un-nerfed + 2,376 unchanged,
+  `patched=86 lost=0 residual=0`), one `.md` per reconstructed prompt (duplicate-id
+  sites collapse to their first occurrence in `gen-catalog.mjs`; the splicer still
+  patches every identical call-site, Part 7).
+- **Scale:** **123 un-nerf rules across 86 files**, `--check` clean. All **123
+  rules re-apply byte-exactly** (`--check` → `Files processed: 86, Rules skipped:
+  123, FAILED: 0, Missing: 0`), and all 5 install.sh verify sentinels are present.
   The un-nerfs touch only the brevity/thoroughness posture (engineering depth and
   human-facing reporting); no protection-class or functional string is flipped.
-- **Known catalog recall gap (deferred fix):** the v2.1.217→218 sync dropped 77
-  prompts from the catalog. 54 are genuine upstream removals (no surviving prose
-  in the binary — the context-tip feature, model-description blobs, framing tags);
-  **13 are reworded-but-still-present** and were dropped in error by
-  `gen-catalog.mjs`'s carry-forward recall gap (`bundleHasSeed`/`distinctiveRun`
-  fingerprint on only the **single longest** pure-ASCII run, which fails when the
-  rewording lands in that run or the prompt is em-dash-heavy so its ASCII islands
-  are short); the remaining 10 are pure-`${interpolation}`/data blobs with no
-  testable prose (status not individually confirmed). **None of the 13 are
-  un-nerf targets, so the patched binary is unaffected** — but the catalog is
-  incomplete for those 13. The permanent fix (per-literal exact-replace matching
-  that carries a reworded prompt with its *fresh* pieces via any surviving
-  distinctive run, not just the longest) is tracked as the next matching-engine
-  task; a stale-text carry would be worse than the drop, so it is not a stopgap.
+- **The normalization sync cost 29 rule re-anchors — budget for this once.** Pure
+  hashing over the normalized AST changed what counts as *one prompt*, so upstream
+  text that used to extract as a single node now splits at every non-bare
+  interpolation. 29 of 123 rules (24%) went `FAILED` on the first run, none because
+  the prompt text changed. Three distinct causes, each with its own fix:
+  **(a) whole-key renames (7)** — the node kept its text but relabel gave it a new
+  `<id>.md`; fix is a one-line dict-key rename. **(b) splits (7 keys → 12)** — one
+  `.md` became two or three sibling nodes, so the rules must be dealt out to the
+  file each one actually lives in now (e.g. the ternary in
+  `agent-prompt-webfetch-summarizer` became a trusted-arm file and an untrusted-arm
+  file; `${x.agentType}` cut the plan-mode Phase-1 block into a prefix node and a
+  tail node, with every brevity directive in the tail). **(c) slot-name drift (2)** —
+  the text is unchanged but a `${SLOT}` was renamed (`CANCEL_TIMEFRAME_DAYS` →
+  `RECURRING_EXPIRY_DAYS`, `CONFIRMATION_MESSAGE` → `CONFIRMATION_TEXT`); fix in
+  place, do **not** re-anchor to another file. Triage trick: wildcard each failing
+  rule's `${...}` into `[^\n]*?` and grep the whole tree — a rule that relocates to
+  exactly one file is a rename or a split; one that hits **its own** file is slot
+  drift; one that hits **zero** files spans an interpolation and must be cut at the
+  node boundary. Always filter `skill-model-migration-guide.md` out of the hit list
+  first: it is a 174 KB doc blob that *quotes* real system prompts, so it matches
+  constantly and must never be un-nerfed.
+- **Catalog recall gap — FIXED by normalization (was deferred at v2.1.218).** The
+  v2.1.217→218 sync dropped 77 prompts: 54 genuine upstream removals, **13
+  reworded-but-still-present and dropped in error**, 10 pure-`${interpolation}`/
+  data blobs with no testable prose. The 13 were lost to the old carry-forward's
+  recall gap — `bundleHasSeed`/`distinctiveRun` fingerprinted only the **single
+  longest** pure-ASCII run, which fails when the rewording lands in that run or the
+  prompt is em-dash-heavy so its ASCII islands are short. (None of the 13 were
+  un-nerf targets, so the shipped v2.1.218 binary was unaffected.) The permanent
+  fix landed as the in-memory AST normalizer: the extractor no longer needs a
+  substring probe at all, so both fingerprints are deleted rather than widened.
+- **Admission gate — the only gate is identity-hash dedupe.** Two narrower gates
+  lived in `gen-catalog.mjs` step 3b and both silently dropped live prompts.
+  `ccFirstSeen === version` dropped **615** at v2.1.219 (whole system-prompt
+  sections, the `EndConversation` tool description). A *containment* gate — skip a
+  string some longer entry quotes verbatim — dropped **55**, of which 54 were live
+  prompts merely quoted by documentation blobs and **0** were genuine leaves. The
+  normalized extractor emits one site per live string node and never emits a
+  folded run *plus* its leaves (a complex interpolation yields **disjoint**
+  siblings, not nested ones), so containment can only ever mean "a doc quotes this
+  prompt." Every candidate reaching 3b is patchable; there is nothing to filter on.
+- **Duplicate identity hashes are by design, and the splicer fans out.** 51 hashes
+  are shared by more than one catalog entry; `sitesByKey` maps a canonical key to an
+  **array** of nodes and queues a write for **every** one, so all spellings of a
+  reused prompt (single-quoted, double-quoted, backticked, `+`-concatenated) are
+  un-nerfed together. Presence-checking the new text is **not** sufficient proof
+  here: if one of N sites is missed, the patched siblings still satisfy it. The
+  splicer therefore also requires every **displaced stock text** to be gone and
+  reports `residual=`; a survivor is a half-un-nerfed prompt and is raised `[LOST]
+  … partial`. Verified in both directions on a synthetic bundle — a 3-spelling
+  prompt patched at all 3 sites with its `${}` variable restored in place, and a
+  deliberately sabotaged fan-out caught by the residual gate (`3/3 present` but
+  `1/3 displaced gone` → `residual=2`).
 - **Sibling audit:** *(carried from v2.1.202 — re-confirm on the next full audit;
   no sibling-audit script exists yet.)* Over the v2.1.202 catalog, **0 un-ruled
   siblings** — every cross-file `stock` match was already ruled in both files
@@ -546,8 +676,11 @@ snapshot each sync rather than appending history.
   what you launched" launch-note flips
   (`tool-description-cloud-agent-launched-result`,
   `tool-result-cloud-agent-launched-notify-user`) remain reachable and applied.
-- **Binary check (Part 7):** our catalog is extracted from the installed v2.1.202
-  binary, and `install.sh` verifies the un-nerf sentinels land on every install.
+- **Binary check (Part 7):** our catalog is extracted from the v2.1.219 binary,
+  and the sync verified the full path end-to-end — prompt splice
+  (`patched=86 lost=0 residual=0`), effort un-nerfs (all applied), repack, boot
+  (`--version` → `2.1.219`), a live `-p` inference returning `OK`, and all 5
+  install.sh sentinels present in the patched JS.
 - **Not yet audited:** the `system-reminder-*` per-turn injections that never
   surface as named prompts — a future full-sweep surface (Part 5).
 

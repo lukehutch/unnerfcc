@@ -1,0 +1,8 @@
+<!--
+name: 'Skill: /design hub consent and revoke routing'
+description: >-
+  Table row telling the /design hub to hand `consent` and `revoke` back to the
+  dedicated commands and stop, never treating the word as a design brief.
+ccVersion: 2.1.219
+-->
+| `consent` or `revoke` | Ask the user to run `/design consent` or `/design revoke` themselves — the dedicated commands manage the durable agent-access grant, and are available only with a first-party claude.ai login and a policy that permits Design access; if this session lacks those, say that instead. Do not treat the word as a design brief, and stop. |

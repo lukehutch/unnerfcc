@@ -33,10 +33,15 @@ The whole upgrade is one command:
   `prompts-<version>.json` from skrabe — `gen-catalog.mjs` produces it on release
   day. The catalog lives in [`data/prompts/`](data/prompts) and **we own it**.
 - **Two SHA-256 hashes per prompt** (`scripts/prompt-index.mjs`):
-  - *identity hash* = `sha256(pieces.join(''))` — label-independent; the stable
-    key for carrying a prompt's id/name/description/identifierMap across versions.
+  - *identity hash* = `sha256` over the **cooked** pieces (each finished-decoded
+    to its literal runtime value) joined with a NUL — label-independent, and
+    independent of the source spelling that produced the string. The stable key
+    for carrying a prompt's id/name/description/identifierMap across versions.
     An unchanged prompt hashes equal → its id is carried verbatim. **This is what
-    keeps `apply-unnerfs.py`'s id-keyed rules stable.**
+    keeps `apply-unnerfs.py`'s id-keyed rules stable.** Matching is **pure
+    hashing** — no fuzzy/prefix fallback: one changed character is a miss, and a
+    miss routes the string back through classification instead of being guessed
+    onto an ancestor id.
   - *drift hash* = `sha256(reconstructed body)` — the change-detection signal
     (successor to the old MD5 `system-prompt-checksums.json`).
 - **Seed-driven catalog + Claude does only the delta.** Our extractor favors
@@ -45,11 +50,17 @@ The whole upgrade is one command:
   every known prompt is matched to its current extracted form (id carried,
   pieces refreshed), and the extractor's over-inclusion is diverted to a
   `*.candidates.json` for review — never polluting the catalog. Only the few
-  dozen reworded/new fragments reach Claude (**Opus**), which proposes a
-  `name` + `description` and a per-`${…}`-slot binding audit against the
-  worklist, the previous catalog, and `UNNERF-GUIDE.md`. For a **reworded**
-  prompt Claude is told to **preserve the existing id** (our rules are keyed to
-  it).
+  dozen reworded/new fragments reach Claude (**Opus 5, `--effort medium`**),
+  which proposes a `name` + `description` and a per-`${…}`-slot binding audit
+  against the worklist, the previous catalog, and `UNNERF-GUIDE.md`.
+- **Rewords are re-identified, not guessed.** A reword misses the identity hash,
+  so it arrives as a *removed* old id plus an *added* fresh fragment. `relabel.mjs
+  prepare` writes `removed.json` alongside the worklist and instructs Claude: if a
+  fragment is a reword of something that just disappeared, **re-use that id
+  verbatim** — `apply-unnerfs.py`'s rules are keyed to `<id>.md`, and a churned id
+  silently orphans an un-nerf. Fresh strings Claude classified as prompts with
+  `ccFirstSeen == <this version>` are auto-admitted to the catalog so the reworded
+  prompt has an entry to be named.
 
 ## The one manual beat: review + bucket-analysis
 

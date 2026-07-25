@@ -1,13 +1,9 @@
 <!--
 name: Skill Listing System-Reminder Wrapper
 description: >-
-  Model-facing skill_listing system-reminder wrapper injected each turn ("The
-  following skills are available for use with the Skill tool:\n\n${content}");
-  conditional on at least one skill being available.
-ccVersion: 2.1.191
-variables:
-  - SYSTEM_REMINDER_SKILL_LISTING_WRAPPER_VAR_0
+  Model-facing skill-listing system reminder injected each turn, announcing the
+  skills available through the Skill tool.
+ccVersion: 2.1.219
 -->
 The following skills are available for use with the Skill tool:
 
-${SYSTEM_REMINDER_SKILL_LISTING_WRAPPER_VAR_0.content}

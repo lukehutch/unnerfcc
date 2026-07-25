@@ -1,10 +1,9 @@
 <!--
-name: 'Tool Result: Click Lands Outside Allowed Apps'
+name: 'Tool Result: Front app not in allowed applications'
 description: >-
-  computer-use tool_result when a click would land on an application not in the
-  allowed list.
-ccVersion: 2.1.178
-variables:
-  - TOOL_DESCRIPTION_COMPUTER_CLICK_OUTSIDE_ALLOWED_APPS_VAR_0
+  computer-use tool_result reporting that the frontmost application is not in
+  the allowed list and telling the model to take a new screenshot since the
+  window may have appeared since the last one.
+ccVersion: 2.1.219
 -->
-Click at these coordinates would land on "${TOOL_DESCRIPTION_COMPUTER_CLICK_OUTSIDE_ALLOWED_APPS_VAR_0.displayName}", which is not in the allowed applications. Take a fresh screenshot to see the current window layout.
+" is not in the allowed applications and is currently in front. Take a new screenshot — it may have appeared since your last one.

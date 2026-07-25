@@ -1,15 +1,15 @@
 <!--
 name: 'Data: Files API reference — Java'
 description: Files API reference doc (Java bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.219
 -->
 # Files API — Java
 
 ## Files API (Beta)
 
-Under \`client.beta().files()\`. File references in messages need the beta message types (non-beta \`DocumentBlockParam.Source\` has no file-ID variant).
+Under `client.beta().files()`. File references in messages need the beta message types (non-beta `DocumentBlockParam.Source` has no file-ID variant).
 
-\`\`\`java
+```java
 import com.anthropic.models.beta.files.FileUploadParams;
 import com.anthropic.models.beta.files.FileMetadata;
 import com.anthropic.models.beta.messages.BetaRequestDocumentBlock;
@@ -25,6 +25,6 @@ FileMetadata meta = client.beta().files().upload(
 BetaRequestDocumentBlock doc = BetaRequestDocumentBlock.builder()
     .source(BetaFileDocumentSource.builder().fileId(meta.id()).build())
     .build();
-\`\`\`
+```
 
-Other methods: \`.list()\`, \`.delete(String fileId)\`, \`.download(String fileId)\`, \`.retrieveMetadata(String fileId)\`.
+Other methods: `.list()`, `.delete(String fileId)`, `.download(String fileId)`, `.retrieveMetadata(String fileId)`.

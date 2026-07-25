@@ -1,10 +1,8 @@
 <!--
 name: 'System Reminder: Deferred tools available again'
-description: Reminder that deferred MCP tools are available again after a server reconnect.
-ccVersion: 2.1.178
-variables:
-  - SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_0
-  - SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_1
-  - SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_2
+description: >-
+  Reminder that deferred MCP tools are available again after their server
+  reconnected, under the names announced earlier in the conversation.
+ccVersion: 2.1.219
 -->
-${SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_0.length} deferred tool${SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_0.length===1?" is":"s are"} available again (MCP server reconnected — names announced earlier in this conversation): ${SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_1(SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_0)}. Load via ${SYSTEM_REMINDER_DEFERRED_TOOLS_READDED_VAR_2} as before.
+ available again (MCP server reconnected — names announced earlier in this conversation): 

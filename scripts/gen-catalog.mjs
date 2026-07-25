@@ -17,15 +17,24 @@
  *
  * Per seed prompt, matched against the fresh extraction:
  *   - identity-hash match  → CARRIED: unchanged; keep the seed entry verbatim.
- *   - fuzzy (100-char) match → CHANGED: Anthropic reworded it; replace
- *     pieces/identifiers/identifierMap with the fresh form (so patching uses
- *     current text), keep id/name, bump version. (An un-nerf rule targeting it
- *     may now need review — apply-unnerfs --check will say so.)
  *   - no match             → REMOVED: dropped from the catalog (reported).
- * Fresh-extraction prompts that match NO seed prompt are genuinely NEW; they are
- * NOT auto-added (that would readmit the junk). They are counted and written to
- * `<out>.candidates.json` (filtered to prompt-shaped) for the maintainer to
- * review and, if worth un-nerfing, promote into the catalog.
+ *
+ * That is the whole matching rule. The fresh extraction is a full-AST parse of
+ * the entire bundle, so "not in the fresh set" means "not in the source" — there
+ * is no grep-the-bundle fallback and no fuzzy tier.
+ *
+ * PURE HASHING — there is no fuzzy/prefix matching. If Anthropic rewords a
+ * prompt by even one character its identityHash misses, the seed entry is
+ * REMOVED, and the new wording arrives as a fresh string that gets classified
+ * and relabeled (relabel is handed the removed-id list so it can re-use the id,
+ * which is what keeps `<id>.md` and the un-nerf rules stable across a reword).
+ *
+ * Fresh-extraction prompts matching no seed are genuinely NEW. Two outcomes:
+ *   - ADMITTED: Claude's classification store says class=="prompt" AND it was
+ *     first seen in THIS version — a real new prompt, added anonymously for
+ *     relabel to name. This is the readmission path for a reworded prompt.
+ *   - CANDIDATE: everything else prompt-shaped, written to
+ *     `<out>.candidates.json` for the maintainer to review.
  *
  * USAGE
  *   node gen-catalog.mjs <cliJsPath> <version> <outCatalog.json> <seedCatalog.json>
@@ -41,10 +50,6 @@ import { identityHash, reconstruct } from "./prompt-index.mjs";
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(SCRIPT_DIR, "..");
 const EXTRACTOR = join(REPO, "lib", "extract-prompts.mjs");
-
-const FUZZY_PREFIX = 100, FUZZY_MIN = 60;
-const fpNormalize = (s) => s.replace(/\\(['"`\\])/g, "$1");
-const fuzzyKey = (p) => fpNormalize((p.pieces ?? []).join("")).slice(0, FUZZY_PREFIX);
 
 function die(m, c = 1) { console.error(`gen-catalog: ${m}`); process.exit(c); }
 
@@ -79,72 +84,90 @@ try {
   rmSync(work, { recursive: true, force: true });
 }
 
-// 2. Index the fresh extraction by identity hash and fuzzy prefix.
+// 2. Index the fresh extraction by identity hash.
 const seed = JSON.parse(readFileSync(seedCatalog, "utf-8"));
 
-// Safety net: the general extractor's inclusion heuristic is a proxy and can
-// miss a prompt (short one-liners especially). But we KNOW every seed prompt,
-// so the heuristic must never be load-bearing for one. Read the bundle once and
-// confirm a seed prompt directly: if a distinctive literal run of its text is
-// present verbatim in the bundle, the prompt is there regardless of what the
-// heuristic decided. A "distinctive run" is a >=25-char stretch of plain
-// printable ASCII with no interpolation / newline / backslash / quote — those
-// are stored source-escaped in the bundle, but plain ASCII is byte-literal.
-const bundle = readFileSync(cliJs, "utf-8");
-function distinctiveRun(p) {
-  let best = null;
-  for (const piece of p.pieces ?? []) {
-    for (const run of piece.split(/\$\{|\\n|\n|\\|["'`]/)) {
-      if (/^[\x20-\x7e]{25,}$/.test(run) && (!best || run.length > best.length)) best = run;
-    }
-  }
-  return best;
-}
-const bundleHasSeed = (p) => { const r = distinctiveRun(p); return r ? bundle.includes(r) : false; };
-const freshByIdentity = new Map();
-const freshFuzzyCounts = new Map(), freshFuzzy = new Map();
-const freshUsed = new Set();
-for (const p of fresh.prompts) {
-  freshByIdentity.set(identityHash(p), p);
-  const k = fuzzyKey(p);
-  if (k.length >= FUZZY_MIN) { freshFuzzyCounts.set(k, (freshFuzzyCounts.get(k) || 0) + 1); freshFuzzy.set(k, p); }
-}
-for (const [k, n] of freshFuzzyCounts) if (n > 1) freshFuzzy.delete(k);
+// Claude's classification store — the authoritative "is this a prompt?" signal.
+// Loaded here (before the merge) because step 3b needs it to decide which fresh
+// strings to admit, not just which to list as candidates.
+let classified = {};
+try { classified = JSON.parse(readFileSync(join(REPO, "data", "string-catalog.json"), "utf8")).strings || {}; } catch {}
 
-// 3. Seed-driven merge.
+// There is NO bundle-text safety net. The extractor parses the ENTIRE bundle
+// into an AST and `--all` mode emits every non-blob literal it contains — one
+// site per live string node — so any string that exists in the source is in the
+// fresh set by construction. A grep of the raw source could only tell us
+// something the AST already knows.
+//
+// The net that used to live here was also actively harmful: it matched the
+// longest >=25-char printable-ASCII run, which in a multi-KB document is a
+// generic sentence that survives an edit elsewhere in the file. Measured at
+// 2.1.218 -> 2.1.219, 15 of its 32 "rescues" were prompts whose text was GONE
+// from the bundle; carrying them would have written stale 2.1.218 wording into
+// the 2.1.219 catalog under a live id. A drop is recoverable (the reworded text
+// is re-admitted at 3b and relabel re-attaches the id); a stale carry is not.
+const freshByIdentity = new Map();
+const freshUsed = new Set();
+for (const p of fresh.prompts) freshByIdentity.set(identityHash(p), p);
+
+// 3. Seed-driven merge — exact identity hash, or nothing.
 const out = { version, prompts: [] };
-let carried = 0, changed = 0, removed = [];
+let carried = 0, removed = [];
 for (const s of seed.prompts) {
   const ih = identityHash(s);
-  const exact = freshByIdentity.get(ih);
-  if (exact) { out.prompts.push({ ...s }); freshUsed.add(ih); carried++; continue; }
-  const fk = fuzzyKey(s);
-  const fz = fk.length >= FUZZY_MIN ? freshFuzzy.get(fk) : undefined;
-  // Only fuzzy-carry to a fresh prompt NOT already claimed by an exact or an
-  // earlier fuzzy match — otherwise two seed prompts sharing a stable prefix
-  // would both map to the same fresh entry (duplicate identity / id mis-carry).
-  if (fz && !freshUsed.has(identityHash(fz))) {
-    // reworded: take the fresh pieces (current text, for patching), keep the
-    // identity. The interpolation slots usually don't change when prose is
-    // reworded, so CARRY the seed's identifierMap (its names) whenever the
-    // identifier structure is unchanged — only a structural change forces the
-    // fresh (empty-named) map, which relabel will then fill.
-    const sameStructure = JSON.stringify(fz.identifiers) === JSON.stringify(s.identifiers);
-    out.prompts.push({
-      name: s.name, id: s.id, description: s.description,
-      pieces: fz.pieces, identifiers: fz.identifiers,
-      identifierMap: sameStructure ? s.identifierMap : fz.identifierMap,
-      version,
-    });
-    freshUsed.add(identityHash(fz)); changed++; continue;
-  }
-  // Not surfaced by the extractor — but if the prompt's text is verbatim in the
-  // bundle, it IS present (the heuristic just missed it); carry it as-is. This
-  // guarantees no known prompt (e.g. an un-nerf target) is ever dropped by an
-  // extraction-heuristic miss.
-  if (bundleHasSeed(s)) { out.prompts.push({ ...s }); carried++; continue; }
+  if (freshByIdentity.has(ih)) { out.prompts.push({ ...s }); freshUsed.add(ih); carried++; continue; }
   removed.push(s.id);
 }
+
+// 3b. Admit genuinely-new prompts. Under pure hashing a reworded prompt is a
+// MISS above and its fresh form lands here, so this is not optional garnish —
+// it is the only way a reworded prompt gets back into the catalog (and hence
+// keeps its `<id>.md` alive for apply-unnerfs). Entries are admitted
+// anonymously (no id/name) — relabel names them, re-using a removed id when it
+// recognizes a reword.
+//
+// The ONLY gate is identity-hash dedupe. Every candidate reaching this loop is
+// a live string node the normalizer emitted, so it is addressable by the
+// patcher and deserves its own entry; there is nothing else to filter on.
+//
+// Two narrower gates lived here and both dropped live prompts:
+//
+//   - `ccFirstSeen === version`, using "first seen in this release" as a proxy
+//     for "not already covered". The proxy is wrong in exactly the case pure
+//     hashing makes common: a prompt whose text predates this release but whose
+//     catalog entry hash-MISSED is neither carried at 3 nor admitted here, so
+//     it vanishes from the catalog while still being live in the bundle —
+//     invisible to relabel, apply-unnerfs and patching. Measured at 2.1.219, it
+//     dropped 615 live prompts, among them whole system-prompt sections
+//     ("# Delivering work", "## Delegating to subagents") and the
+//     EndConversation tool description.
+//
+//   - CONTAINMENT: skip a string that some longer carried/admitted entry quotes
+//     verbatim, justified by the claim that `--all` emits a folded run AND each
+//     of its leaves. The normalized AST does not do that. A bare-`${}` template
+//     folds to ONE site, and a complex interpolation splits into DISJOINT
+//     siblings (prefix / arm / arm / suffix) — so nesting between two extracted
+//     sites is impossible, and containment can only ever mean "some longer
+//     string quotes this prompt". Measured at 2.1.219 it dropped 55 live nodes:
+//     54 prompts quoted by documentation blobs (the 174 KB
+//     skill-model-migration-guide alone accounted for several, including both
+//     ternary arms of "# Communicating with the user"), 1 live sibling prefix,
+//     and 0 genuine leaves.
+const admitted = [];
+const seenAdmit = new Set();
+for (const p of fresh.prompts) {
+  const ih = identityHash(p);
+  if (freshUsed.has(ih) || seenAdmit.has(ih)) continue;
+  const rec = classified[ih];
+  if (!rec || rec.class !== "prompt") continue;
+  seenAdmit.add(ih);
+  admitted.push({
+    name: "", id: "", description: "",
+    pieces: p.pieces, identifiers: p.identifiers, identifierMap: p.identifierMap,
+    version,
+  });
+}
+out.prompts.push(...admitted);
 
 // 4. Genuinely-new candidates: fresh prompts matched to no seed, filtered to
 //    prompt-shaped (markdown header OR long instructional prose), so the
@@ -153,8 +176,6 @@ for (const s of seed.prompts) {
 // non-carried string is a prompt candidate iff Claude classified it "prompt".
 // Fall back to a shape heuristic only for strings not yet in the store, so
 // gen-catalog still works before the classification bootstrap has run.
-let classified = {};
-try { classified = JSON.parse(readFileSync(join(REPO, "data", "string-catalog.json"), "utf8")).strings || {}; } catch {}
 const isPromptShaped = (p) => {
   const rec = classified[identityHash(p)];
   if (rec) return rec.class === "prompt";                     // Claude decided
@@ -168,7 +189,7 @@ const isPromptShaped = (p) => {
 // the maintainer reviews a pre-labeled worklist (skrabe's "proposes names, I
 // sign off"), then promotes the confirmed ones into the catalog with real ids.
 const candidates = fresh.prompts
-  .filter((p) => !freshUsed.has(identityHash(p)) && isPromptShaped(p))
+  .filter((p) => { const ih = identityHash(p); return !freshUsed.has(ih) && !seenAdmit.has(ih) && isPromptShaped(p); })
   .map((p) => {
     const rec = classified[identityHash(p)] || {};
     return { ...p, proposedName: rec.proposedName || "", proposedDescription: rec.proposedDescription || "", slots: rec.slots || "", unnerf: !!rec.unnerf };
@@ -178,8 +199,9 @@ writeFileSync(outCatalog, JSON.stringify(out, null, 2));
 if (candidates.length) writeFileSync(outCatalog.replace(/\.json$/, ".candidates.json"), JSON.stringify({ version, prompts: candidates }, null, 2));
 
 console.error(
-  `catalog: carried ${carried}, changed ${changed}, removed ${removed.length} → ${out.prompts.length} prompts`
+  `catalog: carried ${carried}, admitted ${admitted.length}, removed ${removed.length} → ${out.prompts.length} prompts`
 );
-if (removed.length) console.error(`  removed ids (verify upstream deleted them): ${removed.slice(0, 12).join(", ")}${removed.length > 12 ? " …" : ""}`);
+if (removed.length) console.error(`  removed ids (reworded upstream, or deleted): ${removed.slice(0, 12).join(", ")}${removed.length > 12 ? " …" : ""}`);
+if (admitted.length) console.error(`  admitted ${admitted.length} anonymous prompt-class string(s) — relabel must name them`);
 console.error(`  new candidates for review: ${candidates.length}${candidates.length ? ` → ${outCatalog.replace(/\.json$/, ".candidates.json")}` : ""}`);
 console.log(outCatalog);

@@ -1,0 +1,48 @@
+<!--
+name: 'Skill: /simplify (inline single pass, no Agent tool)'
+description: >-
+  Fallback /simplify prompt used when the Agent tool is unavailable — work all
+  four cleanup angles inline in one pass, apply the fixes, and state that the
+  usual 4-agent fan-out did not run.
+ccVersion: 2.1.219
+variables:
+  - AGENT_TOOL_NAME
+  - PHASE_0_GATHER_DIFF
+  - CLEANUP_ANGLE_REUSE
+  - CLEANUP_ANGLE_SIMPLIFICATION
+  - CLEANUP_ANGLE_EFFICIENCY
+  - CLEANUP_ANGLE_ALTITUDE
+-->
+`/simplify → ${AGENT_TOOL_NAME} tool unavailable → single-pass inline cleanup → apply the fixes`
+
+You are improving the quality of the changed code, not hunting for bugs. Review
+it for reuse, simplification, efficiency, and altitude issues, then fix what you
+find. Do not look for correctness bugs — that is what `/code-review` is for.
+
+The ${AGENT_TOOL_NAME} tool isn't available in this context, so the usual
+4-agent fan-out can't run. Work through all four angles below yourself, in
+this same context, in one pass — do not skip an angle for lack of fan-out.
+
+${PHASE_0_GATHER_DIFF}
+## Phase 1 — Review (4 cleanup angles, single pass)
+
+Review the diff against each angle below in turn. For each, note findings with
+`file`, `line`, a one-line `summary`, and the concrete cost (what is
+duplicated, wasted, or harder to maintain).
+
+### Reuse
+
+${CLEANUP_ANGLE_REUSE}
+${CLEANUP_ANGLE_SIMPLIFICATION}
+${CLEANUP_ANGLE_EFFICIENCY}
+${CLEANUP_ANGLE_ALTITUDE}
+## Phase 2 — Apply the fixes
+
+Dedup findings that point at the same line or mechanism, and fix each
+remaining one directly. Skip any finding whose fix would change intended
+behavior, require changes well outside the reviewed diff, or that you judge to
+be a false positive — note the skip rather than arguing with it. Finish with a
+brief summary of what was fixed and what was skipped (or confirm the code was
+already clean). State clearly in your summary that this was a single-pass
+review done without the ${AGENT_TOOL_NAME} tool, not the full 4-agent
+fan-out, so whoever reads it isn't misled about what actually ran.

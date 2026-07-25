@@ -3,37 +3,32 @@ name: 'Skill: Code Review (max / xhigh effort)'
 description: >-
   Effort-tier prompt for max and xhigh code review — 10 finder angles, uncapped
   candidate reporting, recall-biased, all qualifying findings
-ccVersion: 2.1.218
+ccVersion: 2.1.219
 variables:
-  - EFFORT_LEVEL
-  - PHASE_0_GATHER_DIFF
+  - REVIEW_SCOPE_PREAMBLE
   - AGENT_TOOL_NAME
-  - PHASE_1_FINDER_NOTE
-  - HIGH_EFFORT_ANGLES
+  - TEST_FILE_SCOPE_NOTE
+  - CORRECTNESS_ANGLES
   - CLEANUP_ANGLES
-  - PHASE_2_VERIFY_3_STATE
-  - PHASE_3_SWEEP
-  - OUTPUT_FORMAT_FN
+  - ALTITUDE_AND_CONVENTIONS_ANGLES
+  - VERIFY_PHASE
 -->
-\`${EFFORT_LEVEL} effort → 5+5 angles → 1-vote verify → sweep → all qualifying findings\`
-
-You are reviewing for **recall** at ${EFFORT_LEVEL==="max"?"maximum":"extra-high"} effort: catch every real bug. At
+ effort: catch every real bug. At
 this level, catching real bugs matters more than avoiding false positives — a
 missed bug ships. Err on the side of surfacing.
 
-${PHASE_0_GATHER_DIFF}
+${REVIEW_SCOPE_PREAMBLE}
 ## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)
 
 Run **10 independent finder angles** via the ${AGENT_TOOL_NAME} tool. Each
 surfaces every candidate finding. Do NOT let one angle's conclusions
 suppress another's — if two angles flag the same line for different reasons,
-record both. ${PHASE_1_FINDER_NOTE}
+record both. ${TEST_FILE_SCOPE_NOTE}
 
-${HIGH_EFFORT_ANGLES}
+${CORRECTNESS_ANGLES}
 ${CLEANUP_ANGLES}
-${PHASE_2_VERIFY_3_STATE}
+${ALTITUDE_AND_CONVENTIONS_ANGLES}
 This is recall mode — a single non-REFUTED vote carries the finding. Do NOT
 drop on uncertainty.
 
-${PHASE_3_SWEEP}
-${OUTPUT_FORMAT_FN(15)}
+${VERIFY_PHASE}
