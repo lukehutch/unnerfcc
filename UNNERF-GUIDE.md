@@ -586,13 +586,16 @@ binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
 ([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
 format changes ([BACKGROUND.md](BACKGROUND.md)).
 
-## Part 9 — Current state (v2.1.219)
+## Part 9 — Current state (v2.1.220)
 
 We track **only the latest** Claude Code version, generating the prompt catalog
 ourselves from the installed binary each sync (`gen-catalog.mjs`). Replace this
 snapshot each sync rather than appending history.
 
-- **Version:** built from **v2.1.219** — the latest CC release. Catalog holds
+- **Version:** built from **v2.1.220** — the latest CC release. Upstream changed
+  **zero** system prompts from v2.1.219 (checksum diff: `changed 0, added 0,
+  removed 0, unchanged 2462`), so the `.md` set is byte-identical to the previous
+  release and no rule needed to move. Catalog holds
   **2,568 prompt entries / 2,463 distinct identity hashes**; the splicer patches
   **2,462 call-sites** in the binary (86 un-nerfed + 2,376 unchanged,
   `patched=86 lost=0 residual=0`), one `.md` per reconstructed prompt (duplicate-id
@@ -676,11 +679,19 @@ snapshot each sync rather than appending history.
   what you launched" launch-note flips
   (`tool-description-cloud-agent-launched-result`,
   `tool-result-cloud-agent-launched-notify-user`) remain reachable and applied.
-- **Binary check (Part 7):** our catalog is extracted from the v2.1.219 binary,
+- **Binary check (Part 7):** our catalog is extracted from the v2.1.220 binary,
   and the sync verified the full path end-to-end — prompt splice
   (`patched=86 lost=0 residual=0`), effort un-nerfs (all applied), repack, boot
-  (`--version` → `2.1.219`), a live `-p` inference returning `OK`, and all 5
+  (`--version` → `2.1.220`), a live `-p` inference returning `OK`, and all 5
   install.sh sentinels present in the patched JS.
+- **The normalization paid off at v2.1.220 — the next sync should look like this.**
+  The first sync after the re-anchoring above cost *nothing*: **1** new string to
+  classify out of 23,450 literals (one round, 0 still missing), catalog `carried
+  2568, admitted 0, removed 0`, **no** fragments needing relabel, and all **123
+  rules re-applied with zero drift and zero re-anchoring**. Treat the 29-anchor
+  bill as a one-time migration cost, not the going rate. If a future sync
+  suddenly needs many re-anchors again, suspect a change in how prompts are *cut*
+  (Part 2) before assuming upstream rewrote the prompts.
 - **Not yet audited:** the `system-reminder-*` per-turn injections that never
   surface as named prompts — a future full-sweep surface (Part 5).
 
@@ -759,6 +770,40 @@ reported. `upgrade.sh` snapshots the stock effort surface to
 a renamed field or restructured enum surfaces as a loud worklist (update the
 anchors in `apply-code-patches.mjs`), the same idea as the Part 4 checksum
 manifest. Flags: `node lib/apply-code-patches.mjs {apply <in> <out>|posture <in>|verify <in>}`.
+
+**Idempotency trap — never put a non-ASCII character in a code-patch replacement.**
+These patches run on the **output of the AST patcher**, whose generator is
+ASCII-safe: it rewrites every literal non-ASCII character to a `\uXXXX` escape.
+So a replacement written with a literal `—` lands as a literal em dash on the
+first run, and comes back as the six characters `—` on the second. A patch
+whose already-applied check searches for the *literal* spelling then matches
+neither the stock anchor (already consumed) nor its own output, and falls through
+to a **false `anchor MISSING` failure** — which reads exactly like an upstream
+regression and will send you hunting for a change that never happened. This bit
+P4 at v2.1.220, on a plain re-run of `install.sh` over an already-patched binary.
+Two rules, and apply both:
+
+- **Emit the `\uXXXX` escape, not the character.** The bundle stays pure ASCII
+  (which the splicer already asserts) and the inserted bytes survive an AST
+  round-trip unchanged, so the text is byte-stable across runs.
+- **Detect on an ASCII-only substring.** Anchor the already-applied check on a
+  byte-unique prefix that is identical in both spellings (for P4:
+  `"<bullet points covering all notable changes `), never on the full
+  replacement string.
+
+The general gate: applying the **whole pipeline** twice — splice → code patches,
+then splice → code patches again — must report every patch `[ALREADY]` on the
+second pass and produce a **byte-identical** bundle. Checking a patch in isolation
+is not enough; P4 was idempotent on its own and still broke under composition,
+because the escaping happens in the *other* stage.
+
+Recorded evidence at v2.1.220, run against real bundles (no fixtures). Pass 1 from
+stock: `patched=86 runs=104 lost=0 residual=0`, all five code patches `[APPLIED]`.
+Pass 2 over pass 1's output: `patched=0 couldNotFind=86 residual=0` (every prompt
+already un-nerfed, so nothing left to find), all five `[ALREADY]`, and the two
+bundles `cmp` byte-identical. That triple — every prompt already present, every
+patch `[ALREADY]`, bytes identical — is the pass condition to re-check after
+touching either stage.
 
 **Honest limit.** Model downgrades pushed via Anthropic's **server-side** Statsig
 config (e.g. `tengu_auto_mode_config` routing the auto-mode classifier to a small
