@@ -156,6 +156,15 @@ if [ "$DRY_RUN" = 1 ] && ! command -v claude >/dev/null; then
 else
   LAUNCHER="$(command -v claude)"
   CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
+  # Windows/Git Bash: `claude` on PATH is npm's sh shim (a "#!" script sitting
+  # in the npm prefix), not the native PE, and readlink cannot see through it.
+  # If the shim's own prefix holds the real exe, target that instead. No-op on
+  # Linux/macOS (the derived path doesn't exist there).
+  NPM_EXE="$(dirname "$CC_BIN")/node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+  case "$CC_BIN" in
+    *.exe) : ;;
+    *) [ -f "$NPM_EXE" ] && CC_BIN="$NPM_EXE" ;;
+  esac
   [ -f "$CC_BIN" ] || die "could not resolve the claude binary from $LAUNCHER"
   RESOLVED_VERSION="$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
   [ "$RESOLVED_VERSION" = "$CC_VERSION" ] || \
