@@ -1,6 +1,27 @@
 {
- "from": "2.1.219",
- "to": "2.1.220",
- "changes": [],
+ "from": "2.1.220",
+ "to": "2.1.222",
+ "changes": [
+  {
+   "id": "skill-building-llm-powered-applications-with-claude",
+   "name": "Skill: Building LLM-powered applications with Claude",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "dae1ee30d030",
+   "newHash": "1efe1d899717",
+   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
+  },
+  {
+   "id": "system-prompt-claude-in-chrome-browser-automation",
+   "name": "System Prompt: Claude in Chrome browser automation",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "59f8a5bc55f0",
+   "newHash": "e2f9e7f17ce6",
+   "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au"
+  }
+ ],
  "unverifiable": []
 }

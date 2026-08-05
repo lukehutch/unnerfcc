@@ -7,7 +7,7 @@ description: >-
   inline-SVG figure rules) that the model copies, fills, and publishes as a
   *.workshop.html document, stating the structural contract the publish-time
   verifier enforces.
-ccVersion: 2.1.219
+ccVersion: 2.1.222
 -->
 <!--
 name: workshop-page
@@ -39,9 +39,10 @@ description: The blessed template for DIRECT-HTML workshops (`*.workshop.html`):
     inside <pre><code> with entities escaped — & first, then < > " ' — and
     never into attribute values.
   - Diagrams, hand-authored inline SVG, two kinds: ONE overall <figure> in the
-    working draft showing the current plan as a whole (revised as decisions
-    land), and one small <figure> directly above EVERY call-item, scoped to that
-    decision only. No <script>, <style>, or
+    working draft, leading the page, showing the current plan as a whole
+    (redrawn every round as decisions land), and one <figure> directly above
+    EVERY call-item, scoped to that decision only and drawn to show the real
+    mechanism or architecture under each option. No <script>, <style>, or
     <foreignObject> inside SVG, and none of the rawtext-named elements
     (xmp, noembed, noframes, plaintext, noscript); resource references
     (use, gradients) stay fragment-internal (#id); <a>/<image> inside
@@ -945,6 +946,9 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
       --text-secondary: #52514e;
       --text-accent: #184f95;
       --border: rgba(11, 11, 11, 0.1);
+      /* Card rules paint with the shadow token family (var(--shadow-sm));
+         re-pin its color component so a dark-stamped page prints light. */
+      --shadow-color: rgba(11, 11, 11, 0.08);
       --border-strong: rgba(11, 11, 11, 0.2);
       --border-stronger: rgba(11, 11, 11, 0.4);
       --fill-control: rgba(11, 11, 11, 0.1);
@@ -1110,6 +1114,14 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
   .call-item {
     display: flex;
     gap: var(--gap-sm);
+    /* Separation: air AFTER each card — the unit boundary. The card's
+       own diagram stays at the base flex gap above it (tight grouping);
+       margin-top here would invert that proximity. margin-bottom is
+       adjacency-independent, so the lanes' varying between-elements
+       can't defeat it. Shadow is theme-aware: --shadow-sm composes
+       --shadow-color, darkens for dark scheme, re-pinned for print. */
+    margin-bottom: var(--gap-xs);
+    box-shadow: var(--shadow-sm);
     /* Right padding mirrors the marker column (card padding + marker
        width + flex gap) so option rows sit equidistant from the card's
        left and right edges. */
@@ -1186,6 +1198,11 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
     display: flex;
     align-items: center;
     gap: var(--gap-sm);
+    /* Same height reserve as .ws-status-footer: the two rules share the
+       fixed bottom band (the script swaps between them), so they must
+       share the floor or the band jumps on every swap. */
+    min-height: 72px;
+    box-sizing: border-box;
     /* Content left-aligns with the article's text column: the article is
        a centered content-box of 76ch + 24px side padding, so its text
        edge sits at (100% - 76ch) / 2 from the viewport — the Confirm
@@ -1282,6 +1299,17 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
   }
   header h1 { font-size: 1.9em; letter-spacing: -0.015em; }
   .lede { font-size: 15px; max-width: 60ch; }
+  /* The working draft is the page hero — an accent-ruled panel with
+     room for the main diagram sets it apart from the decisions below. */
+  .draft {
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--fill-accent);
+    border-radius: var(--radius);
+    padding: var(--gap-md) var(--gap-lg);
+  }
+  .draft > h2 { border-top: none; padding-top: 0; color: var(--text-accent); }
+  .draft figure svg { width: 100%; }
   section > h2 {
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -1294,7 +1322,9 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
     background: var(--surface-0);
     border: 1px solid var(--border);
     border-left: 3px solid var(--fill-accent);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    /* This later rule is where the cascade resolves the card shadow on
+       this lane — it must stay theme-aware or dark mode loses the lift. */
+    box-shadow: var(--shadow-sm);
   }
   figure { margin: 0; display: flex; flex-direction: column; gap: var(--gap-xs); align-items: center; }
   figure svg { max-width: 100%; height: auto; }
@@ -1333,6 +1363,11 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
     display: flex;
     align-items: center;
     gap: var(--gap-sm);
+    /* Height reserve: state changes swap the footer's content (CTAs vs a
+       single status line); min-height keeps the bar, and the body padding
+       that matches it, stable across states. */
+    min-height: 72px;
+    box-sizing: border-box;
     padding: 14px 24px 14px max(24px, calc((100% - 76ch) / 2));
     /* Opaque by requirement: content must not scroll through the
        footer — accent tint layered over the page background. */
@@ -1420,44 +1455,71 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
     <p class="lede">One-paragraph summary of what is being decided, readable cold.</p>
   </header>
 
+  <section class="draft">
+    <h2>Working draft</h2>
+    <p>The plan as it now stands, leading the page — rewrite this prose after every round so it states what has been decided so far, and redraw the diagram to match. Replace freely: prose, lists, tables. Each decision below carries its own diagram, scoped to that decision.</p>
+    <figure>
+      <svg viewBox="0 0 560 200" role="img" aria-label="Current plan: the API service reads and writes user records in the primary database and looks up sessions on every request; where the session store lives is still open, leaning toward a table in the existing database rather than a new Redis cluster" width="560" height="200">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
+        </defs>
+        <rect x="8" y="74" width="92" height="44" rx="8" fill="none" stroke="currentColor"/>
+        <text x="54" y="94" text-anchor="middle" font-size="12" fill="currentColor">browser</text>
+        <text x="54" y="109" text-anchor="middle" font-size="10" fill="currentColor">session cookie</text>
+        <line x1="100" y1="96" x2="168" y2="96" stroke="currentColor" marker-end="url(#arrow)"/>
+        <text x="134" y="88" text-anchor="middle" font-size="10" fill="currentColor">request</text>
+        <rect x="170" y="66" width="120" height="60" rx="8" fill="none" stroke="currentColor"/>
+        <text x="230" y="92" text-anchor="middle" font-size="12" fill="currentColor">API service</text>
+        <text x="230" y="108" text-anchor="middle" font-size="10" fill="currentColor">auth middleware</text>
+        <line x1="290" y1="82" x2="400" y2="38" stroke="currentColor" marker-end="url(#arrow)"/>
+        <text x="336" y="46" font-size="10" fill="currentColor">read and write users</text>
+        <line x1="290" y1="112" x2="400" y2="158" stroke="currentColor" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+        <text x="320" y="166" font-size="10" fill="currentColor">look up session</text>
+        <rect x="402" y="14" width="150" height="48" rx="8" fill="none" stroke="currentColor"/>
+        <text x="477" y="36" text-anchor="middle" font-size="12" fill="currentColor">primary DB</text>
+        <text x="477" y="51" text-anchor="middle" font-size="10" fill="currentColor">users, orders</text>
+        <rect x="402" y="134" width="150" height="48" rx="8" fill="none" stroke="currentColor" stroke-dasharray="5 3"/>
+        <text x="477" y="156" text-anchor="middle" font-size="12" fill="currentColor">session store</text>
+        <text x="477" y="171" text-anchor="middle" font-size="10" fill="currentColor">undecided</text>
+      </svg>
+      <figcaption>The whole plan as it stands — redrawn every round as decisions land. The dashed store is the open question below.</figcaption>
+    </figure>
+  </section>
+
   <section>
     <h2>What we're deciding</h2>
     <p>Context for the workshop: the goal, the constraints, what "done" looks like.</p>
   </section>
 
   <section>
-    <h2>Working draft</h2>
-    <p>The thing being shaped. Replace freely — prose, lists, tables — and keep one overall diagram here of the current plan as it stands, revised as decisions land. Each decision below also carries its own small sketch, scoped to that decision.</p>
-    <figure>
-      <svg viewBox="0 0 320 80" role="img" aria-label="Current plan: client to service to the session cache (still undecided, leaning Spanner) to the primary database" width="320" height="80">
-        <rect x="6" y="24" width="60" height="32" rx="6" fill="none" stroke="currentColor"/>
-        <text x="36" y="44" text-anchor="middle" font-size="11" fill="currentColor">client</text>
-        <line x1="66" y1="40" x2="88" y2="40" stroke="currentColor"/>
-        <rect x="88" y="24" width="60" height="32" rx="6" fill="none" stroke="currentColor"/>
-        <text x="118" y="44" text-anchor="middle" font-size="11" fill="currentColor">service</text>
-        <line x1="148" y1="40" x2="170" y2="40" stroke="currentColor"/>
-        <rect x="170" y="24" width="64" height="32" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>
-        <text x="202" y="44" text-anchor="middle" font-size="11" fill="currentColor">cache?</text>
-        <line x1="234" y1="40" x2="256" y2="40" stroke="currentColor"/>
-        <rect x="256" y="24" width="58" height="32" rx="6" fill="none" stroke="currentColor"/>
-        <text x="285" y="44" text-anchor="middle" font-size="11" fill="currentColor">DB</text>
-      </svg>
-      <figcaption>The current plan as a whole — redrawn as decisions land. Each decision below has its own local sketch.</figcaption>
-    </figure>
-  </section>
-
-  <section>
     <h2>Decisions</h2>
     <figure>
-      <svg viewBox="0 0 240 72" role="img" aria-label="Sketch: where the session cache lives under each option" width="240" height="72">
-        <rect x="6" y="14" width="100" height="44" rx="6" fill="none" stroke="currentColor"/>
-        <text x="56" y="34" text-anchor="middle" font-size="11" fill="currentColor">Spanner</text>
-        <text x="56" y="49" text-anchor="middle" font-size="9" fill="currentColor">rides the existing DB</text>
-        <rect x="134" y="14" width="100" height="44" rx="6" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>
-        <text x="184" y="34" text-anchor="middle" font-size="11" fill="currentColor">Redis</text>
-        <text x="184" y="49" text-anchor="middle" font-size="9" fill="currentColor">a new cache cluster</text>
+      <svg viewBox="0 0 560 200" role="img" aria-label="The session lookup under each option: with Spanner the API service reads a sessions table inside the existing database in the same connection it already holds; with Redis the API service keeps its database connection for user data and adds a second connection to a new Redis cluster that the team would also run" width="560" height="200">
+        <defs>
+          <marker id="arrow-d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/></marker>
+        </defs>
+        <text x="8" y="20" font-size="11" font-weight="600" fill="currentColor">Spanner (recommended)</text>
+        <rect x="8" y="42" width="96" height="40" rx="7" fill="none" stroke="currentColor"/>
+        <text x="56" y="66" text-anchor="middle" font-size="11" fill="currentColor">API service</text>
+        <line x1="104" y1="62" x2="146" y2="62" stroke="currentColor" marker-end="url(#arrow-d1)"/>
+        <rect x="148" y="30" width="116" height="64" rx="7" fill="none" stroke="currentColor"/>
+        <text x="206" y="50" text-anchor="middle" font-size="11" fill="currentColor">primary DB</text>
+        <rect x="160" y="58" width="92" height="26" rx="4" fill="none" stroke="currentColor"/>
+        <text x="206" y="75" text-anchor="middle" font-size="10" fill="currentColor">sessions table</text>
+        <text x="8" y="120" font-size="11" font-weight="600" fill="currentColor">Redis</text>
+        <rect x="8" y="134" width="96" height="40" rx="7" fill="none" stroke="currentColor"/>
+        <text x="56" y="158" text-anchor="middle" font-size="11" fill="currentColor">API service</text>
+        <line x1="104" y1="146" x2="146" y2="128" stroke="currentColor" marker-end="url(#arrow-d1)"/>
+        <text x="110" y="128" font-size="9" fill="currentColor">users</text>
+        <line x1="104" y1="162" x2="146" y2="180" stroke="currentColor" stroke-dasharray="5 3" marker-end="url(#arrow-d1)"/>
+        <text x="106" y="192" font-size="9" fill="currentColor">sessions</text>
+        <rect x="148" y="100" width="116" height="36" rx="7" fill="none" stroke="currentColor"/>
+        <text x="206" y="122" text-anchor="middle" font-size="11" fill="currentColor">primary DB</text>
+        <rect x="148" y="164" width="116" height="34" rx="7" fill="none" stroke="currentColor" stroke-dasharray="5 3"/>
+        <text x="206" y="181" text-anchor="middle" font-size="11" fill="currentColor">Redis cluster</text>
+        <text x="206" y="194" text-anchor="middle" font-size="9" fill="currentColor">new system to operate</text>
       </svg>
-      <figcaption>A small sketch local to this one decision — the shape of each option — directly above its card.</figcaption>
+      <figcaption>What changes under each option: Spanner keeps one connection and adds a table; Redis adds a second datastore and the path to it.</figcaption>
     </figure>
     <div class="call-item" data-decision-id="cache-store" data-decision-state="open" data-lean-choice="spanner">
       <span class="marker" aria-hidden="true">●</span>

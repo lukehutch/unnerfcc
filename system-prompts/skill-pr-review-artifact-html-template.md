@@ -6,7 +6,7 @@ description: >-
   sections with named SLOT comments, PR-string escaping rules, and the baked
   decision-pill script that republishes the user's calls for the review session
   to read
-ccVersion: 2.1.219
+ccVersion: 2.1.222
 -->
 <!-- Artifact-tool body fragment — no <!DOCTYPE>/<html>/<head>/<body> wrapper. See SKILL.md for slot guidance.
      SECURITY: every string that originates from the PR (title, description, diff lines,
@@ -182,6 +182,21 @@ ccVersion: 2.1.219
   .actions { margin: 0; }
   .actions .gh-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 16px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--t6); text-decoration: none; background: transparent; box-shadow: inset 0 0 0 1px var(--t3); }
   .actions .note { margin: 8px 0 0; font-size: 11px; line-height: 14px; color: var(--t5); padding-left: 2px; }
+  .stamp { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+  .stamp[hidden] { display: none; }
+  .stamp-btn { font: inherit; font-size: 13.5px; font-weight: 500; height: 34px; padding: 0 16px; border-radius: 8px; border: 0; cursor: pointer; background: var(--accent-fill, var(--accent)); color: #ffffff; }
+  .stamp-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .stamp-sub { margin: 0; font-size: 12px; line-height: 17px; color: var(--t6); }
+  .stamp-sub[hidden] { display: none; }
+  .stamp-sub code { font-family: var(--mono); font-size: 0.92em; background: var(--t1); border-radius: 3px; padding: 0 4px; }
+  /* Revealed by the done note alone: the approved state is the only one where
+     dismissing on GitHub is the page's next affordance. */
+  .actions .gh-dismiss { display: none; }
+  .actions:has(.stamp-done:not([hidden])) .gh-dismiss { display: block; width: fit-content; margin: 8px 0 0; font-size: 12px; line-height: 17px; color: var(--t6); text-decoration: underline; }
+  .stamp-states p { margin: 0; font-size: 12px; line-height: 17px; color: var(--t7); }
+  .stamp-states p[hidden] { display: none; }
+  .stamp-states .stamp-done { color: var(--ok); font-weight: 500; }
+  .stamp-states .stamp-stale, .stamp-states .stamp-precheck, .stamp-states .stamp-unclear, .stamp-states .stamp-submitted, .stamp-states .stamp-reauth, .stamp-states .stamp-unavail, .stamp-states .stamp-blocked, .stamp-states .stamp-refused { color: var(--warn); }
 
   .followups { margin: 0; }
   .followups h2 { margin: 0 0 6px; font-size: 11px; line-height: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--t6); }
@@ -241,7 +256,7 @@ ccVersion: 2.1.219
     <div class="topbar">
       <span class="brand">Claude Code</span>
       <span class="crumb">Review / <!-- SLOT: REPO — "owner/repo", escaped -->owner/repo</span>
-      <a class="gh" href="https://github.com/owner/repo/pull/1" target="_blank" rel="noopener noreferrer"><!-- SLOT: GH_LINK — set href to the PR's GitHub URL (also used once more below, on the Review on GitHub button) -->GitHub</a>
+      <a class="gh" href="https://github.com/owner/repo/pull/1" target="_blank" rel="noopener noreferrer"><!-- SLOT: GH_LINK — set href to the PR's GitHub URL (also used twice more below, on the Review on GitHub button and the dismiss link) -->GitHub</a>
     </div>
 
     <!-- Staleness banner: fixed copy, hidden by default. Only the baked script at the end
@@ -334,7 +349,31 @@ ccVersion: 2.1.219
       </section>
 
       <section class="actions">
+        <!-- Approve control: fixed copy, hidden by default. Only the baked approve script at the
+             end of this template reveals it, and only when the viewer's own GitHub connector can
+             post a review as them. Not a slot — never edit or fill it. The empty .stamp-target
+             span is written by that script from the anchor's owner/repo/number (validated
+             identifier fields), never from PR text. The click acts directly, so the as-you
+             disclosure must stay visible with the armed button, never behind another step. -->
+        <div class="stamp" hidden>
+          <button type="button" class="stamp-btn" aria-describedby="stamp-disclosure">Approve on GitHub</button>
+          <p class="stamp-sub" id="stamp-disclosure">Posts an approving review of <code class="stamp-target"></code> from your own GitHub account, as you, if the branch is unchanged.</p>
+          <div class="stamp-states" role="status">
+            <p class="stamp-checking" hidden>Checking that the branch is unchanged…</p>
+            <p class="stamp-busy" hidden>Approving…</p>
+            <p class="stamp-done" hidden>Approved by you. The review is posted on GitHub.</p>
+            <p class="stamp-submitted" hidden>GitHub accepted the review, but this page couldn't confirm it shows as approved. Check the pull request on GitHub.</p>
+            <p class="stamp-stale" hidden>The branch changed since this briefing. Review the new commits on GitHub before approving there.</p>
+            <p class="stamp-precheck" hidden>Couldn't confirm the branch is unchanged. Try again, or approve on GitHub.</p>
+            <p class="stamp-reauth" hidden>The GitHub connector needs reconnecting. Reconnect it in claude.ai settings and reload this page, or approve on GitHub.</p>
+            <p class="stamp-unavail" hidden>Approving isn't available from this page. Approve on GitHub.</p>
+            <p class="stamp-blocked" hidden>This page was published without permission to use its approve tool, so approving from here can't work. The author can fix that by re-running <code>/artifact-pr-review</code>. Approve on GitHub.</p>
+            <p class="stamp-refused" hidden>GitHub didn't accept the approval. Open the pull request on GitHub and try approving there.</p>
+            <p class="stamp-unclear" hidden>The approval may not have gone through. Check the pull request on GitHub.</p>
+          </div>
+        </div>
         <a class="gh-btn" href="https://github.com/owner/repo/pull/1" target="_blank" rel="noopener noreferrer">Review on GitHub ↗</a>
+        <a class="gh-dismiss" href="https://github.com/owner/repo/pull/1" target="_blank" rel="noopener noreferrer">Changed your mind? Dismiss your review on GitHub ↗</a>
         <p class="note">Approve and comment on GitHub. When the decision pills are active, a click saves your call to this page for the review session to act on.</p>
       </section>
 
@@ -1043,6 +1082,434 @@ ccVersion: 2.1.219
     if (!e.target.closest('.pill[data-choice]')) return;
     e.preventDefault();
     onActivate(e);
+  });
+})();
+</script>
+
+<!-- APPROVE BINDING (publish-time data island). The composed lane fills this from the
+     payload's "stamp" field; the raw lane ALWAYS keeps {"stamp":null} — publish refuses a
+     non-null stamp outside the composed lane. A filled binding names the single review-write
+     tool the publishing session observed on the GitHub connector, the exact approve input,
+     and the result key path of the review's state. Every input value must be one of the
+     anchor's own identifiers or an approve vocabulary word, so the approve can only target
+     the anchored pull request. With "stamp": null the page keeps the "Review on GitHub"
+     fallback and shows no approve control. Never PR title, description, diff text, or any URL. -->
+<script type="application/json" id="prr-stamp">{"stamp":null}</script>
+
+<!-- APPROVE SCRIPT — FIXED, VETTED CODE. Copy byte-for-byte; never edit, reorder, or extend
+     it. A test pins this block by exact hash, so any change is a deliberate, reviewed hash
+     update in the same change. It reads only the #prr-anchor and #prr-stamp islands and the
+     fixed approve control above, and it calls the viewer's own GitHub connector — once, on
+     the viewer's explicit click beside the always-visible as-you disclosure, and only after
+     a fresh re-read confirms the pull request's head still matches the anchor. It writes no
+     fetched data into the page, follows no URLs, and never retries a write.
+     Contract: written against the artifact viewer's runtime MCP surface (window.claude.mcp
+     listTools/callTool, ToolInfo.annotations.readOnlyHint, result.payload, McpError codes);
+     the exact contract version is recorded next to the hash pin in the test suite. The
+     click-time freshness re-read passes callTool's cache refresh option; a runtime that
+     ignores it serves a cached head at most staleTime old, and the write then rides a
+     slightly wider re-read window — the banner latch and the anchored-values wall still
+     hold. A change to that surface requires editing this block and re-deriving its pinned
+     hash together; published pages keep the block they shipped with and fall back to the
+     static page on any mismatch. -->
+<script>
+(function prReviewApprove() {
+  var anchorIsland = document.getElementById('prr-anchor');
+  var stampIsland = document.getElementById('prr-stamp');
+  var banner = document.querySelector('.stale-banner');
+  var box = document.querySelector('.stamp');
+  if (!anchorIsland || !stampIsland || !banner || !box) return;
+  var btn = box.querySelector('.stamp-btn');
+  var sub = box.querySelector('.stamp-sub');
+  var target = box.querySelector('.stamp-target');
+  var notes = {
+    checking: box.querySelector('.stamp-checking'),
+    busy: box.querySelector('.stamp-busy'),
+    done: box.querySelector('.stamp-done'),
+    submitted: box.querySelector('.stamp-submitted'),
+    stale: box.querySelector('.stamp-stale'),
+    precheck: box.querySelector('.stamp-precheck'),
+    reauth: box.querySelector('.stamp-reauth'),
+    unavail: box.querySelector('.stamp-unavail'),
+    blocked: box.querySelector('.stamp-blocked'),
+    refused: box.querySelector('.stamp-refused'),
+    unclear: box.querySelector('.stamp-unclear')
+  };
+  if (!btn || !sub || !target) return;
+  for (var name in notes) {
+    if (!notes[name]) return;
+  }
+
+  var cfg;
+  var scfg;
+  try {
+    cfg = JSON.parse(anchorIsland.textContent || 'null');
+    scfg = JSON.parse(stampIsland.textContent || 'null');
+  } catch (e) {
+    return;
+  }
+  if (!cfg || typeof cfg !== 'object' || !scfg || typeof scfg !== 'object') return;
+  var anchor = cfg.anchor;
+  var live = cfg.live;
+  var stamp = scfg.stamp;
+
+  var HEX40 = /^[0-9a-f]{40}$/i;
+  var IDENT = /^[A-Za-z0-9_.-]{1,64}$/;
+  var KEY = /^[A-Za-z0-9_]{1,48}$/;
+  var OWNER = /^[A-Za-z0-9-]{1,39}$/;
+  /* The only words, besides the anchor's own identifiers, that an approve input may carry. */
+  var VOCAB = /^approved?$/i;
+  /* Positive name allowlist: the tool must BE a create-and-submit review tool by name. The
+     absence of banned words is too weak a grammar — a review-named non-approve write
+     (request_copilot_review) or a renamed submit-pending tool passes a denylist, and
+     submitting a reviewer's own pre-existing pending review would publish their unreleased
+     draft comments under the approval. The denylist stays as a second, independent wall. */
+  var APPROVE_TOOL = /^(create_(and_submit_)?)?(pull_?request_|pr_)?review(_write)?$/i;
+  /* The approve verb may only ride an event-named key: under any other key
+     (body, method) the write would post an event-less PENDING draft while
+     the page claims a submission. */
+  var EVENT_KEY = /^(review_?)?event$/i;
+  var DESTRUCTIVE_TOOL = /merge|delete|dismiss|close|remove|update|branch|file|push|comment|request_changes|pending|reviewers/i;
+  /* Identity-family keys must hold exactly the anchor's own value, and an owner/repo value
+     may only ride a key of its own family: a value-level allowlist alone still admits
+     swapped or decoy-keyed owner/repo values, which name a different (squattable)
+     repository. SUBSTRING classes, not exact spellings, so nonstandard connector key
+     spellings (ownerName, repo_name) classify too; a key matching both families refuses. */
+  var OWNERISH_KEY = /owner|org|login|user/i;
+  var REPOISH_KEY = /repo|project/i;
+
+  if (!anchor || anchor.kind !== 'pr') return;
+  if (typeof anchor.headSha !== 'string' || !HEX40.test(anchor.headSha)) return;
+  if (typeof anchor.owner !== 'string' || !OWNER.test(anchor.owner)) return;
+  if (typeof anchor.repo !== 'string' || !IDENT.test(anchor.repo)) return;
+  if (!Number.isSafeInteger(anchor.number) || anchor.number < 1) return;
+  var anchorSha = anchor.headSha.toLowerCase();
+  /* The unfilled template's placeholder anchor names a squattable owner/repo and a head
+     no branch can ever match; a control armed against it could only mislead. */
+  if (anchorSha === '0000000000000000000000000000000000000000') return;
+
+  function validPath(path) {
+    if (!Array.isArray(path) || path.length === 0 || path.length > 6) return null;
+    for (var i = 0; i < path.length; i++) {
+      if (typeof path[i] !== 'string' || !KEY.test(path[i])) return null;
+    }
+    return path;
+  }
+
+  /* The live READ binding. PR-membership alone is not enough here: this read is what the
+     click-time freshness check trusts, so every value must BE one of the anchor's own
+     identifiers (owner, repo, number) — a value the anchor does not name could point the
+     re-read at a resource that is not the reviewed pull request. The anchored head SHA is
+     deliberately NOT allowed either: a read tool that echoes its arguments would let a
+     publisher point shaPath at the echo and make the freshness check vacuously pass. This
+     strands consolidated read tools whose input needs a method word — deliberately: the
+     page fails closed to the read-only link until the real connector vocabulary is known.
+     A read input carrying anything else never arms the control. */
+  function liveInputOf(b) {
+    if (!b || typeof b !== 'object' || Array.isArray(b)) return null;
+    if (typeof b.tool !== 'string' || !IDENT.test(b.tool)) return null;
+    var input = b.input;
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+    var keys = Object.keys(input);
+    if (keys.length === 0 || keys.length > 8) return null;
+    var hasOwner = false;
+    var hasRepo = false;
+    var hasNumber = false;
+    for (var i = 0; i < keys.length; i++) {
+      if (!KEY.test(keys[i])) return null;
+      var val = input[keys[i]];
+      var ownerish = OWNERISH_KEY.test(keys[i]);
+      var repoish = REPOISH_KEY.test(keys[i]);
+      if (ownerish && repoish) return null;
+      if (ownerish) {
+        if (val !== anchor.owner) return null;
+        hasOwner = true;
+        continue;
+      }
+      if (repoish) {
+        if (val !== anchor.repo) return null;
+        hasRepo = true;
+        continue;
+      }
+      if (typeof val === 'number') {
+        if (val !== anchor.number) return null;
+        hasNumber = true;
+        continue;
+      }
+      if (typeof val !== 'string' || !IDENT.test(val)) return null;
+      if (val === String(anchor.number)) {
+        hasNumber = true;
+        continue;
+      }
+      return null;
+    }
+    if (!hasOwner || !hasRepo || !hasNumber) return null;
+    return input;
+  }
+
+  /* The approve WRITE binding, held to a stricter wall: EVERY value is one of the anchor's
+     own identifiers (owner, repo, number, head SHA) or an approve vocabulary word, a family
+     key pins its entry to exactly its anchor value (a number can never be one), an owner or
+     repo value may only ride a key of its own family, and the input must name the anchored
+     pull request and carry an explicit "approve" value. An input that could target any
+     other pull request, or do anything but approve, yields null and the control never arms. */
+  function stampInputOf(b) {
+    if (!b || typeof b !== 'object' || Array.isArray(b)) return null;
+    if (typeof b.tool !== 'string' || !IDENT.test(b.tool)) return null;
+    if (!APPROVE_TOOL.test(b.tool) || DESTRUCTIVE_TOOL.test(b.tool)) return null;
+    var input = b.input;
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+    var keys = Object.keys(input);
+    if (keys.length === 0 || keys.length > 8) return null;
+    var hasOwner = false;
+    var hasRepo = false;
+    var hasNumber = false;
+    var hasApprove = false;
+    for (var i = 0; i < keys.length; i++) {
+      if (!KEY.test(keys[i])) return null;
+      var val = input[keys[i]];
+      var ownerish = OWNERISH_KEY.test(keys[i]);
+      var repoish = REPOISH_KEY.test(keys[i]);
+      if (ownerish && repoish) return null;
+      if (ownerish) {
+        if (val !== anchor.owner) return null;
+        hasOwner = true;
+        continue;
+      }
+      if (repoish) {
+        if (val !== anchor.repo) return null;
+        hasRepo = true;
+        continue;
+      }
+      if (typeof val === 'number') {
+        if (val !== anchor.number) return null;
+        hasNumber = true;
+        continue;
+      }
+      if (typeof val !== 'string' || !IDENT.test(val)) return null;
+      if (val === anchor.owner || val === anchor.repo) return null;
+      if (val === String(anchor.number)) {
+        hasNumber = true;
+        continue;
+      }
+      if (val.toLowerCase() === anchorSha) continue;
+      if (!VOCAB.test(val)) return null;
+      if (val.toLowerCase() === 'approve') {
+        if (!EVENT_KEY.test(keys[i])) return null;
+        hasApprove = true;
+      }
+    }
+    if (!hasOwner || !hasRepo || !hasNumber || !hasApprove) return null;
+    return input;
+  }
+
+  /* The freshness read's SHA pointer must name a HEAD field: a free pointer
+     could be aimed at a stable field (base.sha, merge_commit_sha) with the
+     anchor's headSha set to match, silencing the gate forever. */
+  function validShaPath(path) {
+    if (!validPath(path)) return null;
+    var lastSegment = path[path.length - 1];
+    if (/^head_?sha$/i.test(lastSegment)) return path;
+    if (!/^sha$/i.test(lastSegment)) return null;
+    for (var s = 0; s < path.length - 1; s++) {
+      if (/^head$/i.test(path[s])) return path;
+    }
+    return null;
+  }
+
+  var liveInput = liveInputOf(live);
+  if (!liveInput) return;
+  var shaPath = validShaPath(live.shaPath);
+  if (!shaPath) return;
+  var stampInput = stampInputOf(stamp);
+  if (!stampInput) return;
+  var statePath = validPath(stamp.statePath);
+  if (!statePath) return;
+  if (stamp.tool === live.tool) return;
+
+  var mcp = window.claude ? window.claude.mcp : undefined;
+  if (!mcp || typeof mcp.listTools !== 'function' || typeof mcp.callTool !== 'function') return;
+  /* The stale-button coupling observes the banner element; an environment that cannot
+     observe it cannot keep the control honest, so stay static. */
+  if (typeof MutationObserver !== 'function') return;
+
+  /* Walk a result payload along a key path; the terminal string or null. */
+  function walk(payload, path) {
+    var cur = payload;
+    for (var i = 0; i < path.length; i++) {
+      if (!cur || typeof cur !== 'object') return null;
+      cur = cur[path[i]];
+    }
+    return typeof cur === 'string' ? cur : null;
+  }
+
+  /* Exactly one connector may offer the named tool, with the required wire-declared
+     annotation: the read must declare readOnlyHint: true; the approve tool must not declare
+     itself a read. Ambiguity, absence, or a wrong annotation all yield null. */
+  function findServer(servers, toolName, mustBeRead) {
+    var found = null;
+    var matches = 0;
+    for (var s = 0; s < servers.length; s++) {
+      var tools = (servers[s] ? servers[s].tools : null) || [];
+      for (var t = 0; t < tools.length; t++) {
+        var candidate = tools[t];
+        if (candidate ? candidate.name === toolName : false) {
+          var hints = candidate.annotations;
+          var isRead = hints ? hints.readOnlyHint === true : false;
+          if (isRead !== mustBeRead) return null;
+          found = servers[s].server;
+          matches++;
+          break;
+        }
+      }
+    }
+    return matches === 1 && typeof found === 'string' ? found : null;
+  }
+
+  var server = null;
+  /* state: ready | checking | busy | done | submitted | denied | retry.
+     moved latches the first time anything shows the head left the anchor — the banner
+     (including a later flicker) or the click-time re-read — and is never cleared. */
+  var state = 'ready';
+  var note = null;
+  var moved = false;
+
+  function show(shown) {
+    for (var key in notes) notes[key].hidden = key !== shown;
+  }
+
+  function render() {
+    if (banner.hidden === false) moved = true;
+    var terminal = state === 'done' || state === 'submitted' || state === 'denied';
+    var working = state === 'checking' || state === 'busy';
+    btn.hidden = terminal;
+    btn.disabled = moved || working;
+    /* The disclosure rides the actionable button: hidden with it, and hidden once the
+       latched stale note has replaced the action. */
+    sub.hidden = terminal || moved;
+    if (terminal) {
+      show(note);
+    } else if (working) {
+      show(state);
+    } else if (moved) {
+      show('stale');
+    } else if (state === 'retry') {
+      show(note);
+    } else {
+      show(null);
+    }
+  }
+
+  function settle(newState, newNote) {
+    state = newState;
+    note = newNote || null;
+    render();
+  }
+
+  /* McpError code -> [state, note]. Everything on a write is terminal: a rejected write is
+     not proof the approval did not land, so it is never re-issued — not automatically and not
+     by re-arming the button. Only a failed re-read that could not say the branch is unchanged
+     offers a fresh try, because no write was attempted. */
+  function classify(code, isWrite) {
+    switch (code) {
+      case 'needs_reauth':
+        return ['denied', 'reauth'];
+      case 'not_in_manifest':
+        /* On the write this is the one failure that is a PUBLISH bug — the stamp island was
+           filled but the approve tool was left out of the capabilities manifest — and its
+           remedy (the author republishes) is the opposite of a policy denial's, so it gets
+           its own note. */
+        return ['denied', isWrite ? 'blocked' : 'unavail'];
+      case 'server_not_connected':
+      case 'server_not_found':
+      case 'selection_required':
+      case 'blocked_by_policy':
+      case 'approval_required':
+      case 'not_granted':
+      case 'capability_disabled':
+      case 'capability_removed':
+      case 'bad_request':
+      case 'transform_error':
+        return ['denied', 'unavail'];
+      case 'tool_error':
+        return ['denied', isWrite ? 'refused' : 'unavail'];
+      default:
+        return isWrite ? ['denied', 'unclear'] : ['retry', 'precheck'];
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    if (state !== 'ready' && state !== 'retry') return;
+    if (moved || banner.hidden === false) {
+      render();
+      return;
+    }
+    settle('checking', null);
+    mcp.callTool(server, live.tool, liveInput, { cache: { refresh: true } })
+      .then(function (readResult) {
+        var sha = walk(readResult ? readResult.payload : undefined, shaPath);
+        if (sha === null || !HEX40.test(sha)) {
+          settle('retry', 'precheck');
+          return;
+        }
+        if (sha.toLowerCase() !== anchorSha) {
+          moved = true;
+          settle('ready', null);
+          return;
+        }
+        settle('busy', null);
+        return mcp.callTool(server, stamp.tool, stampInput).then(
+          function (writeResult) {
+            var outcome = walk(writeResult ? writeResult.payload : undefined, statePath);
+            if (outcome === 'APPROVED') {
+              settle('done', 'done');
+            } else {
+              settle('submitted', 'submitted');
+            }
+          },
+          function (err) {
+            var verdict = classify(err ? err.code : undefined, true);
+            settle(verdict[0], verdict[1]);
+          }
+        );
+      }, function (err) {
+        var verdict = classify(err ? err.code : undefined, false);
+        settle(verdict[0], verdict[1]);
+      })
+      .catch(function () {
+        /* A throw that interrupts the CHECKING phase provably precedes any
+           write (busy is set synchronously before the write call), so it
+           gets the read-failure treatment: a fresh try, never a hedge
+           about an approval that was never attempted. */
+        if (state === 'checking') {
+          settle('retry', 'precheck');
+          return;
+        }
+        if (state !== 'busy') return;
+        settle('denied', 'unclear');
+      });
+  });
+
+  mcp.listTools().then(function (res) {
+    var servers = (res ? res.servers : null) || [];
+    var readServer = findServer(servers, live.tool, true);
+    if (readServer === null) return;
+    var writeServer = findServer(servers, stamp.tool, false);
+    if (writeServer === null || writeServer !== readServer) return;
+    /* Name-CLASS pin, not identity: connector display names are the only
+       identity at this layer, so this narrows arming to connectors that
+       PRESENT as GitHub in the viewer's consent dialog — which is the
+       control that actually names what the viewer granted. */
+    if (!/github/i.test(writeServer)) return;
+    server = writeServer;
+    target.textContent = anchor.owner + '/' + anchor.repo + ' #' + String(anchor.number);
+    new MutationObserver(function () {
+      render();
+    }).observe(banner, { attributes: true, attributeFilter: ['hidden'] });
+    render();
+    box.hidden = false;
+  }).catch(function () {
+    return;
   });
 })();
 </script>

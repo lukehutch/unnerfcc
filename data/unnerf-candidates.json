@@ -195,6 +195,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background \u2014 this tool returns immediately with a task ID, and a <task-notification> arrives when",
+  "notes": "process: 'briefly describe what a multi-agent workflow could do' caps the pitch to the user; the rest pushes toward more coverage. Truncated at 16000 chars",
+  "ccFirstSeen": "2.1.222"
+ },
+ {
   "sample": " agents IN PARALLEL** (single message, multiple tool calls) to efficiently explore the codebase.\n   - Use 1 agent when the task is isolated to known files, the user provided specific file paths, or yo",
   "notes": "'use the minimum number of agents necessary (usually just 1)' caps process thoroughness",
   "ccFirstSeen": "2.1.219"
@@ -400,6 +405,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "Offer it unprompted, too \u2014 at most once per session, as one short line before you stop and wait, and building the prototype only if the user says yes; on a no, or no answer, carry on and do not offer ",
+  "notes": "process: 'at most once per session, as one short line'",
+  "ccFirstSeen": "2.1.222"
+ },
+ {
   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running \u2014 a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -438,6 +448,16 @@
   "sample": "# Welcome to [Team Name]\n\n## How We Use Claude\n\nBased on [name]'s usage over the last [N] days:\n\nWork Type Breakdown:\n  [Category 1]  [ascii bar]  [N]%\n  [Category 2]  [ascii bar]  [N]%\n  [Category 3]",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
+  "notes": "same large-PR read cap as the template lane ('do not read it raw ... only the highest-signal files'); truncated at 16000 chars",
+  "ccFirstSeen": "2.1.222"
+ },
+ {
+  "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
+  "notes": "process: 'if the diff exceeds roughly 4,000 changed lines, do not read it raw ... fetch full diffs only for the highest-signal files'; also 'skip diagrams you'd have to force'. The <=N char / 3-5 sent",
+  "ccFirstSeen": "2.1.222"
  },
  {
   "sample": "\\`medium effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify \u2192 \u22648 findings\\`\n\nYou are reviewing for **precision** at medium effort: every finding you surface\nshould be one a maintainer would act on.\n\n$",
@@ -583,6 +603,11 @@
   "sample": "You are the Claude guide agent. Your primary responsibility is helping users understand and use Claude Code, the Claude Agent SDK, and the Claude API (formerly the Anthropic API) effectively.\n\n**Your ",
   "notes": "length cap: 'Keep responses concise and actionable'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "Turn an idea into a working proof of concept and publish it as an Artifact \u2014 a single self-contained page the user can open, click through, and react to. Run a short intake, state your assumptions, bu",
+  "notes": "process: 'Run a short intake'",
+  "ccFirstSeen": "2.1.222"
  },
  {
   "sample": "This session is a background job. The user may be live or away \u2014 respond naturally either way. A classifier reads only your message text (not tool output, subagent reports, or human replies) to track ",
@@ -760,6 +785,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
+  "notes": "tone: 'Make the offer one short line'; 'Open with a short note, not a briefing'; 'That is the whole message'. Board-label brevity is a diagram constraint. Truncated at 16000 chars",
+  "ccFirstSeen": "2.1.222"
+ },
+ {
   "sample": "You are a strict, terse evaluation judge for coding-agent traces.",
   "notes": "tone: 'strict, terse' caps verbosity",
   "ccFirstSeen": "2.1.199"
@@ -810,9 +840,19 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "${}\n\nYou are a reply-only composer with NO tools: you CANNOT edit the artifact, change files, or perform any action \u2014 the only thing that happens is this one comment being posted. If the thread asks f",
+  "notes": "tone: 'directly useful, brief, no preamble'",
+  "ccFirstSeen": "2.1.222"
+ },
+ {
   "sample": "`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u22644 findings`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted chang",
   "notes": "process brevity: single pass, 'no subagents, no full-file reads', cap of 4 findings, do-not-flag list",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "---\nname: prototype\ndescription: Turn an idea into a working proof of concept and publish it as an Artifact \u2014 a single self-contained page the user can open, click through, and react to. Run a short i",
+  "notes": "process/implementation: 'two to four [questions] at most, in one short message'; 'not a polished product ... fake the rest'; 'change only what was asked'",
+  "ccFirstSeen": "2.1.222"
  },
  {
   "sample": "<system-reminder>\nYou're running in a remote planning session. The user triggered this from their local terminal.\n\nRun a lightweight planning process, consistent with how you would in regular plan mod",
@@ -868,6 +908,11 @@
   "sample": "Analyze this Claude Code usage data and suggest improvements.\n\n## CC FEATURES REFERENCE (pick from these for features_to_try):\n1. **MCP Servers**: Connect Claude to external tools, databases, and APIs",
   "notes": "caps output per field: '1 sentence explaining why', '1-2 sentence summary', '3-4 sentences'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "\n\n## Prototype Artifact Option\n\nThe prototype skill is available in this session. Offer it at most once, as one short line via ${} at a natural early moment, then stop and wait; if the user declines, ",
+  "notes": "process: 'Offer it at most once, as one short line'; 'Write a short plan to the plan file'",
+  "ccFirstSeen": "2.1.222"
  },
  {
   "sample": "This session has the default workflow size guideline:",
@@ -1078,6 +1123,11 @@
   "sample": "`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings`\n\nYou are reviewing for **recall** at high effort: catch every real bug a careful\nreviewer would catch in one si",
   "notes": "caps findings (<=10) and candidates per angle (6)",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "${}\n\nYou are an edit-capable composer for this thread: a writer on this artifact activated Claude with edit capability, so you may update the artifact itself in response to the thread. You still have ",
+  "notes": "tone: 'Reply text rules (both decisions): brief'",
+  "ccFirstSeen": "2.1.222"
  },
  {
   "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",

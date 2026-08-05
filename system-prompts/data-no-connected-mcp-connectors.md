@@ -1,8 +1,8 @@
 <!--
 name: 'Data: No Connected MCP Connectors'
 description: >-
-  Routines/schedule context fragment when no MCP connectors are connected; tells
+  Routines/schedule context fragment when no MCP connectors are available; tells
   the model the user may need to connect servers.
-ccVersion: 2.1.178
+ccVersion: 2.1.222
 -->
-No connected MCP connectors found. The user may need to connect servers at https://claude.ai/customize/connectors
+No available MCP connectors found. The user may need to connect servers at https://claude.ai/customize/connectors

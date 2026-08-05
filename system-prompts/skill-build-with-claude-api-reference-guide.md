@@ -3,7 +3,7 @@ name: 'Skill: Build with Claude API (reference guide)'
 description: >-
   Template for presenting language-specific reference documentation with quick
   task navigation
-ccVersion: 2.1.219
+ccVersion: 2.1.222
 -->
 ## Reference Documentation
 
@@ -27,6 +27,9 @@ The relevant documentation for your detected language is included below in `<doc
 
 **Prompt caching / optimize caching / "why is my cache hit rate low":**
 → Refer to `shared/prompt-caching.md` + `{lang}/claude-api/README.md` (Prompt Caching section)
+
+**Audit / clean up prompts, skills, or tool descriptions for outdated patterns ("cruft"):**
+→ Refer to `shared/prompt-audit.md`
 
 **Count tokens in a file / prompt / diff ("how many tokens is X"):**
 → Refer to `shared/token-counting.md` — use `messages.count_tokens`, never `tiktoken`
