@@ -172,13 +172,19 @@ included; the audit re-checks them:
 ## Part 2 — The upgrade workflow
 
 The workflow is now **[`./upgrade.sh`](upgrade.sh)** — fully standalone, no
-tweakcc, no waiting on anyone to publish a catalog. The full playbook (what each
-step does, the Claude classification of new strings, the review beats, the
+tweakcc, no waiting on anyone to publish a catalog. Bucket-analysis (deciding
+which new/changed prompts need a rule under this Part's procedure, and
+drafting it) is automated too — `scripts/bucket-analyze.mjs` mirrors the
+labeling step: an AI proposal, mechanically validated before it reaches
+`apply-unnerfs.py`. The full playbook (what each step does, the Claude
+classification of new strings, the audit-before-commit beat, the
 Bun-format-change path) lives in **[UPGRADE.md](UPGRADE.md)**. In brief:
 
 ```bash
 ./upgrade.sh          # detect new CC → unpack → classify new strings (Opus,
-                      # cached) → generate catalog → replay un-nerfs → verify boots
+                      # cached) → generate catalog → relabel → bucket-analyze
+                      # (draft un-nerf rules for this Part's decision
+                      # procedure) → replay un-nerfs → verify boots
 python3 scripts/apply-unnerfs.py --check   # gate: 0 FAILED, 0 missing
 ```
 

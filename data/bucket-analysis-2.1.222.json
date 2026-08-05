@@ -1,0 +1,81 @@
+{
+  "ccVersion": "2.1.222",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "tool-description-workflow.md",
+      "verdict": "keep",
+      "reasoning": "The flagged pitch cap is already lifted by this file's registered rule — the file now reads \"describe what a multi-agent workflow could do for this task\" with no \"briefly\". What remains brevity-shaped is the concurrency/agent-count ceiling, a genuine resource limit disclosed honestly (\"passing more is an explicit error, not a silent truncation\"), and a scaling line that already leans thorough for research/review/audit requests."
+    },
+    {
+      "file": "skill-prototype-when-to-use-offer-unprompted.md",
+      "verdict": "keep",
+      "reasoning": "\"at most once per session, as one short line\" governs an unsolicited offer the user never asked for, then stops and waits and never re-offers on a no — interruption-appropriate UX for an uninvited suggestion, not a cap on substantive work (calibration 2). The prototype work itself is unconstrained by this fragment."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "This is the same unprompted-offer sentence as ref 1, carried in skill-prototype.md's when_to_use line — keep for the same reason (calibration 2). The substantive caps in this file (intake, assumption message, publish note, closing list) already have registered rules."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The large-PR rule is a genuine context-budget constraint, not a depth nerf: an over-4,000-line raw diff can blow the context window, and it is paired with mandatory disclosure — `actions_read` must say what was read, `coverage` must state what was skipped, \"Never imply full coverage you don't have.\" That is calibration 1 exactly."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "Same large-PR read cap as ref 3, in the non-composed lane; here the disclosure lands as a `Coverage` row in the signals grid plus \"Never imply full coverage you don't have.\" A real resource limit with honest disclosure of what was skipped — keep (calibration 1)."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "Beyond the large-PR rule (calibration 1), the remaining flags are payload-schema field specs — `<=280`/`<=900` chars, \"3-5 sentences\", 0-3 concerns, `<=6` actions_read — for a fixed-layout published page whose publish path \"refuses out-of-schema payloads with the failing field named\", so exceeding them breaks the publish (decision procedure 1). \"skip diagrams you'd have to force\" prevents fabricating a diagram that does not fit the change, which is a quality directive, not brevity."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "Same call as ref 5 for the non-composed lane: the large-PR rule is calibration 1, and the `<=N chars`/\"3-5 sentences\" bounds are rendering-contract field specs that the skill's own gate requires (\"the length bounds hold\") before the page renders. \"skip diagrams you'd have to force\" keeps the explainer honest rather than shorter."
+    },
+    {
+      "file": "skill-prototype-description.md",
+      "verdict": "keep",
+      "reasoning": "\"Run a short intake\" is already lifted by the registered sibling rule; the current file reads \"Run the intake\". Nothing else in this one-paragraph skill description caps depth or length."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "Same \"Run a short intake\" passage as ref 7, in skill-prototype.md, and this file's own registered rule already flips it — proposing another rule would overlap an existing one."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "lift",
+      "reasoning": "The lines the classifier flagged are keeps — the unprompted offer is calibration 2, board-label brevity is a diagram constraint, and the publish note's content is fully enumerated so \"short note, not a briefing\" only bars turning a handoff into a briefing. Step 4 is a different thing: it caps the chat reply at \"a line or two\" with \"at most a sentence of the reasoning behind it\" while the board itself forbids paragraphs (\"nothing you place on the board is a paragraph\"), so the design rationale is capped in the one channel that can carry it — a Group-1/3 cap on substantive content, the same shape this project already lifts elsewhere. The replacement drops the caps and keeps the good clause that the drawing carries the design and no plan gets dumped in either.",
+      "rule": {
+        "stock": "Reply in chat with a line or two — what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why — no plan dumped in either.",
+        "unnerf": "Reply in chat with what you drew and where, plus the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why — no plan dumped in either.",
+        "description": "whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-composer.md",
+      "verdict": "keep",
+      "reasoning": "\"directly useful, brief, no preamble\" governs text posted verbatim as a single comment-thread reply — \"Reply with ONLY the comment text\" makes the whole output the comment, so no-preamble is a parse contract and \"brief\" matches that medium's genre (calibration 3, decision procedure 1). The composer has no tools and does no investigation to hold back."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "The 2-4-question/one-short-message cap flagged here already has a registered rule. \"not a polished product ... prove the core of the idea, fake the rest\" is the prototype's defining scope rather than an implementation-brevity nerf — it is paired with \"say what you faked\" and an already-lifted complete list of what a real build would still need — and \"change only what was asked\" is iteration scope discipline plus the same-file republish contract that keeps the artifact's URL and version history."
+    },
+    {
+      "file": "system-reminder-plan-mode-prototype-option.md",
+      "verdict": "keep",
+      "reasoning": "\"Offer it at most once, as one short line\" is the unprompted plan-mode offer, keep per calibration 2, and the accompanying \"short plan\" cap is already lifted by this file's registered rule."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-edit-composer.md",
+      "verdict": "keep",
+      "reasoning": "\"Reply text rules (both decisions): brief, plain text only, no emoji\" applies to comment-thread reply text carried inside a machine-executed decision object (calibration 3); the surrounding constraints are the posting gate's plain-text contract and the untrusted-artifact-source injection guard, which is decision procedure 3. The edit itself is uncapped — it must be the complete new source and the reply must state specifically what changed."
+    }
+  ]
+}

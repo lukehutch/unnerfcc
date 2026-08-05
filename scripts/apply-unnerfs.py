@@ -1407,6 +1407,19 @@ RULES: dict[str, list[Rule]] = {
             description="plan-mode prototype option: drop the 'short plan' cap",
         ),
     ],
+    # -------------------------------------------------------------------------
+    # v2.1.222 sync (bucket-analyze.mjs, 2026-08-05): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.222.json
+    # -------------------------------------------------------------------------
+    "skill-whiteboard.md": [
+        Rule(
+            stock="Reply in chat with a line or two — what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why — no plan dumped in either.",
+            unnerf="Reply in chat with what you drew and where, plus the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why — no plan dumped in either.",
+            description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
+        ),
+    ],
 }
 
 
