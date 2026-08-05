@@ -10,7 +10,7 @@ ccVersion: 2.1.222
 -->
 ---
 name: prototype
-description: Turn an idea into a working proof of concept and publish it as an Artifact — a single self-contained page the user can open, click through, and react to. Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact. Use when the user asks to prototype an idea, mock up a concept, build a proof of concept, or wants to see something working before committing to a real build.
+description: Turn an idea into a working proof of concept and publish it as an Artifact — a single self-contained page the user can open, click through, and react to. Run the intake, state your assumptions, build, then iterate on feedback in the same artifact. Use when the user asks to prototype an idea, mock up a concept, build a proof of concept, or wants to see something working before committing to a real build.
 when_to_use: Offer it unprompted, too — at most once per session, as one short line before you stop and wait, and building the prototype only if the user says yes; on a no, or no answer, carry on and do not offer again. Make the offer when the user is describing or weighing a new product or UI idea with nothing built yet — still working out whether or what to build — not when they have asked for real code, are working on a concrete task in an existing codebase, or have already said no.
 ---
 
@@ -26,8 +26,7 @@ Restate the idea in a sentence so the user can see you understood it.
 Then decide whether anything genuinely blocks you: what the prototype
 should prove, who it is for, or where the scope ends.
 
-Ask only the questions whose answers would change what you build — two
-to four at most, in one short message — and only when the request is
+Ask only the questions whose answers would change what you build, as many as the ambiguity genuinely requires, and only when the request is
 actually ambiguous. If the repository, its CLAUDE.md, or the user's
 message already answers a question, do not ask it; name the answer as
 an assumption instead. A specific request ("a pomodoro timer that tracks
@@ -36,7 +35,7 @@ failure; a stated assumption is the fallback.
 
 ## Assumptions up front
 
-Before building, send one short message: what you take the idea to be,
+Before building, send a message covering what you take the idea to be,
 the assumptions you are making, and what the prototype will and will not
 do. Then proceed — this is a heads-up, not a request for sign-off, so do
 not wait for approval unless an intake question is genuinely open.
@@ -54,7 +53,7 @@ Before publishing, re-read the file once for the mistake that would
 break the demo — an unclosed tag, a handler wired to nothing, a script
 error — and fix it. Then publish with the Artifact tool, following its
 own instructions — a stable title, a favicon emoji, and a one-sentence
-description. Give the user the link plus one or two lines: what the
+description. Give the user the link plus a summary of what the
 prototype shows, what is faked, and the obvious next step.
 
 ## Iterate
@@ -69,6 +68,6 @@ improved.
 ## Stop
 
 When the user says it is good, link the final prototype and close with a
-short list of what a real build would still need that the prototype
+complete list of what a real build would still need that the prototype
 skipped — real data, persistence, auth, error handling, whatever applies.
 Stop proposing changes after that.

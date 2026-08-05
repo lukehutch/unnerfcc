@@ -1335,6 +1335,78 @@ RULES: dict[str, list[Rule]] = {
     # prompts in v2.1.218 (the proactive /schedule-offer feature is gone from the
     # binary; grep of the v2.1.218 bundle finds neither "background agent to do it"
     # nor "Quote the artifact"). -3 rules total from the two files.
+
+    # -------------------------------------------------------------------------
+    # v2.1.222 sync: bucket-analysis of the 110 new/reworded prompts (the
+    # artifact-comment-thread / auto-reply family, plus the new prototype/
+    # whiteboard/workshop skills). Classifier-flagged 10 candidates; most are
+    # legitimately KEEP, not lift, per Part 1's decision procedure:
+    #   - skill-artifact-pr-review.md / skill-artifact-pr-review-2.md: the
+    #     "4,000 changed lines -> read highest-signal files, not the raw diff"
+    #     strategy is a genuine context-budget constraint (unlike the allowlist
+    #     scan's "cap at 50 sessions so this stays fast", nothing here trades
+    #     depth for speed) and already discloses exactly what it covered via the
+    #     `Coverage` row/field — that is the opposite of silently holding back.
+    #     "skip diagrams you'd have to force" is proportionality for genuinely
+    #     trivial PRs (substantial PRs explicitly get 3-7 concern blocks), not a
+    #     blanket cap.
+    #   - skill-prototype-when-to-use-offer-unprompted.md, the matching
+    #     when_to_use text embedded in skill-prototype.md, skill-whiteboard.md's
+    #     offer line, and system-reminder-plan-mode-prototype-option.md's offer
+    #     line: "one short line" for an UNPROMPTED, unsolicited offer is
+    #     medium-appropriate (an uninvited pitch should be easy to wave off, not
+    #     expanded into a pitch), not a "hold back capability" nerf. Same
+    #     reasoning for skill-whiteboard.md's "short note, not a briefing" —
+    #     the actual collaboration happens on the board, not in chat.
+    #   - agent-prompt-artifact-comment-reply-composer.md and
+    #     -edit-composer.md: "brief" reply text is the register of a posted
+    #     comment-thread reply (short-form by genre, like a PR comment), and the
+    #     JSON-only / no-preamble output is machine-executed, a genuine parsing
+    #     requirement (decision-procedure item 1).
+    # The prototype skill's actual WORKING FLOW once the user says yes — not the
+    # unprompted offer — did have real process/chat-brevity caps; rules below.
+    # -------------------------------------------------------------------------
+    "skill-prototype.md": [
+        Rule(
+            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            description="prototype description: drop the 'short' intake cap",
+        ),
+        Rule(
+            stock="Ask only the questions whose answers would change what you build — two\nto four at most, in one short message — and only when the request is\nactually ambiguous.",
+            unnerf="Ask only the questions whose answers would change what you build, as many as the ambiguity genuinely requires, and only when the request is\nactually ambiguous.",
+            description="prototype intake: drop the 2-4-question cap and the one-message limit",
+        ),
+        Rule(
+            stock="Before building, send one short message: what you take the idea to be,",
+            unnerf="Before building, send a message covering what you take the idea to be,",
+            description="prototype assumptions: drop the 'one short message' cap",
+        ),
+        Rule(
+            stock="Give the user the link plus one or two lines: what the\nprototype shows, what is faked, and the obvious next step.",
+            unnerf="Give the user the link plus a summary of what the\nprototype shows, what is faked, and the obvious next step.",
+            description="prototype publish: drop the 'one or two lines' cap",
+        ),
+        Rule(
+            stock="close with a\nshort list of what a real build would still need that the prototype\nskipped",
+            unnerf="close with a\ncomplete list of what a real build would still need that the prototype\nskipped",
+            description="prototype close: 'short list' -> 'complete list'",
+        ),
+    ],
+    "skill-prototype-description.md": [
+        Rule(
+            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            description="prototype menu description: drop the 'short' intake cap (sibling of skill-prototype.md)",
+        ),
+    ],
+    "system-reminder-plan-mode-prototype-option.md": [
+        Rule(
+            stock="Write a short plan to the plan file naming the prototype-first approach",
+            unnerf="Write a plan to the plan file naming the prototype-first approach",
+            description="plan-mode prototype option: drop the 'short plan' cap",
+        ),
+    ],
 }
 
 
