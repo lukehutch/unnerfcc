@@ -43,6 +43,7 @@ cd "$REPO"
 NATIVE_CLI="$REPO/lib/bun-binary.mjs"
 PATCH_CLI="$REPO/lib/patch-prompts.mjs"
 LIB_DIR="$REPO/lib"
+SCRIPTS_DIR="$REPO/scripts"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
@@ -91,6 +92,16 @@ command -v python3 >/dev/null || die "python3 not found"
 if [ ! -d "$LIB_DIR/node_modules/node-lief" ] || [ ! -d "$LIB_DIR/node_modules/@babel/generator" ]; then
   log "Installing lib/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
   ( cd "$LIB_DIR" && npm install )
+fi
+
+# Install scripts/ deps too (gray-matter, used by sync-version.mjs at step 5) —
+# a repo whose only prior run was install.sh (which bootstraps lib/ + scripts/)
+# vs. one whose first run is upgrade.sh both need this; missing it here crashes
+# step 5 with ERR_MODULE_NOT_FOUND after the (expensive, AI-driven) classify and
+# relabel steps have already completed, which is the worst place to fail.
+if [ ! -d "$SCRIPTS_DIR/node_modules/gray-matter" ]; then
+  log "Installing scripts/ dependencies (first run: gray-matter)"
+  ( cd "$SCRIPTS_DIR" && npm install --ignore-scripts --save-exact )
 fi
 
 # --- resolve the TARGET version (works whether or not CC is installed) ------
