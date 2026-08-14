@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * gen-catalog.mjs — build a prompt catalog for a new CC version from an
- *                   extracted JS bundle, using OUR OWN extractor (lib/) and a
+ *                   extracted JS bundle, using OUR OWN extractor (engine/) and a
  *                   SEED-DRIVEN merge. Replaces downloading skrabe's catalog.
  *
  * WHY SEED-DRIVEN
  * ---------------
- * Our minimal extractor (lib/extract-prompts.mjs), run in `--all` mode, favors
+ * Our minimal extractor (engine/extract-prompts.mjs), run in `--all` mode, favors
  * recall: it emits every non-blob literal (incl. error/log/library strings and
  * short structural ones). Rather than chase precision (tweakcc uses an LLM cache
  * for that), we anchor the catalog to
@@ -49,7 +49,7 @@ import { identityHash, reconstruct } from "./prompt-index.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(SCRIPT_DIR, "..");
-const EXTRACTOR = join(REPO, "lib", "extract-prompts.mjs");
+const EXTRACTOR = join(REPO, "engine", "extract-prompts.mjs");
 
 function die(m, c = 1) { console.error(`gen-catalog: ${m}`); process.exit(c); }
 

@@ -1,5 +1,5 @@
 {
-  "name": "@unnerfcc/lib",
+  "name": "@unnerfcc/engine",
   "private": true,
   "type": "module",
   "description": "unnerfcc's own minimal toolkit: extract/un-minify/parse/patch/re-package Claude Code. No tweakcc code; uses node-lief (ELF surgery), @babel/parser (parse), prettier (un-minify).",

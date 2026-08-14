@@ -2,7 +2,7 @@
 // extract-prompts.mjs — unnerfcc's own prompt-catalog extractor.
 //
 // Parses a Claude Code JS bundle (cli.js, minified or not) with @babel/parser,
-// NORMALIZES the AST in memory (lib/normalize-ast.mjs) so that every way of
+// NORMALIZES the AST in memory (engine/normalize-ast.mjs) so that every way of
 // spelling a string collapses to one shape, and emits a catalog:
 //   { version, prompts: [ { name, id, description, pieces, identifiers,
 //                            identifierMap, version } ] }
@@ -85,7 +85,7 @@ export function normalizeVersion(s, version) {
 // Sites: every string-producing node in the normalized tree.
 // ---------------------------------------------------------------------------
 // A site carries the live AST NODE, not a source span — patching mutates the node
-// (see lib/patch-prompts.mjs) and the bundle is regenerated from the tree, so
+// (see engine/patch-prompts.mjs) and the bundle is regenerated from the tree, so
 // there is nothing to keep in sync with byte offsets.
 //
 //   node          the AST node to read or rewrite

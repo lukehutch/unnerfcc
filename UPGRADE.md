@@ -3,7 +3,7 @@
 unnerfcc is **standalone**: it generates its own prompt catalog and patches the
 Claude Code binary itself, without depending on the tweakcc-fixed *project*
 (no clone, no build-from-`main`, no waiting for skrabe to publish a catalog).
-The toolkit that does this is our own, under [`lib/`](lib) — no tweakcc code; it
+The toolkit that does this is our own, under [`engine/`](engine) — no tweakcc code; it
 uses only general libraries (node-lief for the ELF/Bun surgery, `@babel/parser`
 to parse, prettier to un-minify).
 
@@ -18,15 +18,15 @@ The whole upgrade is one command:
 | Step | Action | Component |
 |---|---|---|
 | 1 | Detect installed CC version; find our latest catalog | — |
-| 2 | Unpack the JS bundle from the CC native binary | `lib/bun-binary.mjs` (node-lief) |
-| 3 | Extract a fresh prompt catalog, **seed-driven** so known prompts keep their ids and the extractor's over-inclusion never reaches the catalog | `lib/extract-prompts.mjs` + `scripts/gen-catalog.mjs` |
+| 2 | Unpack the JS bundle from the CC native binary | `engine/bun-binary.mjs` (node-lief) |
+| 3 | Extract a fresh prompt catalog, **seed-driven** so known prompts keep their ids and the extractor's over-inclusion never reaches the catalog | `engine/extract-prompts.mjs` + `scripts/gen-catalog.mjs` |
 | 4 | SHA-256-diff new vs previous → the relabel worklist | `scripts/prompt-index.mjs` |
 | 5 | **Launch Claude Code headless to semantically label** the new/changed fragments the extractor couldn't identify | `scripts/relabel.mjs` + `claude -p` |
 | 6 | Validate the catalog (structural gates) | `scripts/validate-catalog.mjs` |
 | 7 | Reconstruct stock `.md` | `scripts/sync-version.mjs` |
 | 8 | **Launch Claude Code headless to bucket-analyze** every new un-nerf candidate against the fresh stock text — decide keep/lift per `UNNERF-GUIDE.md` Part 1, draft any warranted rule; mechanically validated (stock occurs exactly once, no new `${VAR}` introduced, no overlap with an existing rule) and merged into `apply-unnerfs.py` | `scripts/bucket-analyze.mjs` + `claude -p` |
 | 9 | Replay all un-nerfs (existing + whatever step 8 just added); `apply-unnerfs.py --check` gates the release | `scripts/apply-unnerfs.py` |
-| 10 | Patch-verify: splice → effort pass → posture diff → repack → boot-check; a **lost un-nerf (exit 3) blocks the release** | `lib/patch-prompts.mjs` + `lib/apply-code-patches.mjs` + `lib/bun-binary.mjs` |
+| 10 | Patch-verify: splice → effort pass → posture diff → repack → boot-check; a **lost un-nerf (exit 3) blocks the release** | `engine/patch-prompts.mjs` + `engine/apply-code-patches.mjs` + `engine/bun-binary.mjs` |
 | 11 | Leave everything staged for your review + commit | — |
 
 ## Why this design
@@ -98,7 +98,7 @@ automatically, but nothing ships until you review the diff:
 
 1. **Skim the relabels** in `data/prompts/prompts-<version>.json`'s new
    entries. Claude's labels are validated (unique, slot-complete, id-stable)
-   but semantic. (At patch time `lib/patch-prompts.mjs` re-checks slot
+   but semantic. (At patch time `engine/patch-prompts.mjs` re-checks slot
    alignment and **fails closed** on any capture/identifier mismatch — a
    benign skip is a silent no-op, but a mismatch that would **lose an un-nerf
    raises a banner and exits 3** (a release blocker in `upgrade.sh`), so a
@@ -113,20 +113,20 @@ automatically, but nothing ships until you review the diff:
    automation proposes, it doesn't have the last word.
 3. Commit the catalog, `system-prompts/*.md`, `system-prompt-checksums.json`,
    `scripts/apply-unnerfs.py`, `data/bucket-analysis-<version>.json`, and any
-   `lib/` changes.
+   `engine/` changes.
 
 ## Applying to your own binary
 
 `upgrade.sh` prepares the repo. To patch YOUR Claude Code binary with the
 un-nerfed prompts, run [`install.sh`](install.sh) (also standalone — same
-`lib/` patcher + binary I/O).
+`engine/` patcher + binary I/O).
 
 ## If the Bun format changed
 
-`lib/bun-binary.mjs` detects a container format it doesn't understand and
+`engine/bun-binary.mjs` detects a container format it doesn't understand and
 `upgrade.sh` / `install.sh` STOP with a `BUN_FORMAT_INCOMPATIBLE` banner: Bun
 changed its standalone-binary layout. Update the format constants/logic in
-`lib/bun-binary.mjs` for the new layout — its file header documents the format
+`engine/bun-binary.mjs` for the new layout — its file header documents the format
 (section → `[u64 size][blob]`, blob → `[data][OFFSETS][TRAILER]`, module
 structs), and a current tweakcc-fixed's `nativeInstallation.ts` is a useful
 reference if you need to see how the new format is handled. This is the only
@@ -134,8 +134,8 @@ part that tracks Bun internals.
 
 ## First-run setup
 
-`lib/`'s deps install themselves on the first `upgrade.sh`/`install.sh` run
-(`cd lib && npm install`: node-lief, @babel/parser, prettier). Requirements:
+`engine/`'s deps install themselves on the first `upgrade.sh`/`install.sh` run
+(`cd engine && npm install`: node-lief, @babel/parser, prettier). Requirements:
 Node ≥ 20, Python 3, a C toolchain for `node-lief`'s native addon, and `npm`.
 `upgrade.sh` additionally needs the `claude` CLI (for relabeling and
 bucket-analysis, both headless `claude -p` calls); `install.sh` auto-installs

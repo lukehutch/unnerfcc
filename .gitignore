@@ -32,10 +32,10 @@ system-prompts/*.diff.html
 # the lockfile is checked in for reproducibility).
 scripts/node_modules/
 
-# lib/ deps: package.json + our .mjs are committed, but node_modules is NOT —
+# engine/ deps: package.json + our .mjs are committed, but node_modules is NOT —
 # node-lief is a platform-specific native addon that upgrade.sh / install.sh
 # `npm install` locally on first run.
-lib/node_modules/
+engine/node_modules/
 
 # Python bytecode cache from apply-unnerfs.py
 scripts/__pycache__/

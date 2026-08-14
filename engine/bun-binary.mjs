@@ -173,10 +173,6 @@ function detectModuleStruct(modulesListLen) {
   );
 }
 
-const isClaudeModule = (name) =>
-  name.endsWith("/claude") || name === "claude" || name.endsWith("/claude.exe") ||
-  name.endsWith("src/entrypoints/cli.js");
-
 function parseOffsets(blob) {
   const start = blob.length - SIZEOF_OFFSETS - TRAILER.length;
   if (start < 0) throw fmtErr("blob too small for offsets + trailer");
@@ -256,8 +252,14 @@ export function extract(binaryPath) {
   const offsets = parseOffsets(blob);
   const structSize = detectModuleStruct(offsets.modulesPtr.length);
   const modules = parseModules(blob, offsets, structSize);
-  const claude = modules.find((m) => isClaudeModule(m.name));
-  if (!claude) throw fmtErr("claude module not found in the module graph");
+  // The entry-point module is identified by ID in the offsets header — Bun's
+  // own authoritative answer, not a guess. Matching by NAME used to be how this
+  // worked (a handful of hardcoded suffixes like "/claude" or "cli.js"), but
+  // that broke the moment the compiled entry file's name changed (v2.1.231
+  // ships it as "/$bunfs/root/cli", matching none of the old patterns) — using
+  // entryPointId is immune to any future renaming.
+  const claude = modules[offsets.entryPointId];
+  if (!claude) throw fmtErr(`entry-point module (id=${offsets.entryPointId}) not found among ${modules.length} module(s)`);
   const js = spContent(blob, claude.ptrs.contents);
   return {
     js: Buffer.from(js),
@@ -274,8 +276,9 @@ function rebuildBlob(meta, newJs) {
   // Phase 1: collect each module's strings (replacing claude contents).
   const strings = []; // flat list, nSP per module, in field order
   const perModule = [];
-  for (const m of modules) {
-    const isClaude = isClaudeModule(m.name);
+  for (let i = 0; i < modules.length; i++) {
+    const m = modules[i];
+    const isClaude = i === offsets.entryPointId;
     const name = spContent(blob, m.ptrs.name);
     const contents = isClaude ? newJs : spContent(blob, m.ptrs.contents);
     const sourcemap = spContent(blob, m.ptrs.sourcemap);
@@ -470,7 +473,29 @@ async function main(argv) {
       console.log(`repacked -> ${b}`);
       return 0;
     }
-    console.error("usage:\n  node bun-binary.mjs unpack <binary> <out.js>\n  node bun-binary.mjs repack <binary> <in.js> <out-binary>");
+    if (cmd === "list" && bin) {
+      // Diagnostic: dump every module name in the graph without requiring a
+      // isClaudeModule() match — the entry-point name is under Anthropic's
+      // build config, not Bun's container format, and has changed before.
+      // Use this to find the new pattern when "claude module not found" fires.
+      const buf = readFileSync(bin);
+      const format = detectFormat(buf);
+      const sec = format === "elf" ? findBunSectionELF(buf) : findBunSectionMachO(buf);
+      if (!sec) throw fmtErr("bun section not found");
+      const section = buf.subarray(sec.off, sec.off + sec.size);
+      let headerSize;
+      if (section.length >= 8 && Number(section.readBigUInt64LE(0)) + 8 === section.length) headerSize = 8;
+      else if (section.length >= 4 && section.readUInt32LE(0) + 4 === section.length) headerSize = 4;
+      else throw fmtErr("unrecognized .bun section size header");
+      const blob = section.subarray(headerSize);
+      const offsets = parseOffsets(blob);
+      const structSize = detectModuleStruct(offsets.modulesPtr.length);
+      const modules = parseModules(blob, offsets, structSize);
+      console.log(`format=${format} structSize=${structSize} entryPointId=${offsets.entryPointId} moduleCount=${modules.length}`);
+      modules.forEach((m, i) => console.log(`[${i}]${i === offsets.entryPointId ? " *entry*" : ""} ${m.name} (${m.encoding === 0 ? "text" : "binary"}, ${spContent(blob, m.ptrs.contents).length}B)`));
+      return 0;
+    }
+    console.error("usage:\n  node bun-binary.mjs unpack <binary> <out.js>\n  node bun-binary.mjs repack <binary> <in.js> <out-binary>\n  node bun-binary.mjs list <binary>");
     return 2;
   } catch (e) {
     if (e && /^BUN_FORMAT:/.test(e.message)) {

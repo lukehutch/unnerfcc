@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # install.sh — patch your Claude Code binary with the un-nerfed prompts.
-#              STANDALONE: uses unnerfcc's OWN toolkit in lib/ (bun-binary,
+#              STANDALONE: uses unnerfcc's OWN toolkit in engine/ (bun-binary,
 #              patch-prompts) — no dependency on the tweakcc-fixed project.
 #
 # WHAT IT DOES
@@ -21,8 +21,8 @@
 #   4. Verifies the un-nerf sentinels actually landed, and disables CC's
 #      auto-updater so the patch isn't silently reverted on next launch.
 #
-# If Bun changed the binary format, lib/bun-binary.mjs reports it and this
-# script STOPS — update lib/bun-binary.mjs for the new layout.
+# If Bun changed the binary format, engine/bun-binary.mjs reports it and this
+# script STOPS — update engine/bun-binary.mjs for the new layout.
 #
 # USAGE
 #   ./install.sh [--dry-run] [--version X.Y.Z] [--help]
@@ -34,9 +34,9 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO"
 
-NATIVE_CLI="$REPO/lib/bun-binary.mjs"
-PATCH_CLI="$REPO/lib/patch-prompts.mjs"
-LIB_DIR="$REPO/lib"
+NATIVE_CLI="$REPO/engine/bun-binary.mjs"
+PATCH_CLI="$REPO/engine/patch-prompts.mjs"
+ENGINE_DIR="$REPO/engine"
 SCRIPTS_DIR="$REPO/scripts"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
@@ -59,9 +59,9 @@ warn() { printf '%s!! %s%s\n' "$Y" "$*" "$N" >&2; }
 die()  { printf '%sERROR:%s %s\n' "$R$B" "$N" "$*" >&2; exit 1; }
 run()  { if [ "$DRY_RUN" = 1 ]; then printf '%s[dry-run]%s %s\n' "$B" "$N" "$*"; else eval "$@"; fi; }
 bun_incompatible() {
-  printf '%s\nBUN FORMAT INCOMPATIBLE — lib/bun-binary.mjs could not parse this\n' "$R$B" >&2
+  printf '%s\nBUN FORMAT INCOMPATIBLE — engine/bun-binary.mjs could not parse this\n' "$R$B" >&2
   printf 'Claude Code binary. Bun likely changed its standalone container format.\n' >&2
-  printf 'Update the format logic in lib/bun-binary.mjs for the new layout.%s\n' "$N" >&2
+  printf 'Update the format logic in engine/bun-binary.mjs for the new layout.%s\n' "$N" >&2
   printf 'detail: %s\n' "$1" >&2
   exit 3
 }
@@ -70,12 +70,12 @@ bun_incompatible() {
 command -v node    >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
 
-# Install lib/ deps on first run (node-lief native addon, babel, prettier).
-[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
-[ -f "$PATCH_CLI" ]  || die "lib/patch-prompts.mjs missing — is the repo intact?"
-if [ ! -d "$LIB_DIR/node_modules/node-lief" ]; then
-  log "Installing lib/ dependencies (first run: node-lief, @babel/parser, prettier)"
-  run "( cd '$LIB_DIR' && npm install )"
+# Install engine/ deps on first run (node-lief native addon, babel, prettier).
+[ -f "$NATIVE_CLI" ] || die "engine/bun-binary.mjs missing — is the repo intact?"
+[ -f "$PATCH_CLI" ]  || die "engine/patch-prompts.mjs missing — is the repo intact?"
+if [ ! -d "$ENGINE_DIR/node_modules/node-lief" ]; then
+  log "Installing engine/ dependencies (first run: node-lief, @babel/parser, prettier)"
+  run "( cd '$ENGINE_DIR' && npm install )"
 fi
 
 # Install scripts/ deps on first run (gray-matter, used by sync-version.mjs).
@@ -202,10 +202,10 @@ esac
 # --- effort un-nerfs (BEST-EFFORT; must never block the prompt patches) -----
 # Lift CC's silent effort caps (mid-tier model default, /effort capped below the
 # ceiling). Runs on the already-prompt-patched bundle; if an anchor drifted, it
-# reports and we ship the prompt un-nerfs alone. See lib/apply-code-patches.mjs.
+# reports and we ship the prompt un-nerfs alone. See engine/apply-code-patches.mjs.
 EFF_JS="$WORK/patched.effort.js"
 log "Applying effort un-nerfs (best-effort)"
-set +e; EFF_OUT="$(node "$REPO/lib/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
 echo "$EFF_OUT" | sed 's/^/    /'
 if [ -s "$EFF_JS" ]; then
   PATCHED_JS="$EFF_JS"   # ship prompt + effort un-nerfs

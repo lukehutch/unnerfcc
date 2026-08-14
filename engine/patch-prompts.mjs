@@ -12,7 +12,7 @@
 // matcher and a per-run source span to overwrite, and every gap in that machinery
 // showed up as a prompt that "vanished" on a version bump.
 //
-// lib/normalize-ast.mjs removes the problem at the root: the AST is put into
+// engine/normalize-ast.mjs removes the problem at the root: the AST is put into
 // normal form the moment it is parsed, BEFORE anything is hashed, so every way of
 // writing a string collapses to ONE shape (a TemplateLiteral whose interpolations
 // are bare variables). A prompt is then located by a plain sha256 of the one
@@ -350,7 +350,7 @@ async function apply(inJs, catalogPath, promptsDir, outJs) {
   counts.patched = accepted.length - failedWrite.length;
 
   // De-normalize before emitting: the normal form is an in-memory device, and
-  // lib/apply-code-patches.mjs (which runs next, on this output) anchors its
+  // engine/apply-code-patches.mjs (which runs next, on this output) anchors its
   // effort un-nerfs on quoted string-literal contracts. See normalize-ast.mjs.
   denormalizeProgram(ast);
   const out = await generateSource(ast, source);

@@ -167,7 +167,7 @@ Caused by upstream deleting a file that a rule referenced.
 
 Re-run once more and confirm `Rules FAILED: 0` and `Missing files: 0`. This is the
 *text-level* check only. The release also requires the **binary patch-verify** (run by
-`./upgrade.sh` via `lib/patch-prompts.mjs`) to exit 0: an un-nerf can pass
+`./upgrade.sh` via `engine/patch-prompts.mjs`) to exit 0: an un-nerf can pass
 `apply-unnerfs.py --check` yet still fail to reach the bundle, which the splicer reports
 as a **LOST un-nerf → exit 3**. An exit 3 is a release blocker — resolve it (fix the
 catalog `pieces` / rule anchor) before tagging. Only then proceed.

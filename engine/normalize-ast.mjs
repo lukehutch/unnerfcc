@@ -418,7 +418,7 @@ export function normalizeProgram(ast) {
 // ---------------------------------------------------------------------------
 // The normal form is an IN-MEMORY device: it exists so hashing and patching see
 // one shape. The emitted bundle does not have to keep it, and it must not, because
-// downstream source-level tooling still reads the bundle as text. lib/apply-code-
+// downstream source-level tooling still reads the bundle as text. engine/apply-code-
 // patches.mjs anchors its effort un-nerfs on string-literal contracts spelled with
 // quotes (`default_effort:"high"`, the `["low",…,"xhigh"]` enum, the
 // `x==="max"&&!f(y))x="high"` resolver guard); against a fully normalized bundle

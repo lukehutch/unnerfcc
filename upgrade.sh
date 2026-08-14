@@ -19,12 +19,12 @@
 #   9. leaves everything staged for you to review + commit.
 #
 # It does NOT depend on the tweakcc-fixed project: extract/re-package the binary
-# (lib/bun-binary.mjs), un-minify (lib/beautify.mjs), extract the catalog
-# (lib/extract-prompts.mjs), and patch (lib/patch-prompts.mjs) are all OUR OWN
+# (engine/bun-binary.mjs), un-minify (engine/beautify.mjs), extract the catalog
+# (engine/extract-prompts.mjs), and patch (engine/patch-prompts.mjs) are all OUR OWN
 # code. The only external "AI" call is `claude` itself for relabeling.
 #
-# BUN FORMAT: if lib/bun-binary.mjs reports the binary's Bun container format is
-# one it doesn't understand, this script STOPS — update lib/bun-binary.mjs for
+# BUN FORMAT: if engine/bun-binary.mjs reports the binary's Bun container format is
+# one it doesn't understand, this script STOPS — update engine/bun-binary.mjs for
 # the new layout.
 #
 # USAGE
@@ -40,10 +40,10 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO"
 
-NATIVE_CLI="$REPO/lib/bun-binary.mjs"
-PATCH_CLI="$REPO/lib/patch-prompts.mjs"
+NATIVE_CLI="$REPO/engine/bun-binary.mjs"
+PATCH_CLI="$REPO/engine/patch-prompts.mjs"
 BUCKET_ANALYZE="$REPO/scripts/bucket-analyze.mjs"
-LIB_DIR="$REPO/lib"
+ENGINE_DIR="$REPO/engine"
 SCRIPTS_DIR="$REPO/scripts"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
@@ -68,10 +68,10 @@ warn() { printf '\033[1;33m  !\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mupgrade.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 bun_incompatible() {
   printf '\033[1;31m\n╔══════════════════════════════════════════════════════════════╗\n'
-  printf   '║  BUN FORMAT INCOMPATIBLE — lib/bun-binary.mjs could not parse ║\n'
+  printf   '║  BUN FORMAT INCOMPATIBLE — engine/bun-binary.mjs could not parse ║\n'
   printf   '║  this Claude Code binary. Bun likely changed its standalone   ║\n'
   printf   '║  container format. Update the format constants/logic in       ║\n'
-  printf   '║  lib/bun-binary.mjs for the new layout (its header documents  ║\n'
+  printf   '║  engine/bun-binary.mjs for the new layout (its header documents  ║\n'
   printf   '║  the format; a current tweakcc-fixed is a useful reference).  ║\n'
   printf   '╚══════════════════════════════════════════════════════════════╝\033[0m\n' >&2
   printf 'detail: %s\n' "$1" >&2
@@ -84,19 +84,19 @@ command -v python3 >/dev/null || die "python3 not found"
 # NOTE: `claude` is NOT required to be installed — we fetch the target binary
 # ourselves (see below). It's only used, if present, for the semantic relabel
 # step; otherwise the freshly-fetched binary stands in.
-[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
+[ -f "$NATIVE_CLI" ] || die "engine/bun-binary.mjs missing — is the repo intact?"
 # Check EVERY load-bearing dep, not just the first one ever added: a repo cloned
 # (or last upgraded) before @babel/generator became required has a populated
 # node_modules that a node-lief-only test would wrongly call complete, and the
 # patcher would then die mid-run. @babel/generator is what writes the patched AST
 # back out to source, so it is as load-bearing as the parser.
-if [ ! -d "$LIB_DIR/node_modules/node-lief" ] || [ ! -d "$LIB_DIR/node_modules/@babel/generator" ]; then
-  log "Installing lib/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
-  ( cd "$LIB_DIR" && npm install )
+if [ ! -d "$ENGINE_DIR/node_modules/node-lief" ] || [ ! -d "$ENGINE_DIR/node_modules/@babel/generator" ]; then
+  log "Installing engine/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
+  ( cd "$ENGINE_DIR" && npm install )
 fi
 
 # Install scripts/ deps too (gray-matter, used by sync-version.mjs at step 5) —
-# a repo whose only prior run was install.sh (which bootstraps lib/ + scripts/)
+# a repo whose only prior run was install.sh (which bootstraps engine/ + scripts/)
 # vs. one whose first run is upgrade.sh both need this; missing it here crashes
 # step 5 with ERR_MODULE_NOT_FOUND after the (expensive, AI-driven) classify and
 # relabel steps have already completed, which is the worst place to fail.
@@ -417,13 +417,13 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   # (renamed field, restructured enum) surfaces as a LOUD worklist, not a silent
   # regression — same idea as the prompt-checksum manifest.
   POSTURE="$REPO/data/effort-posture.json"; POSTURE_NEW="$WORK/effort-posture.json"
-  node "$REPO/lib/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
+  node "$REPO/engine/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
   EFF_JS="$WORK/patched.effort.js"
-  set +e; EFF_OUT="$(node "$REPO/lib/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+  set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
   echo "$EFF_OUT" | sed 's/^/  /'
   [ -s "$EFF_JS" ] && PATCHED_JS="$EFF_JS"
   echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
-    warn "effort un-nerf incomplete — CC's effort code likely changed; update lib/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
+    warn "effort un-nerf incomplete — CC's effort code likely changed; update engine/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
   if [ -f "$POSTURE" ] && [ -s "$POSTURE_NEW" ] && ! diff -q "$POSTURE" "$POSTURE_NEW" >/dev/null 2>&1; then
     warn "CC effort surface changed since last release — review the diff:"
     diff "$POSTURE" "$POSTURE_NEW" 2>/dev/null | sed 's/^/    /' || true
@@ -474,7 +474,7 @@ cat <<EOF
     - system-prompt-checksums.json            (regenerated by sync-version)
     - scripts/apply-unnerfs.py                (bucket-analysis may have added new rules)
     - data/bucket-analysis-$CC_VERSION.json   (full keep/lift review, incl. every KEEP + why)
-    - scripts/*, lib/*                        (if changed)
+    - scripts/*, engine/*                        (if changed)
 
   Bucket-analysis (deciding which new/changed prompts need a new un-nerf rule,
   and drafting it) already ran automatically above — see

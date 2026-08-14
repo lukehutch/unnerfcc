@@ -71,7 +71,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { extract } from "../lib/extract-prompts.mjs";
+import { extract } from "../engine/extract-prompts.mjs";
 import { identityHash, reconstruct } from "./prompt-index.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");

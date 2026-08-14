@@ -114,7 +114,7 @@ is left as separate parts. Shares its node→`pieces` logic with
 not usually by hand:
 
 ```bash
-node lib/patch-prompts.mjs apply <inJs> <catalog.json> <systemPromptsDir> <outJs>
+node engine/patch-prompts.mjs apply <inJs> <catalog.json> <systemPromptsDir> <outJs>
 ```
 
 It reconstructs stock from the catalog to grade every skip, so a benign no-op is
@@ -166,9 +166,9 @@ the prompt patch in `install.sh` / `upgrade.sh`; a failure never blocks the prom
 un-nerfs. Full rationale: [UNNERF-GUIDE.md](UNNERF-GUIDE.md) Part 10.
 
 ```bash
-node lib/apply-code-patches.mjs apply   <inJs> <outJs>   # patch (best-effort, always exits 0)
-node lib/apply-code-patches.mjs posture <inJs>           # snapshot the effort surface (JSON)
-node lib/apply-code-patches.mjs verify  <inJs>           # exit 0 iff all effort un-nerfs present
+node engine/apply-code-patches.mjs apply   <inJs> <outJs>   # patch (best-effort, always exits 0)
+node engine/apply-code-patches.mjs posture <inJs>           # snapshot the effort surface (JSON)
+node engine/apply-code-patches.mjs verify  <inJs>           # exit 0 iff all effort un-nerfs present
 ```
 
 Four patches run in order: **cascade-max-fallback** (P0, makes the raise

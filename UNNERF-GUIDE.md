@@ -7,7 +7,7 @@ changing any un-nerf rule.
 
 > [!NOTE]
 > The **upgrade/sync workflow** now lives in [UPGRADE.md](UPGRADE.md) — unnerfcc
-> is standalone (its own `lib/` toolkit, SHA-256 Claude classification, no
+> is standalone (its own `engine/` toolkit, SHA-256 Claude classification, no
 > tweakcc dependency). The later parts of this guide (the tweakcc-based sync
 > playbook, Parts 2 / 7–9) predate that rewrite and are being superseded by
 > UPGRADE.md; treat Part 1 (the policy) as authoritative and UPGRADE.md as the
@@ -194,7 +194,7 @@ Every string's identity is one `sha256` over one string — no runs to re-align,
 encoding table, no fuzzy tier.
 
 That is possible because the AST is **normalized in memory the moment it is
-parsed**, before anything is hashed (`lib/normalize-ast.mjs`). The bundle spells
+parsed**, before anything is hashed (`engine/normalize-ast.mjs`). The bundle spells
 the same prompt differently from build to build — `"a"+x+"b"` one release,
 `` `a${x}b` `` the next, single quotes here, double quotes there, a `+` chain
 split at a different point. Normalization collapses all of it: every
@@ -307,14 +307,14 @@ last changed — **not** the global CC version), and `variables`.
   machine-generated placeholders (`${<PROMPT_ID>_VAR_0}`, …). Rules that target
   such a fragment must spell the placeholder exactly as extracted.
 
-### B. The installed binary, via `lib/bun-binary.mjs unpack` (ground truth)
+### B. The installed binary, via `engine/bun-binary.mjs unpack` (ground truth)
 
 Extract the bundled JS from any installed binary directly — to inspect a prompt
 or confirm a rule's `stock` text still matches what you're running:
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"   # e.g. .../@anthropic-ai/claude-code/bin/claude.exe
-node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js   # writes ~18 MB of JS; read-only, non-destructive
+node engine/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js   # writes ~18 MB of JS; read-only, non-destructive
 ```
 
 You then search that JS for prompt text. **Escaping gotcha:** the minified JS
@@ -442,7 +442,7 @@ FAILs).
   a bare `${}`, so a minifier renaming `Wv` to `q3` between releases can't churn
   the catalog — see [Matching is pure hashing](#matching-is-pure-hashing)). With
   the name out of the hash, **position is the only binding there is**.
-  `lib/patch-prompts.mjs` splits the edited body on the marker sequence the
+  `engine/patch-prompts.mjs` splits the edited body on the marker sequence the
   prompt's `identifiers` list gives, then rebinds the i-th marker to the i-th
   interpolation the stock string already had — restoring the bundle's own
   variables in place. Each way of breaking that fails differently:
@@ -504,7 +504,7 @@ a patch release that changed prompts the published JSON doesn't yet cover):
 
 ```bash
 CCBIN="$(readlink -f "$(command -v claude)")"
-node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js
+node engine/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js
 # for each prompt, check its longest pure-ASCII piece is present in /tmp/cc.js
 # (see scripts usage / Part 3 escaping note). Near-total presence => essentially
 # identical; the only expected misses are micro-prompts that are pure ${interpolation}
@@ -512,7 +512,7 @@ node lib/bun-binary.mjs unpack "$CCBIN" /tmp/cc.js
 ```
 
 To verify an **applied** un-nerf actually reached the binary (after
-`./install.sh` / `node lib/patch-prompts.mjs`), unpack the *patched* binary and
+`./install.sh` / `node engine/patch-prompts.mjs`), unpack the *patched* binary and
 grep for un-nerf sentinels present and stock sentinels gone:
 
 ```bash
@@ -529,7 +529,7 @@ on a no-op/partial apply** — it verifies the 5 sentinels independently rather 
 trusting the splice's own summary, and the splicer's own LOST banner + exit 3
 (below) is the primary guard against a silent no-op.
 
-**The vendored splicer classifies its own skips by severity** (`lib/patch-prompts.mjs`).
+**The vendored splicer classifies its own skips by severity** (`engine/patch-prompts.mjs`).
 When a prompt can't be uniquely located (couldNotFind / several matches, none a
 standalone string literal / two prompts resolving to overlapping bundle regions),
 the splicer compares the edited `.md` against stock (reconstructed from the catalog
@@ -587,8 +587,8 @@ logic lives in `extract-prompts.mjs`, so the extractor and patcher agree exactly
 ## Part 8 — (removed)
 
 This project no longer uses the tweakcc-fixed tool. Extract/patch/re-package the
-binary is our own `lib/` toolkit (`node lib/bun-binary.mjs unpack|repack`,
-`node lib/patch-prompts.mjs`); the whole flow is `./install.sh` / `./upgrade.sh`
+binary is our own `engine/` toolkit (`node engine/bun-binary.mjs unpack|repack`,
+`node engine/patch-prompts.mjs`); the whole flow is `./install.sh` / `./upgrade.sh`
 ([UPGRADE.md](UPGRADE.md)). tweakcc-fixed remains a reference if Bun's binary
 format changes ([BACKGROUND.md](BACKGROUND.md)).
 
@@ -707,7 +707,7 @@ snapshot each sync rather than appending history.
 
 Beyond prompt text, CC degrades reasoning **effort in code**. unnerfcc's charter:
 **never let effort be silently degraded.** These are handled by
-[`lib/apply-code-patches.mjs`](lib/apply-code-patches.mjs) — a **best-effort,
+[`engine/apply-code-patches.mjs`](engine/apply-code-patches.mjs) — a **best-effort,
 second-tier** pass that edits CC's own code/data strings (not prompts) on the
 already-prompt-patched bundle. It **can never block the prompt un-nerfs**:
 `install.sh` / `upgrade.sh` run it after the prompt patch, and any failure is
@@ -775,7 +775,7 @@ reported. `upgrade.sh` snapshots the stock effort surface to
 [`data/effort-posture.json`](data/effort-posture.json) and **diffs it each sync** —
 a renamed field or restructured enum surfaces as a loud worklist (update the
 anchors in `apply-code-patches.mjs`), the same idea as the Part 4 checksum
-manifest. Flags: `node lib/apply-code-patches.mjs {apply <in> <out>|posture <in>|verify <in>}`.
+manifest. Flags: `node engine/apply-code-patches.mjs {apply <in> <out>|posture <in>|verify <in>}`.
 
 **Idempotency trap — a raw-text stage must borrow the AST stage's canonicaliser.**
 The in-code patches run on the **output of the AST patcher**, but they are a
