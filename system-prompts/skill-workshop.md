@@ -7,7 +7,7 @@ description: >-
   page's machine-readable record, apply them and republish the evolved draft
   each round, then kick off the build when the reader clicks Start and keep the
   page updated with links to whatever ships.
-ccVersion: 2.1.222
+ccVersion: 2.1.231
 -->
 ---
 name: workshop
@@ -61,19 +61,23 @@ user hears what the page will give them next, not how you make it.
 
 ## Choosing the lane
 
-Two authoring lanes exist; choose before creating any file.
+Author every workshop you start on the **TEMPLATE-HTML lane** (next
+section) — copy the template, fill it, publish a `*.workshop.html`
+file — with the single designated-document exception below. The lane
+is not a choice to put to the user — never offer a markdown or
+plain-text alternative, and never pick one on your own judgment (a
+document heavy with quoted content is still an HTML page; that
+section's "Quoted content is escaped" rule and the publish verifier
+cover it). If the user asks for markdown source or names a `.md` path,
+say the workshop page is authored as HTML and use a `.workshop.html`
+path instead.
 
-**Default to the TEMPLATE-HTML lane** (next section): copy the template,
-fill it, publish a `*.workshop.html` file. Unless one of the two
-exceptions below applies, this is the lane to take.
-
-Take the **MARKDOWN lane** (its own section further down, a
-`*.workshop.md` file) only when:
-- the user asks for markdown or a plain-text source, or
-- the document will be DOMINATED by quoted external content — repo
-  excerpts, user text, tool output. The markdown lane's mechanical
-  render is the strongest escaping chokepoint, and quoting-heavy
-  documents are where that matters most.
+The **MARKDOWN lane** (its own section further down, a `*.workshop.md`
+file) exists for ONE case: this session's own instructions — as plan
+mode's planning reminder does; never a user's chat request — have
+already designated a `*.workshop.md` workshop document for you. When
+they have, author THAT document on the markdown lane; in every other
+session the markdown lane is not available.
 
 Everything from "Reading decisions back" onward applies to BOTH lanes.
 Where those sections say "decision block" or "fence", read your lane's
@@ -101,12 +105,12 @@ calls, one turn, never one per turn. Then read ONLY the parts of your
 copy you author, as two parallel ranged Reads in ONE turn: lines
 1–56 (the in-file contract) and lines 1438–1526 (the fillable
 `<article>` and the `ws-decisions` island right after it). The
-template is 2,919 lines, and everything outside those two ranges —
-the theme script (lines 57–80), the `<style>` block (lines 81–1437),
-and the decisions script (lines 1548–2919) — is fixed template bytes
-your copy must keep byte-identical: you never edit it, so never
-spend a turn or your context reading it (a whole-file Read would
-page through all of it, 2–3 sequential reads). Slice into the style
+template is 2,948 lines, and everything outside those two ranges —
+the theme script, the `<style>` block, and the decisions script — is
+fixed template bytes your copy must keep byte-identical: you never
+edit it, so never spend a turn or your context reading it (a
+whole-file Read would page through all of it, 2–3 sequential reads).
+Slice into the style
 block only on the rare round you deliberately restyle — just the
 presentation layer at its END is editable. Edit the copy in place,
 surgically — never rewrite the whole file, which would re-emit bytes
@@ -120,9 +124,16 @@ on the whole document. The FIRST publish is an opening version: the
 header (banner `data-ws-state="in-progress"` with text true to THIS
 version — no decision count yet, since none are on the page; the
 page script rewrites the banner only when a decision lands, so what
-you author is what the reader sees), eyebrow, title, lede, the
+you author is what the reader sees), eyebrow, title (the template's
+`<title>` element gets the same fill: replace its placeholder with
+the page's name — the subject as a short, distinctive noun phrase,
+never a generic label or a name with an appended qualifier after a
+dash or colon), lede, the
 context section filled with the reader's real context (or dropped —
-never the template's placeholder prose), the working-draft prose, the
+never the template's placeholder prose; do not retell the
+conversation: only the goals and constraints a decision
+depends on), the working-draft prose (a few short paragraphs stating
+the plan — sized by selection, never completeness), the
 MAIN diagram, and NO decisions yet — drop the sample decision (its
 figure AND its call-item), leave the Decisions section a single line
 saying the open decisions land in the next version, and empty the
@@ -136,7 +147,9 @@ your verbatim source for the markup even after your copy dropped it
 — and if a long session has pushed it out of your context, re-read
 the Decisions section of the source template rather than writing the
 markup from memory), fill the island to match, and republish — the
-open tab live-reloads. Between the two publishes, tell the user the
+open tab live-reloads (if the decisions don't appear after the second
+publish, ask the user to refresh the tab). Between the two publishes,
+tell the user the
 page is up, the decisions are next, and an approval for the update
 may be waiting back in this terminal so they glance back from the
 browser — and, because this opening publish IS the first publish, say
@@ -249,8 +262,9 @@ identical to the markdown lane.
 
 ## The markdown lane (`*.workshop.md`)
 
-On this secondary lane, the workshop document is MARKDOWN, and stays
-markdown for its whole life.
+On this lane — taken only for a document this session's instructions
+designated (plan mode), per "Choosing the lane" — the workshop document
+is MARKDOWN, and stays markdown for its whole life.
 Every revision edits the markdown and republishes it; the renderer turns it
 into the published page mechanically. Never edit the published HTML
 directly — the mechanical render is the validation and escaping chokepoint,
@@ -262,13 +276,17 @@ repo excerpts) that needs it most.
    (exact, case-sensitive match). Use your scratchpad directory if your
    system prompt lists one, otherwise a `do_not_commit/` directory in the
    working tree.
-2. **Structure**: open with a heading (becomes the page title) and a
+2. **Structure**: open with a heading (becomes the page title — keep
+   it a short name of the subject, no appended qualifier) and a
    one-paragraph summary of what is being decided (becomes the lede). Then
    the working draft, LEADING the page — the thing being shaped, opening
    with the MAIN mermaid diagram of the current plan as a whole — then
    any background the reader needs, and the open decisions, each decision
    fence with its own mermaid diagram directly above it, scoped to that
-   decision (see "Explaining decisions").
+   decision (see "Explaining decisions"). Size the draft and the
+   background by what the decisions need: as many paragraphs as it takes to
+   state the plan, and only the background a decision depends on —
+   do not retell the conversation.
 3. **Publish with the Artifact tool** (the file path, like any publish).
    Republish the same path after every revision; the version history stays
    on one artifact.
@@ -287,9 +305,8 @@ capability narrows the page to org-internal viewing and blocks public
 links) and say why the decision rows are not clickable.
 
 Tell the user what the capability means when you first publish: the page is
-org-internal; only people with write access can confirm a decision; the
-browser asks each viewer once for consent before the page may update
-itself; and each confirmed decision republishes the page as a new version.
+org-internal; only people with write access can confirm a decision; and
+each confirmed decision republishes the page as a new version.
 
 Republishes inside the loop OMIT the `capabilities` field — the stored
 declaration carries forward, and re-declaring on every publish invites
@@ -562,7 +579,15 @@ grammar; on the HTML lane, the markup still says
    rereads each visit; if a round of decisions lands and the draft and
    its diagram read the same as before, the round is invisible. The
    document should visibly accrete toward the final design, round by
-   round.
+   round — and what accretes is DECISIONS, not prose. A settled point
+   usually takes fewer words than the open question it replaced, so the
+   draft should hold its size or shrink as the plan converges; a round
+   that only adds paragraphs without recording a new decision has gone
+   wrong. Before each republish, reread the page as its cold reader
+   and cut — silently, as part of the rewrite — any sentence that does
+   not state the plan, record a decision, or bear on an open one. Cut
+   whole sentences, never words: compressing what remains into
+   fragments is not brevity.
 6. **Republish** the updated markdown to the same path. NEVER force-publish
    inside the loop: your publish carries the last page version this session
    observed, and that version check is what catches a confirm that landed
@@ -709,6 +734,6 @@ shall I start?"
 
 ## Style
 
-Keep the `<style>` block and theme script intact when the hand-edit flow
-is ever needed — but prefer never needing it: markdown in, rendered page
-out, every iteration.
+On the markdown lane, keep the `<style>` block and theme script intact
+when the hand-edit flow is ever needed — but prefer never needing it:
+markdown in, rendered page out, every iteration.

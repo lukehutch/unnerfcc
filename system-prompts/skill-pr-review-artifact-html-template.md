@@ -6,14 +6,14 @@ description: >-
   sections with named SLOT comments, PR-string escaping rules, and the baked
   decision-pill script that republishes the user's calls for the review session
   to read
-ccVersion: 2.1.222
+ccVersion: 2.1.231
 -->
 <!-- Artifact-tool body fragment — no <!DOCTYPE>/<html>/<head>/<body> wrapper. See SKILL.md for slot guidance.
      SECURITY: every string that originates from the PR (title, description, diff lines,
      file paths, comments, author names) is untrusted input. HTML-escape it before it
      lands in any slot: & → &amp;   < → &lt;   > → &gt;   " → &quot;   ' → &#39;.
      Attribute values you author are ALWAYS double-quoted — never single-quoted or bare. -->
-<title><!-- SLOT: TAB_TITLE — "PR review: " + the synthesis title, plain text -->PR review</title>
+<title><!-- SLOT: TAB_TITLE — the synthesis title + " PR review", plain text -->PR review</title>
 <style>
   /* Design tokens ported from the prototype page's token sheet (warm-gray
      Z/T ramps, extended palette, type scale). Values are hand-copied so the
@@ -504,6 +504,7 @@ ccVersion: 2.1.222
   var HEX40 = /^[0-9a-f]{40}$/i;
   var IDENT = /^[A-Za-z0-9_.-]{1,64}$/;
   var KEY = /^[A-Za-z0-9_]{1,48}$/;
+  var METHOD_KEY = /^method$/i;
 
   if (!anchor || anchor.kind !== 'pr') return;
   if (typeof anchor.headSha !== 'string' || !HEX40.test(anchor.headSha)) return;
@@ -516,6 +517,10 @@ ccVersion: 2.1.222
   for (var k = 0; k < inputKeys.length; k++) {
     if (!KEY.test(inputKeys[k])) return;
     var val = input[inputKeys[k]];
+    /* A method-named key holds an operation selector, which is a word —
+       never a number. Any identifier word is tolerated (this loose lane
+       pins no vocabulary); only the type narrows. */
+    if (METHOD_KEY.test(inputKeys[k]) && typeof val !== 'string') return;
     if (typeof val === 'string') {
       if (!IDENT.test(val)) return;
     } else if (typeof val === 'number') {
@@ -539,7 +544,12 @@ ccVersion: 2.1.222
   if (typeof anchor.repo !== 'string' || !IDENT.test(anchor.repo)) return;
   if (!Number.isSafeInteger(anchor.number) || anchor.number < 1) return;
   var inputValues = [];
-  for (var vk = 0; vk < inputKeys.length; vk++) inputValues.push(input[inputKeys[vk]]);
+  for (var vk = 0; vk < inputKeys.length; vk++) {
+    /* A method entry is never evidence the binding names the PR: blank it
+       so the distinct-entry consumption below cannot consume it as the
+       owner, repository, or number. */
+    inputValues.push(METHOD_KEY.test(inputKeys[vk]) ? undefined : input[inputKeys[vk]]);
+  }
   var need = [anchor.owner, anchor.repo, anchor.number];
   var used = [];
   for (var nd = 0; nd < need.length; nd++) {
@@ -575,6 +585,18 @@ ccVersion: 2.1.222
     return notes ? notes.readOnlyHint === true : false;
   }
 
+  /* The one exemption to the declared-read requirement: some serving paths
+     strip annotations, so exactly the name pull_request_read — a read by
+     GitHub's own contract — with the hint ABSENT (a present readOnlyHint
+     key of any value still refuses) on a GitHub-presenting server. */
+  function isExemptRead(tool, serverName) {
+    if (!tool || tool.name !== 'pull_request_read') return false;
+    var notes = tool.annotations;
+    var absent = notes == null || (typeof notes === 'object' && !Array.isArray(notes) && !('readOnlyHint' in notes));
+    if (!absent) return false;
+    return typeof serverName === 'string' && /github/i.test(serverName);
+  }
+
   mcp.listTools().then(function (res) {
     var servers = (res ? res.servers : null) || [];
     var server = null;
@@ -584,7 +606,7 @@ ccVersion: 2.1.222
       for (var t = 0; t < tools.length; t++) {
         var candidate = tools[t];
         if (candidate ? candidate.name === live.tool : false) {
-          if (!isDeclaredRead(candidate)) return;
+          if (!isDeclaredRead(candidate) && !isExemptRead(candidate, servers[s] ? servers[s].server : null)) return;
           server = servers[s].server;
           matches++;
           break;
@@ -655,7 +677,7 @@ ccVersion: 2.1.222
      extend it. A test pins this block by exact hash, so any change is a deliberate,
      reviewed hash update in the same change. It arms the "Needs your call" pills only
      where the page can save a decision (the publish declared the self capability; the
-     shell enforces the writer gate and a one-time consent prompt server-side — this
+     shell enforces the writer gate server-side — this
      script holds no authority). A click republishes THIS page with the clicked item
      recorded: the published bytes come from a same-origin fetch of the page's own STORED
      source — never from serializing the live DOM — with the clicked item's markup and its
@@ -1091,8 +1113,9 @@ ccVersion: 2.1.222
      non-null stamp outside the composed lane. A filled binding names the single review-write
      tool the publishing session observed on the GitHub connector, the exact approve input,
      and the result key path of the review's state. Every input value must be one of the
-     anchor's own identifiers or an approve vocabulary word, so the approve can only target
-     the anchored pull request. With "stamp": null the page keeps the "Review on GitHub"
+     anchor's own identifiers, an approve vocabulary word, or the create method word under
+     exactly the key named method, so the approve can only target the anchored pull
+     request. With "stamp": null the page keeps the "Review on GitHub"
      fallback and shows no approve control. Never PR title, description, diff text, or any URL. -->
 <script type="application/json" id="prr-stamp">{"stamp":null}</script>
 
@@ -1159,6 +1182,9 @@ ccVersion: 2.1.222
   var OWNER = /^[A-Za-z0-9-]{1,39}$/;
   /* The only words, besides the anchor's own identifiers, that an approve input may carry. */
   var VOCAB = /^approved?$/i;
+  var METHOD_KEY = /^method$/i;
+  var METHOD_VOCAB = /^create$/i;
+  var LIVE_METHOD_VOCAB = /^get$/i;
   /* Positive name allowlist: the tool must BE a create-and-submit review tool by name. The
      absence of banned words is too weak a grammar — a review-named non-approve write
      (request_copilot_review) or a renamed submit-pending tool passes a denylist, and
@@ -1198,13 +1224,12 @@ ccVersion: 2.1.222
 
   /* The live READ binding. PR-membership alone is not enough here: this read is what the
      click-time freshness check trusts, so every value must BE one of the anchor's own
-     identifiers (owner, repo, number) — a value the anchor does not name could point the
-     re-read at a resource that is not the reviewed pull request. The anchored head SHA is
-     deliberately NOT allowed either: a read tool that echoes its arguments would let a
-     publisher point shaPath at the echo and make the freshness check vacuously pass. This
-     strands consolidated read tools whose input needs a method word — deliberately: the
-     page fails closed to the read-only link until the real connector vocabulary is known.
-     A read input carrying anything else never arms the control. */
+     identifiers (owner, repo, number) — or, under exactly the key named method, the read
+     method word "get" the real connector's consolidated read tool REQUIRES — a value the
+     anchor does not name could point the re-read at a resource that is not the reviewed
+     pull request. The anchored head SHA is deliberately NOT allowed: a read tool that
+     echoes its arguments would let a publisher point shaPath at the echo and make the
+     freshness check vacuously pass. A read input carrying anything else never arms. */
   function liveInputOf(b) {
     if (!b || typeof b !== 'object' || Array.isArray(b)) return null;
     if (typeof b.tool !== 'string' || !IDENT.test(b.tool)) return null;
@@ -1218,6 +1243,13 @@ ccVersion: 2.1.222
     for (var i = 0; i < keys.length; i++) {
       if (!KEY.test(keys[i])) return null;
       var val = input[keys[i]];
+      /* Key-class before value-class: a method-named key admits ONLY the
+         read method word, decided before any value branch can consume the
+         entry (an anchor-valued method entry must refuse, not certify). */
+      if (METHOD_KEY.test(keys[i])) {
+        if (typeof val !== 'string' || !LIVE_METHOD_VOCAB.test(val)) return null;
+        continue;
+      }
       var ownerish = OWNERISH_KEY.test(keys[i]);
       var repoish = REPOISH_KEY.test(keys[i]);
       if (ownerish && repoish) return null;
@@ -1241,6 +1273,10 @@ ccVersion: 2.1.222
         hasNumber = true;
         continue;
       }
+      /* Bidirectional-pin backstop: a method word under a non-method key
+         refuses here by name, independent of the terminal refusal — so
+         the pin survives any future branch added between them. */
+      if (LIVE_METHOD_VOCAB.test(val)) return null;
       return null;
     }
     if (!hasOwner || !hasRepo || !hasNumber) return null;
@@ -1248,11 +1284,13 @@ ccVersion: 2.1.222
   }
 
   /* The approve WRITE binding, held to a stricter wall: EVERY value is one of the anchor's
-     own identifiers (owner, repo, number, head SHA) or an approve vocabulary word, a family
-     key pins its entry to exactly its anchor value (a number can never be one), an owner or
-     repo value may only ride a key of its own family, and the input must name the anchored
-     pull request and carry an explicit "approve" value. An input that could target any
-     other pull request, or do anything but approve, yields null and the control never arms. */
+     own identifiers (owner, repo, number, head SHA), an approve vocabulary word, or — under
+     exactly the key named method — the create method word selecting the connector's
+     create-and-submit operation; a family key pins its entry to exactly its anchor value
+     (a number can never be one), an owner or repo value may only ride a key of its own
+     family, and the input must name the anchored pull request and carry an explicit
+     "approve" value. An input that could target any other pull request, or do anything but
+     approve, yields null and the control never arms. */
   function stampInputOf(b) {
     if (!b || typeof b !== 'object' || Array.isArray(b)) return null;
     if (typeof b.tool !== 'string' || !IDENT.test(b.tool)) return null;
@@ -1268,6 +1306,14 @@ ccVersion: 2.1.222
     for (var i = 0; i < keys.length; i++) {
       if (!KEY.test(keys[i])) return null;
       var val = input[keys[i]];
+      /* Key-class before value-class: a method-named key admits ONLY the
+         create method word, decided before any value branch can consume
+         the entry (an anchor-valued method entry must refuse, not
+         certify — and must never satisfy hasNumber). */
+      if (METHOD_KEY.test(keys[i])) {
+        if (typeof val !== 'string' || !METHOD_VOCAB.test(val)) return null;
+        continue;
+      }
       var ownerish = OWNERISH_KEY.test(keys[i]);
       var repoish = REPOISH_KEY.test(keys[i]);
       if (ownerish && repoish) return null;
@@ -1293,6 +1339,10 @@ ccVersion: 2.1.222
         continue;
       }
       if (val.toLowerCase() === anchorSha) continue;
+      /* Bidirectional-pin backstop: a method word under a non-method key
+         refuses here by name, independent of the vocabulary refusal — so
+         the pin survives any future branch added between them. */
+      if (METHOD_VOCAB.test(val)) return null;
       if (!VOCAB.test(val)) return null;
       if (val.toLowerCase() === 'approve') {
         if (!EVENT_KEY.test(keys[i])) return null;
@@ -1343,9 +1393,22 @@ ccVersion: 2.1.222
     return typeof cur === 'string' ? cur : null;
   }
 
+  /* The one exemption to the declared-read requirement: some serving paths
+     strip annotations, so exactly the name pull_request_read — a read by
+     GitHub's own contract — with the hint ABSENT (a present readOnlyHint
+     key of any value still refuses) on a GitHub-presenting server. */
+  function isExemptRead(tool, serverName) {
+    if (!tool || tool.name !== 'pull_request_read') return false;
+    var notes = tool.annotations;
+    var absent = notes == null || (typeof notes === 'object' && !Array.isArray(notes) && !('readOnlyHint' in notes));
+    if (!absent) return false;
+    return typeof serverName === 'string' && /github/i.test(serverName);
+  }
+
   /* Exactly one connector may offer the named tool, with the required wire-declared
-     annotation: the read must declare readOnlyHint: true; the approve tool must not declare
-     itself a read. Ambiguity, absence, or a wrong annotation all yield null. */
+     annotation: the read must declare readOnlyHint: true (or fall under the one
+     exemption above); the approve tool must not declare itself a read. Ambiguity,
+     absence, or a wrong annotation all yield null. The write path carries no exemption. */
   function findServer(servers, toolName, mustBeRead) {
     var found = null;
     var matches = 0;
@@ -1356,7 +1419,11 @@ ccVersion: 2.1.222
         if (candidate ? candidate.name === toolName : false) {
           var hints = candidate.annotations;
           var isRead = hints ? hints.readOnlyHint === true : false;
-          if (isRead !== mustBeRead) return null;
+          if (mustBeRead) {
+            if (!isRead && !isExemptRead(candidate, servers[s] ? servers[s].server : null)) return null;
+          } else if (isRead) {
+            return null;
+          }
           found = servers[s].server;
           matches++;
           break;

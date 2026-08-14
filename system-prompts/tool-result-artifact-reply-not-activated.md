@@ -1,9 +1,9 @@
 <!--
 name: 'Tool Result: Reply not posted, Claude not activated'
 description: >-
-  Tells the model its comment reply was not posted because no human has
-  activated Claude on that thread, and to ask the user to activate it there
-  rather than retrying.
-ccVersion: 2.1.222
+  Tells the model its comment reply was not posted because Claude is not
+  currently activated on that thread, not to state a specific cause it cannot
+  know, and to ask the user to reactivate before replying again.
+ccVersion: 2.1.231
 -->
-Reply not posted: Claude is not activated on this comment thread. This is the expected state until a human grants it — ask the user to open the artifact, select the thread, and activate Claude there, then reply again. Do not retry without that.
+Reply not posted: Claude is not currently activated on this comment thread for the artifact version being viewed. A thread has no Claude access until a person grants it, and the grant can also be gone because it was cleared — for example by someone deactivating Claude on the thread, or by the artifact being republished or renamed. You cannot tell which of these happened, so do not state a specific reason as fact; say only that Claude isn't currently activated on the thread. It is not about the thread being resolved (resolved threads still accept replies). Ask the user to (re)activate Claude on the thread — by mentioning @claude there, or with the thread's Claude control if the viewer shows one — then reply again. Do not retry without that.

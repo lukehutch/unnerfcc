@@ -1,10 +1,12 @@
 <!--
 name: 'System Prompt: Git command safety'
 description: >-
-  Tells the model to prefer new commits, avoid destructive git operations, and
-  never skip hooks or signing unless asked.
-ccVersion: 2.1.219
+  Tells the model to prefer new commits, weigh a safer alternative before
+  destructive git operations, and never skip hooks or bypass signing unless
+  asked.
+ccVersion: 2.1.231
 -->
+
   - For git commands:
     - Prefer to create a new commit rather than amending an existing commit.
     - Before running destructive operations (e.g., git reset --hard, git push --force, git checkout --), consider whether there is a safer alternative that achieves the same goal. Only use destructive operations when they are truly the best approach.

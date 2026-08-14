@@ -7,7 +7,7 @@ description: >-
   inline-SVG figure rules) that the model copies, fills, and publishes as a
   *.workshop.html document, stating the structural contract the publish-time
   verifier enforces.
-ccVersion: 2.1.222
+ccVersion: 2.1.231
 -->
 <!--
 name: workshop-page
@@ -109,12 +109,12 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
  * surfaces degrade. This line is the triage breadcrumb for "published
  * artifact looks broken" reports — ask the browser version first.
  *
- * The plan-artifact template embeds this file byte-for-byte between
- * BEGIN/END markers; a drift test asserts the two stay identical. To
- * refresh: copy the upstream generated file below this header, update the
- * commit hash and upstream-sha256 above, run
- * `bun scripts/embed-cds-tokens.ts`, then
- * `bun test test/frame/planArtifactHtml.test.ts`.
+ * The plan-artifact, workshop, and whiteboard templates embed this file
+ * byte-for-byte between BEGIN/END markers; drift tests assert the copies
+ * stay identical. To refresh: copy the upstream generated file below this
+ * header, update the commit hash and upstream-sha256 above, run
+ * `bun scripts/embed-cds-tokens.ts`, then `bun test
+ * test/frame/planArtifactHtml.test.ts test/skills/bundled/whiteboardTokens.test.ts`.
  */
 
 /**
@@ -1539,8 +1539,8 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
      a test pins this block by exact hash, so any change is a deliberate,
      reviewed hash update in the same change. It arms the decision option rows
      only where the page can save a decision (the publish declared the self
-     capability; the shell enforces the writer gate and a one-time consent
-     prompt server-side — this script holds no authority) AND the render
+     capability; the shell enforces the writer gate server-side — this
+     script holds no authority) AND the render
      emitted the ws-decisions island. The interaction is two-step by design:
      selecting rows — one option per decision, across any number of
      decisions — only accumulates them in a sticky footer (a confirmed
@@ -2868,6 +2868,35 @@ style: tokens come from @ant/cds's vanilla export, embedded verbatim (drift
     e.preventDefault();
     onActivate(e);
   });
+  /* Opening version: published before any decision exists (empty island,
+     no decision rows), so the page is waiting on the session's next
+     version — show the painter until that version loads. */
+  (function () {
+    var isl = document.getElementById('ws-decisions');
+    if (!isl) return;
+    var parsed = null;
+    try {
+      parsed = JSON.parse(isl.textContent || '');
+    } catch (e) {
+      return;
+    }
+    var items = parsed && parsed.items;
+    if (!Array.isArray(items) || items.length !== 0) return;
+    if (document.querySelector('[data-decision-id]')) return;
+    showPainter(true);
+    /* The session may have died between the two publishes: escalate once
+       into the footer bar (textContent only) rather than spin forever. */
+    setTimeout(function () {
+      if (!painterCanvas) return;
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'ws-footer';
+        document.body.appendChild(footer);
+        document.body.style.paddingBottom = '72px';
+      }
+      footerStatus('Still nothing — Claude may not be watching this page right now. Reload to check for the latest version.');
+    }, 180000);
+  })();
   /* Confirm-reboot continuity: re-enter the waiting state recorded at
      publish time, then verify against the now-stored bytes and exit
      cleanly when a NEWER version (the session's apply) is what loaded.

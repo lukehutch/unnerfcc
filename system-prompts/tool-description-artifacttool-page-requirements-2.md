@@ -2,15 +2,16 @@
 name: 'Tool Description: ArtifactTool (page requirements, continued)'
 description: >-
   Continuation of the Artifact page requirements — the rendered-page size cap
-  that data: URIs count toward, responsive and theme-aware styling, the required
-  stable emoji favicon, and the never-publish list.
-ccVersion: 2.1.222
+  that data: URIs count toward, responsive layout, the three theme states a page
+  must define tokens for, the required stable emoji favicon, and the
+  never-publish list.
+ccVersion: 2.1.231
 -->
 MB or smaller, and embedded data: URIs count toward that.
 
 **Responsive**: Use relative units, flexbox/grid, `max-width:100%` on images. Wide content (tables, diagrams, code blocks) must scroll inside its own `overflow-x: auto` container — the page body must never scroll horizontally.
 
-**Theme-aware**: Pages render in the viewer's light or dark theme. Unless the design deliberately commits to a single look, style both: use `@media (prefers-color-scheme: dark)` as the default signal, plus `:root[data-theme="dark"]` / `:root[data-theme="light"]` overrides — the viewer's theme toggle stamps `data-theme` on the root element, and it must win in both directions.
+**Theme-aware**: Pages render in the viewer's theme, which has three states: an explicit choice stamps `data-theme="dark"` / `data-theme="light"` on the root element, and the default "system" setting stamps nothing — only `prefers-color-scheme` separates light from dark. Define the complete light palette as tokens on bare `:root` (dark-first designs swap the roles consistently); redefine only the tokens under `@media (prefers-color-scheme: dark)`, guarded as `:root:not([data-theme="light"])`; redefine them again under `:root[data-theme="dark"]` so the toggle wins in both directions. Never give a color its only definition inside a media or `[data-theme]` block, and give `body` an explicit token background — the viewer paints its own ground behind the page, so a transparent body borrows the host's theme. A design that deliberately commits to a single look may skip the dark blocks but still paints background and colors explicitly.
 
 **Favicon** (required): Pass one or two emoji as `favicon` (e.g. `"📊"`, `"🐛"`, `"⚡🔥"`). It becomes the browser-tab icon. Emoji only — no SVG, no markup. Keep it the **same** across redeploys of an artifact — users find their tab by its icon, and a changed favicon reads as a different page. Only pick a new emoji on a hard pivot in what the artifact is about (new investigation, new deliverable), not for incremental updates.
 

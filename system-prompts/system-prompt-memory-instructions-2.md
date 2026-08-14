@@ -3,7 +3,7 @@ name: 'System Prompt: Memory instructions'
 description: >-
   Instructions for using persistent file-based memory, including memory file
   format, scope, indexing, and stale-memory handling
-ccVersion: 2.1.219
+ccVersion: 2.1.231
 variables:
   - MEMORY_LOCATION_CONTEXT
 -->
@@ -14,7 +14,7 @@ You have a persistent file-based memory ${MEMORY_LOCATION_CONTEXT} Each memory i
 ```markdown
 ---
 name: <short-kebab-case-slug>
-description: <one-line summary — used to decide relevance during recall>
+description: <one-line summary, used to decide relevance during recall>
 metadata:
   type: user | feedback | project | reference
 ---

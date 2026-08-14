@@ -1,26 +1,106 @@
 {
- "from": "2.1.220",
- "to": "2.1.222",
+ "from": "2.1.222",
+ "to": "2.1.231",
  "changes": [
   {
    "id": "skill-building-llm-powered-applications-with-claude",
    "name": "Skill: Building LLM-powered applications with Claude",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "dae1ee30d030",
-   "newHash": "1efe1d899717",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "1efe1d899717",
+   "newHash": "2350a3c147ae",
    "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
   },
   {
-   "id": "system-prompt-claude-in-chrome-browser-automation",
-   "name": "System Prompt: Claude in Chrome browser automation",
+   "id": "skill-workshop",
+   "name": "Skill: workshop",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "07a43dc5cd0a",
+   "newHash": "e38e74d4a273",
+   "sample": "---\nname: workshop\ndescription: Build a design together with the user, one decision at a time — publish an evolving plan document as an Artifact, surface each open decision on the page for the reader "
+  },
+  {
+   "id": "tool-description-artifact-comments",
+   "name": "Tool Description: Artifact comments and replies",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "0209f79b9b87",
+   "newHash": "708d1e6cebbe",
+   "sample": "\n\n**Comments**: Viewers can leave comment threads on a published artifact. Pass `action: \"comments\"` with the artifact's `url` to read them — each thread shows whether the user has activated Claude re"
+  },
+  {
+   "id": "tool-parameter-artifact-action-comments-reply",
+   "name": "Tool Parameter: Artifact action — comments, reply, and resolve",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "dffe7248da91",
+   "newHash": "e72e06986b28",
+   "sample": " 'comments' reads the comment threads on a published artifact (pass `url`; add `thread_id` to read just that one thread, or `cursor`, from a prior result's \"more threads not listed\" line, to continue "
+  },
+  {
+   "id": "agent-prompt-artifact-comment-edit-composer",
+   "name": "Agent Prompt: Artifact comment edit-capable composer",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "59f8a5bc55f0",
-   "newHash": "e2f9e7f17ce6",
-   "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au"
+   "oldHash": "c6c6babfc324",
+   "newHash": "7e4f660724db",
+   "sample": "${THREAD_CONTEXT_HEADER}${ANALYSIS_NOTES_BLOCK}\n\nYou are an edit-capable composer for this thread: a writer on this artifact activated Claude with edit capability, so you may update the artifact itsel"
+  },
+  {
+   "id": "agent-prompt-eval-authoring-interview",
+   "name": "Agent Prompt: Eval-authoring Interview",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "23680b66b65a",
+   "newHash": "8b9a5b9e8634",
+   "sample": "# Eval-authoring interview\n\nYou are running inside `claude plugin eval init` in the plugin at `${PLUGIN_ROOT_PATH}`. Walk the user through building an eval suite under `evals/`.${ADDITIONAL_SETUP_NOTE"
+  },
+  {
+   "id": "skill-artifact-design",
+   "name": "Skill: artifact-design",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "592d5183b41f",
+   "newHash": "6ea4d90467c5",
+   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\n---\n\nApproach this as the design lead at a small studio known for their versatility, giving every client a visual"
+  },
+  {
+   "id": "skill-prototype-description",
+   "name": "Skill: prototype description",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "69add9923ee7",
+   "newHash": "0317d458dd89",
+   "sample": "Turn an idea into a working proof of concept and publish it as an Artifact — a single self-contained page the user can open, click through, and react to. Run a short intake, state your assumptions, bu"
+  },
+  {
+   "id": "tool-description-code-review-command",
+   "name": "Tool Description: Code review command",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "f8b2ad1e506c",
+   "newHash": "baf188a6f175",
+   "sample": "Review the current diff, or a PR number/branch/path target, for correctness bugs and reuse/simplification/efficiency cleanups at the given effort level (low/medium: fewer, high-confidence findings; hi"
+  },
+  {
+   "id": "tool-description-workflow",
+   "name": "Tool Description: Workflow",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "1ea84fa25529",
+   "newHash": "c9557ee06ebc",
+   "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background — this tool returns immediately with a task ID, and a <task-notification> arrives when"
   }
  ],
  "unverifiable": []

@@ -1,12 +1,11 @@
 <!--
 name: 'Tool Result: Command Running In Background'
 description: >-
-  Bash tool_result reporting a command moved to background with its ID and
-  output file, and how to check interim output.
-ccVersion: 2.1.178
+  Bash tool_result head reporting that a command was moved to the background,
+  with its ID and the file its output is being written to.
+ccVersion: 2.1.231
 variables:
-  - TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_0
-  - TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_1
-  - TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_2
+  - BACKGROUND_TASK_ID
+  - OUTPUT_FILE_PATH
 -->
-Command running in background with ID: ${TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_0}. Output is being written to: ${TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_1}. You will be notified when it completes. To check interim output, use ${TOOL_DESCRIPTION_BASH_RUNNING_IN_BACKGROUND_RESULT_VAR_2} on that file path.
+Command running in background with ID: ${BACKGROUND_TASK_ID}. Output is being written to: ${OUTPUT_FILE_PATH}.

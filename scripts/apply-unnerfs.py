@@ -1007,13 +1007,8 @@ RULES: dict[str, list[Rule]] = {
             description='act-when-ready: lead with a recommendation AND the alternatives weighed',
         ),
     ],
-    "system-prompt-clarifying-question-research-first.md": [
-        Rule(
-            stock='Before asking, spend up to a minute on read-only investigation (grep the codebase, check docs, search memory) so your question is specific.',
-            unnerf="Before asking, do thorough read-only investigation (grep the codebase, check docs, search memory) until your question is as specific as the available evidence allows — don't cut the investigation short to save time.",
-            description='clarify-first: investigate until specific, not a one-minute time-box',
-        ),
-    ],
+    # v2.1.231: system-prompt-clarifying-question-research-first.md removed
+    # upstream entirely (no replacement, base or sibling) — key retired.
     # renamed at the tweakcc-fixed switch (was system-prompt-coordinator-worker-instructions).
     # v2.1.219 split the worker-agent prompt into three nodes; both rules moved out
     # of system-prompt-worker-agent.md, which now holds only the (un-nerfed) fan-out
@@ -1297,19 +1292,9 @@ RULES: dict[str, list[Rule]] = {
             description="lift the local anti-malicious refusal reminder (server-side enforcement unaffected)",
         ),
     ],
-    "agent-prompt-review-pr-slash-command-2.md": [
-        # v2.1.202: upstream restructured /review-pr into a classic bullet review
-        # and DROPPED the old "a 2-3 sentence overview of what the PR does" cap on
-        # its own (the overview bullet is now uncapped). The residual brevity nerf
-        # is "Keep your review concise but thorough" — flip the "concise" cap: a
-        # code review is depth work, not a place to compress. ("provide a thorough
-        # code review" already leads the section; this removes the walk-back.)
-        Rule(
-            stock="Keep your review concise but thorough. Focus on:",
-            unnerf="Keep your review thorough and complete. Focus on:",
-            description="review-pr: drop the 'concise' review cap (keep it thorough); upstream already dropped the 2-3-sentence overview cap",
-        ),
-    ],
+    # v2.1.231: agent-prompt-review-pr-slash-command-2.md (and its non-'-2' base
+    # variant) removed upstream entirely — the /review-pr prompt this un-nerfed
+    # no longer exists in any form. Key retired.
     # insights UI-card body slots — lift the length caps. JSON string length does
     # not break parsing, and this matches the at-a-glance-summary flip. The
     # genuine short-label slots (title "3-6 words", one-sentence intro/headline)
@@ -1373,8 +1358,11 @@ RULES: dict[str, list[Rule]] = {
             description="prototype description: drop the 'short' intake cap",
         ),
         Rule(
-            stock="Ask only the questions whose answers would change what you build — two\nto four at most, in one short message — and only when the request is\nactually ambiguous.",
-            unnerf="Ask only the questions whose answers would change what you build, as many as the ambiguity genuinely requires, and only when the request is\nactually ambiguous.",
+            # v2.1.231: upstream rewrote this whole paragraph (now starts "When
+            # asking:"); same numeric cap, new wording — stock/unnerf updated to
+            # match, description/intent unchanged.
+            stock="two to four questions, each a single pointed sentence, in\none short message",
+            unnerf="as many questions as the ambiguity genuinely requires, each a single pointed sentence",
             description="prototype intake: drop the 2-4-question cap and the one-message limit",
         ),
         Rule(
@@ -1383,8 +1371,10 @@ RULES: dict[str, list[Rule]] = {
             description="prototype assumptions: drop the 'one short message' cap",
         ),
         Rule(
-            stock="Give the user the link plus one or two lines: what the\nprototype shows, what is faked, and the obvious next step.",
-            unnerf="Give the user the link plus a summary of what the\nprototype shows, what is faked, and the obvious next step.",
+            # v2.1.231: identical wording, just a shifted line-wrap point
+            # (reflowed elsewhere in the file) — stock/unnerf newline updated.
+            stock="Give the user the link plus one or two lines: what the prototype shows,\nwhat is faked, and the obvious next step.",
+            unnerf="Give the user the link plus a summary of what the prototype shows,\nwhat is faked, and the obvious next step.",
             description="prototype publish: drop the 'one or two lines' cap",
         ),
         Rule(
@@ -1418,6 +1408,89 @@ RULES: dict[str, list[Rule]] = {
             stock="Reply in chat with a line or two — what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why — no plan dumped in either.",
             unnerf="Reply in chat with what you drew and where, plus the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why — no plan dumped in either.",
             description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.231 sync (bucket-analyze.mjs, 2026-08-13): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.231.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-commit-slash-command-verify-and-hook-failure.md": [
+        Rule(
+            stock="Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+            unnerf="Read whatever additional code, history, or files you need to describe the change accurately.",
+            description="commit slash command: allow reading beyond the supplied git context",
+        ),
+    ],
+    "agent-prompt-pr-slash-command-single-message-and-url.md": [
+        Rule(
+            stock="Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+            unnerf="Read whatever additional code, history, or files you need to describe the change accurately.",
+            description="PR slash command: allow reading beyond the supplied git context",
+        ),
+    ],
+    "skill-artifact-pr-review-2.md": [
+        Rule(
+            stock="digest the PR into a concise, meaningful review — so a field earns its\nlength by selection, never by completeness.",
+            unnerf="digest the PR into a meaningful review — so a field carries every detail\nthe reviewer needs to decide.",
+            description="PR review artifact: fields carry what the reviewer needs, not a selection cap",
+        ),
+    ],
+    "skill-artifact-pr-review.md": [
+        Rule(
+            stock="- concerns: 0-3, ONLY genuine judgment questions a human reviewer should\n  weigh",
+            unnerf="- concerns: every genuine judgment question a human reviewer should\n  weigh",
+            description="PR review artifact: drop the 0-3 ceiling on reviewer concerns",
+        ),
+    ],
+    "agent-prompt-commit-message-zero-context-reader.md": [
+        Rule(
+            stock="Short beats complete: after one pass the reader should know what the change does and what to check",
+            unnerf="Give the reader what the change does and what to check, at whatever length that takes",
+            description="commit message: drop 'short beats complete'",
+        ),
+    ],
+    "agent-prompt-managed-agents-onboarding-flow.md": [
+        Rule(
+            stock="At most one batched follow-up for true gaps.",
+            unnerf="Batch follow-up questions for the true gaps the description leaves.",
+            description="managed-agents onboarding: drop the one-follow-up cap",
+        ),
+    ],
+    "agent-prompt-dream-memory-consolidation-phases.md": [
+        Rule(
+            stock="Don't exhaustively read transcripts. Look only for things you already suspect matter.",
+            unnerf="Read as much of the transcripts as the consolidation needs, including what you did not already suspect mattered.",
+            description="dream consolidation: drop the transcript-reading cap",
+        ),
+    ],
+    "agent-prompt-artifact-comment-thread-analyst.md": [
+        Rule(
+            stock="plain text, under 30 lines, and the first line",
+            unnerf="plain text, as long as the thread's detail warrants, and the first line",
+            description="comment-thread analyst: drop the 30-line cap on the brief",
+        ),
+    ],
+    "agent-prompt-commit-slash-command-git-safety-and-task.md": [
+        Rule(
+            stock="Draft a concise (1-2 sentences) commit message that focuses on the \"why\" rather than the \"what\"",
+            unnerf="Draft a commit message that focuses on the \"why\" rather than the \"what\", at the length the change warrants",
+            description="commit slash command: drop the 1-2-sentence commit message cap",
+        ),
+    ],
+    "skill-workshop.md": [
+        Rule(
+            stock="Size the draft and the\n   background by selection, never completeness: a few short paragraphs\n   stating the plan",
+            unnerf="Size the draft and the\n   background by what the decisions need: as many paragraphs as it takes to\n   state the plan",
+            description="workshop draft: size by what the decisions need, not by selection over completeness",
+        ),
+    ],
+    "system-reminder-usage-limit-grace-window-checkpoint.md": [
+        Rule(
+            stock="list up to 3 short bullets of the most impactful remaining work",
+            unnerf="list the remaining work as bullets, most impactful first, with enough detail to resume each one",
+            description="usage-limit grace window: drop the 3-bullet cap on the remaining-work handoff",
         ),
     ],
 }

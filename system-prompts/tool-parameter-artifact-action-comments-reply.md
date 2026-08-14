@@ -1,9 +1,9 @@
 <!--
-name: 'Tool Parameter: Artifact action — comments and reply'
+name: 'Tool Parameter: Artifact action — comments, reply, and resolve'
 description: >-
-  Describes the artifact action field's 'comments' and 'reply' values — which
-  comment rows are addressed to Claude, that an activated thread may carry a
-  backlog of feedback, and that only activated threads accept replies.
-ccVersion: 2.1.222
+  Describes the artifact action field's comments, reply, and resolve values —
+  which rows are addressed to Claude, that only activated threads accept
+  replies, and that resolve marks only threads actually acted on.
+ccVersion: 2.1.231
 -->
- 'comments' reads the comment threads on a published artifact (pass `url`); a comment labeled 'sent to you' was sent to Claude and is addressed to you, while other comments are not necessarily addressed to you — and a thread you were activated on may carry a backlog of existing feedback for you to address even when no comment is labeled. 'reply' posts a reply into one comment thread (pass `url`, `thread_id`, `text`) — only threads the user has activated for Claude accept replies.
+ 'comments' reads the comment threads on a published artifact (pass `url`; add `thread_id` to read just that one thread, or `cursor`, from a prior result's "more threads not listed" line, to continue that listing); a comment labeled 'sent to you' was sent to Claude and is addressed to you, while other comments are not necessarily addressed to you — and a thread you were activated on may carry a backlog of existing feedback for you to address even when no comment is labeled. 'reply' posts a reply into one comment thread (pass `url`, `thread_id`, `text`) — only threads a person has activated for Claude accept replies (they activate by mentioning @claude in the thread, or via the thread's Claude control where the viewer offers one); activation can also be cleared — by deactivating Claude on the thread, or by a republish or rename — and is unrelated to whether a thread is resolved (resolved threads still accept replies). 'resolve' marks one comment thread resolved (pass `url`, `thread_id`) — use it when you are done acting on a thread: the requested change is made, or you determined no change was needed. Resolve only threads you actually addressed — never to tidy away feedback you did not act on; a brief reply saying what you did before resolving helps the commenter see what happened. Leave a thread open when the conversation is still active, or when the commenter asked a question and still needs to see your answer. A thread already marked resolved stays resolved — answer new comments there with a reply, never by re-resolving. Resolved threads show as resolved by Claude and a person can reopen them.
