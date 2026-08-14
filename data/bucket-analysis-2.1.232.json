@@ -1,0 +1,116 @@
+{
+  "ccVersion": "2.1.232",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "agent-prompt-web-fetch-specialist.md",
+      "verdict": "lift",
+      "reasoning": "The specialist's report is consumed by an orchestrating agent, so per Part 1's subagent rule it should be thorough; 'keep the report focused on what was asked' is a Group-3 process-brevity cap with no stated mechanical or resource reason. The sibling webfetch summarizer already has exactly this flip. I keep the report-not-raw-dump clause, which is a shape rule and also limits how much raw untrusted page text reaches the caller.",
+      "rule": {
+        "stock": "- Keep the report focused on what was asked. Do not paste whole pages back.",
+        "unnerf": "- Report everything on the page that bears on the caller's request, including what they did not know to ask for. Write a report, not the raw page pasted back.",
+        "description": "web-fetch specialist: report everything relevant, not only what was literally asked"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-comment-ack-composer-identity.md",
+      "verdict": "keep",
+      "reasoning": "This is the identity line for the fast-acknowledgement composer, whose entire job is a placeholder sentence posted to a comment thread while the real reply is composed separately — calibration example 3 (comment-thread reply text). No capability is held back: the substantive answer comes from the reply composer. 'Output only the sentence — no code fences, no quotes, no preamble' is decision-procedure item 1, since the output is posted verbatim as the comment."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "lift",
+      "reasoning": "'concerns: 0-3' is a numeric ceiling on substantive reviewer-facing findings — the 'no numeric output limits' rule, and an un-ruled sibling of the flip already registered for skill-artifact-pr-review.md. Nothing validates the count (the publish validates identifier grammars and required keys, not concern cardinality), so removing it breaks no parse contract. The flagged 'concise review / earns its length by selection' sentence already has a rule; the remaining <=N-chars and N-sentence bounds are per-field schema bounds the publish path validates, and this page is explicitly tiered with the uncapped explainer as its depth tier.",
+      "rule": {
+        "stock": "- concerns: 0-3 genuine judgment questions a human reviewer should weigh.",
+        "unnerf": "- concerns: every genuine judgment question a human reviewer should weigh.",
+        "description": "PR review payload: drop the 0-3 ceiling on reviewer concerns"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "The one genuine over-cap in this file — the 0-3 ceiling on reviewer concerns — already has a rule. The 'concise review / earns its length by selection' phrasing the notes flag is not in this file at all; it lives only in skill-artifact-pr-review-2.md. What remains here (bottom_line 3-5 sentences / <=900 chars, <=40-char pill labels, <=5 blind spots, blocks 1..8) are schema field bounds for slots in a fixed HTML template that Claude fills and self-validates against ('the length bounds hold') — layout contracts, decision-procedure item 1 — and the depth tier, the explainer blocks, is where '3..7 blocks' guidance already points at more, not less."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "lift",
+      "reasoning": "The publish-time opening note caps the explanation of Claude's own first sketch at 'one clause' and forbids a 'briefing' — a Group-1 cap on the design reasoning behind a deliverable the user asked for. This file's existing rule already lifted the identical cap on the step-4 reply ('a line or two ... at most a sentence of the reasoning'), so this is the un-ruled sibling of a flip the project already made. The when_to_use 'make the offer one short line' stays: that is an unprompted, unsolicited offer (calibration example 2).",
+      "rule": {
+        "stock": "4. Open with a short note, not a briefing: that you put up a\n   whiteboard you can both draw on — with, when you drew one, one\n   clause on what your first sketch shows and that it is the orange\n   ink,",
+        "unnerf": "4. Open with a note: that you put up a\n   whiteboard you can both draw on — with, when you drew one, what\n   your first sketch shows, the reasoning behind it, and that it is\n   the orange ink,",
+        "description": "whiteboard opening note: drop the 'short note, not a briefing' and one-clause caps"
+      }
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "lift",
+      "reasoning": "The three phrases the notes flag are settled: two already have rules, and 'build the smallest page that proves the idea' is the skill's own definition of a prototype with a genuine stated reason, so it stays. The uncovered nerf is the pre-publish check — 'one read and its fixes are the whole check', plus an outright ban on running the page — which caps verification of the deliverable at a single pass for no stated reason (Group 3, and Group 5 thoroughness weakened).",
+      "rule": {
+        "stock": "Before publishing, re-read the file once for the mistakes that would\nbreak the demo — an unclosed tag, a handler wired to nothing, a script\nerror — and fix what that read turns up. One read and its fixes are the\nwhole check: do not spin up browsers, servers, or test harnesses to\ndrive the page, and do not start a second polish pass.",
+        "unnerf": "Before publishing, re-read the file for the mistakes that would\nbreak the demo — an unclosed tag, a handler wired to nothing, a script\nerror — and fix what those reads turn up. Keep checking until the page\nruns clean, driving it in a browser or test harness where one is\navailable.",
+        "description": "prototype pre-publish check: drop the one-read cap and the ban on running the page"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-comment-fast-ack-composer.md",
+      "verdict": "keep",
+      "reasoning": "This composer writes only the interim acknowledgement — the prompt says the full reply follows separately and forbids answering here, so the length cap holds back no work. It is comment-thread text posted verbatim (calibration example 3), and the 160-character bound reads as a display limit on that surface."
+    },
+    {
+      "file": "skill-design.md",
+      "verdict": "lift",
+      "reasoning": "The two 'one line' exits the notes flag stay: one asks what to design when the request is empty (nothing to be thorough about) and the other is a routing redirect for account commands. The real cap is in the design-system match step — after a directive to 'go deep on resolving styles PRECISELY', reporting what was matched is capped at one line, which is Group-3 process brevity on the findings of a real investigation. Same class as the whiteboard, prototype, and workshop artifact-handoff caps the project already lifted.",
+      "rule": {
+        "stock": "density — so it looks native by default. Say in one line what you\n   matched",
+        "unnerf": "density — so it looks native by default. Name the tokens, components,\n   and values you matched",
+        "description": "design canvas: drop the one-line cap on reporting the matched design system"
+      }
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "lift",
+      "reasoning": "'Sketch a short design plan' caps the planning pass that every build in this skill derives from — Group-3 process brevity, with no mechanical, reference, or protection reason. The plan's own depth feeds the artifact's quality, so this is a capability cap rather than word count. I leave the craft constraints intact: 4-6 palette values and 'used with restraint' are design standards, not caps on Claude.",
+      "rule": {
+        "stock": "Before writing code, sketch a short design plan — a compact token system with color, type, and layout:",
+        "unnerf": "Before writing code, write the design plan — a token system with color, type, and layout, specified so every build decision derives from it:",
+        "description": "artifact-design process: drop the 'short'/'compact' cap on the design plan"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-composer.md",
+      "verdict": "keep",
+      "reasoning": "Calibration example 3 covers this directly: it composes one reply posted to an artifact comment thread, where 'brief, no preamble' is that medium's genre. The prompt already carries the pro-thorough clause for the part that matters — a question gets answered 'directly and substantively' — and 'brief acknowledgement' applies only to change requests, which this tool-less composer cannot act on anyway."
+    },
+    {
+      "file": "skill-workshop.md",
+      "verdict": "lift",
+      "reasoning": "The 'sized by selection, never completeness' cap on the working draft appears twice in this file, and the existing rule's stock only matches the second one (the 'Size the draft and the background' passage). This is the first-publish copy, still stock — the same nerf on the same content, un-ruled. Flipping it to match keeps the file internally consistent.",
+      "rule": {
+        "stock": "the working-draft prose (a few short paragraphs stating\nthe plan — sized by selection, never completeness)",
+        "unnerf": "the working-draft prose (as many paragraphs as it takes to state\nthe plan — sized by what the decisions need)",
+        "description": "workshop first publish: size the draft by what the decisions need (sibling of the existing rule)"
+      }
+    },
+    {
+      "file": "tool-description-product-feedback-draft.md",
+      "verdict": "lift",
+      "reasoning": "'One to three lines each' caps a free-text field that a human triager reads — Group-3 reporting brevity, and Part 1 is explicit that a length cap on a string field breaks no parsing. The cap bites hardest on the Repro and Evidence bullets, where a dropped step is the difference between an actionable report and a dead one. The labeled-bullet order stays: that is the form contract.",
+      "rule": {
+        "stock": "Write `details` as short labeled bullets in this exact order — one to three lines each, no narrative paragraphs:",
+        "unnerf": "Write `details` as labeled bullets in this exact order, each carrying every detail a reader needs to act on it without coming back for more:",
+        "description": "feedback draft: drop the one-to-three-lines cap on each details bullet"
+      }
+    },
+    {
+      "file": "agent-prompt-webfetch-summarizer.md",
+      "verdict": "keep",
+      "reasoning": "The file's entire directive body is the one sentence 'Provide a concise response based only on the content above. In your response:' followed by ${REPORTING_RULES}, and that sentence already has a registered rule flipping it to thorough. Nothing else in the file is a candidate, so no new rule."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-edit-rules.md",
+      "verdict": "keep",
+      "reasoning": "'Reply text rules (both decisions): brief' governs text posted into an artifact comment thread — calibration example 3. The reply is not where the work happens (the edit is), and the clause that carries the substance is already maximal and un-capped: the reply must state specifically what changed, because it is the audit record viewers see."
+    }
+  ]
+}

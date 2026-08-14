@@ -857,79 +857,14 @@ RULES: dict[str, list[Rule]] = {
             description='code-review sweep: drop the 8-candidate cap (matches the phase-1 finder flip)',
         ),
     ],
-    # The bundled /code-review WORKFLOW script (distinct from the skill-code-review-*
-    # prompts). The script IS the prompt, so its numeric caps are lifted here the
-    # same way — unlike a binary-baked cap, these are editable text. Removed caps
-    # leave a few now-inert vars (P.maxFindings, f.cap); harmless in JS.
-    "workflow-script-code-review.md": [
-        # Per-angle candidate cap — the enforcement point. Finders' candidates all
-        # flow to verification instead of being sliced to `cap` (also covers sweep,
-        # which reuses ingest). Resolves the stock contradiction where the prompt
-        # says "do not silently drop candidates" but the code slices them.
-        Rule(
-            stock='const ingest = (cs, cap, kind) => cs.slice(0, cap).map(c => ({ ...c, file: canonFile(c.file), kind }))',
-            unnerf='const ingest = (cs, cap, kind) => cs.map(c => ({ ...c, file: canonFile(c.file), kind }))',
-            description='/code-review workflow: ingest every candidate (drop per-angle slice cap)',
-        ),
-        Rule(
-            stock='"Surface up to " + f.cap + " candidate findings, each with file, line',
-            unnerf='"Surface every candidate finding, each with file, line',
-            description='/code-review workflow finder prompt: surface every candidate',
-        ),
-    ],
-
-    # v2.1.219 split the workflow script into three spliceable nodes: the tier
-    # header comment block (workflow-script-code-review-2.md), the
-    # find/verify/sweep + synthesize/assemble body (this key), and the ingest +
-    # finder-prompt head (workflow-script-code-review.md, above). Same rules,
-    # re-keyed to the node each one actually lives in now.
-    "workflow-script-code-review-find-verify-sweep.md": [
-        Rule(
-            stock='"Surface up to " + SWEEP_MAX + " additional candidates. If nothing new, return an empty list — do not pad.',
-            unnerf='"Surface every additional candidate. If nothing new, return an empty list — do not pad.',
-            description='/code-review workflow sweep prompt: surface every additional candidate',
-        ),
-        # Final findings cap — the headline lift. Report every verified surviving
-        # finding, no numeric ceiling.
-        Rule(
-            stock='"3. Keep at most " + P.maxFindings + " decisions; omit the least severe beyond the cap.',
-            unnerf='"3. Keep every distinct finding; do not omit any to satisfy a count.',
-            description='/code-review workflow synthesis prompt: keep every finding (no cap)',
-        ),
-        Rule(
-            stock='for (const d of decisions) {\n  if (findings.length >= P.maxFindings) break\n  if (!claim(d.index)) continue',
-            unnerf='for (const d of decisions) {\n  if (!claim(d.index)) continue',
-            description='/code-review workflow assembler: drop the maxFindings break',
-        ),
-        Rule(
-            stock='for (let i = 0; i < ranked.length && findings.length < P.maxFindings; i++) {',
-            unnerf='for (let i = 0; i < ranked.length; i++) {',
-            description='/code-review workflow backfill: append every remaining verified finding',
-        ),
-        # Comments that would otherwise claim findings are still capped.
-        Rule(
-            stock='// ─── Synthesize: rank, merge semantic dupes, cap ───',
-            unnerf='// ─── Synthesize: rank, merge semantic dupes (uncapped — report all) ───',
-            description='/code-review workflow synthesize header comment: uncapped',
-        ),
-        Rule(
-            stock='// Correctness bugs outrank cleanup findings when the cap forces a cut;\n// CONFIRMED outranks PLAUSIBLE within each group.',
-            unnerf='// Correctness bugs are ranked above cleanup findings;\n// CONFIRMED outranks PLAUSIBLE within each group.',
-            description='/code-review workflow rank comment: no cap-forced cut',
-        ),
-        Rule(
-            stock='//   1. No silent drops while there is room: every verified finding either appears\n//      (as primary or merge note) or is omitted only because the cap is full.',
-            unnerf='//   1. No silent drops: every verified finding appears\n//      (as primary or merge note).',
-            description='/code-review workflow assembler-invariant comment: no cap',
-        ),
-    ],
-    "workflow-script-code-review-2.md": [
-        Rule(
-            stock='//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings',
-            unnerf='//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings',
-            description='/code-review workflow tier comment: reflect uncapped output',
-        ),
-    ],
+    # v2.1.232: Anthropic replaced the /code-review WORKFLOW-script implementation
+    # (workflow-script-code-review*.md, 9 rules total across these 3 keys) with a
+    # skill-based, effort-tiered system (skill-code-review-phase-*, -angle-*,
+    # -effort-*, etc. — dozens of new fragments). None of the old JS survives;
+    # all 3 keys retired. The new architecture needs its own un-nerf review — see
+    # data/bucket-analysis-2.1.232.json and the skill-code-review-* keys below for
+    # what carried an id forward (same rule, drift-checked) vs. what's genuinely
+    # new (reviewed fresh).
     # This file targets the STANDALONE general-purpose fallback constant (`BCa` in
     # the 2.1.201 bundle), used as the system prompt when getSystemPrompt() throws
     # — a DIFFERENT bundle string from the main general-purpose prompt (which
@@ -1491,6 +1426,40 @@ RULES: dict[str, list[Rule]] = {
             stock="list up to 3 short bullets of the most impactful remaining work",
             unnerf="list the remaining work as bullets, most impactful first, with enough detail to resume each one",
             description="usage-limit grace window: drop the 3-bullet cap on the remaining-work handoff",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.232 sync (bucket-analyze.mjs, 2026-08-14): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.232.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-web-fetch-specialist.md": [
+        Rule(
+            stock="- Keep the report focused on what was asked. Do not paste whole pages back.",
+            unnerf="- Report everything on the page that bears on the caller's request, including what they did not know to ask for. Write a report, not the raw page pasted back.",
+            description="web-fetch specialist: report everything relevant, not only what was literally asked",
+        ),
+    ],
+    "skill-design.md": [
+        Rule(
+            stock="density — so it looks native by default. Say in one line what you\n   matched",
+            unnerf="density — so it looks native by default. Name the tokens, components,\n   and values you matched",
+            description="design canvas: drop the one-line cap on reporting the matched design system",
+        ),
+    ],
+    "skill-artifact-design.md": [
+        Rule(
+            stock="Before writing code, sketch a short design plan — a compact token system with color, type, and layout:",
+            unnerf="Before writing code, write the design plan — a token system with color, type, and layout, specified so every build decision derives from it:",
+            description="artifact-design process: drop the 'short'/'compact' cap on the design plan",
+        ),
+    ],
+    "tool-description-product-feedback-draft.md": [
+        Rule(
+            stock="Write `details` as short labeled bullets in this exact order — one to three lines each, no narrative paragraphs:",
+            unnerf="Write `details` as labeled bullets in this exact order, each carrying every detail a reader needs to act on it without coming back for more:",
+            description="feedback draft: drop the one-to-three-lines cap on each details bullet",
         ),
     ],
 }

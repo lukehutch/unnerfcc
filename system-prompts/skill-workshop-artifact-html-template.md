@@ -8,7 +8,7 @@ description: >-
   ws-status-banner, ws-decisions island and ws-status-footer fill points, and
   the hash-pinned decisions script that arms the option rows and republishes the
   page when the reader confirms.
-ccVersion: 2.1.231
+ccVersion: 2.1.232
 -->
 <!--
 name: workshop
@@ -1406,8 +1406,8 @@ style: tokens come from @ant/cds's own vanilla export, embedded verbatim
 <!-- DECISIONS SCRIPT — FIXED, VETTED CODE. Never edit, reorder, or extend it;
      a test pins this block by exact hash, so any change is a deliberate,
      reviewed hash update in the same change. It arms the decision option rows
-     only where the page can save a decision (the publish declared the self
-     capability; the shell enforces the writer gate server-side — this
+     only where the page can save a decision (the publish declared the
+     artifact-publish capability; the shell enforces the writer gate server-side — this
      script holds no authority) AND the render
      emitted the ws-decisions island. The interaction is two-step by design:
      selecting rows — one option per decision, across any number of
@@ -1543,7 +1543,8 @@ style: tokens come from @ant/cds's own vanilla export, embedded verbatim
   }
   function selfApi() {
     var c = window.claude;
-    return c && c.self && typeof c.self.publish === 'function' ? c.self : null;
+    var a = c && (c.artifact || c.self);
+    return a && typeof a.publish === 'function' ? a : null;
   }
   function openRows(scope) {
     return scope.querySelectorAll('[data-decision-state="open"] .option[data-choice]');
@@ -1552,7 +1553,8 @@ style: tokens come from @ant/cds's own vanilla export, embedded verbatim
     return '[data-decision-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]';
   }
   /* Affordance only — authorization stays server-side. The viewer runtime
-     mounts a queueing window.claude.self stub synchronously when the
+     mounts a queueing self-write stub (window.claude.artifact, legacy
+     window.claude.self) synchronously when the
      capability is declared, so a brief poll covers only script-order skew.
      No island means nothing to arm: the render emits the island exactly
      when the page shows open call-items. */
@@ -2500,7 +2502,7 @@ style: tokens come from @ant/cds's own vanilla export, embedded verbatim
     if (code === 'conflict') return null; /* shell reloads to the winner */
     if (code === 'upstream_error' && msg.indexOf('(409)') !== -1) return null;
     if (code === 'consent_required')
-      return 'Page updates were not allowed for this artifact — reload and allow self-update to decide here.';
+      return 'Page updates were not allowed for this artifact — reload and allow it to update itself to decide here.';
     if (code === 'not_writer')
       return 'Only someone with edit access can decide from the page.';
     if (code === 'not_declared')

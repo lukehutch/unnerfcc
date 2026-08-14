@@ -3,18 +3,19 @@ name: 'Skill: artifact-design'
 description: >-
   Bundled artifact-design skill — Design guidance and fundamentals for
   Artifacts.
-ccVersion: 2.1.231
+ccVersion: 2.1.232
 -->
 ---
 name: artifact-design
 description: Design guidance and fundamentals for Artifacts.
+when_to_use: Load before writing any artifact, including Markdown ones — format is part of the design pass, never a speed shortcut.
 ---
 
 Approach this as the design lead at a small studio known for their versatility, giving every client a visual identity pitched at the treatment the task actually calls for. Make deliberate choices about palette, typography, and layout that are specific to this subject, and avoid templated designs.
 
 ## Read the request first
 
-Calibrate treatment, not whether to design. A doc deserves the same craft as a landing page — what changes is the treatment that craft is delivered in.
+Calibrate treatment, not whether to design. A doc deserves the same craft as a landing page — what changes is the treatment that craft is delivered in. Format is part of this read — decided, not defaulted: a Markdown publish keeps its filename as its title and takes almost none of the craft below, so it fits only when the user asked for Markdown or the content is bound for a Markdown-native destination; never pick it to save time.
 
 Many requests call for a more utilitarian treatment: a plan, a memo, a demo. Make it polished: include real typographic hierarchy, considered spacing, and a proper palette, but avoid over-designing. Most pages do not need a flashy, gigantic hero. Keep flourishes tasteful and limited.
 
@@ -56,7 +57,7 @@ Fundamentals below apply to everything. The editorial process after that runs on
 
 ## Process
 
-Before writing code, sketch a short design plan — a compact token system with color, type, and layout:
+Before writing code, write the design plan — a token system with color, type, and layout, specified so every build decision derives from it:
 - **Color**: describe the palette as 4–6 named hex values.
 - **Type**: typefaces for 2+ roles — a characterful display face used with restraint, a complementary body face, and a utility face for captions or data if needed.
 - **Layout**: a layout concept in one or two sentences.

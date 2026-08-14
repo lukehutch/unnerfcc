@@ -4,7 +4,7 @@ description: >-
   Reference documentation for Managed Agents multiagent sessions, covering when
   to delegate, coordinator rosters, threads, session stream events, the advisor,
   subagent tool permissions, and pitfalls
-ccVersion: 2.1.231
+ccVersion: 2.1.232
 -->
 # Managed Agents — Multiagent Sessions
 
@@ -204,7 +204,7 @@ agent = client.beta.agents.create(
 
 **Rules:**
 - **At most one advisor entry per roster.** The entry occupies the reserved roster name `anthropic.advisor` — a roster that also lists a member literally named `anthropic.advisor` is a 400. In responses, the advisor entry is echoed **last** in the roster regardless of submitted position.
-- **Pairing is validated at agent save:** the advisor model must meet a minimum capability bar, and the agent's own model must not be more capable than its advisor (equals can pair). Invalid pairing → 400. The valid pairs mirror the Messages advisor tool's executor↔advisor table (`shared/tool-use-concepts.md`) — except {{FABLE_NAME}}, which is temporarily unavailable as a Managed Agents advisor; use {{OPUS_ID}} instead. {{MYTHOS_NAME}} advisors are unaffected — the unavailability is specific to {{FABLE_ID}}, despite the two models' shared capabilities.
+- **Pairing is validated at agent save:** the advisor model must meet a minimum capability bar, and the agent's own model must not be more capable than its advisor (equals can pair). Invalid pairing → 400. The valid pairs mirror the Messages advisor tool's executor↔advisor table (`shared/tool-use-concepts.md`).
 - **Only the primary thread consults it.** The advisor is not a roster agent: invisible to the coordinator's `list_agents` tool, unreachable via `send_to_agent`, and roster agents cannot consult it.
 
 **How consultations work.** Each consultation runs as a platform-spawned thread named `anthropic.advisor` that terminates itself when done; the advice is delivered to the primary thread as an `agent.thread_message_received` event. Typical event order (the reserved name rides `agent_name` on lifecycle events and `from_agent_name` on the delivery):
