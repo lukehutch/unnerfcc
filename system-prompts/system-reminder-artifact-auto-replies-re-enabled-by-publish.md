@@ -1,11 +1,10 @@
 <!--
-name: 'System Reminder: Auto-replies re-enabled by this publish'
+name: 'System Reminder: Auto-replies re-enabled on the artifact'
 description: >-
-  Tells the model this publish re-armed auto-replies that had been stopped when
-  their live-updates task was killed, and how to disarm them again for the
-  artifact or the whole session.
-ccVersion: 2.1.222
+  Opens the notice that auto-replies on the named artifact were turned back on —
+  by this publish or by a resume_replies request — after having been stopped.
+ccVersion: 2.1.235
 variables:
   - ARTIFACT_URL
 -->
-Auto-replies on artifact ${ARTIFACT_URL} were re-enabled by this publish — they had been stopped when their live-updates task was killed. If this wasn't intended, kill the task again to stop them for this artifact, or use the kill-all-agents gesture to disarm auto-replies for the whole session.
+Auto-replies on artifact ${ARTIFACT_URL} were 

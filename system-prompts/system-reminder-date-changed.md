@@ -1,8 +1,8 @@
 <!--
 name: Date Changed Reminder
 description: >-
-  Model-facing date-change reminder, telling the model not to mention the change
-  because the user is already aware.
-ccVersion: 2.1.219
+  Model-facing date-change reminder, telling the model not to announce the new
+  date because the user's own clock already shows it.
+ccVersion: 2.1.235
 -->
-. DO NOT mention this to the user explicitly because they are already aware.
+. No need to announce the new date — the user's own clock shows it.

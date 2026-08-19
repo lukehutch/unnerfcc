@@ -1462,6 +1462,33 @@ RULES: dict[str, list[Rule]] = {
             description="feedback draft: drop the one-to-three-lines cap on each details bullet",
         ),
     ],
+    # -------------------------------------------------------------------------
+    # v2.1.235 sync (bucket-analyze.mjs, 2026-08-19): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.235.json
+    # -------------------------------------------------------------------------
+    "system-prompt-coordinator-mode.md": [
+        Rule(
+            stock="But don't parallelize simple tasks: a question or small task that takes a handful of tool calls is faster done in a single loop (one worker) than fanned out.",
+            unnerf="Keep a task in one worker only when splitting it would add no coverage.",
+            description="coordinator concurrency: fan out unless splitting adds no coverage",
+        ),
+    ],
+    "system-prompt-turn-updates-narration.md": [
+        Rule(
+            stock="Before you start, say in a line what you're about to do; brief updates while you work help the user follow along. Close with a short recap that stands on its own",
+            unnerf="Before you start, explain what you're about to do; substantive updates while you work help the user follow along. Close with a complete recap that stands on its own",
+            description="turn-updates narration: substantive updates and a complete recap (mirrors write-for-a-teammate)",
+        ),
+    ],
+    "system-reminder-goal-check-in-background-work-progress.md": [
+        Rule(
+            stock="If they are progressing, say so briefly and keep waiting;",
+            unnerf="If they are progressing, report what their output shows — what is done, what is still running — and keep waiting;",
+            description="goal check-in: report what the background work has done, then keep waiting",
+        ),
+    ],
 }
 
 

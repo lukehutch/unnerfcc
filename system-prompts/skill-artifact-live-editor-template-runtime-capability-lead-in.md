@@ -1,8 +1,10 @@
 <!--
 name: 'Skill: Live editor template runtime capability note (lead-in)'
 description: >-
-  Opens the live-editor template's note that behavior beyond its already-wired
-  editing, persistence, and commenting is a runtime capability.
-ccVersion: 2.1.231
+  Opens the live-editor template's note that behavior beyond the editor
+  capabilities it already wires is a runtime capability.
+ccVersion: 2.1.235
+variables:
+  - WIRED_EDITOR_CAPABILITIES
 -->
-This template publishes a live editor whose editing, persistence, and commenting are already wired. If the user wants behavior beyond that — the page reading
+This template publishes an editor whose ${WIRED_EDITOR_CAPABILITIES} already wired. If the user wants behavior beyond that — the page reading

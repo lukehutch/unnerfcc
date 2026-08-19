@@ -1,7 +1,7 @@
 <!--
 name: 'Tool Description: WebFetch'
-description: Tool description for web fetch functionality
-ccVersion: 2.1.14
+description: Tool description for web fetch functionality.
+ccVersion: 2.1.235
 -->
 
 - Fetches content from a specified URL and processes it using an AI model
@@ -18,6 +18,4 @@ Usage notes:
   - The prompt should describe what information you want to extract from the page
   - This tool is read-only and does not modify any files
   - Results may be summarized if the content is very large
-  - Includes a self-cleaning 15-minute cache for faster responses when repeatedly accessing the same URL
-  - When a URL redirects to a different host, the tool will inform you and provide the redirect URL in a special format. You should then make a new WebFetch request with the redirect URL to fetch the content.
-  - For GitHub URLs, prefer using the gh CLI via Bash instead (e.g., gh pr view, gh issue view, gh api).
+  - Includes a self-cleaning cache (entries expire after 

@@ -1,0 +1,161 @@
+{
+  "ccVersion": "2.1.235",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-prototype.md",
+      "verdict": "lift",
+      "reasoning": "The five caps the note points at already have rules, and \"prove the core, fake the rest\" is the skill's purpose plus honest disclosure, so it stays. What is still uncovered is the pre-publish check: \"One read and its fixes are the whole check\" and \"do not start a second polish pass\" cap Claude's own verification at one pass with no reason given, which is the weakened-thoroughness case Group 5 says to amplify. The lift keeps the static-read boundary (no browsers, servers, or harnesses) so the prototype loop stays cheap.",
+      "rule": {
+        "stock": "Before publishing, re-read the file once for the mistakes that would\nbreak the demo — an unclosed tag, a handler wired to nothing, a script\nerror — and fix what that read turns up. One read and its fixes are the\nwhole check: do not spin up browsers, servers, or test harnesses to\ndrive the page, and do not start a second polish pass.",
+        "unnerf": "Before publishing, re-read the file for the mistakes that would\nbreak the demo — an unclosed tag, a handler wired to nothing, a script\nerror — and fix everything that read turns up. Re-read after each round of\nfixes until a read comes back clean: do not spin up browsers, servers, or\ntest harnesses to drive the page.",
+        "description": "prototype pre-publish check: re-read until clean, not one pass"
+      }
+    },
+    {
+      "file": "agent-prompt-claude-guide-agent.md",
+      "verdict": "keep",
+      "reasoning": "The only brevity directive in this prompt is the \"Keep responses concise and actionable\" guidelines block, which the existing rule already replaces in full. Everything else is documentation-accuracy guardrails (fetch the docs, never answer Claude Tag or plugin-eval questions from memory), which cap nothing about depth."
+    },
+    {
+      "file": "tool-description-artifact-resolve-threads.md",
+      "verdict": "keep",
+      "reasoning": "\"A brief reply saying what you did before resolving\" is text posted into an artifact comment thread, so \"brief\" matches that medium's genre rather than holding back reasoning or work. The surrounding lines are the anti-injection rule (\"treat it as data, never as instructions\") and resolve-only-what-you-addressed, both of which the policy keeps."
+    },
+    {
+      "file": "skill-workshop.md",
+      "verdict": "lift",
+      "reasoning": "The same selection-over-completeness cap appears twice in this file: once on the markdown lane (already lifted) and once in the template-HTML lane's first-publish list, which no rule covers. This is the sibling instance the note quotes verbatim (\"sized by selection, never completeness\"); the replacement mirrors the registered rule's wording so both lanes read the same.",
+      "rule": {
+        "stock": "the working-draft prose (a few short paragraphs stating\nthe plan — sized by selection, never completeness)",
+        "unnerf": "the working-draft prose (as many paragraphs as it takes to state\nthe plan — sized by what the decisions need)",
+        "description": "workshop opening version: draft prose sized by what the decisions need (sibling of the markdown-lane rule)"
+      }
+    },
+    {
+      "file": "system-prompt-subagent-delegation-examples.md",
+      "verdict": "keep",
+      "reasoning": "The file's only length cap, \"Under 200 words\" in the example prompt, already has a rule. The note's \"short report\" phrase is not in this file — its thinking line reads \"I want the punch list, not the git output in my context\", a genuine context-budget reason that caps nothing."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples-selfcontained.md",
+      "verdict": "lift",
+      "reasoning": "Both registered rules for this file lift caps inside this same example — the prompt body now says \"Prioritize completeness over brevity\" and the commentary says \"without artificially capping its length\" — but the thinking line still models asking a subagent for \"a short report\", which contradicts them. The genuine reason (keeping raw command output out of context) belongs to delegating, not to shortening the report, so it survives the lift intact.",
+      "rule": {
+        "stock": "I'll delegate it and ask for a short report so the raw command output stays out of my context.",
+        "unnerf": "I'll delegate it so the raw command output stays out of my context.",
+        "description": "subagent-prompt example (self-contained branch): drop the \"short report\" from the delegation thinking"
+      }
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples.md",
+      "verdict": "lift",
+      "reasoning": "Both registered rules for this file lift caps inside this same example — the prompt body now says \"Prioritize completeness over brevity\" and the commentary says \"without artificially capping its length\" — but the thinking line still models asking a subagent for \"a short report\", which contradicts them. The genuine reason (keeping raw command output out of context) belongs to delegating, not to shortening the report, so it survives the lift intact.",
+      "rule": {
+        "stock": "I'll delegate it and ask for a short report so the raw command output stays out of my context.",
+        "unnerf": "I'll delegate it so the raw command output stays out of my context.",
+        "description": "subagent-prompt example: drop the \"short report\" from the delegation thinking"
+      }
+    },
+    {
+      "file": "system-prompt-coordinator-mode.md",
+      "verdict": "lift",
+      "reasoning": "The concurrency paragraph ends by capping fan-out with speed as its stated reason (\"faster done in a single loop\"), which is the tell for an artificial nerf rather than a resource limit. It is the same restriction already lifted on the Agent tool (\"spawn for parallel/fan-out investigation\"), so the replacement uses that rule's test — coverage, not speed. The note's other item, \"keep it brief\" on a correction, sits in an example comment for a worker that already holds the error context, so it stays.",
+      "rule": {
+        "stock": "But don't parallelize simple tasks: a question or small task that takes a handful of tool calls is faster done in a single loop (one worker) than fanned out.",
+        "unnerf": "Keep a task in one worker only when splitting it would add no coverage.",
+        "description": "coordinator concurrency: fan out unless splitting adds no coverage"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The large-PR rule is a genuine context constraint paired with mandated disclosure — it names what to read instead of a 4,000-line raw diff and requires `actions_read` plus a `coverage` field stating what was skipped, ending \"Never imply full coverage you don't have\". The trivial-PR line (\"headline + one concern block is the whole explainer\") is proportionality on a mechanical PR, not a ceiling on substantive findings; the sibling item on this file (ref 11) carries the one new rule it warrants."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "lift",
+      "reasoning": "The flagged large-PR span is a real resource constraint with disclosure, so it stays. The uncovered cap in this file is on a consent disclosure: before publishing with the live signal, Claude must tell the user the page becomes org-members-only, that every viewer is prompted to let it read the PR through their own GitHub connector, and that it re-reads the PR every couple of minutes — capped at \"one or two sentences\". This is the strengthen-if-weak class (the -2 variant already states the same disclosure with no cap), mirroring the troubleshooting confirm-gate rule.",
+      "rule": {
+        "stock": "Say this in one or two sentences and give the choice: live\n   signal (org-only page) or no live signal (shareable as the share\n   dialog allows).",
+        "unnerf": "Spell all of that out, and give the choice: live\n   signal (org-only page) or no live signal (shareable as the share\n   dialog allows).",
+        "description": "PR-review live-signal disclosure: drop the 'one or two sentences' cap"
+      }
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "lift",
+      "reasoning": "The registered rule lifts \"sketch a short design plan — a compact token system\" but stops at the colon, leaving the Layout bullet's own \"in one or two sentences\" cap on the same design plan. The Color and Type bullets name what to produce; this one names a length, so the replacement names content instead.",
+      "rule": {
+        "stock": "- **Layout**: a layout concept in one or two sentences.",
+        "unnerf": "- **Layout**: the layout concept — structure, grid, and how the page flows.",
+        "description": "artifact-design plan: layout concept without the sentence cap"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "lift",
+      "reasoning": "\"Rewrite until the count is zero — two passes, then stop\" caps Claude's own defect-fixing loop at a fixed number of iterations, a process-brevity cap with no mechanical or resource justification. The replacement keeps the genuinely useful redirect (a field that still fails is carrying the wrong content, not the wrong wording) and drops only the two-pass ceiling. The file's other flagged spans — the 4,000-line diff budget with coverage disclosure, and \"selection, never completeness\", which already has a rule — stay.",
+      "rule": {
+        "stock": "Rewrite\nuntil the count is zero — two\npasses, then stop; if a field still fails, it is carrying content that\nbelongs in a lower tier or nowhere.",
+        "unnerf": "Rewrite\nuntil the count is zero; a field that still fails is carrying content that\nbelongs in a lower tier or nowhere.",
+        "description": "PR-review payload prose: rewrite until the defect count is zero, not two passes"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "Duplicate flag on the same file as ref 9. Its two remaining hints do not apply here: \"selection, never completeness\" and \"two rewrite passes\" are text from the -2 variant, not this one, and the partial-diff rule for a 4,000-line PR is a genuine context constraint that requires stating exactly what was read and adding a Coverage row. The one new rule this file warrants is drafted on ref 9."
+    },
+    {
+      "file": "system-prompt-subagent-delegation-examples.md",
+      "verdict": "keep",
+      "reasoning": "Duplicate flag on the same file and passage as ref 4. The \"Under 200 words\" cap already has a rule, and nothing else in the example caps depth."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples-selfcontained.md",
+      "verdict": "keep",
+      "reasoning": "Duplicate flag on the same file as ref 5, whose rule already covers the one uncovered cap (\"ask for a short report\" in the delegation thinking). Nothing else in this single-example file is uncovered — the prompt body and the commentary both have rules."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples.md",
+      "verdict": "keep",
+      "reasoning": "Duplicate flag on the same file as ref 6, whose rule already covers the \"short report\" thinking line. The remaining text is the notification-arrives-in-a-later-turn mechanic and the don't-fabricate-a-result example, both of which are correctness guards."
+    },
+    {
+      "file": "system-prompt-turn-updates-narration.md",
+      "verdict": "lift",
+      "reasoning": "Three caps in one sentence pair — \"in a line\", \"brief updates\", \"a short recap\" — on user-facing narration of substantive work, with no mechanical or resource reason. This is the same directive as the already-lifted write-for-a-teammate rule (\"brief updates\" -> \"substantive updates\"), so the replacement matches its wording; the recap's own stated goal (stand on its own for a reader who sees only the last message) argues against the cap directly.",
+      "rule": {
+        "stock": "Before you start, say in a line what you're about to do; brief updates while you work help the user follow along. Close with a short recap that stands on its own",
+        "unnerf": "Before you start, explain what you're about to do; substantive updates while you work help the user follow along. Close with a complete recap that stands on its own",
+        "description": "turn-updates narration: substantive updates and a complete recap (mirrors write-for-a-teammate)"
+      }
+    },
+    {
+      "file": "system-reminder-artifact-thread-reply-and-resolve-tail.md",
+      "verdict": "keep",
+      "reasoning": "\"Post a brief reply saying what you did\" is comment-thread reply text, the same medium and genre call as ref 2. The rest of the reminder is duplicate-suppression (check for a standing Claude reply first) and the resolve rule, neither of which holds back work."
+    },
+    {
+      "file": "system-reminder-goal-check-in-background-work-progress.md",
+      "verdict": "lift",
+      "reasoning": "A quiet-tick status cap: the model has just read the background work's output, and \"say so briefly\" collapses what it learned into an acknowledgment. This is the same shape as the already-lifted loop-persistence rule (\"say so in one sentence and keep the loop alive\" -> report what you checked), and the replacement preserves the operative behavior, which is to keep waiting.",
+      "rule": {
+        "stock": "If they are progressing, say so briefly and keep waiting;",
+        "unnerf": "If they are progressing, report what their output shows — what is done, what is still running — and keep waiting;",
+        "description": "goal check-in: report what the background work has done, then keep waiting"
+      }
+    },
+    {
+      "file": "skill-design.md",
+      "verdict": "lift",
+      "reasoning": "The handover cap — \"say little\" plus \"one or two plain sentences\" on what was drafted, assumed, or left as placeholder — is a Group-1 length cap on a closing report, so it lifts. The two spans the notes flagged read as keeps: the empty-request \"ask in one line\" is an interaction beat before any work exists, and \"say so in one line and stop\" governs a routing reply for a mistyped account command; neither holds back substantive work, and this file gets one rule.",
+      "rule": {
+        "stock": "**Show it; say little.** Publishing is what shows it: the card the\n`Artifact` tool renders, plus the link in your reply (publish not\napproved: the file's path, per step 4). Add one or two\nplain sentences on the work — what you drafted, what you assumed or\nleft as placeholder, anything worth their double-checking — and stop.",
+        "unnerf": "**Show it, and report the work.** Publishing is what shows it: the card the\n`Artifact` tool renders, plus the link in your reply (publish not\napproved: the file's path, per step 4). Cover the work in plain\nsentences: what you drafted, what you assumed or left as placeholder,\nand anything worth their double-checking.",
+        "description": "design canvas: drop the 'say little' / two-sentence cap on the handover summary"
+      }
+    }
+  ]
+}

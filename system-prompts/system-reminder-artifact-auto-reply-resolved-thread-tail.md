@@ -1,8 +1,9 @@
 <!--
 name: 'System Reminder: Resolved thread stays resolved after you act'
 description: >-
-  Tail of the auto-reply notice for an already-resolved thread — post a brief
-  reply saying what was done, and leave the thread resolved.
-ccVersion: 2.1.231
+  Tail of the auto-reply notice for an already-resolved thread — the
+  acknowledgement reply already stands, so post no duplicate, leave the thread
+  resolved, and skip a reply that only confirms no change was needed.
+ccVersion: 2.1.235
 -->
- Once you have acted on the thread, post a brief reply saying what you did (if you have not already); the thread stays resolved.
+ The acknowledgement reply is already in the thread — do NOT post another; the thread stays resolved. Do not reply only to confirm that no change was needed — the standing reply covers it.

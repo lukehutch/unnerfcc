@@ -7,7 +7,7 @@ description: >-
   page's machine-readable record, apply them and republish the evolved draft
   each round, then kick off the build when the reader clicks Start and keep the
   page updated with links to whatever ships.
-ccVersion: 2.1.232
+ccVersion: 2.1.235
 -->
 ---
 name: workshop
@@ -105,7 +105,7 @@ calls, one turn, never one per turn. Then read ONLY the parts of your
 copy you author, as two parallel ranged Reads in ONE turn: lines
 1–56 (the in-file contract) and lines 1438–1526 (the fillable
 `<article>` and the `ws-decisions` island right after it). The
-template is 2,950 lines, and everything outside those two ranges —
+template is 3,041 lines, and everything outside those two ranges —
 the theme script, the `<style>` block, and the decisions script — is
 fixed template bytes your copy must keep byte-identical: you never
 edit it, so never spend a turn or your context reading it (a
@@ -299,14 +299,11 @@ opening version — have the artifact-capabilities skill loaded (on the
 template-HTML lane it rides the setup turn; on the markdown lane, load
 it before you publish), then pass `capabilities: {"artifact": {}}` on that
 publish. Default to doing this — the user invoked an interactive skill, so
-an actionable page is the point — with one exception: if the user asked for
-a page they can share outside the org, publish static instead (the
-artifact-publish capability narrows the page to org-internal viewing and
-blocks public links) and say why the decision rows are not clickable.
+an actionable page is the point.
 
-Tell the user what the capability means when you first publish: the page is
-org-internal; only people with write access can confirm a decision; and
-each confirmed decision republishes the page as a new version.
+Tell the user what the capability means when you first publish: only people
+with write access can confirm a decision, and each confirmed decision
+republishes the page as a new version.
 
 Republishes inside the loop OMIT the `capabilities` field — the stored
 declaration carries forward, and re-declaring on every publish invites
@@ -728,8 +725,8 @@ block entirely, continue the loop, and surface whatever the reader might
 want revisited as fresh decision blocks. A stale kickoff block must not
 haunt subsequent republishes.
 
-If the page cannot be interactive (published static for external
-sharing), fall back to asking in conversation: "all decisions are in —
+If the page was published without the capability (its decision blocks
+are inert), fall back to asking in conversation: "all decisions are in —
 shall I start?"
 
 ## Style

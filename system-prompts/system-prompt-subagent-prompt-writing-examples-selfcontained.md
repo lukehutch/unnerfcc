@@ -2,14 +2,12 @@
 name: 'System Prompt: Subagent prompt-writing examples (self-contained variant)'
 description: >-
   Subagent example (self-contained commentary branch of the fork/background
-  ternary)
-ccVersion: 2.1.218
+  ternary), whose agent report comes back as the tool result for the model to
+  relay to the user.
+ccVersion: 2.1.235
 variables:
   - AGENT_TOOL_NAME
-  - AGENT_TOOL_NAME_2
 -->
-Example usage:
-
 <example>
 user: "What's left on this branch before we can ship?"
 assistant: <thinking>A survey question across git state, tests, and config. I'll delegate it and ask for a short report so the raw command output stays out of my context.</thinking>
@@ -22,4 +20,3 @@ The prompt is self-contained: it states the goal, lists what to check, and speci
 </commentary>
 </example>
 
-${AGENT_TOOL_NAME_2}
