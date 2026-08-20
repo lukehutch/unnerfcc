@@ -19,12 +19,12 @@
 #   9. leaves everything staged for you to review + commit.
 #
 # It does NOT depend on the tweakcc-fixed project: extract/re-package the binary
-# (lib/bun-binary.mjs), un-minify (lib/beautify.mjs), extract the catalog
-# (lib/extract-prompts.mjs), and patch (lib/patch-prompts.mjs) are all OUR OWN
+# (engine/bun-binary.mjs), un-minify (engine/beautify.mjs), extract the catalog
+# (engine/extract-prompts.mjs), and patch (engine/patch-prompts.mjs) are all OUR OWN
 # code. The only external "AI" call is `claude` itself for relabeling.
 #
-# BUN FORMAT: if lib/bun-binary.mjs reports the binary's Bun container format is
-# one it doesn't understand, this script STOPS — update lib/bun-binary.mjs for
+# BUN FORMAT: if engine/bun-binary.mjs reports the binary's Bun container format is
+# one it doesn't understand, this script STOPS — update engine/bun-binary.mjs for
 # the new layout.
 #
 # USAGE
@@ -40,9 +40,11 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO"
 
-NATIVE_CLI="$REPO/lib/bun-binary.mjs"
-PATCH_CLI="$REPO/lib/patch-prompts.mjs"
-LIB_DIR="$REPO/lib"
+NATIVE_CLI="$REPO/engine/bun-binary.mjs"
+PATCH_CLI="$REPO/engine/patch-prompts.mjs"
+BUCKET_ANALYZE="$REPO/scripts/bucket-analyze.mjs"
+ENGINE_DIR="$REPO/engine"
+SCRIPTS_DIR="$REPO/scripts"
 PROMPTS_DIR="$REPO/data/prompts"
 SYS_PROMPTS="$REPO/system-prompts"
 
@@ -66,10 +68,10 @@ warn() { printf '\033[1;33m  !\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mupgrade.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 bun_incompatible() {
   printf '\033[1;31m\n╔══════════════════════════════════════════════════════════════╗\n'
-  printf   '║  BUN FORMAT INCOMPATIBLE — lib/bun-binary.mjs could not parse ║\n'
+  printf   '║  BUN FORMAT INCOMPATIBLE — engine/bun-binary.mjs could not parse ║\n'
   printf   '║  this Claude Code binary. Bun likely changed its standalone   ║\n'
   printf   '║  container format. Update the format constants/logic in       ║\n'
-  printf   '║  lib/bun-binary.mjs for the new layout (its header documents  ║\n'
+  printf   '║  engine/bun-binary.mjs for the new layout (its header documents  ║\n'
   printf   '║  the format; a current tweakcc-fixed is a useful reference).  ║\n'
   printf   '╚══════════════════════════════════════════════════════════════╝\033[0m\n' >&2
   printf 'detail: %s\n' "$1" >&2
@@ -82,15 +84,25 @@ command -v python3 >/dev/null || die "python3 not found"
 # NOTE: `claude` is NOT required to be installed — we fetch the target binary
 # ourselves (see below). It's only used, if present, for the semantic relabel
 # step; otherwise the freshly-fetched binary stands in.
-[ -f "$NATIVE_CLI" ] || die "lib/bun-binary.mjs missing — is the repo intact?"
+[ -f "$NATIVE_CLI" ] || die "engine/bun-binary.mjs missing — is the repo intact?"
 # Check EVERY load-bearing dep, not just the first one ever added: a repo cloned
 # (or last upgraded) before @babel/generator became required has a populated
 # node_modules that a node-lief-only test would wrongly call complete, and the
 # patcher would then die mid-run. @babel/generator is what writes the patched AST
 # back out to source, so it is as load-bearing as the parser.
-if [ ! -d "$LIB_DIR/node_modules/node-lief" ] || [ ! -d "$LIB_DIR/node_modules/@babel/generator" ]; then
-  log "Installing lib/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
-  ( cd "$LIB_DIR" && npm install )
+if [ ! -d "$ENGINE_DIR/node_modules/node-lief" ] || [ ! -d "$ENGINE_DIR/node_modules/@babel/generator" ]; then
+  log "Installing engine/ dependencies (node-lief, @babel/parser, @babel/generator, prettier)"
+  ( cd "$ENGINE_DIR" && npm install )
+fi
+
+# Install scripts/ deps too (gray-matter, used by sync-version.mjs at step 5) —
+# a repo whose only prior run was install.sh (which bootstraps engine/ + scripts/)
+# vs. one whose first run is upgrade.sh both need this; missing it here crashes
+# step 5 with ERR_MODULE_NOT_FOUND after the (expensive, AI-driven) classify and
+# relabel steps have already completed, which is the worst place to fail.
+if [ ! -d "$SCRIPTS_DIR/node_modules/gray-matter" ]; then
+  log "Installing scripts/ dependencies (first run: gray-matter)"
+  ( cd "$SCRIPTS_DIR" && npm install --ignore-scripts --save-exact )
 fi
 
 # --- resolve the TARGET version (works whether or not CC is installed) ------
@@ -325,9 +337,65 @@ for old in "$PROMPTS_DIR"/prompts-*.json; do
 done
 [ "$PRUNED" -gt 0 ] && ok "pruned $PRUNED superseded catalog(s) — only prompts-$CC_VERSION.json remains (git will show them deleted)"
 
-# --- 5. reconstruct stock .md + replay un-nerfs ----------------------------
-log "Reconstructing stock prompts + replaying un-nerfs"
+# --- 5. reconstruct stock .md -----------------------------------------------
+log "Reconstructing stock prompts"
 node "$REPO/scripts/sync-version.mjs" "$CC_VERSION"
+
+# --- 5b. bucket-analyze new un-nerf candidates (automated: AI proposes, this
+# script mechanically validates and merges — see bucket-analyze.mjs's header
+# for why this needs no human gate to take effect). Runs against the FRESH
+# stock text just written above, so a candidate's flagged phrase is exactly
+# what's on disk right now — a rule keyed to already-un-nerfed text would
+# immediately show up as "already covered" (or, if genuinely different, get
+# rejected by the overlap check) rather than silently duplicating.
+if [ -f "$BUCKET_ANALYZE" ]; then
+  log "Preparing un-nerf bucket-analysis worklist"
+  BA_WORK="$WORK/bucket-analysis"
+  M=$(node "$BUCKET_ANALYZE" prepare "$CC_VERSION" "$BA_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
+
+  if [ "${M:-0}" -gt 0 ]; then
+    log "Launching Claude Code to bucket-analyze $M new un-nerf candidate(s) in $(ls "$BA_WORK"/chunk-*.json | wc -l) chunk(s)"
+    for attempt in 1 2 3; do
+      for chunk in "$BA_WORK"/chunk-*.json; do
+        cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+        [ -f "$BA_WORK/verdicts-$cn.json" ] && continue   # already analyzed (earlier attempt)
+        log "  analyzing chunk $cn (attempt $attempt)"
+        ( cd "$BA_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
+            --model "$RELABEL_MODEL" \
+            "Read BUCKET-ANALYSIS-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your verdicts to verdicts-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; read its Part 1 in full before deciding anything. Do not ask questions; complete the task and write the file." ) || true
+      done
+      if node "$BUCKET_ANALYZE" collect "$BA_WORK"; then break; fi
+      [ "$attempt" = 3 ] && die "bucket-analysis incomplete after 3 attempts (see $BA_WORK)"
+      log "  re-running short chunks"
+      # Drop any verdicts file that is short/malformed so the loop retries it.
+      for chunk in "$BA_WORK"/chunk-*.json; do
+        cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+        node -e '
+          const fs=require("fs");
+          const [c,l]=process.argv.slice(1);
+          if(!fs.existsSync(l)) process.exit(0);
+          try{
+            const want=JSON.parse(fs.readFileSync(c,"utf8")).map(i=>i.ref).sort((a,b)=>a-b);
+            const got=[...new Set(JSON.parse(fs.readFileSync(l,"utf8")).map(o=>o.ref))].sort((a,b)=>a-b);
+            if(JSON.stringify(want)!==JSON.stringify(got)) fs.unlinkSync(l);
+          }catch{ fs.unlinkSync(l); }
+        ' "$chunk" "$BA_WORK/verdicts-$cn.json"
+      done
+    done
+    [ -f "$BA_WORK/verdicts.json" ] || die "bucket-analysis did not produce verdicts.json"
+    log "Merging accepted un-nerf rules into apply-unnerfs.py"
+    node "$BUCKET_ANALYZE" merge "$BA_WORK" "$REPO/scripts/apply-unnerfs.py" "$CC_VERSION" \
+      || die "bucket-analysis merge failed — see output above"
+    ok "bucket-analysis complete — full keep/lift review: data/bucket-analysis-$CC_VERSION.json"
+  else
+    ok "no new un-nerf candidates to bucket-analyze"
+  fi
+else
+  warn "scripts/bucket-analyze.mjs missing — skipping automated bucket-analysis (fall back to the manual UNNERF-GUIDE Part 1 pass)"
+fi
+
+# --- 5c. replay un-nerfs (existing + any bucket-analyze just added) --------
+log "Replaying un-nerfs"
 python3 "$REPO/scripts/apply-unnerfs.py"
 python3 "$REPO/scripts/apply-unnerfs.py" --check || die "apply-unnerfs --check not clean after sync"
 ok "un-nerfs applied + idempotent"
@@ -349,13 +417,13 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   # (renamed field, restructured enum) surfaces as a LOUD worklist, not a silent
   # regression — same idea as the prompt-checksum manifest.
   POSTURE="$REPO/data/effort-posture.json"; POSTURE_NEW="$WORK/effort-posture.json"
-  node "$REPO/lib/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
+  node "$REPO/engine/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
   EFF_JS="$WORK/patched.effort.js"
-  set +e; EFF_OUT="$(node "$REPO/lib/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+  set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
   echo "$EFF_OUT" | sed 's/^/  /'
   [ -s "$EFF_JS" ] && PATCHED_JS="$EFF_JS"
   echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
-    warn "effort un-nerf incomplete — CC's effort code likely changed; update lib/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
+    warn "effort un-nerf incomplete — CC's effort code likely changed; update engine/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
   if [ -f "$POSTURE" ] && [ -s "$POSTURE_NEW" ] && ! diff -q "$POSTURE" "$POSTURE_NEW" >/dev/null 2>&1; then
     warn "CC effort surface changed since last release — review the diff:"
     diff "$POSTURE" "$POSTURE_NEW" 2>/dev/null | sed 's/^/    /' || true
@@ -404,9 +472,16 @@ cat <<EOF
     - data/prompts/prompts-*.json (deleted)   (superseded catalogs — 'git add' the deletions)
     - system-prompts/*.md                     (reconstructed + un-nerfed)
     - system-prompt-checksums.json            (regenerated by sync-version)
-    - scripts/*, lib/*                        (if changed)
+    - scripts/apply-unnerfs.py                (bucket-analysis may have added new rules)
+    - data/bucket-analysis-$CC_VERSION.json   (full keep/lift review, incl. every KEEP + why)
+    - scripts/*, engine/*                        (if changed)
 
-  Bucket-analyze any new/changed prompts per UNNERF-GUIDE Part 1, add un-nerf
-  rules to scripts/apply-unnerfs.py where warranted, then re-run
-  'python3 scripts/apply-unnerfs.py --check' before committing.
+  Bucket-analysis (deciding which new/changed prompts need a new un-nerf rule,
+  and drafting it) already ran automatically above — see
+  data/bucket-analysis-$CC_VERSION.json for the full review before committing.
+  apply-unnerfs.py --check already gates this step, so anything in
+  scripts/apply-unnerfs.py has already passed; this file is for AUDIT, not
+  redoing the analysis. If bucket-analyze.mjs was skipped or rejected a
+  candidate you disagree with, that's the one case left for a manual
+  UNNERF-GUIDE Part 1 pass.
 EOF

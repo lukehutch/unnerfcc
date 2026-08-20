@@ -1,6 +1,8 @@
 <!--
 name: 'Tool Description: Manage scheduled routines (summary)'
-description: One-line action description — manage scheduled cloud agent routines.
-ccVersion: 2.1.219
+description: >-
+  One-line action description — manage scheduled cloud agent routines and
+  inspect their run history and logs.
+ccVersion: 2.1.231
 -->
-manage scheduled cloud agent routines
+manage scheduled cloud agent routines; inspect their run history and logs

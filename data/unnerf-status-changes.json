@@ -1,6 +1,97 @@
 {
- "from": "2.1.219",
- "to": "2.1.220",
- "changes": [],
+ "from": "2.1.232",
+ "to": "2.1.235",
+ "changes": [
+  {
+   "id": "skill-artifact-pr-review",
+   "name": "Skill: artifact-pr-review",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "48fa3a45e4ed",
+   "newHash": "766b7c69fec8",
+   "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact — a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal"
+  },
+  {
+   "id": "system-prompt-turn-updates-narration",
+   "name": "System Prompt: Turn updates narration",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "957a621be76d",
+   "newHash": "f73794d3e72b",
+   "sample": "Before you start, say in a line what you're about to do; brief updates while you work help the user follow along. Close with a short recap that stands on its own — what you found, what you did, and wh"
+  },
+  {
+   "id": "agent-prompt-coding-session-title-generator",
+   "name": "Agent Prompt: Coding session title generator",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "32b62cdd87ea",
+   "newHash": "765b5ba2fa0a",
+   "sample": "You are naming a coding session so the user can pick it out of a long list of sessions. The title is a name for what the session is about, not a sentence describing the task: a short noun phrase of tw"
+  },
+  {
+   "id": "agent-prompt-pass-fail-verdict",
+   "name": "Agent Prompt: Respond PASS or FAIL",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "3a98cf8ab675",
+   "newHash": "0080836d3250",
+   "sample": "):\n${GRADED_AGENT_OUTPUT}\n\n\nRespond with exactly one word: PASS or FAIL."
+  },
+  {
+   "id": "agent-prompt-session-title-and-branch-generation",
+   "name": "Agent Prompt: Session title and branch generation",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "d7986fefc7a2",
+   "newHash": "7c91813c93ff",
+   "sample": "You are coming up with a title and a git branch name for a coding session based on the provided description.\n\nThe title is a name for what the session is about, not a sentence describing the task: a s"
+  },
+  {
+   "id": "skill-building-llm-powered-applications-with-claude",
+   "name": "Skill: Building LLM-powered applications with Claude",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "2350a3c147ae",
+   "newHash": "2e0bbf9556b3",
+   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
+  },
+  {
+   "id": "system-reminder-artifact-auto-edit-summary-reply-posted-2",
+   "name": "System Reminder: Auto-edit posted its summary reply (check and resolve)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "9cfb67232ec7",
+   "newHash": "1309b6272b3f",
+   "sample": " and posted a summary reply${SUMMARY_REPLY_NOTE}. Review the change — if it missed the mark, edit the artifact yourself or deactivate the thread. The thread may not be resolved — check it (action \"com"
+  },
+  {
+   "id": "system-reminder-artifact-auto-reply-resolved-thread-tail",
+   "name": "System Reminder: Resolved thread stays resolved after you act",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "8fb6eaf1b775",
+   "newHash": "3753509b488b",
+   "sample": " The acknowledgement reply is already in the thread — do NOT post another; the thread stays resolved. Do not reply only to confirm that no change was needed — the standing reply covers it."
+  },
+  {
+   "id": "tool-description-artifact-comments",
+   "name": "Tool Description: Artifact comments and replies",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "708d1e6cebbe",
+   "newHash": "02ed12ba5436",
+   "sample": "\n\n**Comments**: Viewers can leave comment threads on a published artifact. Pass `action: \"comments\"` with the artifact's `url` to read them — each thread shows whether the user has activated Claude re"
+  }
+ ],
  "unverifiable": []
 }

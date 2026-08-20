@@ -4,7 +4,7 @@ description: >-
   Interactive interview script that walks users through configuring a Managed
   Agent from scratch — selecting tools, skills, files, environment settings —
   and emits setup and runtime code
-ccVersion: 2.1.218
+ccVersion: 2.1.231
 -->
 # Managed Agents — Onboarding Flow
 
@@ -26,7 +26,7 @@ Let them answer in full before configuring anything.
 
 ## 2. Configure the agent — propose, don't interrogate
 
-Their description does the interview's work. Draft the agent config from it and **present it as a proposal with your suggestions inline** — the user reacts to a concrete config instead of answering a question list. At most one batched follow-up for true gaps. Suggest where the description gives you an opening:
+Their description does the interview's work. Draft the agent config from it and **present it as a proposal with your suggestions inline** — the user reacts to a concrete config instead of answering a question list. Batch follow-up questions for the true gaps the description leaves. Suggest where the description gives you an opening:
 
 - **Tools** — enable the full prebuilt toolset by default (`agent_toolset_20260401`: `bash`, `read`, `write`, `edit`, `glob`, `grep`, `web_fetch`, `web_search`). **Suggest MCP servers** for any third-party service the job names (GitHub, Linear, Slack, …) — and flag the credential each one implies as you suggest it ("Linear MCP → you'll need a Linear API token at kickoff"), so §4's auth step is a formality, not a surprise. Collection itself waits for §4. Custom tools only if the user's own app must answer calls (name, description, input schema — their handler code is theirs; don't generate it).
 - **Skills** — **suggest** prebuilt `xlsx`/`docx`/`pptx`/`pdf` when the job produces those artifacts; custom by `skill_id` (max 20 total per agent, prebuilt + custom combined).
@@ -57,7 +57,7 @@ Usually zero or one question:
 - `user.define_outcome` + rubric — when §2 settled on an Outcome; the harness iterates and grades until the rubric passes.
 - **Scheduled shape?** Skip per-session kickoff entirely — create a **deployment** (`deployments.create()` with `schedule` + `initial_events`); each firing creates the session autonomously. See `shared/managed-agents-scheduled-deployments.md`.
 
-Mechanics to bake into the runtime code: session creation resolves resources (a bad mount surfaces there, before tokens) but does not itself provision the sandbox; open the event stream *before* sending the kickoff; break on `session.status_terminated`, or `session.status_idle` with a terminal `stop_reason` — anything except `requires_action` (`shared/managed-agents-client-patterns.md` Pattern 5); usage lands on `span.model_request_end`; artifacts land in `/mnt/session/outputs/` (`files.list({scope_id: session.id, ...})`).
+Mechanics to bake into the runtime code: session creation resolves resources (a bad mount surfaces there, before tokens) but does not itself provision the sandbox; open the event stream *before* sending the kickoff; break on `session.status_terminated`, or `session.status_idle` with any non-`requires_action` `stop_reason` — terminal, or `budget_reached`, which is not terminal (only a budget change/removal resumes it) (`shared/managed-agents-client-patterns.md` Pattern 5); usage lands on `span.model_request_end`; artifacts land in `/mnt/session/outputs/` (`files.list({scope_id: session.id, ...})`).
 
 ## 5. Integrate — emit the code
 

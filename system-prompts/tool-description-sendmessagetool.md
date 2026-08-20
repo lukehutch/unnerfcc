@@ -1,7 +1,12 @@
 <!--
 name: 'Tool Description: SendMessageTool'
-description: Agent teams version of SendMessageTool.
-ccVersion: 2.1.219
+description: >-
+  Agent teams version of SendMessageTool — recipient forms, that plain output is
+  invisible to other agents, and how names resolve to agents.
+ccVersion: 2.1.231
+variables:
+  - CROSS_SESSION_TARGET_ROWS
+  - CROSS_SESSION_SECTION
 -->
 
 # SendMessage
@@ -15,6 +20,6 @@ Send a message to another agent.
 | `to` | |
 |---|---|
 | `"researcher"` | Teammate by name |
-| `"main"` | The main conversation (background subagents only) |
+| `"main"` | The main conversation (background subagents only) |${CROSS_SESSION_TARGET_ROWS}
 
-Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to agents by name — names keep working after an agent completes (a send resumes it from its transcript). Use the raw `agentId` (format `a...-...`) from its spawn result only when the agent has no name, or when a newer agent took the name (latest wins). When relaying, don't quote the original — it's already rendered to the user.
+Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to agents by name — names keep working after an agent completes (a send resumes it from its transcript). Use the raw `agentId` (format `a...-...`) from its spawn result only when the agent has no name, or when a newer agent took the name (latest wins). When relaying, don't quote the original — it's already rendered to the user.${CROSS_SESSION_SECTION}

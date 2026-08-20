@@ -5,7 +5,7 @@ description: >-
   (registered as SKILL_FILES + PLAN_TEMPLATE) - the title/eyebrow/summary +
   section-run HTML/CSS scaffold the SKILL.md tells the model to copy and fill by
   hand, and that the auto-publish path fills mechanically.
-ccVersion: 2.1.219
+ccVersion: 2.1.231
 -->
 <!--
 name: plan
@@ -73,12 +73,12 @@ style: tokens come from @ant/cds's own vanilla export, embedded verbatim
  * surfaces degrade. This line is the triage breadcrumb for "published
  * artifact looks broken" reports — ask the browser version first.
  *
- * The plan-artifact template embeds this file byte-for-byte between
- * BEGIN/END markers; a drift test asserts the two stay identical. To
- * refresh: copy the upstream generated file below this header, update the
- * commit hash and upstream-sha256 above, run
- * `bun scripts/embed-cds-tokens.ts`, then
- * `bun test test/frame/planArtifactHtml.test.ts`.
+ * The plan-artifact, workshop, and whiteboard templates embed this file
+ * byte-for-byte between BEGIN/END markers; drift tests assert the copies
+ * stay identical. To refresh: copy the upstream generated file below this
+ * header, update the commit hash and upstream-sha256 above, run
+ * `bun scripts/embed-cds-tokens.ts`, then `bun test
+ * test/frame/planArtifactHtml.test.ts test/skills/bundled/whiteboardTokens.test.ts`.
  */
 
 /**

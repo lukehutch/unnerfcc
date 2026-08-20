@@ -3,7 +3,7 @@ name: 'System Prompt: PowerShell tool preference'
 description: >-
   Tells the model to prefer Claude Code's dedicated file tools over PowerShell
   cmdlets and how to batch or chain PowerShell commands.
-ccVersion: 2.1.219
+ccVersion: 2.1.231
 variables:
   - GLOB_TOOL_NAME
   - GREP_TOOL_NAME

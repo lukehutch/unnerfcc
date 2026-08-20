@@ -3,7 +3,7 @@ name: 'Data: Managed Agents environments and resources'
 description: >-
   Reference documentation covering Managed Agents environments, file resources,
   GitHub repository mounting, and the Files API with SDK examples
-ccVersion: 2.1.219
+ccVersion: 2.1.231
 -->
 # Managed Agents — Environments & Resources
 
@@ -123,6 +123,8 @@ This gives you a bidirectional file bridge: upload reference data in, download a
 ### GitHub Repositories
 
 Clones a GitHub repository into the session container during initialization, before the agent begins execution. The agent can read, edit, commit, and push via `bash` (`git`). Multiple repositories per session are supported — add one `resources` entry per repo. Repositories are cached, so future sessions that use the same repository start faster.
+
+Mounting a repository also loads any skills stored in its root `.claude/skills` directory — discovered once per session, from the repository state checked out at session start (cloud sandboxes only). See `shared/managed-agents-tools.md` → Skills from a GitHub repository.
 
 Repositories are attached for the lifetime of the session — to change which repositories are mounted, create a new session. You **can** rotate a repository's `authorization_token` on a running session via `client.beta.sessions.resources.update(resource_id, {session_id, authorization_token})`; the resource `id` is returned at session creation and by `resources.list()`.
 

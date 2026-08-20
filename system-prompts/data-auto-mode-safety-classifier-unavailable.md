@@ -3,9 +3,11 @@ name: 'Data: Auto mode safety classifier unavailable'
 description: >-
   tool_result text telling the model the auto-mode safety classifier is down and
   to retry later or do read-only work
-ccVersion: 2.1.219
+ccVersion: 2.1.231
 variables:
+  - CANNOT_DETERMINE_SAFETY_CLAUSE
   - BLOCKED_ACTION_DESCRIPTION
-  - CLASSIFIER_UNAVAILABLE_REASON
+  - RETRY_FALLBACK_GUIDANCE
+  - READ_ONLY_OPERATIONS_NOTE
 -->
-${BLOCKED_ACTION_DESCRIPTION}${CLASSIFIER_UNAVAILABLE_REASON} right now. Wait briefly and then try this action again. If it keeps failing, continue with other tasks that don't require this action and come back to it later. Note: reading files, searching code, and other read-only operations do not require the classifier and can still be used.
+${CANNOT_DETERMINE_SAFETY_CLAUSE}${BLOCKED_ACTION_DESCRIPTION} right now. Wait a moment and then try this action again. ${RETRY_FALLBACK_GUIDANCE} ${READ_ONLY_OPERATIONS_NOTE}

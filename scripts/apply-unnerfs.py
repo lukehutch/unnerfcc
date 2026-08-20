@@ -857,79 +857,14 @@ RULES: dict[str, list[Rule]] = {
             description='code-review sweep: drop the 8-candidate cap (matches the phase-1 finder flip)',
         ),
     ],
-    # The bundled /code-review WORKFLOW script (distinct from the skill-code-review-*
-    # prompts). The script IS the prompt, so its numeric caps are lifted here the
-    # same way — unlike a binary-baked cap, these are editable text. Removed caps
-    # leave a few now-inert vars (P.maxFindings, f.cap); harmless in JS.
-    "workflow-script-code-review.md": [
-        # Per-angle candidate cap — the enforcement point. Finders' candidates all
-        # flow to verification instead of being sliced to `cap` (also covers sweep,
-        # which reuses ingest). Resolves the stock contradiction where the prompt
-        # says "do not silently drop candidates" but the code slices them.
-        Rule(
-            stock='const ingest = (cs, cap, kind) => cs.slice(0, cap).map(c => ({ ...c, file: canonFile(c.file), kind }))',
-            unnerf='const ingest = (cs, cap, kind) => cs.map(c => ({ ...c, file: canonFile(c.file), kind }))',
-            description='/code-review workflow: ingest every candidate (drop per-angle slice cap)',
-        ),
-        Rule(
-            stock='"Surface up to " + f.cap + " candidate findings, each with file, line',
-            unnerf='"Surface every candidate finding, each with file, line',
-            description='/code-review workflow finder prompt: surface every candidate',
-        ),
-    ],
-
-    # v2.1.219 split the workflow script into three spliceable nodes: the tier
-    # header comment block (workflow-script-code-review-2.md), the
-    # find/verify/sweep + synthesize/assemble body (this key), and the ingest +
-    # finder-prompt head (workflow-script-code-review.md, above). Same rules,
-    # re-keyed to the node each one actually lives in now.
-    "workflow-script-code-review-find-verify-sweep.md": [
-        Rule(
-            stock='"Surface up to " + SWEEP_MAX + " additional candidates. If nothing new, return an empty list — do not pad.',
-            unnerf='"Surface every additional candidate. If nothing new, return an empty list — do not pad.',
-            description='/code-review workflow sweep prompt: surface every additional candidate',
-        ),
-        # Final findings cap — the headline lift. Report every verified surviving
-        # finding, no numeric ceiling.
-        Rule(
-            stock='"3. Keep at most " + P.maxFindings + " decisions; omit the least severe beyond the cap.',
-            unnerf='"3. Keep every distinct finding; do not omit any to satisfy a count.',
-            description='/code-review workflow synthesis prompt: keep every finding (no cap)',
-        ),
-        Rule(
-            stock='for (const d of decisions) {\n  if (findings.length >= P.maxFindings) break\n  if (!claim(d.index)) continue',
-            unnerf='for (const d of decisions) {\n  if (!claim(d.index)) continue',
-            description='/code-review workflow assembler: drop the maxFindings break',
-        ),
-        Rule(
-            stock='for (let i = 0; i < ranked.length && findings.length < P.maxFindings; i++) {',
-            unnerf='for (let i = 0; i < ranked.length; i++) {',
-            description='/code-review workflow backfill: append every remaining verified finding',
-        ),
-        # Comments that would otherwise claim findings are still capped.
-        Rule(
-            stock='// ─── Synthesize: rank, merge semantic dupes, cap ───',
-            unnerf='// ─── Synthesize: rank, merge semantic dupes (uncapped — report all) ───',
-            description='/code-review workflow synthesize header comment: uncapped',
-        ),
-        Rule(
-            stock='// Correctness bugs outrank cleanup findings when the cap forces a cut;\n// CONFIRMED outranks PLAUSIBLE within each group.',
-            unnerf='// Correctness bugs are ranked above cleanup findings;\n// CONFIRMED outranks PLAUSIBLE within each group.',
-            description='/code-review workflow rank comment: no cap-forced cut',
-        ),
-        Rule(
-            stock='//   1. No silent drops while there is room: every verified finding either appears\n//      (as primary or merge note) or is omitted only because the cap is full.',
-            unnerf='//   1. No silent drops: every verified finding appears\n//      (as primary or merge note).',
-            description='/code-review workflow assembler-invariant comment: no cap',
-        ),
-    ],
-    "workflow-script-code-review-2.md": [
-        Rule(
-            stock='//   high  → 3 correctness + 1 cleanup (5 angles, ≤30 cands) → ≤10 findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles, ≤40 cands) → sweep → ≤15 findings',
-            unnerf='//   high  → 3 correctness + 1 cleanup (5 angles) → all verified findings\n//   xhigh → 5 correctness + 1 cleanup (5 angles) → sweep → all verified findings',
-            description='/code-review workflow tier comment: reflect uncapped output',
-        ),
-    ],
+    # v2.1.232: Anthropic replaced the /code-review WORKFLOW-script implementation
+    # (workflow-script-code-review*.md, 9 rules total across these 3 keys) with a
+    # skill-based, effort-tiered system (skill-code-review-phase-*, -angle-*,
+    # -effort-*, etc. — dozens of new fragments). None of the old JS survives;
+    # all 3 keys retired. The new architecture needs its own un-nerf review — see
+    # data/bucket-analysis-2.1.232.json and the skill-code-review-* keys below for
+    # what carried an id forward (same rule, drift-checked) vs. what's genuinely
+    # new (reviewed fresh).
     # This file targets the STANDALONE general-purpose fallback constant (`BCa` in
     # the 2.1.201 bundle), used as the system prompt when getSystemPrompt() throws
     # — a DIFFERENT bundle string from the main general-purpose prompt (which
@@ -1007,13 +942,8 @@ RULES: dict[str, list[Rule]] = {
             description='act-when-ready: lead with a recommendation AND the alternatives weighed',
         ),
     ],
-    "system-prompt-clarifying-question-research-first.md": [
-        Rule(
-            stock='Before asking, spend up to a minute on read-only investigation (grep the codebase, check docs, search memory) so your question is specific.',
-            unnerf="Before asking, do thorough read-only investigation (grep the codebase, check docs, search memory) until your question is as specific as the available evidence allows — don't cut the investigation short to save time.",
-            description='clarify-first: investigate until specific, not a one-minute time-box',
-        ),
-    ],
+    # v2.1.231: system-prompt-clarifying-question-research-first.md removed
+    # upstream entirely (no replacement, base or sibling) — key retired.
     # renamed at the tweakcc-fixed switch (was system-prompt-coordinator-worker-instructions).
     # v2.1.219 split the worker-agent prompt into three nodes; both rules moved out
     # of system-prompt-worker-agent.md, which now holds only the (un-nerfed) fan-out
@@ -1297,19 +1227,9 @@ RULES: dict[str, list[Rule]] = {
             description="lift the local anti-malicious refusal reminder (server-side enforcement unaffected)",
         ),
     ],
-    "agent-prompt-review-pr-slash-command-2.md": [
-        # v2.1.202: upstream restructured /review-pr into a classic bullet review
-        # and DROPPED the old "a 2-3 sentence overview of what the PR does" cap on
-        # its own (the overview bullet is now uncapped). The residual brevity nerf
-        # is "Keep your review concise but thorough" — flip the "concise" cap: a
-        # code review is depth work, not a place to compress. ("provide a thorough
-        # code review" already leads the section; this removes the walk-back.)
-        Rule(
-            stock="Keep your review concise but thorough. Focus on:",
-            unnerf="Keep your review thorough and complete. Focus on:",
-            description="review-pr: drop the 'concise' review cap (keep it thorough); upstream already dropped the 2-3-sentence overview cap",
-        ),
-    ],
+    # v2.1.231: agent-prompt-review-pr-slash-command-2.md (and its non-'-2' base
+    # variant) removed upstream entirely — the /review-pr prompt this un-nerfed
+    # no longer exists in any form. Key retired.
     # insights UI-card body slots — lift the length caps. JSON string length does
     # not break parsing, and this matches the at-a-glance-summary flip. The
     # genuine short-label slots (title "3-6 words", one-sentence intro/headline)
@@ -1335,6 +1255,240 @@ RULES: dict[str, list[Rule]] = {
     # prompts in v2.1.218 (the proactive /schedule-offer feature is gone from the
     # binary; grep of the v2.1.218 bundle finds neither "background agent to do it"
     # nor "Quote the artifact"). -3 rules total from the two files.
+
+    # -------------------------------------------------------------------------
+    # v2.1.222 sync: bucket-analysis of the 110 new/reworded prompts (the
+    # artifact-comment-thread / auto-reply family, plus the new prototype/
+    # whiteboard/workshop skills). Classifier-flagged 10 candidates; most are
+    # legitimately KEEP, not lift, per Part 1's decision procedure:
+    #   - skill-artifact-pr-review.md / skill-artifact-pr-review-2.md: the
+    #     "4,000 changed lines -> read highest-signal files, not the raw diff"
+    #     strategy is a genuine context-budget constraint (unlike the allowlist
+    #     scan's "cap at 50 sessions so this stays fast", nothing here trades
+    #     depth for speed) and already discloses exactly what it covered via the
+    #     `Coverage` row/field — that is the opposite of silently holding back.
+    #     "skip diagrams you'd have to force" is proportionality for genuinely
+    #     trivial PRs (substantial PRs explicitly get 3-7 concern blocks), not a
+    #     blanket cap.
+    #   - skill-prototype-when-to-use-offer-unprompted.md, the matching
+    #     when_to_use text embedded in skill-prototype.md, skill-whiteboard.md's
+    #     offer line, and system-reminder-plan-mode-prototype-option.md's offer
+    #     line: "one short line" for an UNPROMPTED, unsolicited offer is
+    #     medium-appropriate (an uninvited pitch should be easy to wave off, not
+    #     expanded into a pitch), not a "hold back capability" nerf. Same
+    #     reasoning for skill-whiteboard.md's "short note, not a briefing" —
+    #     the actual collaboration happens on the board, not in chat.
+    #   - agent-prompt-artifact-comment-reply-composer.md and
+    #     -edit-composer.md: "brief" reply text is the register of a posted
+    #     comment-thread reply (short-form by genre, like a PR comment), and the
+    #     JSON-only / no-preamble output is machine-executed, a genuine parsing
+    #     requirement (decision-procedure item 1).
+    # The prototype skill's actual WORKING FLOW once the user says yes — not the
+    # unprompted offer — did have real process/chat-brevity caps; rules below.
+    # -------------------------------------------------------------------------
+    "skill-prototype.md": [
+        Rule(
+            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            description="prototype description: drop the 'short' intake cap",
+        ),
+        Rule(
+            # v2.1.231: upstream rewrote this whole paragraph (now starts "When
+            # asking:"); same numeric cap, new wording — stock/unnerf updated to
+            # match, description/intent unchanged.
+            stock="two to four questions, each a single pointed sentence, in\none short message",
+            unnerf="as many questions as the ambiguity genuinely requires, each a single pointed sentence",
+            description="prototype intake: drop the 2-4-question cap and the one-message limit",
+        ),
+        Rule(
+            stock="Before building, send one short message: what you take the idea to be,",
+            unnerf="Before building, send a message covering what you take the idea to be,",
+            description="prototype assumptions: drop the 'one short message' cap",
+        ),
+        Rule(
+            # v2.1.231: identical wording, just a shifted line-wrap point
+            # (reflowed elsewhere in the file) — stock/unnerf newline updated.
+            stock="Give the user the link plus one or two lines: what the prototype shows,\nwhat is faked, and the obvious next step.",
+            unnerf="Give the user the link plus a summary of what the prototype shows,\nwhat is faked, and the obvious next step.",
+            description="prototype publish: drop the 'one or two lines' cap",
+        ),
+        Rule(
+            stock="close with a\nshort list of what a real build would still need that the prototype\nskipped",
+            unnerf="close with a\ncomplete list of what a real build would still need that the prototype\nskipped",
+            description="prototype close: 'short list' -> 'complete list'",
+        ),
+    ],
+    "skill-prototype-description.md": [
+        Rule(
+            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
+            description="prototype menu description: drop the 'short' intake cap (sibling of skill-prototype.md)",
+        ),
+    ],
+    "system-reminder-plan-mode-prototype-option.md": [
+        Rule(
+            stock="Write a short plan to the plan file naming the prototype-first approach",
+            unnerf="Write a plan to the plan file naming the prototype-first approach",
+            description="plan-mode prototype option: drop the 'short plan' cap",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.222 sync (bucket-analyze.mjs, 2026-08-05): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.222.json
+    # -------------------------------------------------------------------------
+    "skill-whiteboard.md": [
+        Rule(
+            stock="Reply in chat with a line or two — what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why — no plan dumped in either.",
+            unnerf="Reply in chat with what you drew and where, plus the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why — no plan dumped in either.",
+            description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.231 sync (bucket-analyze.mjs, 2026-08-13): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.231.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-commit-slash-command-verify-and-hook-failure.md": [
+        Rule(
+            stock="Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+            unnerf="Read whatever additional code, history, or files you need to describe the change accurately.",
+            description="commit slash command: allow reading beyond the supplied git context",
+        ),
+    ],
+    "agent-prompt-pr-slash-command-single-message-and-url.md": [
+        Rule(
+            stock="Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+            unnerf="Read whatever additional code, history, or files you need to describe the change accurately.",
+            description="PR slash command: allow reading beyond the supplied git context",
+        ),
+    ],
+    "skill-artifact-pr-review-2.md": [
+        Rule(
+            stock="digest the PR into a concise, meaningful review — so a field earns its\nlength by selection, never by completeness.",
+            unnerf="digest the PR into a meaningful review — so a field carries every detail\nthe reviewer needs to decide.",
+            description="PR review artifact: fields carry what the reviewer needs, not a selection cap",
+        ),
+    ],
+    "skill-artifact-pr-review.md": [
+        Rule(
+            stock="- concerns: 0-3, ONLY genuine judgment questions a human reviewer should\n  weigh",
+            unnerf="- concerns: every genuine judgment question a human reviewer should\n  weigh",
+            description="PR review artifact: drop the 0-3 ceiling on reviewer concerns",
+        ),
+    ],
+    "agent-prompt-commit-message-zero-context-reader.md": [
+        Rule(
+            stock="Short beats complete: after one pass the reader should know what the change does and what to check",
+            unnerf="Give the reader what the change does and what to check, at whatever length that takes",
+            description="commit message: drop 'short beats complete'",
+        ),
+    ],
+    "agent-prompt-managed-agents-onboarding-flow.md": [
+        Rule(
+            stock="At most one batched follow-up for true gaps.",
+            unnerf="Batch follow-up questions for the true gaps the description leaves.",
+            description="managed-agents onboarding: drop the one-follow-up cap",
+        ),
+    ],
+    "agent-prompt-dream-memory-consolidation-phases.md": [
+        Rule(
+            stock="Don't exhaustively read transcripts. Look only for things you already suspect matter.",
+            unnerf="Read as much of the transcripts as the consolidation needs, including what you did not already suspect mattered.",
+            description="dream consolidation: drop the transcript-reading cap",
+        ),
+    ],
+    "agent-prompt-artifact-comment-thread-analyst.md": [
+        Rule(
+            stock="plain text, under 30 lines, and the first line",
+            unnerf="plain text, as long as the thread's detail warrants, and the first line",
+            description="comment-thread analyst: drop the 30-line cap on the brief",
+        ),
+    ],
+    "agent-prompt-commit-slash-command-git-safety-and-task.md": [
+        Rule(
+            stock="Draft a concise (1-2 sentences) commit message that focuses on the \"why\" rather than the \"what\"",
+            unnerf="Draft a commit message that focuses on the \"why\" rather than the \"what\", at the length the change warrants",
+            description="commit slash command: drop the 1-2-sentence commit message cap",
+        ),
+    ],
+    "skill-workshop.md": [
+        Rule(
+            stock="Size the draft and the\n   background by selection, never completeness: a few short paragraphs\n   stating the plan",
+            unnerf="Size the draft and the\n   background by what the decisions need: as many paragraphs as it takes to\n   state the plan",
+            description="workshop draft: size by what the decisions need, not by selection over completeness",
+        ),
+    ],
+    "system-reminder-usage-limit-grace-window-checkpoint.md": [
+        Rule(
+            stock="list up to 3 short bullets of the most impactful remaining work",
+            unnerf="list the remaining work as bullets, most impactful first, with enough detail to resume each one",
+            description="usage-limit grace window: drop the 3-bullet cap on the remaining-work handoff",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.232 sync (bucket-analyze.mjs, 2026-08-14): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.232.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-web-fetch-specialist.md": [
+        Rule(
+            stock="- Keep the report focused on what was asked. Do not paste whole pages back.",
+            unnerf="- Report everything on the page that bears on the caller's request, including what they did not know to ask for. Write a report, not the raw page pasted back.",
+            description="web-fetch specialist: report everything relevant, not only what was literally asked",
+        ),
+    ],
+    "skill-design.md": [
+        Rule(
+            stock="density — so it looks native by default. Say in one line what you\n   matched",
+            unnerf="density — so it looks native by default. Name the tokens, components,\n   and values you matched",
+            description="design canvas: drop the one-line cap on reporting the matched design system",
+        ),
+    ],
+    "skill-artifact-design.md": [
+        Rule(
+            stock="Before writing code, sketch a short design plan — a compact token system with color, type, and layout:",
+            unnerf="Before writing code, write the design plan — a token system with color, type, and layout, specified so every build decision derives from it:",
+            description="artifact-design process: drop the 'short'/'compact' cap on the design plan",
+        ),
+    ],
+    "tool-description-product-feedback-draft.md": [
+        Rule(
+            stock="Write `details` as short labeled bullets in this exact order — one to three lines each, no narrative paragraphs:",
+            unnerf="Write `details` as labeled bullets in this exact order, each carrying every detail a reader needs to act on it without coming back for more:",
+            description="feedback draft: drop the one-to-three-lines cap on each details bullet",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.235 sync (bucket-analyze.mjs, 2026-08-19): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.235.json
+    # -------------------------------------------------------------------------
+    "system-prompt-coordinator-mode.md": [
+        Rule(
+            stock="But don't parallelize simple tasks: a question or small task that takes a handful of tool calls is faster done in a single loop (one worker) than fanned out.",
+            unnerf="Keep a task in one worker only when splitting it would add no coverage.",
+            description="coordinator concurrency: fan out unless splitting adds no coverage",
+        ),
+    ],
+    "system-prompt-turn-updates-narration.md": [
+        Rule(
+            stock="Before you start, say in a line what you're about to do; brief updates while you work help the user follow along. Close with a short recap that stands on its own",
+            unnerf="Before you start, explain what you're about to do; substantive updates while you work help the user follow along. Close with a complete recap that stands on its own",
+            description="turn-updates narration: substantive updates and a complete recap (mirrors write-for-a-teammate)",
+        ),
+    ],
+    "system-reminder-goal-check-in-background-work-progress.md": [
+        Rule(
+            stock="If they are progressing, say so briefly and keep waiting;",
+            unnerf="If they are progressing, report what their output shows — what is done, what is still running — and keep waiting;",
+            description="goal check-in: report what the background work has done, then keep waiting",
+        ),
+    ],
 }
 
 

@@ -22,7 +22,7 @@
  *
  *       PURE HASHING — one string, one sha256, no runs to re-align and no fuzzy
  *       tier. The pieces are the string's VALUE, not the source spelling that
- *       produced it: the extractor normalizes the AST first (lib/normalize-ast.mjs),
+ *       produced it: the extractor normalizes the AST first (engine/normalize-ast.mjs),
  *       so a prompt written as a quoted literal, as a `+` chain, or as a backtick
  *       template is literally the same node shape by the time it is read, and the
  *       canonical form here is byte-identical to what `canonicalText(node)` yields
@@ -59,7 +59,7 @@ import { pathToFileURL } from "node:url";
 // The ONE marker-escaping rule, shared with the normalizer so the catalog's
 // canonical form and a live AST node's canonical form are the same bytes.
 // (normalize-ast.mjs is dependency-free, so this stays a pure module.)
-import { escapeMarkers, SLOT } from "../lib/normalize-ast.mjs";
+import { escapeMarkers, SLOT } from "../engine/normalize-ast.mjs";
 
 export const HASH_ALGO = "sha256";
 export const sha256 = (text) =>
@@ -68,7 +68,7 @@ export const sha256 = (text) =>
 /**
  * Canonical byte form of an entry: the single string a normalized AST node
  * renders to. Literal runs interleaved with BARE `${}` slot markers — see
- * lib/normalize-ast.mjs `canonicalText`, which produces byte-identical output
+ * engine/normalize-ast.mjs `canonicalText`, which produces byte-identical output
  * straight from the node. Keeping both sides on one encoding is what makes
  * `identityHash(entry)` and `sha256(canonicalText(node))` the same number by
  * construction, so the catalog and the patcher can never disagree about what

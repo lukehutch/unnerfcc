@@ -1,0 +1,226 @@
+{
+  "ccVersion": "2.1.231",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "agent-prompt-artifact-comment-edit-rules.md",
+      "verdict": "keep",
+      "reasoning": "The \"brief\" applies to text posted as an artifact comment-thread reply, bundled with genuine posting-gate mechanics (plain text only, no emoji, ordinary spaces) — calibration 3 keeps that channel's register. The substantive requirement, stating specifically what changed as the viewer-visible audit record, is already uncapped."
+    },
+    {
+      "file": "agent-prompt-commit-slash-command-verify-and-hook-failure.md",
+      "verdict": "lift",
+      "reasoning": "\"Do not run additional commands to read or explore code beyond the git context above\" caps how far Claude may investigate before writing the commit message — Group 3, with no stated resource reason and no mechanical dependency. Removing it breaks nothing: the single-message staging instruction and the git-safety rules stand on their own.",
+      "rule": {
+        "stock": "Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+        "unnerf": "Read whatever additional code, history, or files you need to describe the change accurately.",
+        "description": "commit slash command: allow reading beyond the supplied git context"
+      }
+    },
+    {
+      "file": "system-reminder-usage-limit-approaching-checkpoint.md",
+      "verdict": "keep",
+      "reasoning": "The reminder fires because the usage budget is nearly exhausted and states that reason in its first words, so the checkpoint cap and the ban on new subagents are a genuine resource constraint (calibration 1), not a speed-motivated nerf. Lifting it would spend budget the user no longer has and strand them mid-task."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "\"Default to the simplest tier\" selects an architecture for the user's own application, and the passage defines simplest as \"the least code you own\" — it recommends the larger hosted platform over a hand-rolled agent loop. It caps neither Claude's investigation nor its implementation depth; it is API teaching material about product selection."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-resolved-thread-note.md",
+      "verdict": "keep",
+      "reasoning": "\"A short reply is wanted\" reports what the human who commented on an already-resolved thread actually asked for, in artifact comment-thread register — calibration 3. The directive that carries weight here (the thread stays resolved) is not a brevity cap."
+    },
+    {
+      "file": "agent-prompt-pr-slash-command-single-message-and-url.md",
+      "verdict": "lift",
+      "reasoning": "Same investigation cap as the commit slash command: \"do not run additional commands to read or explore code beyond the git context above\" bounds how well Claude can understand the change it is describing in the PR. Group 3, no stated reason, and rules are per-file, so this sibling needs its own flip.",
+      "rule": {
+        "stock": "Do not run additional commands to read or explore code beyond the git context above, and do not use any non-git tools for this task.",
+        "unnerf": "Read whatever additional code, history, or files you need to describe the change accurately.",
+        "description": "PR slash command: allow reading beyond the supplied git context"
+      }
+    },
+    {
+      "file": "system-prompt-communicating-with-the-user-lead-with-outcome.md",
+      "verdict": "lift",
+      "reasoning": "\"The way to keep output short is to be selective about what you include (drop details that don't change what the reader would do next)\" instructs Claude to drop detail from what it tells the user — a Group-1 chat-length cap. The genuinely good half of the sentence (never compress into fragments, abbreviations, arrow chains, or jargon) is preserved by the flip.",
+      "rule": {
+        "stock": "The way to keep output short is to be selective about what you include (drop details that don't change what the reader would do next), not to compress the writing",
+        "unnerf": "Include whatever the reader needs to act without asking a follow-up, and write it out rather than compressing it",
+        "description": "communicating with the user: include what the reader needs instead of dropping detail to stay short"
+      }
+    },
+    {
+      "file": "system-reminder-artifact-thread-reply-and-resolve-tail.md",
+      "verdict": "keep",
+      "reasoning": "\"Post a brief reply saying what you did\" governs text posted into an artifact comment thread — calibration 3 keeps that medium's register. The substantive instructions around it (resolve only what you addressed, leave it open while the commenter still needs an answer) are uncapped."
+    },
+    {
+      "file": "tool-description-artifact-comments.md",
+      "verdict": "keep",
+      "reasoning": "This is the Artifact tool's description of comments/reply/resolve: the \"brief reply\" is comment-thread text (calibration 3) and the 4096-byte limit is a real posting cap. Nothing here bounds Claude's reasoning or the work it does before replying."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "lift",
+      "reasoning": "\"A field earns its length by selection, never by completeness\" subordinates completeness in every prose field of a human-facing review briefing — a Group-1/3 cap on substantive reporting. The paragraph's genuinely good rules (lead with the answer, don't restate what the page already shows, never compress into fragments or arrow-chains) survive the flip untouched.",
+      "rule": {
+        "stock": "digest the PR into a concise, meaningful review — so a field earns its\nlength by selection, never by completeness.",
+        "unnerf": "digest the PR into a meaningful review — so a field carries every detail\nthe reviewer needs to decide.",
+        "description": "PR review artifact: fields carry what the reviewer needs, not a selection cap"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "lift",
+      "reasoning": "The flagged large-PR rule is a keep — a real context-budget constraint paired with mandatory disclosure of what was skipped (calibration 1) — but this file also caps `concerns` at 0-3, a numeric ceiling on genuine reviewer-facing judgment calls, which Part 1's no-numeric-output-limits rule lifts. The \"genuine judgment question\" filter is preserved; only the count ceiling goes, and nothing indexes the array by position.",
+      "rule": {
+        "stock": "- concerns: 0-3, ONLY genuine judgment questions a human reviewer should\n  weigh",
+        "unnerf": "- concerns: every genuine judgment question a human reviewer should\n  weigh",
+        "description": "PR review artifact: drop the 0-3 ceiling on reviewer concerns"
+      }
+    },
+    {
+      "file": "agent-prompt-commit-message-zero-context-reader.md",
+      "verdict": "lift",
+      "reasoning": "\"Short beats complete\" is a bare Group-1 preference for brevity over completeness on the commit message itself, the deliverable of this prompt. The readability rules beside it (one idea per sentence, define shorthand on first use) are style, not depth, and stay.",
+      "rule": {
+        "stock": "Short beats complete: after one pass the reader should know what the change does and what to check",
+        "unnerf": "Give the reader what the change does and what to check, at whatever length that takes",
+        "description": "commit message: drop 'short beats complete'"
+      }
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-flow.md",
+      "verdict": "lift",
+      "reasoning": "\"At most one batched follow-up for true gaps\" caps how much clarification the onboarding interview may seek before emitting a config, the same shape as the 2-4-question intake cap this project already lifted in skill-prototype. The batching (ask them together, don't interrogate) is kept; only the ceiling goes.",
+      "rule": {
+        "stock": "At most one batched follow-up for true gaps.",
+        "unnerf": "Batch follow-up questions for the true gaps the description leaves.",
+        "description": "managed-agents onboarding: drop the one-follow-up cap"
+      }
+    },
+    {
+      "file": "system-reminder-artifact-auto-reply-resolved-thread-tail.md",
+      "verdict": "keep",
+      "reasoning": "\"Post a brief reply saying what you did\" is artifact comment-thread text (calibration 3), and the rest of the line is a state rule (the thread stays resolved) rather than a cap on work."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "lift",
+      "reasoning": "The five existing rules already cover the intake, assumptions, publish, and gaps-list caps. The remaining one — \"One short line per requirement\" on the approved requirements brief — caps a substantive deliverable an implementing session must build from (calibration 2's contrast case), while the numbering, which is the real mechanic, is preserved.",
+      "rule": {
+        "stock": "One short line per requirement, numbered",
+        "unnerf": "One numbered entry per requirement, specific enough to implement from",
+        "description": "prototype brief: requirements specific enough to implement, not one short line"
+      }
+    },
+    {
+      "file": "system-reminder-artifact-auto-edit-summary-reply-posted-2.md",
+      "verdict": "keep",
+      "reasoning": "The directive here is to review the automatic edit and resolve the thread if the change is right; the \"brief reply\" is artifact comment-thread text (calibration 3). The review itself carries no cap."
+    },
+    {
+      "file": "system-reminder-artifact-auto-edit-summary-reply-posted.md",
+      "verdict": "keep",
+      "reasoning": "This file contains no brevity directive at all — it says the summary reply posted, review the change, and edit or deactivate if it missed the mark. The classifier's \"brief reply\" note matches the `-2` sibling, not this text."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "lift",
+      "reasoning": "\"Make the offer one short line\" is an unprompted, unsolicited pitch and stays per calibration 2, but \"Open with a short note, not a briefing\" caps how Claude hands over a deliverable the user asked for — Group 1, and the same class as the step-4 chat-reply cap this file already has a rule for. The message's content list and the \"no plan dumped in chat\" split are untouched.",
+      "rule": {
+        "stock": "Open with a short note, not a briefing: that you put up a",
+        "unnerf": "Open with a note the reader can act on: that you put up a",
+        "description": "whiteboard publish note: drop the 'short note, not a briefing' cap"
+      }
+    },
+    {
+      "file": "agent-prompt-dream-memory-consolidation-phases.md",
+      "verdict": "lift",
+      "reasoning": "\"Look only for things you already suspect matter\" caps discovery in a memory-consolidation pass whose whole job is finding what is worth persisting, and no resource reason is given (contrast calibration 1's large-diff rule, which states its reason and discloses coverage). The targeted-grep mechanics on the line above, including the `tail -50` bound, are left in place.",
+      "rule": {
+        "stock": "Don't exhaustively read transcripts. Look only for things you already suspect matter.",
+        "unnerf": "Read as much of the transcripts as the consolidation needs, including what you did not already suspect mattered.",
+        "description": "dream consolidation: drop the transcript-reading cap"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-comment-thread-analyst.md",
+      "verdict": "lift",
+      "reasoning": "The ANALYSIS BRIEF is consumed by an orchestrating composer agent, which Part 1 says should get a thorough report, and \"under 30 lines\" caps it. The actual parse contract — the first line being exactly \"ANALYSIS BRIEF\", without which the message is discarded — is preserved by the flip.",
+      "rule": {
+        "stock": "plain text, under 30 lines, and the first line",
+        "unnerf": "plain text, as long as the thread's detail warrants, and the first line",
+        "description": "comment-thread analyst: drop the 30-line cap on the brief"
+      }
+    },
+    {
+      "file": "agent-prompt-commit-slash-command-git-safety-and-task.md",
+      "verdict": "lift",
+      "reasoning": "\"Draft a concise (1-2 sentences) commit message\" is a numeric length cap on the prompt's deliverable — Group 1 wearing a number. The good clause, focusing on the \"why\" rather than the \"what\", is preserved, and the git-safety protocol above it is untouched.",
+      "rule": {
+        "stock": "Draft a concise (1-2 sentences) commit message that focuses on the \"why\" rather than the \"what\"",
+        "unnerf": "Draft a commit message that focuses on the \"why\" rather than the \"what\", at the length the change warrants",
+        "description": "commit slash command: drop the 1-2-sentence commit message cap"
+      }
+    },
+    {
+      "file": "agent-prompt-pr-slash-command-git-safety.md",
+      "verdict": "keep",
+      "reasoning": "This file is only the PR slash command's git-safety list — no config edits, no force push to main, no skipped hooks, no interactive `-i` — which is decision-procedure item 3, protecting the user's own repository. The flagged \"1-2 sentences\" commit-message cap is not in this file; it lives in the commit slash command's task section."
+    },
+    {
+      "file": "agent-prompt-quick-pr-creation.md",
+      "verdict": "keep",
+      "reasoning": "The flagged \"concise (1-2 sentences)\" text is not in this file. What is here is the git-safety protocol (item 3) plus a task section that pushes the other way — analyze ALL commits included in the PR, not just the latest."
+    },
+    {
+      "file": "skill-workshop.md",
+      "verdict": "lift",
+      "reasoning": "\"Size the draft and the background by selection, never completeness: a few short paragraphs\" caps the depth of the plan document that is this skill's deliverable — Group 3 on substantive human-facing work. The scoping clauses that do real work (only background a decision depends on, don't retell the conversation) are preserved.",
+      "rule": {
+        "stock": "Size the draft and the\n   background by selection, never completeness: a few short paragraphs\n   stating the plan",
+        "unnerf": "Size the draft and the\n   background by what the decisions need: as many paragraphs as it takes to\n   state the plan",
+        "description": "workshop draft: size by what the decisions need, not by selection over completeness"
+      }
+    },
+    {
+      "file": "tool-parameter-artifact-action-comments-reply.md",
+      "verdict": "keep",
+      "reasoning": "A tool-parameter description of the artifact `action` field — an output-format contract, which Part 5 treats as essentially always keep — and the \"brief reply\" it mentions is artifact comment-thread text (calibration 3)."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-composer.md",
+      "verdict": "keep",
+      "reasoning": "The composer's only output is one posted comment: \"brief, no preamble ... Reply with ONLY the comment text\" is the posting channel's contract (comment-thread genre plus a strict no-preamble/plain-text gate that rejects emoji and exotic spaces), decision-procedure item 1 plus calibration example 3. Depth is already protected in the same prompt — \"answer it directly and substantively\" — and the other \"brief\" is on the acknowledgement of a change request the composer cannot perform, not on substantive answering."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The flagged passage is verbatim calibration example 1: over roughly 4,000 changed lines, read the highest-signal files instead of the raw diff, then state exactly what was covered (\"most of the diff (12 of 40 files)\", set the `coverage` field, \"Never imply full coverage you don't have\"). That is a genuine context-budget constraint paired with mandatory disclosure — the opposite of silently holding back. The other brevity hits in this file (`bottom_line` <=600 chars, 2-3 followups, up to 10 diagram nodes) are layout contracts for the rendered page, bucket-1 keeps."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "Same passage and same call as ref 26 (this file is the sibling variant): the 4,000-changed-line threshold routes an oversized diff to highest-signal files and requires `actions_read` plus a `Coverage` row to name what was skipped, so nothing is dropped silently. Its remaining caps (<=60/<=80/<=100 char labels, 2-4 followups, at most 8 keys) are the artifact page's rendering and input-schema contracts, not depth limits on the review."
+    },
+    {
+      "file": "system-prompt-coordinator-mode.md",
+      "verdict": "keep",
+      "reasoning": "None of the three flagged elements is a depth cap on this file's text. The concurrency paragraph is already maximally pro-parallel (\"Parallelism is your superpower\", \"don't serialize work that can run simultaneously\", \"cover multiple angles\"); the trailing hedge is scoped to \"a question or small task that takes a handful of tool calls\", where fanning out adds coordination overhead and splits context without adding any investigation — flipping it would make the tool worse, so I lean keep per the conservative rule. \"Just verify the happy path\" sits inside an example list of purpose statements (item 2), and the file's own verification section already mandates real proof over rubber-stamping. The launch-note brevity is not in this file at all — it is `${POST_LAUNCH_RESPONSE_INSTRUCTION}`, whose value is catalogued separately as `system-prompt-coordinator-briefly-tell-user-what-you-launched.md` and must be ruled there (Part 6 retarget), alongside the existing `tool-description-cloud-agent-launched-result` / `tool-result-cloud-agent-launched-notify-user` flips."
+    },
+    {
+      "file": "system-reminder-usage-limit-grace-window-checkpoint.md",
+      "verdict": "lift",
+      "reasoning": "\"Up to 3 short bullets\" is a numeric output limit on a handoff the user needs precisely because the session is about to stop — item 4, and squarely the \"no numeric output limits\" rule (keep the ordering, drop the ceiling). The genuinely resource-driven clauses stay untouched: finish the current step first, and don't start subagents or long-running work that the grace window would kill mid-flight. Note the near-identical sibling `system-reminder-usage-limit-approaching-checkpoint.md` carries the same sentence and needs the same flip under its own key.",
+      "rule": {
+        "stock": "list up to 3 short bullets of the most impactful remaining work",
+        "unnerf": "list the remaining work as bullets, most impactful first, with enough detail to resume each one",
+        "description": "usage-limit grace window: drop the 3-bullet cap on the remaining-work handoff"
+      }
+    }
+  ]
+}

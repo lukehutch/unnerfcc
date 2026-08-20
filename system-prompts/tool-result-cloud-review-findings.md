@@ -2,14 +2,16 @@
 name: 'Tool Result: Cloud review findings'
 description: >-
   Introduces the findings a cloud review produced, followed by the rendered
-  findings and the follow-up instructions.
-ccVersion: 2.1.219
+  findings, any --fix or launch-note instructions, and the pull-request posting
+  status.
+ccVersion: 2.1.231
 variables:
   - FINDINGS_LIST
-  - FINDINGS_SUMMARY
-  - FOLLOW_UP_INSTRUCTIONS
+  - FIX_INSTRUCTIONS
+  - REVIEW_NOTE_INSTRUCTIONS
+  - PR_POST_STATUS_NOTE
 -->
 
 The cloud review produced the following findings:
 
-${FINDINGS_LIST}${FINDINGS_SUMMARY}${FOLLOW_UP_INSTRUCTIONS}
+${FINDINGS_LIST}${FIX_INSTRUCTIONS}${REVIEW_NOTE_INSTRUCTIONS}${PR_POST_STATUS_NOTE}

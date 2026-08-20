@@ -1,12 +1,12 @@
 <!--
 name: 'Skill: Read contract type defs before MCP calls'
 description: >-
-  Requires reading the extracted type definitions file before writing any
-  window.claude.mcp call, as it is authoritative over any remembered API shape.
-ccVersion: 2.1.219
+  Closes the artifact call-contract note — the read directive it interpolates
+  names the extracted files that are authoritative for this contract version
+  over any remembered API shape.
+ccVersion: 2.1.235
 variables:
-  - CONTRACT_DIR
-  - TYPE_DEFS_FILENAME
+  - READ_CONTRACT_FILES_DIRECTIVE
   - ADDITIONAL_CONTRACT_NOTES
 -->
-. Read `${CONTRACT_DIR}/${TYPE_DEFS_FILENAME}` before writing any `window.claude.mcp` call — it is authoritative for this contract version over any remembered API shape. ${ADDITIONAL_CONTRACT_NOTES}
+. ${READ_CONTRACT_FILES_DIRECTIVE} authoritative for this contract version over any remembered API shape. ${ADDITIONAL_CONTRACT_NOTES}
