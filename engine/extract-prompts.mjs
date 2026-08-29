@@ -186,6 +186,60 @@ export function extract(code, version, { all = false } = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Whole-file markdown/text asset extraction (v2.1.251+)
+// ---------------------------------------------------------------------------
+// v2.1.251 moved a real slice of Claude Code's own prompt/skill/reference
+// content OUT of JS string literals and into standalone .md/.txt asset
+// modules (confirmed by content, not just by name: SKILL-*.md are skill
+// bodies, README-*.md and <topic>-*.md are reference docs, loopAutonomous
+// Preamble(Persistent)-*.md are the autonomous-loop system prompts, etc).
+// extract()'s Babel parser can't see these — they aren't JS — and they were
+// previously silently swallowed by the same catch-and-skip meant for native
+// binaries and HTML templates, meaning this content had zero classification,
+// catalog, or un-nerf coverage at all, not just a few missed reword matches.
+//
+// Each such file gets ONE catalog entry spanning its ENTIRE content — there
+// is no sub-file structure to extract the way there is for JS string
+// literals scattered through code, so pieces is always a single element and
+// identifiers is always []. Confirmed empirically (2026-08-29, real v2.1.251
+// binary): zero of the 121 genuine .md/.txt asset files contain a bare ${}
+// runtime-interpolation slot (the convention used everywhere else in this
+// project for a real slot). The ~40 files that DO contain ${...} are a
+// different category: verbatim bundled source of an external design
+// system's own Storybook/build files (named like
+// source-storybook.mjs-<hash>.txt.zst), shipped as reference material for
+// the Artifact tool's design-system integration — not Claude Code's own
+// prompt text. isMarkdownAssetPath excludes them by their embedded
+// real-extension-before-hash naming pattern (FOREIGN_ASSET_RE): a genuine
+// prompt asset's Bun-assigned hash suffix follows the topic name directly
+// (`loopAutonomousPreamble-07qcyhv4.md`), while a bundled foreign file's
+// suffix follows its OWN original extension (`source-storybook.mjs-
+// 125aecbd.txt.zst` — the `.mjs` is the giveaway, not the trailing `.txt`
+// every zstd-compressed text module shares).
+// [0-9a-z]{6,}, not just hex: confirmed empirically that Bun's hash suffix
+// alphabet is wider than hex (e.g. "893t268n", "zm5eq8m1" — real suffixes on
+// genuine .html-named foreign assets that a hex-only pattern would have
+// missed and misclassified as prompt content).
+const FOREIGN_ASSET_RE = /\.(mjs|jsx?|tsx?|html?|css|py|json)-[0-9a-z]{6,}$/i;
+
+export function isMarkdownAssetPath(relPath) {
+  const base = relPath.replace(/\.zst$/i, '');
+  if (!/\.(md|txt)$/i.test(base)) return false;
+  const stem = base.replace(/\.(md|txt)$/i, '');
+  return !FOREIGN_ASSET_RE.test(stem);
+}
+
+export function extractMarkdownAsset(source, version) {
+  const text = normalizeVersion(source, version);
+  if (!text.trim() || looksLikeBlob(text)) return [];
+  return [{
+    name: '', id: '', description: '',
+    pieces: [text], identifiers: [], identifierMap: {},
+    version,
+  }];
+}
+
+// ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 function readVersion(cliPath) {

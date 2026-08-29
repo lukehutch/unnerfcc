@@ -174,7 +174,7 @@ PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candi
 [ -n "$PREV_CATALOG" ] && ok "carry-forward seed: $(basename "$PREV_CATALOG")"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-upgrade-$CC_VERSION-XXXX")"
-CLI_JS="$WORK/cli.js"
+CLI_JS="$WORK/cli-js"  # a directory (one file per Bun module) since v2.1.251's multi-module build; see engine/bun-binary.mjs unpackToDir
 # Only discard the work dir on SUCCESS. It holds the relabel chunks and the
 # Claude-authored labels-*.json — hours of model output that cannot be
 # regenerated cheaply. Wiping it on a failed run turns a recoverable validation
@@ -225,7 +225,12 @@ echo "$UNPACK_OUT" | grep -q "BUN_FORMAT_INCOMPATIBLE" && bun_incompatible "$UNP
 [ $RC -eq 3 ] && bun_incompatible "$UNPACK_OUT"
 [ $RC -eq 0 ] || die "unpack failed (rc=$RC): $UNPACK_OUT"
 echo "$UNPACK_OUT" | grep -qE "version=$CC_VERSION" || warn "unpacked JS version tag != $CC_VERSION (continuing)"
-ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}') of JS"
+# CLI_JS is now a directory of one file per Bun module, so total size comes
+# from unpack's own "bytes=<n>" stdout line (summed across the blob it parsed)
+# rather than `wc -c` on a single file.
+UNPACK_BYTES="$(echo "$UNPACK_OUT" | grep -oE 'bytes=[0-9]+' | grep -oE '[0-9]+' || echo 0)"
+UNPACK_MODULES="$(echo "$UNPACK_OUT" | grep -oE 'modules=[0-9]+' | grep -oE '[0-9]+' || echo '?')"
+ok "unpacked $(awk -v b="$UNPACK_BYTES" 'BEGIN{printf "%.1fMB", b/1048576}') of JS across $UNPACK_MODULES module(s)"
 
 # --- 1b. classify new strings via Claude (prompt/non-prompt + un-nerf) ------
 # SHA-256-fingerprint every string; only strings NEW to this build (or prompts
@@ -233,16 +238,28 @@ ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}') of JS"
 # (data/string-catalog.json) persists, so this is cheap on a normal upgrade and
 # only large on the one-time bootstrap.
 log "Classifying new strings via Claude (cached by SHA-256)"
+# classify.mjs's own "ONE JOB, NOT MANY" policy puts every pending string in a
+# single Claude call by default (--batch 0) — right for a normal release's few
+# hundred new fragments, but a single spawnSync call is hard-capped at 30 min
+# (engine timeout, kills with SIGTERM/143 past it), and classify.mjs's own
+# comment names --batch N as the sanctioned escape hatch for exactly "an
+# oversized bootstrap": a version jump large enough to accumulate thousands of
+# new strings (observed: ~34 strings/min including bundle-grep lookups, so
+# 11k+ pending strings cannot finish in one 30-minute call). CLASSIFY_BATCH
+# keeps each call comfortably under that ceiling; below it, a batch this size
+# never triggers (the whole pending set fits in one chunk, unchanged from
+# today), so this is a no-op for every normal release.
+CLASSIFY_BATCH="${CLASSIFY_BATCH:-300}"
 PENDING="$(node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --dry-run 2>/dev/null | grep -oE '"toClassify":[0-9]+' | grep -oE '[0-9]+' || echo '?')"
 if [ "$PENDING" = "0" ]; then
   ok "no new strings — classification store is current"
 elif [ "$PENDING" -gt 2000 ] && [ "$ASSUME_YES" -eq 0 ]; then
-  warn "$PENDING strings need classifying (a first-run bootstrap — a large Claude job)."
+  warn "$PENDING strings need classifying (a first-run bootstrap — a large Claude job, chunked at $CLASSIFY_BATCH/call so it survives the 30-min per-call cap)."
   printf '  Run it now? [y/N] '; read -r a
-  case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
-    *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION' later";; esac
+  case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
+    *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION --batch $CLASSIFY_BATCH' later";; esac
 else
-  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
+  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
   [ -f "$REPO/data/unnerf-candidates.json" ] && ok "un-nerf candidates for review: data/unnerf-candidates.json"
 fi
 
@@ -403,7 +420,7 @@ ok "un-nerfs applied + idempotent"
 # --- 6. verify the un-nerfs actually patch the binary ----------------------
 if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   log "Verifying un-nerfs patch the binary (vendored patcher + repack + boot-check)"
-  PATCHED_JS="$WORK/patched.js"; PATCHED_BIN="$WORK/claude-patched.exe"
+  PATCHED_JS="$WORK/patched-js"; PATCHED_BIN="$WORK/claude-patched.exe"
   # Release gate: exit 3 means a real un-nerf failed to splice (see [LOST] banner)
   # — block the release so the drifted anchor gets fixed. exit 2 = invalid output.
   set +e; SPLICE_OUT="$(node "$PATCH_CLI" apply "$CLI_JS" "$NEW_CATALOG" "$SYS_PROMPTS" "$PATCHED_JS" 2>&1)"; SRC=$?; set -e
@@ -418,10 +435,15 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   # regression — same idea as the prompt-checksum manifest.
   POSTURE="$REPO/data/effort-posture.json"; POSTURE_NEW="$WORK/effort-posture.json"
   node "$REPO/engine/apply-code-patches.mjs" posture "$CLI_JS" > "$POSTURE_NEW" 2>/dev/null || true
-  EFF_JS="$WORK/patched.effort.js"
-  set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+  EFF_JS="$WORK/patched-effort-js"
+  # 3 dirs, not 2: apply-code-patches.mjs runs downstream of patch-prompts.mjs's
+  # SPARSE output (only the modules it changed), so it needs the pristine
+  # unpack ($CLI_JS) to search across every module for the effort-config code,
+  # plus that sparse output ($PATCHED_JS) to know what's already changed. See
+  # apply-code-patches.mjs's header comment for the full reasoning.
+  set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$CLI_JS" "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
   echo "$EFF_OUT" | sed 's/^/  /'
-  [ -s "$EFF_JS" ] && PATCHED_JS="$EFF_JS"
+  [ -d "$EFF_JS" ] && PATCHED_JS="$EFF_JS"
   echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
     warn "effort un-nerf incomplete — CC's effort code likely changed; update engine/apply-code-patches.mjs anchors. Prompt un-nerfs are unaffected."
   if [ -f "$POSTURE" ] && [ -s "$POSTURE_NEW" ] && ! diff -q "$POSTURE" "$POSTURE_NEW" >/dev/null 2>&1; then
@@ -439,7 +461,7 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
   # sentinel spot-check
   MISS=0
   for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" "thorough, clear, and rich with explanation"; do
-    grep -qF "$s" "$PATCHED_JS" || { warn "sentinel missing from patched JS: $s"; MISS=$((MISS+1)); }
+    grep -rqF "$s" "$PATCHED_JS" || { warn "sentinel missing from patched JS: $s"; MISS=$((MISS+1)); }
   done
   [ $MISS -eq 0 ] && ok "un-nerf sentinels present in patched binary"
 else

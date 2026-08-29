@@ -179,12 +179,17 @@ if [ "$DRY_RUN" = 1 ]; then log "[dry-run] would unpack, patch, repack, boot-che
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-install-XXXX")"; trap 'rm -rf "$WORK"' EXIT
 
 # --- unpack -> patch -> repack ---------------------------------------------
-CLI_JS="$WORK/cli.js"; PATCHED_JS="$WORK/patched.js"; PATCHED_BIN="$WORK/claude.patched"
+# CLI_JS/PATCHED_JS are directories (one file per Bun module) since v2.1.251's
+# multi-module build; see engine/bun-binary.mjs unpackToDir/repackFromDir.
+CLI_JS="$WORK/cli-js"; PATCHED_JS="$WORK/patched-js"; PATCHED_BIN="$WORK/claude.patched"
 log "Unpacking JS bundle"
 set +e; OUT="$(node "$NATIVE_CLI" unpack "$CC_BIN" "$CLI_JS" 2>&1)"; RC=$?; set -e
 echo "$OUT" | grep -q BUN_FORMAT_INCOMPATIBLE && bun_incompatible "$OUT"; [ $RC -eq 3 ] && bun_incompatible "$OUT"
 [ $RC -eq 0 ] || die "unpack failed: $OUT"
-ok "unpacked $(wc -c < "$CLI_JS" | awk '{printf "%.1fMB", $1/1048576}')"
+# Total size comes from unpack's own "bytes=<n>" stdout line, not `wc -c` on a
+# single file, since CLI_JS is now a directory of many module files.
+UNPACK_BYTES="$(echo "$OUT" | grep -oE 'bytes=[0-9]+' | grep -oE '[0-9]+' || echo 0)"
+ok "unpacked $(awk -v b="$UNPACK_BYTES" 'BEGIN{printf "%.1fMB", b/1048576}')"
 
 log "Splicing un-nerfed prompts into the bundle"
 # Exit codes: 0 ok · 2 output is invalid JS (must NOT repack) · 3 a real un-nerf
@@ -203,11 +208,15 @@ esac
 # Lift CC's silent effort caps (mid-tier model default, /effort capped below the
 # ceiling). Runs on the already-prompt-patched bundle; if an anchor drifted, it
 # reports and we ship the prompt un-nerfs alone. See engine/apply-code-patches.mjs.
-EFF_JS="$WORK/patched.effort.js"
+EFF_JS="$WORK/patched-effort-js"
 log "Applying effort un-nerfs (best-effort)"
-set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
+# 3 dirs, not 2: apply-code-patches.mjs runs downstream of patch-prompts.mjs's
+# SPARSE output (only the modules it changed), so it needs the pristine unpack
+# (CLI_JS) to search across every module for the effort-config code, plus that
+# sparse output (PATCHED_JS) to know what's already changed.
+set +e; EFF_OUT="$(node "$REPO/engine/apply-code-patches.mjs" apply "$CLI_JS" "$PATCHED_JS" "$EFF_JS" 2>&1)"; set -e
 echo "$EFF_OUT" | sed 's/^/    /'
-if [ -s "$EFF_JS" ]; then
+if [ -d "$EFF_JS" ]; then
   PATCHED_JS="$EFF_JS"   # ship prompt + effort un-nerfs
   echo "$EFF_OUT" | grep -q 'SOME MISSING' && \
     warn "effort un-nerf incomplete — CC's effort code likely changed; prompt un-nerfs are unaffected"
@@ -229,7 +238,7 @@ MISS=0
 for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
          "Spawn agents whenever parallel investigation" "investigate thoroughly, then be direct" \
          "thorough, clear, and rich with explanation"; do
-  grep -qF "$s" "$PATCHED_JS" || { warn "sentinel missing: $s"; MISS=$((MISS+1)); }
+  grep -rqF "$s" "$PATCHED_JS" || { warn "sentinel missing: $s"; MISS=$((MISS+1)); }
 done
 [ $MISS -eq 0 ] && ok "all 5 un-nerf sentinels present" || \
   warn "$MISS sentinel(s) missing — patch may be partial for v$CC_VERSION (continuing; the binary boots)"

@@ -67,6 +67,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, unlink
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import { findGeminiApiKey, callGemini, DEFAULT_GEMINI_MODEL } from "./llm-provider.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SYS_PROMPTS = join(REPO, "system-prompts");
@@ -353,6 +354,96 @@ function insertRules(applyUnnerfsPath, ccVersion, accepted) {
   writeFileSync(applyUnnerfsPath, out);
 }
 
+// JSON Schema for the verdicts array. `rule` is always a present object
+// (never null) with the SAME fields regardless of verdict — Gemini's schema
+// dialect is a restricted JSON-Schema subset (confirmed elsewhere in this
+// project: it rejects `additionalProperties` outright), and a nullable
+// nested object isn't a risk worth taking here when it's easy to sidestep:
+// merge()'s own code never reads `rule` at all for a "keep" verdict (its
+// very first branch is `if (v.verdict === "keep") { ...; continue; }`), so
+// analyzeChunkViaGemini nulls `rule` out in post-processing purely to match
+// the documented on-disk contract for a human later reading verdicts.json —
+// not because merge() requires it. NO minItems/maxItems on the outer array:
+// confirmed on classify.mjs (2026-08-29, gemini-3.7-flash) that Gemini's
+// structured-output API rejects that fixed-size constraint with a content-
+// independent 400 somewhere between n=25 and n=100.
+function bucketAnalyzeResultSchema() {
+  return {
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        ref: { type: "integer" },
+        verdict: { type: "string", enum: ["keep", "lift"] },
+        reasoning: { type: "string" },
+        rule: {
+          type: "object",
+          properties: {
+            stock: { type: "string" },
+            unnerf: { type: "string" },
+            description: { type: "string" },
+          },
+          required: ["stock", "unnerf", "description"],
+        },
+      },
+      required: ["ref", "verdict", "reasoning", "rule"],
+    },
+  };
+}
+
+// Analyze ONE chunk via Gemini instead of the (agentic, file-reading) Claude
+// CLI upgrade.sh normally shells out to. Gemini is non-agentic — cannot read
+// chunk-NNN.json/UNNERF-GUIDE.md/the referenced system-prompts/*.md files off
+// disk itself — so all of them are inlined directly into the prompt, mirroring
+// classify.mjs's/relabel.mjs's Gemini paths exactly. The task instructions
+// normally tell the labeler to "read this file yourself" at an absolute repo
+// path; since nothing here can do that, each item's CURRENT full file content
+// is inlined alongside it instead, and the instructions text is corrected to
+// say so, so the model doesn't waste effort trying to reference a path it has
+// no tool to open.
+async function analyzeChunkViaGemini(workDir, chunkNum, model, effort) {
+  const cn = String(chunkNum).padStart(3, "0");
+  const taskMd = readFileSync(join(workDir, "BUCKET-ANALYSIS-TASK.md"), "utf8");
+  const chunk = JSON.parse(readFileSync(join(workDir, `chunk-${cn}.json`), "utf8"));
+  const fileContents = {};
+  for (const it of chunk) {
+    if (fileContents[it.file] !== undefined) continue;
+    try { fileContents[it.file] = readFileSync(join(SYS_PROMPTS, it.file), "utf8"); }
+    catch (e) { fileContents[it.file] = `<<COULD NOT READ: ${e.message}>>`; }
+  }
+  const prompt =
+    `${taskMd}\n\n` +
+    `## Input format override (read this — it changes how you get file content)\n` +
+    `You cannot read files yourself in this environment. Every item below still names its ` +
+    `\`file\`, but instead of opening it at the repo path, look it up in the ` +
+    `"file contents" map that follows — the CURRENT, fully-reconstructed stock text for every ` +
+    `distinct file referenced in your chunk, keyed by filename exactly as it appears in each item.\n\n` +
+    `## chunk-${cn}.json (your assigned items — already provided below, do not look for a file)\n${JSON.stringify(chunk)}\n\n` +
+    `## file contents (keyed by filename; already provided below, do not look for these files)\n${JSON.stringify(fileContents)}`;
+  const found = findGeminiApiKey(REPO);
+  if (!found) {
+    console.error(`bucket-analyze: --provider gemini requires GOOGLE_GEMINI_API_KEY — checked the environment, ${join(REPO, ".env")}, and ~/.env; found none`);
+    return false;
+  }
+  const g = await callGemini({
+    apiKey: found.key, model: model || DEFAULT_GEMINI_MODEL, effort: effort || "medium", prompt,
+    resultSchema: bucketAnalyzeResultSchema(), workDir: null,
+  });
+  if (!g.ok) {
+    console.error(`bucket-analyze: chunk ${cn} gemini call failed: ${g.detail}`);
+    return false;
+  }
+  if (!Array.isArray(g.parsed)) {
+    console.error(`bucket-analyze: chunk ${cn} gemini returned non-array JSON`);
+    return false;
+  }
+  const verdicts = g.parsed.map((v) => (v && v.verdict === "keep" ? { ...v, rule: null } : v));
+  writeFileSync(join(workDir, `verdicts-${cn}.json`), JSON.stringify(verdicts, null, 2));
+  const nLift = verdicts.filter((v) => v && v.verdict === "lift").length;
+  console.error(`bucket-analyze: chunk ${cn} analyzed via gemini (${verdicts.length} verdict(s), ${nLift} lift)`);
+  return true;
+}
+
 function taskInstructions(n, repoAbsPath) {
   return `# Un-nerf bucket-analysis task
 
@@ -459,7 +550,14 @@ start at 0. Do not skip any item.`;
 const DEFAULT_CHUNK_SIZE = 25;
 const DEFAULT_CHUNK_BYTES = 300000; // sum of the referenced files' sizes per chunk
 
-function main(argv) {
+async function main(argv) {
+  const strs = { "--gemini-model": null, "--effort": null };
+  for (const flag of Object.keys(strs)) {
+    const i = argv.indexOf(flag);
+    if (i < 0) continue;
+    strs[flag] = argv[i + 1];
+    argv = argv.filter((_, j) => j !== i && j !== i + 1);
+  }
   const [cmd, ...rest] = argv;
   if (cmd === "prepare" && rest.length === 2) {
     const n = prepare(rest[0], rest[1], DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_BYTES);
@@ -467,13 +565,19 @@ function main(argv) {
   }
   if (cmd === "collect" && rest.length === 1) { collect(rest[0]); return 0; }
   if (cmd === "merge" && rest.length === 3) { merge(rest[0], rest[1], rest[2]); return 0; }
+  if (cmd === "label" && rest.length === 2) {
+    const ok = await analyzeChunkViaGemini(rest[0], rest[1], strs["--gemini-model"], strs["--effort"]);
+    return ok ? 0 : 1;
+  }
   console.error(
     "usage:\n" +
       "  node bucket-analyze.mjs prepare <ccVersion> <workDir>\n" +
       "  node bucket-analyze.mjs collect <workDir>\n" +
-      "  node bucket-analyze.mjs merge   <workDir> <apply-unnerfs.py path> <ccVersion>"
+      "  node bucket-analyze.mjs merge   <workDir> <apply-unnerfs.py path> <ccVersion>\n" +
+      "  node bucket-analyze.mjs label   <workDir> <chunkNum> [--gemini-model M] [--effort E]\n" +
+      "                           (Gemini-only: analyzes one chunk directly, no Claude CLI)"
   );
   return 2;
 }
 
-process.exit(main(process.argv.slice(2)));
+process.exit(await main(process.argv.slice(2)));

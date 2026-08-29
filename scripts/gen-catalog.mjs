@@ -36,53 +36,95 @@
  *   - CANDIDATE: everything else prompt-shaped, written to
  *     `<out>.candidates.json` for the maintainer to review.
  *
+ * MULTI-MODULE INPUT (as of v2.1.251): <jsDir> is a directory produced by
+ * `engine/bun-binary.mjs unpack` — one file per Bun module (zstd modules
+ * already transparently decompressed to plain text) plus a manifest.json.
+ * Earlier builds shipped one ~25MB entry module with everything inlined;
+ * v2.1.251 split it into ~1800 chunk modules with no single "main" one to
+ * special-case (confirmed: the same string can appear in more than one chunk
+ * simultaneously). So every module gets its own extract() call, in-process
+ * (spawning a subprocess per module, as the old single-file flow did once
+ * for the one bundle, would mean ~1800 process spawns) — and many modules
+ * are not JS at all (native .node libraries, an .html .asset template),
+ * which simply fail to parse and are skipped, exactly the failure mode
+ * extract() already needs to survive for one bad file.
+ *
  * USAGE
- *   node gen-catalog.mjs <cliJsPath> <version> <outCatalog.json> <seedCatalog.json>
+ *   node gen-catalog.mjs <jsDir> <version> <outCatalog.json> <seedCatalog.json>
  */
 
-import { readFileSync, writeFileSync, mkdtempSync, copyFileSync, rmSync, existsSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
 import { identityHash, reconstruct } from "./prompt-index.mjs";
+import { extract, isMarkdownAssetPath, extractMarkdownAsset } from "../engine/extract-prompts.mjs";
 
-const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
-const REPO = join(SCRIPT_DIR, "..");
-const EXTRACTOR = join(REPO, "engine", "extract-prompts.mjs");
+const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function die(m, c = 1) { console.error(`gen-catalog: ${m}`); process.exit(c); }
 
-const [cliJs, version, outCatalog, seedCatalog] = process.argv.slice(2);
-if (!cliJs || !version || !outCatalog || !seedCatalog) {
-  die("usage: node gen-catalog.mjs <cliJsPath> <version> <outCatalog.json> <seedCatalog.json>", 2);
+const [jsDir, version, outCatalog, seedCatalog] = process.argv.slice(2);
+if (!jsDir || !version || !outCatalog || !seedCatalog) {
+  die("usage: node gen-catalog.mjs <jsDir> <version> <outCatalog.json> <seedCatalog.json>", 2);
 }
-if (!existsSync(cliJs)) die(`cli.js not found: ${cliJs}`);
-if (!existsSync(EXTRACTOR)) die(`extractor not found: ${EXTRACTOR}`);
+if (!existsSync(jsDir)) die(`module directory not found: ${jsDir}`);
+const manifestPath = join(jsDir, "manifest.json");
+if (!existsSync(manifestPath)) die(`manifest.json not found in ${jsDir} — was this produced by 'bun-binary.mjs unpack'?`);
 if (!existsSync(seedCatalog)) die(`seed catalog not found: ${seedCatalog} (needed for id carry-forward)`);
 
-// 1. Extract the fresh (over-inclusive) catalog into a temp file.
-const work = mkdtempSync(join(tmpdir(), `unnerfcc-gen-${version}-`));
-let fresh;
-try {
-  const workCli = join(work, "cli.js");
-  copyFileSync(cliJs, workCli);
-  writeFileSync(join(work, "package.json"), JSON.stringify({ version }));
-  const freshPath = join(work, "fresh.json");
-  // `--all`: emit EVERY non-blob literal (not just the >=24-char prose set), so
-  // short/structural seed prompts ("[Thinking removed]", "<bash-input>${}…",
-  // "No files found") are present in the fresh set and CARRY by exact identity
-  // hash. Without this they miss extraction AND the bundle-text safety net
-  // (short / em-dash-broken runs), and get spuriously reported REMOVED — which
-  // trips validate-catalog's ">50 removed" gate on an ordinary version bump.
-  const r = spawnSync("node", [EXTRACTOR, workCli, freshPath, "--all"], {
-    stdio: ["ignore", "inherit", "inherit"], maxBuffer: 512 * 1024 * 1024,
-  });
-  if (r.status !== 0) die(`extractor exited ${r.status}`, r.status || 1);
-  fresh = JSON.parse(readFileSync(freshPath, "utf-8"));
-} finally {
-  rmSync(work, { recursive: true, force: true });
+// 1. Extract the fresh (over-inclusive) catalog by running extract() over
+// every module, merging results by identity hash — the SAME dedup key
+// extract() already uses within one file, now applied ACROSS files too, so a
+// string duplicated across chunks by Bun's own splitter still yields exactly
+// one catalog entry (not one per chunk it happens to appear in).
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+const seenHash = new Set();
+const freshPrompts = [];
+let parsedModules = 0, skippedModules = 0, markdownModules = 0;
+for (const entry of manifest.modules) {
+  const filePath = join(jsDir, entry.relPath);
+  let source;
+  try { source = readFileSync(filePath, "utf8"); } catch { skippedModules++; continue; }
+  let items;
+  if (isMarkdownAssetPath(entry.relPath)) {
+    // v2.1.251+: a real slice of Claude Code's own prompt/skill/reference
+    // content lives in standalone .md/.txt asset modules, not JS string
+    // literals — see extract-prompts.mjs's isMarkdownAssetPath/
+    // extractMarkdownAsset header comment for the full writeup (confirmed by
+    // content: SKILL-*.md are skill bodies, README-*.md are reference docs,
+    // loopAutonomousPreamble(Persistent)-*.md are system prompts, etc — and
+    // for what's deliberately EXCLUDED: bundled foreign source from an
+    // external design system's own build, which looks like a text asset by
+    // extension but isn't Claude Code's prompt content at all).
+    items = extractMarkdownAsset(source, version);
+    markdownModules++;
+  } else {
+    try {
+      // `--all`-equivalent (all: true): emit EVERY non-blob literal (not just
+      // the >=24-char prose set), so short/structural seed prompts
+      // ("[Thinking removed]", "<bash-input>${}…", "No files found") are
+      // present in the fresh set and CARRY by exact identity hash. Without this
+      // they miss extraction AND the bundle-text safety net (short /
+      // em-dash-broken runs), and get spuriously reported REMOVED — which
+      // trips validate-catalog's ">50 removed" gate on an ordinary version bump.
+      items = extract(source, version, { all: true });
+    } catch {
+      // Not JS (native binary, HTML asset, foreign bundled design-system
+      // source, etc.) — expected for a meaningful fraction of modules, not an error.
+      skippedModules++;
+      continue;
+    }
+    parsedModules++;
+  }
+  for (const p of items) {
+    const ih = identityHash(p);
+    if (seenHash.has(ih)) continue;
+    seenHash.add(ih);
+    freshPrompts.push(p);
+  }
 }
+console.error(`  scanned ${manifest.modules.length} module(s): ${parsedModules} parsed as JS, ${markdownModules} as whole-file markdown/text assets, ${skippedModules} skipped (not JS or a recognized asset) → ${freshPrompts.length} distinct string(s)`);
+const fresh = { version, prompts: freshPrompts };
 
 // 2. Index the fresh extraction by identity hash.
 const seed = JSON.parse(readFileSync(seedCatalog, "utf-8"));
@@ -90,8 +132,28 @@ const seed = JSON.parse(readFileSync(seedCatalog, "utf-8"));
 // Claude's classification store — the authoritative "is this a prompt?" signal.
 // Loaded here (before the merge) because step 3b needs it to decide which fresh
 // strings to admit, not just which to list as candidates.
+//
+// The two failure modes below are handled differently on purpose: a MISSING
+// store is a legitimate, expected state before the classification bootstrap
+// has ever run (gen-catalog still works, just falls back to the shape
+// heuristic for every string) and stays a quiet note. Anything else — the
+// file exists but fails to read or parse — is surfaced loudly, never silently
+// swallowed: an empty `catch {}` here once hid a plain ReferenceError (a
+// missing `REPO` definition) for an unknown length of time, silently zeroing
+// out EVERY admission and forcing every candidate through the weaker
+// heuristic on every run, which is exactly the "admitted 0, N removed"
+// pattern that looked like a classification or extraction bug but wasn't.
 let classified = {};
-try { classified = JSON.parse(readFileSync(join(REPO, "data", "string-catalog.json"), "utf8")).strings || {}; } catch {}
+const classifyStorePath = join(REPO, "data", "string-catalog.json");
+if (existsSync(classifyStorePath)) {
+  try {
+    classified = JSON.parse(readFileSync(classifyStorePath, "utf8")).strings || {};
+  } catch (e) {
+    console.error(`gen-catalog: WARNING: ${classifyStorePath} exists but could not be read/parsed (${e.message}) — admission and candidate classification will incorrectly fall back to the shape heuristic for EVERY string this run, not just unclassified ones. Fix this before trusting "admitted"/"removed" counts.`);
+  }
+} else {
+  console.error(`gen-catalog: note: no classification store yet at ${classifyStorePath} — admission/candidates use the shape heuristic only (expected only before the classification bootstrap has ever run)`);
+}
 
 // There is NO bundle-text safety net. The extractor parses the ENTIRE bundle
 // into an AST and `--all` mode emits every non-blob literal it contains — one

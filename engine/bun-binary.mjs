@@ -6,9 +6,9 @@
  * This is unnerfcc's OWN implementation (no tweakcc code). It handles the two
  * formats Claude Code ships: an ELF with a `.bun` section (Linux/x64) and a
  * Mach-O with a `__BUN,__bun` segment/section (macOS), both holding Bun's
- * standalone "module graph" blob, whose `cli.js` module is stored as readable
- * `@bun-cjs` source. The blob format is byte-identical across both containers
- * (verified against real binaries) — only the container-level surgery differs:
+ * standalone "module graph" blob. The blob format is byte-identical across
+ * both containers (verified against real binaries) — only the container-level
+ * surgery differs:
  *
  *   ELF `.bun` section / Mach-O `__BUN,__bun` section = [u64 size header][blob]
  *                                                        (u32 header on Bun<1.3.4)
@@ -25,8 +25,27 @@
  *                          moduleFormat, side)                   [36B old fmt = 4 SP + 4 u8]
  *   StringPointer off/len are relative to the blob.
  *
- * Extract is pure-buffer (no deps) for both formats. Repack rebuilds the blob
- * and re-injects it via node-lief (a general ELF/Mach-O library — not tweakcc):
+ * MULTI-MODULE GRAPH (as of v2.1.251): earlier Claude Code builds shipped the
+ * entire application as ONE entry module (~25MB of JS) — the whole toolkit
+ * (this file included) grew up assuming "the bundle" meant that one module.
+ * v2.1.251 split the build into a Bun code-splitting graph: the entry point
+ * (found via `offsets.entryPointId`, unrelated to this change and still
+ * correct) is now a ~20KB dispatcher whose only job is to `import()` roughly
+ * 1800 separate chunk modules on demand. The actual application logic —
+ * including every system prompt — lives scattered across THOSE modules, not
+ * the entry point. Confirmed empirically: the same prompt string can appear
+ * in more than one chunk simultaneously (Bun's splitter duplicates small
+ * shared string constants across chunk boundaries), so there is no single
+ * "main" chunk to special-case — every module must be scanned. A separate
+ * ~60-module subset (`*.md.zst`, `*.txt.zst`) stores larger reference-doc
+ * content as raw zstd frames instead of plain string literals — transparently
+ * decompressed on read and re-compressed on write here (Node's built-in
+ * `node:zlib` has native zstd support; no dependency needed), so every
+ * consumer of this file still just sees plain UTF-8 text.
+ *
+ * Extract/repack are pure-buffer (no deps) for the low-level blob and format
+ * detection; repack re-injects the rebuilt blob via node-lief (a general
+ * ELF/Mach-O library — not tweakcc):
  *
  *   ELF: the section grows, so it is moved to a fresh page-aligned vaddr past
  *   the writable segment, the segment is extended, and the single 8-byte
@@ -47,16 +66,26 @@
  *   re-signed (`codesign --sign -`) before the caller's boot-check runs.
  *
  * If the binary is neither format (or an unrecognized internal layout),
- * extract()/repack() throw an Error whose message begins "BUN_FORMAT:" — the
- * CLI turns that into BUN_FORMAT_INCOMPATIBLE.
+ * parseBinary()/repackFromDir() throw an Error whose message begins
+ * "BUN_FORMAT:" — the CLI turns that into BUN_FORMAT_INCOMPATIBLE.
  *
- * CLI:  node bun-binary.mjs unpack <binary> <out.js>
- *       node bun-binary.mjs repack <binary> <in.js> <out-binary>
+ * CLI:  node bun-binary.mjs unpack <binary> <out-dir>
+ *       node bun-binary.mjs repack <binary> <in-dir> <out-binary>
+ *       node bun-binary.mjs list <binary>
+ *
+ * unpack writes one file per module under <out-dir> (mirroring each module's
+ * own name as a relative path, zstd modules transparently decompressed) plus
+ * a manifest.json repack reads back. repack only needs a REPLACEMENT for
+ * modules that actually changed — any module absent from <in-dir> keeps its
+ * original content untouched, so callers that only patch ~100 of ~1800
+ * modules need not write the other ~1700 back out.
  */
 
-import { readFileSync, writeFileSync, statSync, chmodSync, renameSync, unlinkSync, existsSync, realpathSync } from "node:fs";
+import { readFileSync, writeFileSync, statSync, chmodSync, renameSync, unlinkSync, existsSync, realpathSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { dirname, join, sep } from "node:path";
+import { zstdDecompressSync, zstdCompressSync } from "node:zlib";
 
 const TRAILER = Buffer.from("\n---- Bun! ----\n");
 const SIZEOF_OFFSETS = 32;
@@ -67,6 +96,25 @@ const BLOB_HEADER_ALIGNMENT = 16384;
 const BYTECODE_PREFIX = "// @bun @bytecode";
 const MH_MAGIC_64 = 0xfeedfacf;
 const LC_SEGMENT_64 = 0x19;
+const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
+const MANIFEST_NAME = "manifest.json";
+
+function isZstd(buf) {
+  return buf.length >= 4 && buf.subarray(0, 4).equals(ZSTD_MAGIC);
+}
+
+// Module names are Bun's own import specifiers (e.g. "/$bunfs/root/cli",
+// "/$bunfs/root/src/plugins/functionHooks/hooks-worker/hooks-worker.js") —
+// already unique and already path-shaped. Strip the leading slash to make a
+// safe relative path; refuse anything that would escape outDir (defensive —
+// these names come from Anthropic's own build, not adversarial input, but
+// the check is free).
+function moduleRelPath(name) {
+  const rel = name.replace(/^\/+/, "");
+  const parts = rel.split("/");
+  if (parts.some((p) => p === "..")) throw fmtErr(`unsafe module name (contains ..): ${name}`);
+  return parts.join(sep);
+}
 
 function fmtErr(msg) {
   return new Error("BUN_FORMAT: " + msg);
@@ -215,10 +263,13 @@ function parseModules(blob, offsets, structSize) {
 }
 
 /**
- * Extract the cli.js bundle. Returns { js, meta } where meta carries everything
- * repack() needs (blob, offsets, module table, section geometry, header size).
+ * Parse a Claude Code binary down to its Bun module graph. Returns the meta
+ * object repackFromDir()/unpackToDir() both need (blob, offsets, module
+ * table, section geometry, header size) — no module content is read yet
+ * (that's lazy, via moduleContent() below, since most callers only need a
+ * handful of the ~1800 modules' actual bytes).
  */
-export function extract(binaryPath) {
+export function parseBinary(binaryPath) {
   const buf = readFileSync(binaryPath);
   const format = detectFormat(buf);
   const sec = format === "elf" ? findBunSectionELF(buf) : findBunSectionMachO(buf);
@@ -252,80 +303,175 @@ export function extract(binaryPath) {
   const offsets = parseOffsets(blob);
   const structSize = detectModuleStruct(offsets.modulesPtr.length);
   const modules = parseModules(blob, offsets, structSize);
-  // The entry-point module is identified by ID in the offsets header — Bun's
-  // own authoritative answer, not a guess. Matching by NAME used to be how this
-  // worked (a handful of hardcoded suffixes like "/claude" or "cli.js"), but
-  // that broke the moment the compiled entry file's name changed (v2.1.231
-  // ships it as "/$bunfs/root/cli", matching none of the old patterns) — using
-  // entryPointId is immune to any future renaming.
-  const claude = modules[offsets.entryPointId];
-  if (!claude) throw fmtErr(`entry-point module (id=${offsets.entryPointId}) not found among ${modules.length} module(s)`);
-  const js = spContent(blob, claude.ptrs.contents);
+  if (!modules[offsets.entryPointId]) {
+    throw fmtErr(`entry-point module (id=${offsets.entryPointId}) not found among ${modules.length} module(s)`);
+  }
+  return { format, blob, offsets, structSize, modules, headerSize, section: sec, fileSize: buf.length };
+}
+
+// Raw (possibly zstd-compressed) content of module i, straight from the blob.
+function rawModuleContent(meta, i) {
+  return spContent(meta.blob, meta.modules[i].ptrs.contents);
+}
+
+// Transparently decompressed content of module i — every consumer above this
+// layer sees plain bytes regardless of how Bun stored them on disk.
+function moduleContent(meta, i) {
+  const raw = rawModuleContent(meta, i);
+  return isZstd(raw) ? zstdDecompressSync(raw) : Buffer.from(raw);
+}
+
+/**
+ * Unpack every module to <outDir>, one file per module at a path mirroring
+ * its own name, plus a manifest.json repackFromDir() reads back. zstd modules
+ * are decompressed on the way out; the manifest records which ones were
+ * compressed so repackFromDir() knows to re-compress on the way back in.
+ * Returns a summary (module counts, byte totals, detected version) for the
+ * CLI to report — callers needing module content should read the files this
+ * writes, not hold onto anything from this return value.
+ */
+export function unpackToDir(binaryPath, outDir) {
+  const meta = parseBinary(binaryPath);
+  mkdirSync(outDir, { recursive: true });
+  const manifest = { entryPointId: meta.offsets.entryPointId, modules: [] };
+  let zstdCount = 0, totalBytes = 0;
+  for (let i = 0; i < meta.modules.length; i++) {
+    const m = meta.modules[i];
+    const raw = rawModuleContent(meta, i);
+    const compressed = isZstd(raw);
+    const content = compressed ? zstdDecompressSync(raw) : raw;
+    if (compressed) zstdCount++;
+    totalBytes += content.length;
+    const relPath = moduleRelPath(m.name);
+    const outPath = join(outDir, relPath);
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, content);
+    manifest.modules.push({ index: i, name: m.name, relPath, wasZstd: compressed, size: content.length });
+  }
+  writeFileSync(join(outDir, MANIFEST_NAME), JSON.stringify(manifest, null, 1));
+  const entryJs = moduleContent(meta, meta.offsets.entryPointId);
   return {
-    js: Buffer.from(js),
-    meta: { format, blob, offsets, structSize, modules, headerSize, section: sec, fileSize: buf.length },
+    moduleCount: meta.modules.length,
+    zstdCount,
+    totalBytes,
+    version: versionOf(entryJs),
+    format: meta.format,
   };
 }
 
-// --- blob rebuild (replace the claude module's contents) --------------------
-function rebuildBlob(meta, newJs) {
+// --- blob rebuild (replace zero or more modules' contents) ------------------
+// `replacements` is Map<moduleIndex, Buffer> of NEW plain-text content, already
+// re-compressed by the caller for any module that was originally zstd (see
+// repackFromDir) — every module absent from the map keeps its original bytes
+// untouched, which is the common case (a typical un-nerf pass touches ~100 of
+// ~1800 modules).
+function rebuildBlobMulti(meta, replacements) {
   const { blob, offsets, structSize, modules } = meta;
   const nSP = structSize === MODULE_NEW ? 6 : 4;
-  const clearBytecode = !newJs.subarray(0, BYTECODE_PREFIX.length).toString("latin1").startsWith(BYTECODE_PREFIX);
+  const CONTENTS_FIELD = 1, BYTECODE_FIELD = 3; // index within [name, contents, sourcemap, bytecode, moduleInfo, bytecodeOriginPath]
 
-  // Phase 1: collect each module's strings (replacing claude contents).
-  const strings = []; // flat list, nSP per module, in field order
-  const perModule = [];
+  // Every (module, field) StringPointer, walked in ORIGINAL BLOB ORDER (not
+  // module/field order) so whatever sits BETWEEN tracked strings is preserved
+  // verbatim. This blob is NOT simply "every module's fields packed tightly" —
+  // confirmed empirically on a real v2.1.251 binary: a ~10MB span sits between
+  // two specific modules' fields, addressed by NO module's StringPointer at
+  // all (alignment padding, or a Bun-internal structure this format isn't
+  // fully reverse-engineered enough to name). An earlier version of this
+  // function repacked only the known fields, silently dropped that data, and
+  // produced a blob that segfaulted Bun's runtime at load. Preserving every
+  // original byte outside the fields being intentionally replaced is the only
+  // safe approach for a format this deep into "still not fully understood."
+  const entries = [];
   for (let i = 0; i < modules.length; i++) {
     const m = modules[i];
-    const isClaude = i === offsets.entryPointId;
-    const name = spContent(blob, m.ptrs.name);
-    const contents = isClaude ? newJs : spContent(blob, m.ptrs.contents);
-    const sourcemap = spContent(blob, m.ptrs.sourcemap);
-    const bytecode = isClaude && clearBytecode ? Buffer.alloc(0) : spContent(blob, m.ptrs.bytecode);
-    const fields = [name, contents, sourcemap, bytecode];
-    if (nSP === 6) fields.push(spContent(blob, m.ptrs.moduleInfo), spContent(blob, m.ptrs.bytecodeOriginPath));
-    perModule.push({ fields, enums: [m.encoding, m.loader, m.moduleFormat, m.side] });
-    for (const f of fields) strings.push(f);
+    const ptrs = [m.ptrs.name, m.ptrs.contents, m.ptrs.sourcemap, m.ptrs.bytecode];
+    if (nSP === 6) ptrs.push(m.ptrs.moduleInfo, m.ptrs.bytecodeOriginPath);
+    ptrs.forEach((ptr, field) => entries.push({ module: i, field, ptr }));
   }
+  entries.sort((a, b) => a.ptr.offset - b.ptr.offset);
 
-  // Phase 2: layout (each string NUL-terminated).
-  let off = 0;
-  const strOff = strings.map((s) => { const o = off; off += s.length + 1; return { offset: o, length: s.length }; });
-  const modulesListOffset = off;
-  off += modules.length * structSize;
-  const compileExecArgv = spContent(blob, offsets.compileExecArgvPtr);
-  const ceaOffset = off; off += compileExecArgv.length + 1;
-  const offsetsOffset = off; off += SIZEOF_OFFSETS;
-  const trailerOffset = off; off += TRAILER.length;
+  const newPtr = new Map(); // "module:field" -> {offset, length} in the rebuilt blob
+  const chunks = [];
+  let newOff = 0, origCursor = 0;
+  const push = (buf) => { chunks.push(buf); newOff += buf.length; };
 
-  // Phase 3: write.
-  const out = Buffer.alloc(off);
-  let si = 0;
-  for (const s of strings) { s.copy(out, strOff[si].offset); out[strOff[si].offset + s.length] = 0; si++; }
-  // module structs
-  let mi = 0;
-  for (let m = 0; m < modules.length; m++) {
-    const base = modulesListOffset + m * structSize;
-    for (let k = 0; k < nSP; k++) {
-      const so = strOff[mi++];
-      out.writeUInt32LE(so.offset, base + k * SIZEOF_SP);
-      out.writeUInt32LE(so.length, base + k * SIZEOF_SP + 4);
+  for (const e of entries) {
+    // Gap since the previous tracked string ended, in ORIGINAL coordinates —
+    // copied through byte-for-byte regardless of content. This also supplies
+    // the NUL terminator every string needs: since origCursor advances by the
+    // ORIGINAL length (not the replacement's), the next gap always starts
+    // with whatever byte Bun itself put right after this field — a NUL on
+    // every real bundle checked so far.
+    if (e.ptr.offset > origCursor) push(blob.subarray(origCursor, e.ptr.offset));
+    const replacement = e.field === CONTENTS_FIELD ? replacements.get(e.module) : undefined;
+    const content = replacement ?? spContent(blob, e.ptr);
+    newPtr.set(`${e.module}:${e.field}`, { offset: newOff, length: content.length });
+    push(content);
+    origCursor = e.ptr.offset + e.ptr.length;
+  }
+  // Final gap before the modules struct table begins.
+  if (offsets.modulesPtr.offset > origCursor) push(blob.subarray(origCursor, offsets.modulesPtr.offset));
+
+  const modulesListOffset = newOff;
+  const modulesList = Buffer.alloc(modules.length * structSize);
+  for (let i = 0; i < modules.length; i++) {
+    const m = modules[i];
+    for (let field = 0; field < nSP; field++) {
+      const ptr = newPtr.get(`${i}:${field}`);
+      const base = i * structSize + field * SIZEOF_SP;
+      modulesList.writeUInt32LE(ptr.offset, base);
+      modulesList.writeUInt32LE(ptr.length, base + 4);
     }
-    const eb = base + nSP * SIZEOF_SP;
-    const [e0, e1, e2, e3] = perModule[m].enums;
-    out[eb] = e0; out[eb + 1] = e1; out[eb + 2] = e2; out[eb + 3] = e3;
+    const eb = i * structSize + nSP * SIZEOF_SP;
+    modulesList[eb] = m.encoding; modulesList[eb + 1] = m.loader;
+    modulesList[eb + 2] = m.moduleFormat; modulesList[eb + 3] = m.side;
+    // A replaced module's compiled-bytecode cache no longer matches its new
+    // source. The bytecode bytes themselves were preserved verbatim above
+    // like every other untouched field (harmless — nothing reads past a
+    // pointer's declared length), so zeroing just this struct entry's length
+    // here has the same effect as clearing the content, without needing a
+    // second pass or breaking the single gap-preserving walk above.
+    const replacement = replacements.get(i);
+    if (replacement && !replacement.subarray(0, BYTECODE_PREFIX.length).toString("latin1").startsWith(BYTECODE_PREFIX)) {
+      modulesList.writeUInt32LE(0, i * structSize + BYTECODE_FIELD * SIZEOF_SP + 4);
+    }
   }
-  if (compileExecArgv.length) compileExecArgv.copy(out, ceaOffset);
-  // offsets struct
-  let p = offsetsOffset;
-  out.writeBigUInt64LE(BigInt(offsetsOffset), p); p += 8;           // byteCount = offsets location
-  out.writeUInt32LE(modulesListOffset, p); out.writeUInt32LE(modules.length * structSize, p + 4); p += 8;
-  out.writeUInt32LE(offsets.entryPointId, p); p += 4;
-  out.writeUInt32LE(ceaOffset, p); out.writeUInt32LE(compileExecArgv.length, p + 4); p += 8;
-  out.writeUInt32LE(offsets.flags, p);
-  TRAILER.copy(out, trailerOffset);
-  return out;
+  push(modulesList);
+
+  // Same reasoning as the per-field gaps above: whatever sits between the end
+  // of the ORIGINAL modules struct table and the start of compileExecArgv
+  // (padding/alignment — confirmed non-empty on a real binary) is preserved
+  // verbatim rather than assumed to be zero-width.
+  const modulesListEnd = offsets.modulesPtr.offset + offsets.modulesPtr.length;
+  if (offsets.compileExecArgvPtr.offset > modulesListEnd) {
+    push(blob.subarray(modulesListEnd, offsets.compileExecArgvPtr.offset));
+  }
+
+  const compileExecArgv = spContent(blob, offsets.compileExecArgvPtr);
+  const ceaOffset = newOff;
+  push(compileExecArgv);
+
+  // Same again: the original offsets struct sits at a position derived purely
+  // from blob length (see parseOffsets), so nothing downstream actually
+  // depends on preserving whatever originally followed compileExecArgv — but
+  // preserve it anyway rather than assume it's exactly zero-width, matching
+  // every other boundary in this function.
+  const origCeaEnd = offsets.compileExecArgvPtr.offset + offsets.compileExecArgvPtr.length;
+  const origOffsetsStart = blob.length - SIZEOF_OFFSETS - TRAILER.length;
+  if (origOffsetsStart > origCeaEnd) push(blob.subarray(origCeaEnd, origOffsetsStart));
+
+  const offsetsOffset = newOff;
+  const offsetsBuf = Buffer.alloc(SIZEOF_OFFSETS);
+  let p = 0;
+  offsetsBuf.writeBigUInt64LE(BigInt(offsetsOffset), p); p += 8;   // byteCount = offsets location
+  offsetsBuf.writeUInt32LE(modulesListOffset, p); offsetsBuf.writeUInt32LE(modules.length * structSize, p + 4); p += 8;
+  offsetsBuf.writeUInt32LE(offsets.entryPointId, p); p += 4;
+  offsetsBuf.writeUInt32LE(ceaOffset, p); offsetsBuf.writeUInt32LE(compileExecArgv.length, p + 4); p += 8;
+  offsetsBuf.writeUInt32LE(offsets.flags, p);
+  push(offsetsBuf);
+  push(TRAILER);
+
+  return Buffer.concat(chunks, newOff);
 }
 
 function buildSectionData(blob, headerSize) {
@@ -339,12 +485,27 @@ function buildSectionData(blob, headerSize) {
 const alignBig = (v, a) => (v % a === 0n ? v : v + (a - (v % a)));
 
 /**
- * Repack: rebuild the blob with newJs and write a modified binary to outPath.
- * Uses node-lief for the ELF/Mach-O container surgery (dispatches on format).
+ * Repack: read <inDir>'s manifest, take a replacement for every module it has
+ * a file for (re-compressing back to zstd for any module the manifest marks
+ * wasZstd), leave every other module exactly as it was in the original
+ * binary, and write the rebuilt binary to outPath. Uses node-lief for the
+ * ELF/Mach-O container surgery (dispatches on format).
  */
-export async function repack(binaryPath, newJs, outPath) {
-  const { meta } = extract(binaryPath);
-  const newBlob = rebuildBlob(meta, newJs);
+export async function repackFromDir(binaryPath, inDir, outPath) {
+  const meta = parseBinary(binaryPath);
+  const manifestPath = join(inDir, MANIFEST_NAME);
+  if (!existsSync(manifestPath)) throw fmtErr(`${MANIFEST_NAME} not found in ${inDir} — was this produced by 'unpack'?`);
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+
+  const replacements = new Map();
+  for (const entry of manifest.modules) {
+    const filePath = join(inDir, entry.relPath);
+    if (!existsSync(filePath)) continue; // untouched module — keep original bytes
+    const newContent = readFileSync(filePath);
+    replacements.set(entry.index, entry.wasZstd ? zstdCompressSync(newContent) : newContent);
+  }
+
+  const newBlob = rebuildBlobMulti(meta, replacements);
   const newSection = buildSectionData(newBlob, meta.headerSize);
   if (meta.format === "macho") return repackMachO(binaryPath, newSection, outPath);
   return repackELF(binaryPath, newSection, outPath);
@@ -459,43 +620,33 @@ async function main(argv) {
   const [cmd, bin, a, b] = argv;
   try {
     if (cmd === "unpack" && bin && a) {
-      const { js } = extract(bin);
-      writeFileSync(a, js);
-      const clearBytecode = !js.subarray(0, BYTECODE_PREFIX.length).toString("latin1").startsWith(BYTECODE_PREFIX);
-      console.log(`clearBytecode=${clearBytecode}`);
-      console.log(`version=${versionOf(js)}`);
-      console.log(`bytes=${js.length}`);
+      const summary = unpackToDir(bin, a);
+      console.log(`format=${summary.format} modules=${summary.moduleCount} zstd=${summary.zstdCount}`);
+      console.log(`version=${summary.version}`);
+      console.log(`bytes=${summary.totalBytes}`);
       return 0;
     }
     if (cmd === "repack" && bin && a && b) {
-      const js = readFileSync(a);
-      await repack(bin, js, b);
+      await repackFromDir(bin, a, b);
       console.log(`repacked -> ${b}`);
       return 0;
     }
     if (cmd === "list" && bin) {
-      // Diagnostic: dump every module name in the graph without requiring a
-      // isClaudeModule() match — the entry-point name is under Anthropic's
-      // build config, not Bun's container format, and has changed before.
-      // Use this to find the new pattern when "claude module not found" fires.
-      const buf = readFileSync(bin);
-      const format = detectFormat(buf);
-      const sec = format === "elf" ? findBunSectionELF(buf) : findBunSectionMachO(buf);
-      if (!sec) throw fmtErr("bun section not found");
-      const section = buf.subarray(sec.off, sec.off + sec.size);
-      let headerSize;
-      if (section.length >= 8 && Number(section.readBigUInt64LE(0)) + 8 === section.length) headerSize = 8;
-      else if (section.length >= 4 && section.readUInt32LE(0) + 4 === section.length) headerSize = 4;
-      else throw fmtErr("unrecognized .bun section size header");
-      const blob = section.subarray(headerSize);
-      const offsets = parseOffsets(blob);
-      const structSize = detectModuleStruct(offsets.modulesPtr.length);
-      const modules = parseModules(blob, offsets, structSize);
-      console.log(`format=${format} structSize=${structSize} entryPointId=${offsets.entryPointId} moduleCount=${modules.length}`);
-      modules.forEach((m, i) => console.log(`[${i}]${i === offsets.entryPointId ? " *entry*" : ""} ${m.name} (${m.encoding === 0 ? "text" : "binary"}, ${spContent(blob, m.ptrs.contents).length}B)`));
+      // Diagnostic: dump every module name in the graph. Useful whenever the
+      // entry-point content or a specific module's whereabouts needs checking
+      // by hand — the module list is under Anthropic's build config, not
+      // Bun's container format, and has changed shape before (v2.1.231 renamed
+      // the entry; v2.1.251 split one entry into ~1800 chunk modules).
+      const meta = parseBinary(bin);
+      console.log(`format=${meta.format} structSize=${meta.structSize} entryPointId=${meta.offsets.entryPointId} moduleCount=${meta.modules.length}`);
+      meta.modules.forEach((m, i) => {
+        const raw = rawModuleContent(meta, i);
+        const zstd = isZstd(raw) ? ", zstd" : "";
+        console.log(`[${i}]${i === meta.offsets.entryPointId ? " *entry*" : ""} ${m.name} (${m.encoding === 0 ? "text" : "binary"}, ${raw.length}B${zstd})`);
+      });
       return 0;
     }
-    console.error("usage:\n  node bun-binary.mjs unpack <binary> <out.js>\n  node bun-binary.mjs repack <binary> <in.js> <out-binary>\n  node bun-binary.mjs list <binary>");
+    console.error("usage:\n  node bun-binary.mjs unpack <binary> <out-dir>\n  node bun-binary.mjs repack <binary> <in-dir> <out-binary>\n  node bun-binary.mjs list <binary>");
     return 2;
   } catch (e) {
     if (e && /^BUN_FORMAT:/.test(e.message)) {

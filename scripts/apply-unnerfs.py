@@ -275,8 +275,10 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "skill-dynamic-pacing-loop-execution.md": [
         Rule(
-            stock="3. **Briefly confirm**: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
-            unnerf="3. **Confirm thoroughly**: ${CONFIRMATION_MESSAGE}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you're about to pick and the reasoning that drove the choice, and any observations from this turn that should inform future iterations. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            # v2.1.251 renamed the slot CONFIRMATION_MESSAGE -> CONFIRMATION_TEXT
+            # (verified against the file's own frontmatter variables: list).
+            stock="3. **Briefly confirm**: ${CONFIRMATION_TEXT}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            unnerf="3. **Confirm thoroughly**: ${CONFIRMATION_TEXT}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you're about to pick and the reasoning that drove the choice, and any observations from this turn that should inform future iterations. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             description="dynamic pacing confirm: thorough with reasoning",
         ),
     ],
@@ -293,18 +295,18 @@ RULES: dict[str, list[Rule]] = {
     ],
 
     # -------------------------------------------------------------------------
-    # skill-loop-slash-command.md — thorough /loop scheduling confirmation
+    # skill-loop-interval-to-cron-and-schedule.md: RETIRED in the v2.1.251 sync
+    # (2026-08-29). Grep-verified against the real v2.1.251 binary: the exact
+    # splice point — the numbered "2. Briefly confirm: ..." list item this rule
+    # targeted — no longer exists anywhere in the bundle. The catalog's
+    # `removed` diff also confirms no fresh extraction carries this id forward.
+    # A DIFFERENT, pre-existing sibling id (skill-loop-slash-command-2, carried
+    # unchanged since v2.1.219 — not something this release reworded) has
+    # similar but not identical content (no numbered-list structure, an extra
+    # trailing sentence) and was never covered by its own rule; whether IT
+    # needs an un-nerf is a separate, pre-existing question outside this
+    # release's scope, not something this rule's removal creates.
     # -------------------------------------------------------------------------
-    "skill-loop-interval-to-cron-and-schedule.md": [
-        Rule(
-            # v2.1.219 renamed the slot CANCEL_TIMEFRAME_DAYS -> RECURRING_EXPIRY_DAYS.
-            # Same slot name as the dynamic-mode rule below, but still a distinct node
-            # ("they can cancel" vs "the user can cancel").
-            stock="2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID).",
-            unnerf="2. Confirm thoroughly: what's scheduled, the cron expression, the human-readable cadence, any rounding you applied and why, that recurring tasks auto-expire after ${RECURRING_EXPIRY_DAYS} days, and that they can cancel sooner with ${CRON_DELETE_TOOL_NAME} (include the job ID). Give the user enough information to understand exactly what will run and when.",
-            description="/loop scheduling confirm: thorough with rounding rationale",
-        ),
-    ],
     # Dynamic-mode /loop carries the SAME "Briefly confirm" text but with its own
     # variables (RECURRING_EXPIRY_DAYS / SCHEDULE_CONFIRM_NOTE_FN vs the
     # fixed-interval CANCEL_TIMEFRAME_DAYS / ADDITIONAL_INFO_FN) and "the user can
@@ -387,8 +389,10 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "system-prompt-autonomous-loop-check.md": [
         Rule(
-            stock="If everything is genuinely quiet — no conversation work, no PR maintenance — say so in one sentence and stop. No summary of what you checked, no list of what you might do later. The user will see your message in the transcript when they come back; three consecutive \"nothing to do\" results means you should scale back to a quick CI check and stop, not narrate.",
-            unnerf="If everything is genuinely quiet — no conversation work, no PR maintenance — report what you checked (PRs inspected, CI status, threads reviewed, branches compared) and confirm that nothing needed action. Give the user a clear, substantive status message so they understand what the autonomous check covered and can trust the \"nothing to do\" verdict. If three consecutive checks land on \"nothing to do,\" scale subsequent checks back to a focused CI/threads sweep, but still report what you looked at.",
+            # v2.1.251: upstream flattened both em-dashes to plain hyphens;
+            # text otherwise byte-identical.
+            stock="If everything is genuinely quiet - no conversation work, no PR maintenance - say so in one sentence and stop. No summary of what you checked, no list of what you might do later. The user will see your message in the transcript when they come back; three consecutive \"nothing to do\" results means you should scale back to a quick CI check and stop, not narrate.",
+            unnerf="If everything is genuinely quiet - no conversation work, no PR maintenance - report what you checked (PRs inspected, CI status, threads reviewed, branches compared) and confirm that nothing needed action. Give the user a clear, substantive status message so they understand what the autonomous check covered and can trust the \"nothing to do\" verdict. If three consecutive checks land on \"nothing to do,\" scale subsequent checks back to a focused CI/threads sweep, but still report what you looked at.",
             description="autonomous loop-check: report what was inspected even when quiet",
         ),
         Rule(
@@ -541,8 +545,9 @@ RULES: dict[str, list[Rule]] = {
             description="ultraplan: thorough planning, exhaustive in-context exploration (env may not support subagents)",
         ),
         Rule(
-            stock="When you've decided on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions — they need enough specificity to act (which files, what changes, what order, how to verify), but they don't need you to restate the obvious or pad it with generic advice.",
-            unnerf="When you've decided on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions — give them extensive specificity: which files, what changes, what order, how to verify, the rationale behind non-obvious decisions, edge cases to watch for, and anything you'd want to know if you were implementing it cold. Err on the side of more detail — the implementer cannot ask you to clarify.",
+            # v2.1.251: upstream flattened both em-dashes to plain hyphens.
+            stock="When you've decided on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions - they need enough specificity to act (which files, what changes, what order, how to verify), but they don't need you to restate the obvious or pad it with generic advice.",
+            unnerf="When you've decided on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions - give them extensive specificity: which files, what changes, what order, how to verify, the rationale behind non-obvious decisions, edge cases to watch for, and anything you'd want to know if you were implementing it cold. Err on the side of more detail - the implementer cannot ask you to clarify.",
             description="ultraplan: extensive specificity for the implementer",
         ),
     ],
@@ -561,8 +566,9 @@ RULES: dict[str, list[Rule]] = {
         # in this sibling prompt too (wording differs only by "settled on" vs
         # "decided on"). Without this rule the specificity cap stayed stock here.
         Rule(
-            stock="When you've settled on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions — they need enough specificity to act (which files, what changes, what order, how to verify), but they don't need you to restate the obvious or pad it with generic advice.",
-            unnerf="When you've settled on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions — give them extensive specificity: which files, what changes, what order, how to verify, the rationale behind non-obvious decisions, edge cases to watch for, and anything you'd want to know if you were implementing it cold. Err on the side of more detail — the implementer cannot ask you to clarify.",
+            # v2.1.251: upstream flattened both em-dashes to plain hyphens.
+            stock="When you've settled on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions - they need enough specificity to act (which files, what changes, what order, how to verify), but they don't need you to restate the obvious or pad it with generic advice.",
+            unnerf="When you've settled on an approach, call ExitPlanMode with the plan. Write it for someone who'll implement it without being able to ask you follow-up questions - give them extensive specificity: which files, what changes, what order, how to verify, the rationale behind non-obvious decisions, edge cases to watch for, and anything you'd want to know if you were implementing it cold. Err on the side of more detail - the implementer cannot ask you to clarify.",
             description="remote-planning: extensive specificity for the implementer (mirrors ultraplan)",
         ),
     ],
@@ -695,7 +701,14 @@ RULES: dict[str, list[Rule]] = {
         ),
     ],
 
-    "agent-prompt-agent-hook.md": [
+    # v2.1.251 renamed this file/catalog id (agent-prompt-agent-hook ->
+    # agent-prompt-condition-verification-instructions) — content unchanged,
+    # confirmed byte-identical for the spliced sentence itself; upstream just
+    # wrapped it with more surrounding context (an inspect-the-codebase lead-in
+    # and a structured ok:true/false return instruction), which is why pure
+    # identity hashing saw it as a reword. Key renamed to match; stock/unnerf
+    # text needs no change.
+    "agent-prompt-condition-verification-instructions.md": [
         Rule(
             stock='Use as few steps as possible - be efficient and direct.',
             unnerf='Take whatever steps are needed to verify the condition correctly - investigate thoroughly, then be direct.',
@@ -1094,8 +1107,12 @@ RULES: dict[str, list[Rule]] = {
     # which lifts the same cap with the same replacement text.
     "tool-description-workflow.md": [
         Rule(
-            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
-            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
+            # v2.1.251 renamed the slot AGENT_TOOL_NAME -> SUBAGENT_TOOL_NAME
+            # (verified against the file's own frontmatter variables: list).
+            # Em-dashes here are unchanged, unlike several sibling files this
+            # release that flattened theirs to hyphens — don't "fix" these too.
+            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${SUBAGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
+            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${SUBAGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
             description='workflow: keep opt-in gate, but surface beneficial parallelism proactively',
         ),
     ],
@@ -1340,8 +1357,17 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     "skill-whiteboard.md": [
         Rule(
-            stock="Reply in chat with a line or two — what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why — no plan dumped in either.",
-            unnerf="Reply in chat with what you drew and where, plus the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right — send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why — no plan dumped in either.",
+            # v2.1.251 substantially rewrote this skill (security-event handling,
+            # seq-floor/replay tracking, page-authenticity checks all added) —
+            # verified the OLD example text is gone entirely, but the SAME
+            # brevity cap survives, now stricter ("one line at most" vs the old
+            # "a line or two ... at most a sentence of reasoning"), with a new
+            # example ("answered on the board - added a queue between the API
+            # and the workers"). Judgment call on the unnerf wording, since
+            # there's no old phrasing left to mirror mechanically — kept the
+            # same drop-the-length-cap philosophy as the original rule.
+            stock="In chat, one line at most (\"answered on the board - added a queue\n  between the API and the workers\"). If the user asked to keep it all\n  on the board, say nothing in chat unless something failed.",
+            unnerf="In chat, say what you drew and why (\"answered on the board - added a queue\n  between the API and the workers\"). If the user asked to keep it all\n  on the board, say nothing in chat unless something failed.",
             description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
         ),
     ],
@@ -1367,9 +1393,20 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-artifact-pr-review-2.md": [
         Rule(
-            stock="digest the PR into a concise, meaningful review — so a field earns its\nlength by selection, never by completeness.",
-            unnerf="digest the PR into a meaningful review — so a field carries every detail\nthe reviewer needs to decide.",
+            # v2.1.251: upstream flattened the em-dash to a plain hyphen.
+            stock="digest the PR into a concise, meaningful review - so a field earns its\nlength by selection, never by completeness.",
+            unnerf="digest the PR into a meaningful review - so a field carries every detail\nthe reviewer needs to decide.",
             description="PR review artifact: fields carry what the reviewer needs, not a selection cap",
+        ),
+        # v2.1.251 bucket-analysis (data/bucket-analysis-2.1.251.json, ref 77).
+        # Added by hand: bucket-analyze.mjs's merge reported "inserted" but its
+        # duplicate-key guard actually suppressed the write, since this file
+        # already had a rule block. Sibling of the pre-existing 0-3 concerns cap
+        # rule on skill-artifact-pr-review.md — same nerf, the other payload doc.
+        Rule(
+            stock="- concerns: 0-3 genuine judgment questions a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
+            unnerf="- concerns: every genuine judgment question a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
+            description="PR review payload: drop the 0-3 ceiling on reviewer concerns",
         ),
     ],
     "skill-artifact-pr-review.md": [
@@ -1420,6 +1457,17 @@ RULES: dict[str, list[Rule]] = {
             unnerf="Size the draft and the\n   background by what the decisions need: as many paragraphs as it takes to\n   state the plan",
             description="workshop draft: size by what the decisions need, not by selection over completeness",
         ),
+        # v2.1.251 bucket-analysis (data/bucket-analysis-2.1.251.json, ref 29).
+        # Added by hand: bucket-analyze.mjs's merge reported "inserted" but its
+        # duplicate-key guard actually suppressed the write, since this file
+        # already had a rule block. Same nerf as the rule above, at the HTML
+        # lane's own copy of the draft-sizing instruction (the rule above
+        # targets the markdown lane's wording).
+        Rule(
+            stock="the working-draft prose (a few short paragraphs stating\nthe plan - sized by selection, never completeness), the\nMAIN diagram",
+            unnerf="the working-draft prose (as many paragraphs as it takes to state the plan - sized by what the decisions need), the\nMAIN diagram",
+            description="workshop HTML draft: size by what the decisions need, not by selection over completeness",
+        ),
     ],
     "system-reminder-usage-limit-grace-window-checkpoint.md": [
         Rule(
@@ -1443,21 +1491,30 @@ RULES: dict[str, list[Rule]] = {
     ],
     "skill-design.md": [
         Rule(
-            stock="density — so it looks native by default. Say in one line what you\n   matched",
-            unnerf="density — so it looks native by default. Name the tokens, components,\n   and values you matched",
+            # v2.1.251: the "— so it looks native by default" lead-in clause is
+            # gone (that sentence now just ends at "density."); the cap itself
+            # is unchanged and still present as its own sentence right after.
+            # Narrowed the stock string to just the cap (confirmed unique in
+            # the file) rather than chase the shifted surrounding wording.
+            stock="Say in one line what you matched",
+            unnerf="Name the tokens, components, and values you matched",
             description="design canvas: drop the one-line cap on reporting the matched design system",
         ),
     ],
     "skill-artifact-design.md": [
         Rule(
-            stock="Before writing code, sketch a short design plan — a compact token system with color, type, and layout:",
-            unnerf="Before writing code, write the design plan — a token system with color, type, and layout, specified so every build decision derives from it:",
+            # v2.1.251: upstream flattened the em-dash to a plain hyphen; also
+            # matched the unnerf text's own em-dash to the file's new convention.
+            stock="Before writing code, sketch a short design plan - a compact token system with color, type, and layout:",
+            unnerf="Before writing code, write the design plan - a token system with color, type, and layout, specified so every build decision derives from it:",
             description="artifact-design process: drop the 'short'/'compact' cap on the design plan",
         ),
     ],
     "tool-description-product-feedback-draft.md": [
         Rule(
-            stock="Write `details` as short labeled bullets in this exact order — one to three lines each, no narrative paragraphs:",
+            # v2.1.251: upstream replaced the em-dash with a comma here (unlike
+            # most siblings this release, which flattened theirs to a hyphen).
+            stock="Write `details` as short labeled bullets in this exact order, one to three lines each, no narrative paragraphs:",
             unnerf="Write `details` as labeled bullets in this exact order, each carrying every detail a reader needs to act on it without coming back for more:",
             description="feedback draft: drop the one-to-three-lines cap on each details bullet",
         ),
@@ -1489,6 +1546,25 @@ RULES: dict[str, list[Rule]] = {
             description="goal check-in: report what the background work has done, then keep waiting",
         ),
     ],
+    # -------------------------------------------------------------------------
+    # v2.1.251 sync (bucket-analyze.mjs, 2026-08-29): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.251.json
+    # -------------------------------------------------------------------------
+    "skill-whiteboard-mp.md": [
+        Rule(
+            stock="Reply in chat with a line or two - what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right - send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why - no plan dumped in either.",
+            unnerf="Reply in chat with what you drew and where, and the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right - send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why.",
+            description="multiplayer whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.251 sync (bucket-analyze.mjs, 2026-08-29): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.251.json
+    # -------------------------------------------------------------------------
 }
 
 

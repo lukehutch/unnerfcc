@@ -87,11 +87,38 @@
 //       chain -> also accept "max" (belt-and-braces with P2).
 //
 // CLI
-//   node apply-code-patches.mjs apply   <inJs> <outJs> [--posture-out FILE]
-//   node apply-code-patches.mjs posture <inJs>
-//   node apply-code-patches.mjs verify  <inJs>   # exit 0 iff all patches present
+//   node apply-code-patches.mjs apply   <origJsDir> <inJsDir> <outJsDir> [--posture-out FILE]
+//   node apply-code-patches.mjs posture <jsDir>
+//   node apply-code-patches.mjs verify  <jsDir>   # exit 0 iff all patches present
+//
+// MULTI-MODULE (v2.1.251+): <jsDir>/<inJsDir>/<outJsDir> are directories of one
+// file per Bun module (see engine/bun-binary.mjs unpack), not a single bundle.
+// The patches here are plain regex-over-text (no AST), so every module's raw
+// text can be scanned directly — no parse step, nothing throws on non-JS
+// content, it just never matches. posture() is naturally additive/OR-able
+// across modules (its fields are match COUNTS and boolean presence checks),
+// so posture/verify sum/OR-merge it across every module in <jsDir> — always a
+// pristine unpack (every module physically present), since upgrade.sh only
+// ever calls posture on the fresh, pre-patch bundle.
+//
+// applyCodePatches() is different: P0-P4 are sequential and interdependent
+// (P1 checks P0's own output), which only makes sense run against whichever
+// ONE module actually holds the effort-configuration code — so apply finds
+// that module (the first one where at least one of the 5 named patches, not
+// the separate ascii-invariant check, reports a detail that does not start
+// with "anchor MISSING:", the literal marker every patch uses for "not found
+// here") and patches only it, leaving every other module untouched.
+//
+// apply takes THREE directories, not two, because it runs downstream of
+// patch-prompts.mjs's sparse output: <origJsDir> is the pristine unpack (used
+// to search all ~1800 modules for the one effort module), <inJsDir> is
+// patch-prompts.mjs's outJsDir (manifest + only the modules it changed), and
+// <outJsDir> gets the union of both — every module already carried in
+// <inJsDir>, plus this stage's own patched module — because outJsDir is the
+// last stop before repackFromDir, which only ever consults ONE directory.
 
-import { readFileSync, writeFileSync, existsSync, realpathSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, realpathSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 // The SAME canonicaliser the AST stage writes string literals with. Sharing it is
 // the point: text inserted here is then spelled exactly as a regenerated bundle
 // would spell it, so it survives the next run's parse -> generate unchanged.
@@ -128,6 +155,31 @@ export function posture(js) {
   };
 }
 
+// Merge per-module posture() snapshots into one, for the multi-module CLI
+// paths. Every field here is a match COUNT (additive) or a boolean/enum
+// presence check (OR-able) — see posture()'s own fields — so this is exact,
+// not an approximation: it reproduces byte-for-byte what posture() would
+// report if all modules' text were still one bundle.
+export function mergePosture(postures) {
+  const merged = {
+    defaultEffort: { high: 0, xhigh: 0, max: 0 },
+    effortEnumCapped: 0, effortEnumUncapped: 0, validatorCapped: 0,
+    maxFallback: "unknown", capGuardPresent: false,
+  };
+  for (const p of postures) {
+    merged.defaultEffort.high += p.defaultEffort.high;
+    merged.defaultEffort.xhigh += p.defaultEffort.xhigh;
+    merged.defaultEffort.max += p.defaultEffort.max;
+    merged.effortEnumCapped += p.effortEnumCapped;
+    merged.effortEnumUncapped += p.effortEnumUncapped;
+    merged.validatorCapped += p.validatorCapped;
+    if (p.maxFallback === "xhigh") merged.maxFallback = "xhigh";
+    else if (p.maxFallback === "high" && merged.maxFallback === "unknown") merged.maxFallback = "high";
+    merged.capGuardPresent = merged.capGuardPresent || p.capGuardPresent;
+  }
+  return merged;
+}
+
 // --- the patches ------------------------------------------------------------
 // Each: apply(js) -> { js, status: "applied"|"already"|"failed", detail }.
 // A patch must NEVER throw out of here; it catches its own errors and reports.
@@ -157,14 +209,22 @@ function p0_cascadeMaxFallback(js) {
 
 // P1 — floor model default_effort to "max". "high" is always safe; "xhigh" is
 // raised only when P0's cascade is present (else SKIPPED, fail-safe). See header.
-function p1_floorDefaultEffort(js) {
+//
+// opts.cascadeAppliedElsewhere: MULTI-MODULE — P0's cascade guard and P1's
+// default_effort fields can land in different Bun chunks (confirmed on
+// v2.1.251: they do), so a purely local GUARD_CASCADED.test(js) can read
+// "absent" even though P0 genuinely applied elsewhere in the same bundle.
+// The multi-module orchestrator resolves this GLOBALLY first (one scan of
+// every module) and passes the answer in here, rather than this function
+// trying to see across file boundaries itself.
+function p1_floorDefaultEffort(js, opts = {}) {
   try {
     if (!/default_effort:"[a-z]+"/.test(js)) {
       return { js, status: "failed", detail: `anchor MISSING: no \`default_effort:"..."\` field found — CC's model catalog likely changed its effort-default shape; effort floor NOT applied` };
     }
     const nHigh = (js.match(/default_effort:"high"/g) || []).length;
     const nXhigh = (js.match(/default_effort:"xhigh"/g) || []).length;
-    const cascadeSafe = GUARD_CASCADED.test(js);
+    const cascadeSafe = GUARD_CASCADED.test(js) || !!opts.cascadeAppliedElsewhere;
 
     let out = js;
     const raised = [];
@@ -198,6 +258,17 @@ function p1_floorDefaultEffort(js) {
 }
 
 // P2 — uncap the persisted /effort enum: add "max".
+//
+// MULTI-MODULE: on v2.1.251 this literal appears twice in its own chunk, both
+// keyed `effortLevel:ie([...])` — Bun duplicating ONE schema field verbatim
+// across two structurally-similar schemas (settings.json vs settings.local.json
+// validation, most likely), not two different settings. "effortLevel" is the
+// on-disk persisted-settings key — it crosses the JSON serialization boundary,
+// so unlike a local binding it can't be minifier-mangled, which makes it safe
+// to anchor on literally. When every occurrence is keyed this way, replace all
+// of them; if even one occurrence carries different surrounding context, this
+// really could be an unrelated enum that happens to share the same 4 stock
+// values, and guessing wrong would silently uncap the wrong setting — refuse.
 function p2_uncapEffortEnum(js) {
   try {
     const capped = '["low","medium","high","xhigh"]';
@@ -212,7 +283,19 @@ function p2_uncapEffortEnum(js) {
           : `anchor MISSING: capped enum ["low","medium","high","xhigh"] not found — the /effort setting schema likely changed; enum uncap NOT applied`,
       };
     }
-    if (nCapped > 1) return { js, status: "failed", detail: `ambiguous: ${nCapped} capped effort enums found (expected 1) — refusing to guess which is the /effort setting; enum uncap NOT applied` };
+    if (nCapped > 1) {
+      const KEY_BEFORE = /effortLevel:[$\w]+\($/;
+      let idx = -1, allKeyed = true;
+      while ((idx = js.indexOf(capped, idx + 1)) !== -1) {
+        if (!KEY_BEFORE.test(js.slice(Math.max(0, idx - 40), idx))) { allKeyed = false; break; }
+      }
+      if (!allKeyed) {
+        return { js, status: "failed", detail: `ambiguous: ${nCapped} capped effort enums found (expected 1) — refusing to guess which is the /effort setting; enum uncap NOT applied` };
+      }
+      const out = js.replaceAll(capped, uncapped);
+      if (out.includes(capped)) return { js, status: "failed", detail: `verify failed: capped enum still present after replace` };
+      return { js: out, status: "applied", detail: `added "max" to the persisted /effort enum (${nCapped}× duplicate "effortLevel" schema sites in this chunk, all keyed the same, all patched)` };
+    }
     const out = js.replace(capped, uncapped);
     if ((out.split(capped).length - 1) !== 0) return { js, status: "failed", detail: `verify failed: capped enum still present after replace` };
     return { js: out, status: "applied", detail: `added "max" to the persisted /effort enum (was capped at xhigh)` };
@@ -300,7 +383,7 @@ const PATCHES = [
 
 // Apply all patches best-effort. Returns { js, results, ok }. `ok` is true iff
 // every patch ended "applied" or "already" (i.e. nothing is silently missing).
-export function applyCodePatches(js) {
+export function applyCodePatches(js, opts = {}) {
   const results = [];
   // ASCII INVARIANT. The bundle is pure ASCII and must stay that way for two
   // independent reasons: Bun refuses to boot a standalone container holding a raw
@@ -321,7 +404,7 @@ export function applyCodePatches(js) {
     });
   }
   for (const p of PATCHES) {
-    const r = p.fn(js);
+    const r = p.fn(js, opts);
     js = r.js;
     results.push({ name: p.name, status: r.status, detail: r.detail });
     if (!dirtyInput && NON_ASCII.test(js)) {
@@ -338,24 +421,120 @@ export function applyCodePatches(js) {
   return { js, results, ok, posture: posture(js) };
 }
 
+// --- multi-module directory helpers ------------------------------------------
+// Full read: every module in the manifest is read straight from jsDir. Correct
+// for a pristine `unpackToDir` output where every module is physically present
+// (that's the only kind of directory `posture`/`verify` are ever pointed at —
+// see upgrade.sh, which snapshots posture on the fresh unpack, before any
+// patcher has run and sparsified anything).
+function loadModules(jsDir) {
+  const manifestPath = join(jsDir, "manifest.json");
+  if (!existsSync(manifestPath)) return null;
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  return manifest.modules.map((entry) => ({ relPath: entry.relPath, source: readFileSync(join(jsDir, entry.relPath), "utf8") }));
+}
+
+// Overlay read: like loadModules, but for a directory that sits downstream of
+// another sparse-writing patcher (patch-prompts.mjs) rather than a pristine
+// unpack. That patcher writes only the handful of modules it actually changed
+// plus a carried-forward manifest.json — by design, to skip a babel-generator
+// pass and a file write for the ~1700 modules it never touches. So "the current
+// state of the bundle" is a per-module choice, not a single directory: read
+// from inJsDir if that module was touched, else fall back to origJsDir. This is
+// the same replacement-if-present-else-original rule repackFromDir applies at
+// the binary layer, just applied one layer up, at the unpacked-module layer.
+function loadModulesOverlay(origJsDir, inJsDir) {
+  const manifestPath = join(inJsDir, "manifest.json");
+  if (!existsSync(manifestPath)) return null;
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  return manifest.modules.map((entry) => {
+    const overlayPath = join(inJsDir, entry.relPath);
+    const sourcePath = existsSync(overlayPath) ? overlayPath : join(origJsDir, entry.relPath);
+    return { relPath: entry.relPath, source: readFileSync(sourcePath, "utf8"), fromOverlay: sourcePath === overlayPath };
+  });
+}
+
+// Run P0-P4 across EVERY module and collect whichever ones actually changed.
+// Earlier design ran the whole P0-P4 sequence against a single "relevant"
+// module (the first with any non-"anchor MISSING" result) on the theory that
+// the effort-config code all lives in one place. Empirically false on
+// v2.1.251: P0 (cascade) and P3 (validator) share one chunk, P1 (model
+// catalog defaults) lives in a SECOND chunk, and P4 (PR-summary cap) in a
+// THIRD — Bun's code-splitter groups by import graph, and the resolver,
+// settings schema, model catalog, and PR-description generator are simply
+// different subsystems with different call graphs. Stopping at the first hit
+// silently skipped whichever patches' real homes weren't in that one module.
+//
+// The only genuine cross-patch dependency is P0 -> P1 (p1's cascadeSafe
+// check) — resolved by scanning for the cascade globally FIRST (see
+// cascadeAppliedElsewhere below) rather than per-module, since P0's guard and
+// P1's default_effort fields don't have to be co-located.
+//
+// The anchor/best-result check is scoped to the 5 real PATCHES entries by
+// name, not to every entry in results: a module with pre-existing non-ASCII
+// content unrelated to effort patches at all (a doc string, a genuine unicode
+// UI label) pushes an "ascii-invariant" result whose detail never starts with
+// "anchor MISSING:" — it must never count toward a patch's own verdict.
+const PATCH_NAMES = new Set(PATCHES.map((p) => p.name));
+function applyAcrossModules(modules) {
+  const cascadeAppliedElsewhere = modules.some(
+    (m) => GUARD_CASCADED.test(m.source) || p0_cascadeMaxFallback(m.source).status === "applied"
+  );
+
+  const touched = new Map(); // relPath -> patched source
+  // Per patch name, keep whichever module produced the BEST outcome seen so
+  // far (applied > already > failed) — the headline verdict to report for
+  // that patch, independent of which module(s) happened to hold it.
+  const RANK = { applied: 3, already: 2, failed: 1 };
+  const byPatch = new Map(
+    PATCHES.map((p) => [p.name, { status: "failed", relPath: null, detail: `anchor MISSING: not found in any of ${modules.length} modules` }])
+  );
+
+  for (const m of modules) {
+    const { js: out, results } = applyCodePatches(m.source, { cascadeAppliedElsewhere });
+    if (out !== m.source) touched.set(m.relPath, out);
+    for (const r of results) {
+      if (!PATCH_NAMES.has(r.name)) continue; // exclude ascii-invariant entries
+      const cur = byPatch.get(r.name);
+      if (RANK[r.status] > RANK[cur.status]) byPatch.set(r.name, { status: r.status, relPath: m.relPath, detail: r.detail });
+    }
+  }
+
+  const ok = [...byPatch.values()].every((v) => v.status === "applied" || v.status === "already");
+  return {
+    touched: [...touched.entries()].map(([relPath, source]) => ({ relPath, source })),
+    byPatch,
+    ok,
+    cascadeAppliedElsewhere,
+  };
+}
+
 // --- CLI --------------------------------------------------------------------
 import { pathToFileURL } from "node:url";
 // realpath argv[1] before comparing — import.meta.url is symlink-resolved by
 // Node's loader, argv[1] isn't (e.g. macOS's /tmp -> /private/tmp), so a raw
 // comparison silently skips main() while still exiting 0 when run through one.
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
-  const [cmd, a, b] = process.argv.slice(2);
-  const die = (m, c = 1) => { console.error(`apply-code-patches: ${m}`); process.exit(c); };
+  // a/b/c are reinterpreted per command, same as the old single-file CLI did
+  // (posture/verify take one dir; apply takes three — see its usage string).
+  const [cmd, a, b, c] = process.argv.slice(2);
+  const die = (m, code = 1) => { console.error(`apply-code-patches: ${m}`); process.exit(code); };
   const opt = (n, d) => { const i = process.argv.indexOf(n); return i >= 0 ? process.argv[i + 1] : d; };
+  const requireModules = (dir, label) => {
+    if (!dir || !existsSync(dir)) die(`${label} not found: ${dir}`, 2);
+    const modules = loadModules(dir);
+    if (!modules) die(`manifest.json not found in ${dir} — was this produced by 'bun-binary.mjs unpack'?`, 2);
+    return modules;
+  };
 
   if (cmd === "posture") {
-    if (!a || !existsSync(a)) die(`file not found: ${a}`, 2);
-    console.log(JSON.stringify(posture(readFileSync(a, "utf8")), null, 2));
+    const modules = requireModules(a, "directory");
+    console.log(JSON.stringify(mergePosture(modules.map((m) => posture(m.source))), null, 2));
     process.exit(0);
   }
   if (cmd === "verify") {
-    if (!a || !existsSync(a)) die(`file not found: ${a}`, 2);
-    const p = posture(readFileSync(a, "utf8"));
+    const modules = requireModules(a, "directory");
+    const p = mergePosture(modules.map((m) => posture(m.source)));
     // All effort un-nerfs present iff: no "high"/"xhigh" defaults remain, the
     // resolver cascade is in place, and both /effort caps are lifted.
     const applied = p.defaultEffort.high === 0 && p.defaultEffort.xhigh === 0 &&
@@ -365,19 +544,59 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     process.exit(applied ? 0 : 1);
   }
   if (cmd === "apply") {
-    if (!a || !existsSync(a)) die(`usage: apply <inJs> <outJs> [--posture-out FILE]  (inJs not found)`, 2);
-    if (!b) die(`usage: apply <inJs> <outJs> [--posture-out FILE]  (outJs required)`, 2);
-    const { js, results, ok, posture: post } = applyCodePatches(readFileSync(a, "utf8"));
-    for (const r of results) console.error(`  [${r.status.toUpperCase()}] ${r.name}: ${r.detail}`);
-    writeFileSync(b, js);
+    const usage = "usage: apply <origJsDir> <inJsDir> <outJsDir> [--posture-out FILE]";
+    if (!a || !existsSync(a)) die(`${usage}  (origJsDir not found)`, 2);
+    if (!b || !existsSync(b)) die(`${usage}  (inJsDir not found)`, 2);
+    if (!c) die(`${usage}  (outJsDir required)`, 2);
+    // origJsDir = the pristine unpack (every module present, for the search
+    // across ~1800 modules); inJsDir = patch-prompts.mjs's sparse output
+    // (manifest + only the modules IT changed). Overlaying the two gives the
+    // bundle's true current state per module, exactly like repackFromDir
+    // overlays a sparse dir on top of the original binary at repack time.
+    const modules = loadModulesOverlay(a, b);
+    if (!modules) die(`manifest.json not found in ${b} — was this produced by 'bun-binary.mjs unpack' or patch-prompts.mjs?`, 2);
+
+    mkdirSync(c, { recursive: true });
+    // outJsDir must carry every module patch-prompts.mjs already made, since
+    // this is the last stop before repackFromDir and that tool only consults
+    // ONE directory — anything not carried forward here is silently lost.
+    const manifest = JSON.parse(readFileSync(join(b, "manifest.json"), "utf8"));
+    writeFileSync(join(c, "manifest.json"), JSON.stringify(manifest, null, 1));
+    let carried = 0;
+    for (const m of modules) {
+      if (!m.fromOverlay) continue;
+      const outPath = join(c, m.relPath);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, m.source);
+      carried++;
+    }
+
+    const { touched, byPatch, ok, cascadeAppliedElsewhere } = applyAcrossModules(modules);
+    for (const p of PATCHES) {
+      const r = byPatch.get(p.name);
+      console.error(`  [${r.status.toUpperCase()}] ${p.name}${r.relPath ? ` (${r.relPath})` : ""}: ${r.detail}`);
+    }
+    for (const { relPath, source } of touched) {
+      const outPath = join(c, relPath);
+      mkdirSync(dirname(outPath), { recursive: true });
+      writeFileSync(outPath, source);
+    }
+
     const pOut = opt("--posture-out", null);
-    if (pOut) writeFileSync(pOut, JSON.stringify(post, null, 2) + "\n");
-    console.error(`effort un-nerfs: ${ok ? "all applied/present" : "SOME MISSING (see above) — prompt un-nerfs are unaffected"}`);
-    console.log(b);
+    if (pOut) {
+      // Posture of the bundle AFTER this step: touched modules' new text,
+      // original (overlay) text everywhere else — same replace-if-present-
+      // else-original rule repackFromDir uses at the binary layer.
+      const bySource = new Map(touched.map((t) => [t.relPath, t.source]));
+      const finalPosture = mergePosture(modules.map((m) => posture(bySource.get(m.relPath) ?? m.source)));
+      writeFileSync(pOut, JSON.stringify(finalPosture, null, 2) + "\n");
+    }
+    console.error(`effort un-nerfs: ${ok ? "all applied/present" : "SOME MISSING (see above) — prompt un-nerfs are unaffected"} (${touched.length} module(s) patched, ${carried} carried forward unchanged, cascade ${cascadeAppliedElsewhere ? "present" : "absent"})`);
+    console.log(c);
     // NON-fatal by design: exit 0 even on a miss, so a caller that ignores the
     // exit code still ships the (prompt-patched) bundle. Callers that want to
     // gate on effort can parse the stderr or use `verify`.
     process.exit(0);
   }
-  die(`usage: node apply-code-patches.mjs <apply|posture|verify> ...`, 2);
+  die(`usage: node apply-code-patches.mjs <posture|verify> <jsDir> | apply <origJsDir> <inJsDir> <outJsDir>`, 2);
 }

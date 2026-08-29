@@ -47,9 +47,13 @@
  * carried entry was never named.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { diffCatalogs, reconstruct } from "./prompt-index.mjs";
+import { findGeminiApiKey, callGemini, DEFAULT_GEMINI_MODEL } from "./llm-provider.mjs";
+
+const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function loadJson(p) {
   return JSON.parse(readFileSync(p, "utf-8"));
@@ -416,7 +420,106 @@ const DEFAULT_CHUNK_SIZE = 120;
 // for LABELING-TASK.md, the guide, and the job's own output.
 const DEFAULT_CHUNK_CHARS = 120000;
 
-function main(argv) {
+// JSON Schema for the labels array. NO minItems/maxItems: confirmed on
+// classify.mjs (2026-08-29, gemini-3.7-flash) that Gemini's structured-output
+// API rejects large fixed array-size constraints with a content-independent
+// 400 somewhere between n=25 and n=100 — see classifyResultSchema's comment
+// in classify.mjs for the full writeup.
+//
+// identifierMap is an ARRAY of {key, value} pairs here, NOT the raw
+// {"0": "NAME"} object LABELING-TASK.md's own prose describes (that's what
+// Claude produces and what collect()/merge() expect on disk). Two things
+// forced this: (1) Gemini's schema dialect rejects `additionalProperties`
+// outright ("Unknown name... Cannot find field" — a genuinely restricted
+// JSON-Schema subset, not a bug in this file), so a raw object with unknown
+// keys has no way to tell the model "these values should be populated" at
+// the schema level; (2) confirmed empirically that a bare
+// `identifierMap: {type:"object"}` with no schema-level shape hint makes
+// Gemini emit `{}` for every slotted item regardless of what the prose
+// instructions say — Opus gets this right from prose alone (verified against
+// its own completed chunk), Gemini didn't. An array of {key,value} objects is
+// the same shape as the outer labels array, which DOES come back reliably —
+// so labelChunkViaGemini converts it to the expected object form before
+// writing to disk, keeping collect()/merge() provider-agnostic.
+function labelResultSchema() {
+  return {
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        ref: { type: "integer" },
+        id: { type: "string" },
+        name: { type: "string" },
+        description: { type: "string" },
+        identifierMap: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { key: { type: "string" }, value: { type: "string" } },
+            required: ["key", "value"],
+          },
+        },
+      },
+      required: ["ref", "id", "name", "description"],
+    },
+  };
+}
+
+// Label ONE chunk via Gemini instead of the (agentic, file-reading) Claude CLI
+// upgrade.sh normally shells out to. Gemini is non-agentic — cannot read
+// chunk-NNN.json/removed.json/LABELING-TASK.md off disk itself — so all three
+// are inlined directly into the prompt, exactly mirroring how
+// classify.mjs's Gemini path inlines batch.json + TASK.md. Writes
+// labels-NNN.json in workDir on success, matching the Claude path's contract
+// exactly so collect()/merge() work unchanged regardless of which provider
+// produced which chunk's labels.
+async function labelChunkViaGemini(workDir, chunkNum, model, effort) {
+  const cn = String(chunkNum).padStart(3, "0");
+  const taskMd = readFileSync(join(workDir, "LABELING-TASK.md"), "utf8");
+  const chunk = readFileSync(join(workDir, `chunk-${cn}.json`), "utf8");
+  const removed = existsSync(join(workDir, "removed.json")) ? readFileSync(join(workDir, "removed.json"), "utf8") : "[]";
+  const prompt =
+    `${taskMd}\n\n` +
+    `## chunk-${cn}.json (your assigned chunk — already provided below, do not look for a file)\n${chunk}\n\n` +
+    `## removed.json (already provided below, do not look for a file)\n${removed}\n\n` +
+    `## Output format override (read this — it changes ONE detail above)\n` +
+    `The instructions above describe identifierMap as a JSON object like {"0": "NAME"}. ` +
+    `Your response's identifierMap field must instead be an ARRAY of {"key": "0", "value": "NAME"} ` +
+    `objects, one per slot — same meaning (key = the slot index string, value = the semantic ` +
+    `UPPER_SNAKE name), different shape, purely because of the output schema you're constrained to. ` +
+    `Every item in identifierMapKeys still needs an entry; omit identifierMap entirely only when slots is 0.`;
+  const found = findGeminiApiKey(REPO);
+  if (!found) {
+    console.error(`relabel: --provider gemini requires GOOGLE_GEMINI_API_KEY — checked the environment, ${join(REPO, ".env")}, and ~/.env; found none`);
+    return false;
+  }
+  const g = await callGemini({
+    apiKey: found.key, model: model || DEFAULT_GEMINI_MODEL, effort: effort || "medium", prompt,
+    resultSchema: labelResultSchema(), workDir: null,
+  });
+  if (!g.ok) {
+    console.error(`relabel: chunk ${cn} gemini call failed: ${g.detail}`);
+    return false;
+  }
+  if (!Array.isArray(g.parsed)) {
+    console.error(`relabel: chunk ${cn} gemini returned non-array JSON`);
+    return false;
+  }
+  // Convert identifierMap back from the API's [{key,value}] array shape to
+  // the plain {key: value} object collect()/merge() expect on disk — see the
+  // schema comment above for why the API shape has to differ in the first place.
+  const labels = g.parsed.map((l) => {
+    if (!l || !Array.isArray(l.identifierMap)) return l;
+    const map = {};
+    for (const kv of l.identifierMap) if (kv && typeof kv.key === "string") map[kv.key] = kv.value;
+    return { ...l, identifierMap: map };
+  });
+  writeFileSync(join(workDir, `labels-${cn}.json`), JSON.stringify(labels, null, 2));
+  console.error(`relabel: chunk ${cn} labeled via gemini (${labels.length} label(s))`);
+  return true;
+}
+
+async function main(argv) {
   const nums = { "--chunk-size": DEFAULT_CHUNK_SIZE, "--chunk-chars": DEFAULT_CHUNK_CHARS };
   for (const flag of Object.keys(nums)) {
     const i = argv.indexOf(flag);
@@ -427,6 +530,15 @@ function main(argv) {
       return 2;
     }
     nums[flag] = v;
+    argv = argv.filter((_, j) => j !== i && j !== i + 1);
+  }
+  // Strip label-only string flags the same way, so `rest` below is clean
+  // regardless of which subcommand is running.
+  const strs = { "--gemini-model": null, "--effort": null };
+  for (const flag of Object.keys(strs)) {
+    const i = argv.indexOf(flag);
+    if (i < 0) continue;
+    strs[flag] = argv[i + 1];
     argv = argv.filter((_, j) => j !== i && j !== i + 1);
   }
   const [cmd, ...rest] = argv;
@@ -440,13 +552,19 @@ function main(argv) {
     merge(rest[0], rest[1], rest[2]);
     return 0;
   }
+  if (cmd === "label" && rest.length === 2) {
+    const ok = await labelChunkViaGemini(rest[0], rest[1], strs["--gemini-model"], strs["--effort"]);
+    return ok ? 0 : 1;
+  }
   console.error(
     "usage:\n" +
       "  node relabel.mjs prepare <prevCatalog.json> <nextCatalog.json> <workDir> [--chunk-size N] [--chunk-chars N]\n" +
       "  node relabel.mjs collect <workDir> <nextCatalog.json>\n" +
-      "  node relabel.mjs merge   <nextCatalog.json> <workDir/labels.json> <outCatalog.json>"
+      "  node relabel.mjs merge   <nextCatalog.json> <workDir/labels.json> <outCatalog.json>\n" +
+      "  node relabel.mjs label   <workDir> <chunkNum> [--gemini-model M] [--effort E]\n" +
+      "                           (Gemini-only: labels one chunk directly, no Claude CLI)"
   );
   return 2;
 }
 
-process.exit(main(process.argv.slice(2)));
+process.exit(await main(process.argv.slice(2)));

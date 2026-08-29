@@ -49,7 +49,7 @@
  * status-changes.json + a warning (the apply-unnerfs rule must be re-checked).
  *
  * USAGE
- *   node classify.mjs <cliJs> <ccVersion> [--limit N] [--batch N] [--dry-run]
+ *   node classify.mjs <jsDir> <ccVersion> [--limit N] [--batch N] [--dry-run]
  *     --limit N          classify at most N work items (testing / incremental)
  *     --batch N          strings per Claude call (default 0 = ALL in one file;
  *                        set N>0 only to chunk for testing / an oversized bootstrap)
@@ -61,18 +61,50 @@
  *     --content-file F   classify an explicit [{hash,content}] list, not a bundle
  *     --force            (re)classify every item even if already in the store
  *     --dry-run          report the work to do; don't call Claude or write
+ *     --max-cooldowns N  rate/usage-limit retries before giving up (default 6)
+ *     --cooldown-seconds N  sleep between those retries (default 300)
+ *     --provider P       claude (default) or gemini — see llm-provider.mjs's
+ *                        header for what differs (gemini is non-agentic: no
+ *                        bundle/-grep disambiguation, structured-output JSON
+ *                        instead of a file write). gemini requires
+ *                        GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
+ *                        ~/.env (checked in that order) — a missing key is a
+ *                        hard error, not a silent fallback to claude.
+ *     --gemini-model M   Gemini model id (default gemini-3.7-flash, or
+ *                        $GEMINI_MODEL) — MODEL/--model above is claude-only
  *   Test seam: env CLASSIFY_CLAUDE_CMD, if set, is run (sh -c) in the work dir
  *   instead of spawning claude (it must read batch.json → write result.json) —
  *   lets the top-up/completeness loop be exercised without Opus.
+ *
+ * RESUMABILITY
+ * ------------
+ * Every chunk's results are written to the store the moment that chunk's
+ * result.json parses — not batched up and flushed at the end — so a kill at
+ * ANY point (Ctrl-C, a timeout, a rate limit) loses at most the one in-flight
+ * chunk, never anything already classified. Simply re-running the same
+ * command later picks up exactly where it left off: the SHA-256 store means
+ * every already-classified hash is skipped, not resent, no matter how many
+ * runs it takes across however many separate invocations.
+ *
+ * A round where EVERY chunk fails with no result.json, and the captured
+ * output looks like a rate/usage-limit rejection rather than a genuine
+ * per-string skip, is NOT treated as a content stall — those keep retrying
+ * (sleeping --cooldown-seconds between attempts) for up to --max-cooldowns
+ * tries, since the limit is expected to clear on its own or via an admin
+ * grant, not because the model is struggling with these specific strings.
+ * Once that budget is exhausted the run still exits non-zero (same as any
+ * other incomplete run) — the store already holds everything classified so
+ * far either way, so nothing is lost by giving up and re-running later.
  */
 
-import { readFileSync, writeFileSync, mkdtempSync, existsSync, copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { extract } from "../engine/extract-prompts.mjs";
+import { extract, isMarkdownAssetPath, extractMarkdownAsset } from "../engine/extract-prompts.mjs";
 import { identityHash, reconstruct } from "./prompt-index.mjs";
+import { findGeminiApiKey, callGemini, DEFAULT_GEMINI_MODEL } from "./llm-provider.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const STORE_PATH = join(REPO, "data", "string-catalog.json");
@@ -89,13 +121,24 @@ const asciiSafe = (obj) =>
 
 // --- args -------------------------------------------------------------------
 const argv = process.argv.slice(2);
-const cliJs = argv[0], ccVersion = argv[1];
+const jsDir = argv[0], ccVersion = argv[1];
 const opt = (name, def) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : def; };
 const LIMIT = parseInt(opt("--limit", "0"), 10) || Infinity;
 // Default 0 = put ALL work items in one file / one Opus job (see "ONE JOB" note).
 // --batch N>0 chunks within a round, for testing or an oversized bootstrap.
 const BATCH = parseInt(opt("--batch", "0"), 10);
 const MAX_ROUNDS = parseInt(opt("--max-rounds", "8"), 10);
+// Cooldown-retry budget for rate/usage-limit-shaped failures — separate from
+// MAX_ROUNDS (content top-up passes) because waiting out a limit isn't "one
+// more round", it's "the same round again once whatever blocked it clears".
+// See RESUMABILITY in the header comment.
+const MAX_COOLDOWNS = parseInt(opt("--max-cooldowns", "6"), 10);
+const COOLDOWN_SECONDS = parseInt(opt("--cooldown-seconds", "300"), 10);
+// Loose on purpose: better to sleep-and-retry once too often on an ambiguous
+// message than to misclassify a real rate limit as a content stall and give
+// up early. A false positive here costs one COOLDOWN_SECONDS sleep; a false
+// negative costs the whole run.
+const RATE_LIMIT_RE = /rate.?limit|usage limit|usage cap|quota|try again (later|in)|too many requests|\b429\b|overloaded|over.?capacity|resets? (at|in)/i;
 // Model. The one-time bootstrap used Haiku (cheap, mostly non-prompts). But the
 // un-nerf judgment needs real reasoning — a recall check against the existing
 // rules showed Haiku caught only obvious brevity caps and missed the subtler
@@ -108,6 +151,22 @@ const MODEL = opt("--model", "claude-opus-5");
 // a few hundred strings in ONE job. Valid: low|medium|high|xhigh|max.
 const EFFORT = opt("--effort", "medium");
 const DRY = argv.includes("--dry-run");
+// Provider: which model actually does the classification judgment. "claude"
+// (default) is the existing, battle-tested agentic path (can read/write files,
+// grep bundle/ for ambiguous-string context). "gemini" calls the Gemini API
+// directly instead — much faster per call in early testing, but NON-agentic
+// (see llm-provider.mjs's header) and not yet quality-validated against the
+// full un-nerf recall bar the MODEL comment above describes for Claude Opus —
+// treat gemini results as provisional until spot-checked against that bar.
+const PROVIDER = opt("--provider", "claude");
+const GEMINI_MODEL = opt("--gemini-model", DEFAULT_GEMINI_MODEL);
+let GEMINI_API_KEY = null;
+if (PROVIDER === "gemini") {
+  const found = findGeminiApiKey(REPO);
+  if (!found) die(`--provider gemini requires GOOGLE_GEMINI_API_KEY — checked the environment, ${join(REPO, ".env")}, and ~/.env; found none`, 2);
+  GEMINI_API_KEY = found.key;
+  console.error(`classify: using Gemini (${GEMINI_MODEL}), key from ${found.source}`);
+}
 // Sharding: run several workers in parallel over disjoint slices of the work,
 // each writing to its OWN --shard-out file (no store race); merge afterward.
 const SHARDS = parseInt(opt("--shards", "1"), 10);
@@ -115,7 +174,7 @@ const SHARD = parseInt(opt("--shard", "-1"), 10);
 const SHARD_OUT = opt("--shard-out", null);
 
 // merge mode: `node classify.mjs merge <store.json> <shard1.json> ...`
-if (cliJs === "merge") {
+if (jsDir === "merge") {
   const storePath = ccVersion;
   const st = existsSync(storePath) ? JSON.parse(readFileSync(storePath, "utf8")) : { algo: "sha256", strings: {} };
   st.strings ??= {};
@@ -135,8 +194,8 @@ if (cliJs === "merge") {
 // item even if already in the store.
 const CONTENT_FILE = opt("--content-file", null);
 const FORCE = argv.includes("--force");
-if (!CONTENT_FILE && (!cliJs || !ccVersion)) die("usage: node classify.mjs <cliJs> <ccVersion> [--limit N] [--batch N] [--shard I --shards N --shard-out F] [--content-file F --force] [--dry-run]", 2);
-if (!CONTENT_FILE && !existsSync(cliJs)) die(`cli.js not found: ${cliJs}`);
+if (!CONTENT_FILE && (!jsDir || !ccVersion)) die("usage: node classify.mjs <jsDir> <ccVersion> [--limit N] [--batch N] [--shard I --shards N --shard-out F] [--content-file F --force] [--dry-run]", 2);
+if (!CONTENT_FILE && !existsSync(join(jsDir, "manifest.json"))) die(`manifest.json not found in ${jsDir} — was this produced by 'bun-binary.mjs unpack'?`);
 const CCV = ccVersion || "n/a";
 
 const policyVersion = existsSync(POLICY_PATH) ? parseInt(readFileSync(POLICY_PATH, "utf8").trim(), 10) : 1;
@@ -156,12 +215,36 @@ if (CONTENT_FILE) {
   // that is exactly the question we are paying Opus to answer — it only drops
   // what definitionally cannot be one. (This is the same set the store was
   // built under; `--all` is gen-catalog's seed-matching mode, not this one.)
-  const entries = extract(readFileSync(cliJs, "utf8"), CCV);
-  for (const e of entries) {
-    const h = identityHash(e); // sha256 over the canonical text — see prompt-index.mjs
-    if (!byHash.has(h)) byHash.set(h, { hash: h, content: reconstruct(e) });
+  //
+  // MULTI-MODULE (v2.1.251+): <jsDir> is a directory of one file per Bun
+  // module (see engine/bun-binary.mjs unpack), not a single bundle — extract()
+  // runs once per module, merged by identity hash exactly like the intra-file
+  // dedup extract() already does, so a string duplicated across chunks by
+  // Bun's own splitter still yields exactly one work item. Native binaries,
+  // HTML assets, etc. simply fail to parse as JS and are skipped.
+  const manifest = JSON.parse(readFileSync(join(jsDir, "manifest.json"), "utf8"));
+  let totalEntries = 0, parsedModules = 0, markdownModules = 0;
+  for (const entry of manifest.modules) {
+    const source = readFileSync(join(jsDir, entry.relPath), "utf8");
+    let entries;
+    // v2.1.251+: a real slice of Claude Code's own prompt/skill/reference
+    // content lives in standalone .md/.txt asset modules, not JS string
+    // literals — see extract-prompts.mjs's isMarkdownAssetPath/
+    // extractMarkdownAsset header comment for the full writeup.
+    if (isMarkdownAssetPath(entry.relPath)) {
+      entries = extractMarkdownAsset(source, CCV);
+      markdownModules++;
+    } else {
+      try { entries = extract(source, CCV); } catch { continue; }
+      parsedModules++;
+    }
+    totalEntries += entries.length;
+    for (const e of entries) {
+      const h = identityHash(e); // sha256 over the canonical text — see prompt-index.mjs
+      if (!byHash.has(h)) byHash.set(h, { hash: h, content: reconstruct(e) });
+    }
   }
-  console.error(`extracted ${entries.length} literals → ${byHash.size} distinct strings`);
+  console.error(`scanned ${manifest.modules.length} module(s), ${parsedModules} parsed as JS, ${markdownModules} as whole-file markdown/text assets: extracted ${totalEntries} literals → ${byHash.size} distinct strings`);
 }
 
 // --- 2. select the work: new + policy-stale prompts (or ALL under --force) ---
@@ -191,44 +274,120 @@ const outPath = SHARD_OUT || STORE_PATH;
 const outStore = SHARD_OUT ? { algo: "sha256", strings: {} } : store;
 const tag = SHARD >= 0 ? `[shard ${SHARD}/${SHARDS}] ` : "";
 const workDir = mkdtempSync(join(tmpdir(), `unnerfcc-classify-${CCV}-`));
-const { rmSync } = await import("node:fs");
+const { rmSync, cpSync } = await import("node:fs");
 // Binary context (skrabe's pipeline "digs through the binary for context" when
-// proposing identities/names). On the real upgrade path we have the bundle, so
-// copy it in once and let the worker grep it to disambiguate a hard string. In
-// --content-file mode there's no bundle — the worker classifies text alone.
-const HAS_BUNDLE = !CONTENT_FILE && existsSync(cliJs);
-if (HAS_BUNDLE) copyFileSync(cliJs, join(workDir, "cli.js"));
+// proposing identities/names). On the real upgrade path we have the unpacked
+// module directory, so copy it in once and let the worker grep across it to
+// disambiguate a hard string. In --content-file mode there's no bundle — the
+// worker classifies text alone.
+const HAS_BUNDLE = !CONTENT_FILE && existsSync(jsDir);
+if (HAS_BUNDLE) cpSync(jsDir, join(workDir, "bundle"), { recursive: true });
 // Default: ALL items in one file / one job. --batch N>0 chunks within a round.
 const CHUNK = BATCH > 0 ? BATCH : todo.length || 1;
 
-// Run ONE Opus classification over `batch`, returning a Map ref->result for
-// whatever it actually classified. Tolerant of a partial/absent result.json (a
-// timeout or a skip): the missing refs are simply topped up in a later round.
-function classifyBatch(batch, rtag) {
+// JSON Schema for one classify result object — used to make Gemini's
+// structured output SERVER-ENFORCE the per-object shape (required fields, the
+// class enum) rather than hoping the model's prose reply parses.
+//
+// NO minItems/maxItems: tried constraining the array to exactly n items and
+// confirmed empirically (2026-08-29, gemini-3.7-flash) that the API rejects
+// the request with a content-independent 400 "Request contains an invalid
+// argument" somewhere between n=25 and n=100 — reproduced by holding the
+// prompt fixed and only toggling this constraint off, which fixed it outright
+// (prompt size was ~14KB either way, ruling out a size limit). This isn't a
+// real loss: the round loop already matches results BY ref, not by position
+// or array length, so a response short of n items (whether from this schema
+// change or a Claude-style skip) is handled identically — the missing refs
+// simply top up in the next round. TASK.md's own prose ("MUST contain
+// exactly N objects... go back and classify the refs you skipped") still
+// carries the "don't skip" instruction; only the API-level hard enforcement
+// of array LENGTH specifically is gone, not per-object shape enforcement.
+function classifyResultSchema() {
+  return {
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        ref: { type: "integer" },
+        class: { type: "string", enum: ["prompt", "non-prompt"] },
+        unnerf: { type: "boolean" },
+        name: { type: "string" },
+        description: { type: "string" },
+        slots: { type: "string" },
+        notes: { type: "string" },
+      },
+      required: ["ref", "class", "unnerf", "name", "description", "slots", "notes"],
+    },
+  };
+}
+
+// Run ONE classification job over `batch`, returning { map, failed, output }:
+// map is ref->result for whatever it actually classified (possibly empty),
+// failed says whether this chunk needs a retry, and output is raw diagnostic
+// text — used by the caller to tell a rate/usage-limit rejection apart from a
+// genuine per-string skip. Tolerant of a partial/absent result (a timeout,
+// API error, or a skip): the missing refs are simply topped up in a later
+// round. Provider-agnostic caller contract; see PROVIDER's definition and
+// llm-provider.mjs for what differs between claude and gemini underneath.
+async function classifyBatch(batch, rtag) {
   const items = batch.map((w) => ({ ref: w.ref, text: w.content.slice(0, 16000) }));
   writeFileSync(join(workDir, "batch.json"), JSON.stringify(items, null, 1));
-  writeFileSync(join(workDir, "TASK.md"), classifyInstructions(items.length, HAS_BUNDLE));
   try { rmSync(join(workDir, "result.json")); } catch {} // no stale result from a prior job
+
+  if (PROVIDER === "gemini") {
+    // Gemini is a single non-agentic request/response turn: it cannot read
+    // batch.json or TASK.md off disk, so both are inlined directly into the
+    // prompt. hasBundle is forced false — the "grep bundle/ for ambiguous-
+    // string context" escape hatch needs tool-use/function-calling, which
+    // this first pass doesn't implement (TASK.md itself frames that as an
+    // optional enhancement for hard cases, not a hard requirement, so this
+    // is a bounded quality tradeoff, not a correctness gap).
+    const taskMd = classifyInstructions(items.length, false);
+    const prompt = `${taskMd}\n\n## batch.json (already provided below — do not look for a file)\n${JSON.stringify(items)}`;
+    const g = await callGemini({
+      apiKey: GEMINI_API_KEY, model: GEMINI_MODEL, effort: EFFORT, prompt,
+      resultSchema: classifyResultSchema(), workDir,
+    });
+    if (!g.ok) {
+      const longest = Math.max(0, ...items.map((it) => it.text.length));
+      console.error(`  ${rtag}gemini call failed [n=${items.length}, prompt=${prompt.length} chars/${Buffer.byteLength(prompt, "utf8")} bytes, longest item=${longest} chars]: ${g.detail}`);
+      return { map: new Map(), failed: true, output: g.detail };
+    }
+    if (!Array.isArray(g.parsed)) {
+      console.error(`  ${rtag}gemini returned non-array JSON — will retry`);
+      return { map: new Map(), failed: true, output: JSON.stringify(g.parsed).slice(0, 500) };
+    }
+    return { map: new Map(g.parsed.filter((x) => x && Number.isInteger(x.ref)).map((x) => [x.ref, x])), failed: false, output: "" };
+  }
+
+  writeFileSync(join(workDir, "TASK.md"), classifyInstructions(items.length, HAS_BUNDLE));
   const prompt =
     `Read TASK.md in this directory and follow it EXACTLY. batch.json holds ${items.length} strings. ` +
     `Classify EVERY one of them — skip none — and WRITE result.json: a JSON array of exactly ${items.length} ` +
     `objects, one per ref (echo each ref unchanged). Do not ask questions.`;
   // Test seam: CLASSIFY_CLAUDE_CMD, if set, runs (sh -c) in workDir instead of
   // claude — it must read batch.json → write result.json (see USAGE).
+  // stdio is captured (not "inherit"/"ignore") so a failure is diagnosable —
+  // previously stdout was discarded outright and stderr streamed live to a
+  // parent that, in a backgrounded run, nobody was watching, so a rate-limit
+  // rejection surfaced as a bare "claude status 1" with no way to tell it
+  // apart from a genuine crash after the fact.
   const fake = process.env.CLASSIFY_CLAUDE_CMD;
   const r = fake
-    ? spawnSync("sh", ["-c", fake], { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 })
+    ? spawnSync("sh", ["-c", fake], { cwd: workDir, stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", timeout: 30 * 60 * 1000 })
     : spawnSync("claude", ["-p", "--model", MODEL, "--effort", EFFORT, "--dangerously-skip-permissions", prompt],
-        { cwd: workDir, stdio: ["ignore", "ignore", "inherit"], encoding: "utf8", timeout: 30 * 60 * 1000 });
+        { cwd: workDir, stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", timeout: 30 * 60 * 1000 });
+  const output = `${r.stdout || ""}${r.stderr || ""}`;
   if (!existsSync(join(workDir, "result.json"))) {
-    console.error(`  ${rtag}no result.json (claude status ${r.status}) — will retry any missing`);
-    return new Map();
+    const detail = output.trim().slice(-500).replace(/\s+/g, " ") || "(no output captured)";
+    console.error(`  ${rtag}no result.json (claude status ${r.status}): ${detail}`);
+    return { map: new Map(), failed: true, output };
   }
   let results;
   try { results = JSON.parse(readFileSync(join(workDir, "result.json"), "utf8")); }
-  catch (e) { console.error(`  ${rtag}could not parse result.json (${e.message}) — will retry`); return new Map(); }
-  if (!Array.isArray(results)) return new Map();
-  return new Map(results.filter((x) => x && Number.isInteger(x.ref)).map((x) => [x.ref, x]));
+  catch (e) { console.error(`  ${rtag}could not parse result.json (${e.message}) — will retry`); return { map: new Map(), failed: true, output }; }
+  if (!Array.isArray(results)) return { map: new Map(), failed: true, output };
+  return { map: new Map(results.filter((x) => x && Number.isInteger(x.ref)).map((x) => [x.ref, x])), failed: false, output };
 }
 
 function storeRecord(w, res) {
@@ -250,16 +409,24 @@ function storeRecord(w, res) {
 
 // Round loop: pass 1 classifies ALL items in one job; later passes top up only
 // the refs a prior pass skipped. Stop when none remain, or a round makes no
-// progress (claude keeps dropping the same refs — surfaced by the gate below).
+// progress (claude keeps dropping the same refs — surfaced by the gate below)
+// UNLESS that lack of progress looks like a rate/usage limit, in which case
+// sleep and retry the same round (see RESUMABILITY in the header comment).
 const doneRefs = new Set();
 let remaining = todo.slice();
 let stalled = false;
+let exhaustedCooldowns = false;
+let cooldowns = 0;
 for (let round = 1; remaining.length && round <= MAX_ROUNDS; round++) {
   const rtag = `${tag}round ${round}: `;
   let got = 0;
+  let anySucceeded = false;
+  let sawRateLimit = false;
   for (let i = 0; i < remaining.length; i += CHUNK) {
     const batch = remaining.slice(i, i + CHUNK);
-    const byRef = classifyBatch(batch, rtag);
+    const { map: byRef, failed, output } = await classifyBatch(batch, rtag);
+    if (!failed) anySucceeded = true;
+    else if (RATE_LIMIT_RE.test(output)) sawRateLimit = true;
     for (const w of batch) {
       const res = byRef.get(w.ref);
       if (!res) continue; // skipped this pass — retry next round
@@ -274,15 +441,32 @@ for (let round = 1; remaining.length && round <= MAX_ROUNDS; round++) {
   const before = remaining.length;
   remaining = remaining.filter((w) => !doneRefs.has(w.ref));
   console.error(`  ${tag}round ${round}: classified ${before - remaining.length}/${before}, ${remaining.length} still missing`);
-  if (remaining.length && got === 0) { stalled = true; break; } // no progress → stop
+  if (remaining.length && got === 0) {
+    // Every chunk in this round failed outright (none merely skipped a ref),
+    // and at least one looked like a rate/usage-limit rejection rather than
+    // the model dropping specific strings — that is not a content stall, it's
+    // an external condition expected to clear. Sleep and replay this SAME
+    // round (not counted against MAX_ROUNDS, which is for content top-ups)
+    // up to MAX_COOLDOWNS times before finally giving up.
+    if (!anySucceeded && sawRateLimit && cooldowns < MAX_COOLDOWNS) {
+      cooldowns++;
+      console.error(`  ${tag}round ${round}: every chunk failed with what looks like a rate/usage limit — sleeping ${COOLDOWN_SECONDS}s before retry ${cooldowns}/${MAX_COOLDOWNS} (progress so far is already saved to the store)`);
+      spawnSync("sleep", [String(COOLDOWN_SECONDS)]);
+      round--; // replay this round number; only the cooldown counter advances
+      continue;
+    }
+    if (!anySucceeded && sawRateLimit) exhaustedCooldowns = true;
+    stalled = true;
+    break;
+  }
 }
 
 // --- 3b. completeness gate — the maintainer's "were ALL classified?" check ---
 if (remaining.length) {
-  console.error(
-    `  ${tag}✗ INCOMPLETE: ${remaining.length}/${todo.length} unclassified` +
-    (stalled ? " (a round classified none — claude kept skipping them)" : ` after ${MAX_ROUNDS} round(s)`) + ":"
-  );
+  const why = exhaustedCooldowns
+    ? ` (still rate/usage-limited after ${MAX_COOLDOWNS} cooldown(s) of ${COOLDOWN_SECONDS}s each — nothing is lost, the store already has everything classified so far; just re-run this command later)`
+    : stalled ? " (a round classified none — claude kept skipping them)" : ` after ${MAX_ROUNDS} round(s)`;
+  console.error(`  ${tag}✗ INCOMPLETE: ${remaining.length}/${todo.length} unclassified` + why + ":");
   for (const w of remaining.slice(0, 20)) console.error(`      ${w.hash.slice(0, 12)} ${JSON.stringify(w.content.slice(0, 60))}`);
   if (remaining.length > 20) console.error(`      … and ${remaining.length - 20} more`);
   process.exitCode = 1;
@@ -329,11 +513,12 @@ leave out. Your \`result.json\` MUST contain exactly ${n} objects, one per ref.
   deliberately not part of a string's identity). Echo each \`ref\` back unchanged.
   It may be large: if it exceeds a single read, page through it (offset/limit)
   and classify EVERY ref — do not stop at the first chunk you read.
-${hasBundle ? `- \`cli.js\` — the full Claude Code bundle is in this directory. For a string
-  whose class or purpose is AMBIGUOUS from its text alone, grep \`cli.js\` for a
-  distinctive run of the string to read its surrounding code — how it's assigned,
-  which function/tool consumes it — then decide. Use this only when in doubt; do
-  not grep every string.` : `- (No bundle is available this run — classify from the text alone.)`}
+${hasBundle ? `- \`bundle/\` — the full Claude Code bundle, one file per module, is in this
+  directory (a large build; the same string can legitimately appear in more than
+  one file). For a string whose class or purpose is AMBIGUOUS from its text
+  alone, grep \`bundle/\` recursively for a distinctive run of the string to read
+  its surrounding code — how it's assigned, which function/tool consumes it —
+  then decide. Use this only when in doubt; do not grep every string.` : `- (No bundle is available this run — classify from the text alone.)`}
 
 ## Decide, per string
 1. **class**: \`"prompt"\` or \`"non-prompt"\`.
@@ -371,7 +556,7 @@ ${hasBundle ? `- \`cli.js\` — the full Claude Code bundle is in this directory
    Claude Code uses this prompt FOR.
 5. **slots** (prompts only; \`""\` if no interpolation): be SLOT-AWARE. For each
    \`\${}\` placeholder, in order, say what it binds to (e.g. "slot 1 = tool name,
-   slot 2 = file path"); infer it from the surrounding prose, and from \`cli.js\`
+   slot 2 = file path"); infer it from the surrounding prose, and from \`bundle/\`
    if that is inconclusive. Flag any slot whose role is unclear. This audit is
    load-bearing: an un-nerf edit must keep every placeholder in the same order,
    because the patcher rebinds slots BY POSITION — so a maintainer needs to know
