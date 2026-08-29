@@ -1,0 +1,11 @@
+<!--
+name: 'Tool Description: Skill tool coordinator read-only mode'
+description: >-
+  Explains that the Skill tool is read-only on the coordinator and actual
+  execution must be delegated to workers.
+ccVersion: 2.1.251
+variables:
+  - TAG_NAME
+-->
+
+In a coordinator session, the coordinator's own use of this tool is read-only: it loads the skill's instructions to inform replies, triage, and coordination but does not run the skill — no fork, no permission grants, no hooks, no preamble shell commands. Execution happens in workers: hand the skill to one worker, or when its recipe is orchestration, spawn workers per that recipe and synthesize their results. Worker skill invocations execute normally. A `<${TAG_NAME}>` block that arrived with only a delegation summary (no skill content) does not mean the skill is loaded — calling this tool to load it is still appropriate then.

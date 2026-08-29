@@ -4,13 +4,12 @@ description: >-
   Context block for the /pr command — injects git status, the current branch,
   the commits since the base branch, the full diff against it, and the
   repository's PR template.
-ccVersion: 2.1.231
+ccVersion: 2.1.251
 variables:
-  - COMMAND_PREAMBLE
   - BASE_BRANCH
   - PR_TEMPLATE_CONTEXT_BLOCK
 -->
-${COMMAND_PREAMBLE}## Context
+## Context
 
 - Current git status: !`git status`
 - Current branch: !`git branch --show-current`

@@ -1,0 +1,476 @@
+{
+  "ccVersion": "2.1.251",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-model-migration-guide.md",
+      "verdict": "keep",
+      "reasoning": "Scope confirmation before performing widespread migration edits is a safety and clarity measure to avoid modifying unintentional files, not a capability holdback."
+    },
+    {
+      "file": "system-prompt-remote-plan-mode-ultraplan.md",
+      "verdict": "keep",
+      "reasoning": "The planning thoroughness and implementer specificity guidelines in this file are already un-nerfed by existing registered rules."
+    },
+    {
+      "file": "system-prompt-remote-planning-session.md",
+      "verdict": "keep",
+      "reasoning": "Planning depth and implementer detail directives are already fully addressed by existing registered un-nerf rules."
+    },
+    {
+      "file": "skill-run-skill-generator.md",
+      "verdict": "keep",
+      "reasoning": "The concise guidelines for generated SKILL.md files reflect standard agent skill packaging (keeping context window overhead low) rather than restricting substantive reasoning."
+    },
+    {
+      "file": "data-managed-agents-multiagent-sessions.md",
+      "verdict": "keep",
+      "reasoning": "This is a reference documentation data file explaining Managed Agents architecture and configuration, not a system prompt constraining Claude Code."
+    },
+    {
+      "file": "skill-run-example-browser-driven-web-app.md",
+      "verdict": "keep",
+      "reasoning": "This is an example reference doc demonstrating how to drive browser web apps using chromium-cli rather than an artificial prompt restriction."
+    },
+    {
+      "file": "system-prompt-coordinator-mode.md",
+      "verdict": "keep",
+      "reasoning": "The coordinator prompt's concurrency rules are already un-nerfed, and the remaining text emphasizes rigorous verification and thorough problem investigation."
+    },
+    {
+      "file": "data-prompt-caching-design-optimization.md",
+      "verdict": "keep",
+      "reasoning": "This is a reference document explaining prompt caching mechanics and optimization strategies, not a prompt restriction."
+    },
+    {
+      "file": "skill-doc.md",
+      "verdict": "keep",
+      "reasoning": "Title and paragraph length instructions in this skill describe formatting standards for human-readable word processor document artifacts rather than limiting model intelligence."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-brief-acknowledgement.md",
+      "verdict": "keep",
+      "reasoning": "Matches Calibration Example 3: brief framing for comment-thread acknowledgement replies fits the UI comment medium and does not restrict substantive task work."
+    },
+    {
+      "file": "skill-cost-optimization-guide.md",
+      "verdict": "keep",
+      "reasoning": "The file provides technical cost-optimization procedures and domain guidance rather than artificial brevity restrictions or process shortcuts. Instructing the model to execute steps rather than summarizing is direct workflow execution guidance."
+    },
+    {
+      "file": "skill-run-unit-name-template.md",
+      "verdict": "keep",
+      "reasoning": "This is a documentation template skeleton for generating run-<unit-name> skill files. The brevity prompts in template comments represent structural formatting guidance for created skills rather than a holdback on Claude Code's capabilities."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "The advice to default to simpler tiers (single API calls or workflows before agents) is legitimate architectural best-practice guidance for developers building LLM applications, not an artificial capability restriction."
+    },
+    {
+      "file": "system-prompt-repl-tool-usage-and-scripting-conventions.md",
+      "verdict": "keep",
+      "reasoning": "Batching 1-3 REPL calls per turn and writing concise script syntax are mechanical conventions of the REPL tool DSL to optimize batching and execution efficiency, not brevity caps on task completion."
+    },
+    {
+      "file": "tool-description-product-feedback-draft.md",
+      "verdict": "keep",
+      "reasoning": "The one-to-three-lines details cap has already been lifted by an existing rule. The remaining notes mention behavioral failure modes to report as feedback, which are legitimate issue taxonomy descriptions."
+    },
+    {
+      "file": "skill-design-sync-storybook-source-shape.md",
+      "verdict": "keep",
+      "reasoning": "The instructions describe mechanical Storybook build, conversion, and visual regression testing procedures with no artificial brevity constraints or holdbacks."
+    },
+    {
+      "file": "tool-description-workflow.md",
+      "verdict": "keep",
+      "reasoning": "The existing unnerf rule already replaces the restriction on multi-agent workflow suggestions to proactively surface beneficial parallelism. No further rule is needed."
+    },
+    {
+      "file": "skill-cowork-plugin-authoring.md",
+      "verdict": "keep",
+      "reasoning": "Guidelines on progressive disclosure (keeping SKILL.md under 3,000 words with details in references/) and non-technical user framing reflect Cowork desktop app architecture and target audience requirements, not a capability nerf."
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "keep",
+      "reasoning": "The previous rule lifting the compact design plan constraint is already present. The remaining passages provide aesthetic design leadership principles, typographic advice, and explicit clarification that naming rules do not impose brevity."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The existing rule already ensures review fields carry necessary detail. The remaining 4,000-line diff cap with explicit coverage disclosure is a genuine context-budget mechanical constraint under calibration example 1."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "The 4,000-line diff threshold is a genuine mechanical context constraint with explicit disclosure, and UI schema length limits preserve the visual briefing layout."
+    },
+    {
+      "file": "skill-run-example-electron.md",
+      "verdict": "keep",
+      "reasoning": "The advice to keep the SKILL.md manual short reflects proper documentation design where the driver script contains the actual execution logic."
+    },
+    {
+      "file": "skill-whiteboard-when-to-use-offer-unprompted.md",
+      "verdict": "keep",
+      "reasoning": "Limiting an unsolicited, unprompted offer to one short line is interruption-appropriate UX rather than a capability nerf."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "Substantive chat reply limits in this file are already lifted, and the unprompted offer brevity is appropriate UX per calibration guidance."
+    },
+    {
+      "file": "system-prompt-remote-plan-mode-ultraplan.md",
+      "verdict": "keep",
+      "reasoning": "The core planning depth and specificity nerfs are already lifted in existing rules; remaining diagram instructions and control flow markers are standard feature mechanics."
+    },
+    {
+      "file": "system-prompt-remote-planning-session.md",
+      "verdict": "keep",
+      "reasoning": "Existing rules already lift planning thoroughness and specificity constraints; remaining text governs session control flow and plan mode enforcement."
+    },
+    {
+      "file": "system-prompt-autonomous-loop-check.md",
+      "verdict": "keep",
+      "reasoning": "The quiet-tick reporting nerfs have already been lifted in existing rules; the remaining text provides necessary autonomous safety and priority guidance."
+    },
+    {
+      "file": "system-prompt-autonomous-loop-persistence-guidance-CLAUDE_CODE_LOOP_PERSISTENT.md",
+      "verdict": "keep",
+      "reasoning": "The quiet-tick brevity restriction is already lifted; the remaining instructions enforce loop persistence and safe autonomous execution."
+    },
+    {
+      "file": "agent-prompt-web-fetch-specialist.md",
+      "verdict": "keep",
+      "reasoning": "The reporting cap is already lifted in existing rules, and restricting URL fetches to the request scope is a safety measure against untrusted prompt injection."
+    },
+    {
+      "file": "skill-workshop.md",
+      "verdict": "lift",
+      "reasoning": "The HTML lane draft sizing instruction retains a brevity restriction ('a few short paragraphs stating the plan - sized by selection, never completeness') that mirrors the already-lifted markdown lane rule.",
+      "rule": {
+        "stock": "the working-draft prose (a few short paragraphs stating\nthe plan - sized by selection, never completeness), the\nMAIN diagram",
+        "unnerf": "the working-draft prose (as many paragraphs as it takes to state the plan - sized by what the decisions need), the\nMAIN diagram",
+        "description": "workshop HTML draft: size by what the decisions need, not by selection over completeness"
+      }
+    },
+    {
+      "file": "agent-prompt-eval-authoring-interview.md",
+      "verdict": "keep",
+      "reasoning": "The one-step-per-turn rule enforces an interactive step-by-step interview flow, and disallowing format lookup prevents unnecessary tool calls since the full spec is provided in-prompt."
+    },
+    {
+      "file": "system-prompt-writing-for-the-user.md",
+      "verdict": "keep",
+      "reasoning": "This prompt sets presentation and readability guidelines for the final CLI response rather than holding back technical depth or reasoning."
+    },
+    {
+      "file": "agent-prompt-condition-verification-instructions.md",
+      "verdict": "keep",
+      "reasoning": "The step-minimization nerf is already lifted in existing rules, leaving only the mechanical structured output contract."
+    },
+    {
+      "file": "system-prompt-concise-output-style.md",
+      "verdict": "keep",
+      "reasoning": "This is the active prompt for the user-selected Concise output style mode, where brevity is explicitly requested by the user."
+    },
+    {
+      "file": "system-prompt-learning-mode-2.md",
+      "verdict": "keep",
+      "reasoning": "This prompt configures learning/explanatory mode and explicitly allows exceeding typical length constraints to provide educational insights."
+    },
+    {
+      "file": "system-prompt-learning-mode.md",
+      "verdict": "keep",
+      "reasoning": "This prompt governs interactive learning mode and requests human contributions for pedagogical purposes rather than restricting agent capability."
+    },
+    {
+      "file": "system-prompt-proactive-output-style.md",
+      "verdict": "keep",
+      "reasoning": "Instructing the agent to work proactively and minimize interruptions defines the proactive mode behavior rather than restricting reasoning or work completeness."
+    },
+    {
+      "file": "skill-workflow-authoring-reference.md",
+      "verdict": "keep",
+      "reasoning": "The text explains how to calibrate subagent fan-out and concurrency across multi-agent workflows without imposing arbitrary holdbacks."
+    },
+    {
+      "file": "skill-run-example-web-server-api.md",
+      "verdict": "keep",
+      "reasoning": "This example reference document provides practical guidance on background lifecycle management and smoke testing without nerfing capability."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-composer.md",
+      "verdict": "keep",
+      "reasoning": "Brief framing without preamble matches the genre requirements of a single comment-thread reply channel per calibration guidance."
+    },
+    {
+      "file": "skill-artifact-explainer.md",
+      "verdict": "keep",
+      "reasoning": "Slot structure and step count guidelines are layout specifications for the explainer artifact template rather than artificial brevity caps."
+    },
+    {
+      "file": "system-prompt-attached-machine-housekeeping-chores-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Taking a read-only look on both machines when the target is ambiguous is sound non-destructive diagnostic guidance."
+    },
+    {
+      "file": "tool-description-artifact-gallery-and-after-publishing-web-app.md",
+      "verdict": "keep",
+      "reasoning": "Concise presentation of publish results matches the web app GUI environment where the link is rendered as a native card."
+    },
+    {
+      "file": "skill-dataviz-marks-and-anatomy.md",
+      "verdict": "keep",
+      "reasoning": "These are domain-standard data visualization rules regarding mark sizing, spacing, and label placement to prevent visual clutter."
+    },
+    {
+      "file": "skill-data-visualization.md",
+      "verdict": "keep",
+      "reasoning": "The data visualization skill guide defines accessibility standards and design heuristics rather than holding back work."
+    },
+    {
+      "file": "skill-run-example-cli-tool.md",
+      "verdict": "keep",
+      "reasoning": "This is authoring guidance for how to write a run skill for a CLI tool, explaining what content belongs in the skill rather than constraining Claude's substantive work."
+    },
+    {
+      "file": "skill-dataviz-palette.md",
+      "verdict": "keep",
+      "reasoning": "The palette series limits are genuine accessibility and visual perception constraints (CVD Delta E math and contrast floors), not artificial capability throttling."
+    },
+    {
+      "file": "skill-run-example-library-sdk.md",
+      "verdict": "keep",
+      "reasoning": "This is domain guidance for authoring library run skills, teaching concise documentation patterns rather than throttling Claude's assistance."
+    },
+    {
+      "file": "skill-insights-report-output.md",
+      "verdict": "keep",
+      "reasoning": "This is a fixed slash-command template for /insights where the exact UI response format is prescribed after report generation."
+    },
+    {
+      "file": "skill-artifact-dashboard.md",
+      "verdict": "keep",
+      "reasoning": "These are standard UI/UX design heuristics for dashboard layouts (limiting KPI tiles and breakdown table rows for scannability), not artificial capability restrictions."
+    },
+    {
+      "file": "system-prompt-concise-output-style-summary.md",
+      "verdict": "keep",
+      "reasoning": "This is the explicit definition for the user-selected Concise output style mode, which should respect the user's deliberate style choice."
+    },
+    {
+      "file": "skill-dataviz-anti-patterns.md",
+      "verdict": "keep",
+      "reasoning": "These are dataviz design principles and accessibility rules against misleading or unreadable chart anti-patterns, not capability restrictions."
+    },
+    {
+      "file": "skill-cowork-plugin-authoring-component-schemas.md",
+      "verdict": "keep",
+      "reasoning": "These word count and character guidelines are technical specifications for Claude Code plugin schemas and progressive context disclosure, not capability nerfs."
+    },
+    {
+      "file": "system-prompt-autonomous-loop-check.md",
+      "verdict": "keep",
+      "reasoning": "The candidate brevity caps in this file are already handled by existing unnerf rules."
+    },
+    {
+      "file": "system-prompt-autonomous-loop-persistence-guidance-CLAUDE_CODE_LOOP_PERSISTENT.md",
+      "verdict": "keep",
+      "reasoning": "The quiet-tick brevity cap in this file is already handled by an existing unnerf rule."
+    },
+    {
+      "file": "skill-design-sync-package-source-shape.md",
+      "verdict": "keep",
+      "reasoning": "This is workflow and configuration advice for design system syncing, preventing configuration drift and redundant metadata rather than restricting substantive output."
+    },
+    {
+      "file": "skill-prototype-when-to-use-offer-unprompted.md",
+      "verdict": "keep",
+      "reasoning": "An unprompted, unsolicited offer capped at one short line is interruption-appropriate UX for proactive suggestions, not a restriction on substantive user-requested work."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "The unprompted offer instruction in when_to_use is appropriate UX for unsolicited pitches, and other substantive brevity caps in this file are already covered by existing rules."
+    },
+    {
+      "file": "skill-python-sdk-upgrade-guide.md",
+      "verdict": "keep",
+      "reasoning": "This is procedural workflow and scoping guidance for SDK upgrades ensuring safe code transformations without unprompted mass changes."
+    },
+    {
+      "file": "system-reminder-directory-sync-stopped-switch-to-device.md",
+      "verdict": "keep",
+      "reasoning": "This is an operational status notification instructing Claude to briefly inform the user why sync stopped before continuing work on the device."
+    },
+    {
+      "file": "tool-description-bash-committing-changes-with-git.md",
+      "verdict": "keep",
+      "reasoning": "Standard git conventions dictate concise commit messages focusing on intent, and the exploration constraint prevents extraneous tool calls during the atomic commit workflow."
+    },
+    {
+      "file": "skill-agent-design-patterns.md",
+      "verdict": "keep",
+      "reasoning": "This is descriptive reference documentation explaining Claude API parameters and architectural trade-offs for developers building agents."
+    },
+    {
+      "file": "skill-artifact-report.md",
+      "verdict": "keep",
+      "reasoning": "These are document layout and slot-formatting specifications for an HTML report artifact, defining the visual hierarchy between key takeaway callouts and body sections."
+    },
+    {
+      "file": "skill-loop-self-pacing-mode.md",
+      "verdict": "keep",
+      "reasoning": "The user-facing confirmation was already lifted in existing rules, and the reason field here is a concise parameter value for the schedule wakeup tool."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "All substantive intake, assumptions, publishing, and close-out brevity caps in this file are already addressed by existing rules."
+    },
+    {
+      "file": "tool-parameter-artifact-action-comments-reply.md",
+      "verdict": "keep",
+      "reasoning": "As outlined in the calibration guidance, brief replies in artifact comment threads match the comment-thread medium's genre and do not restrict Claude's substantive work."
+    },
+    {
+      "file": "skill-dataviz-choosing-a-form.md",
+      "verdict": "keep",
+      "reasoning": "These series limits are based on human perception and CVD accessibility constraints in chart visualization rather than arbitrary output limits."
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-flow.md",
+      "verdict": "keep",
+      "reasoning": "The follow-up question constraint was already lifted, and the remaining instructions direct Claude to output clean setup code without unnecessary preamble during onboarding."
+    },
+    {
+      "file": "agent-prompt-artifact-workshop-change-in-file-instruction.md",
+      "verdict": "keep",
+      "reasoning": "This instruction governs comment-thread notifications directing users to the workshop file, fitting the comment medium without restricting substantive editing."
+    },
+    {
+      "file": "skill-design-sync.md",
+      "verdict": "keep",
+      "reasoning": "The character budget for the conventions header is dictated by system prompt token limits and the ~32k technical truncation boundary for injected design system headers."
+    },
+    {
+      "file": "skill-artifact-data-table.md",
+      "verdict": "keep",
+      "reasoning": "The row limits in the data-table skill represent physical DOM/context limits paired with transparent disclosure in the footer, which is a genuine mechanical constraint per calibration example 1."
+    },
+    {
+      "file": "skill-dataviz-color-formula.md",
+      "verdict": "keep",
+      "reasoning": "The color and series guidelines encode WCAG contrast standards and CVD perceptual separation formulas rather than artificial capability nerfs."
+    },
+    {
+      "file": "skill-prompt-audit-guide.md",
+      "verdict": "keep",
+      "reasoning": "This is reference material explaining prompt audit methodology for removing obsolete prompting patterns, containing no hold-back instructions on Claude's work."
+    },
+    {
+      "file": "skill-artifact-diagramming.md",
+      "verdict": "keep",
+      "reasoning": "The diagramming guidance describes visual design and SVG clarity principles rather than arbitrary brevity caps or process shortcuts."
+    },
+    {
+      "file": "data-claude-api-reference-java.md",
+      "verdict": "keep",
+      "reasoning": "Advising compilation diagnostics over executing reflection scripts prevents known tool-hang and polling failures in subshell execution environments."
+    },
+    {
+      "file": "skill-design.md",
+      "verdict": "keep",
+      "reasoning": "The primary design-system matching cap was already lifted in existing rules; the remaining intake and handoff instructions are appropriate UI delivery guidance."
+    },
+    {
+      "file": "system-prompt-concise-output-style-rules.md",
+      "verdict": "keep",
+      "reasoning": "This file explicitly defines the user-selected concise output style rules; unnerfing user-opted brevity settings would override explicit user preferences."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "lift",
+      "reasoning": "The 0-3 numeric cap on reviewer concerns artificially suppresses genuine judgment questions in the PR review briefing and should be lifted to match its sibling prompt.",
+      "rule": {
+        "stock": "- concerns: 0-3 genuine judgment questions a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
+        "unnerf": "- concerns: every genuine judgment question a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
+        "description": "PR review payload: drop the 0-3 ceiling on reviewer concerns"
+      }
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "The reviewer concern ceiling was already lifted in existing rules; large PR diff handling is a genuine context constraint with honest disclosure per calibration example 1."
+    },
+    {
+      "file": "tool-result-artifact-private-app-card.md",
+      "verdict": "keep",
+      "reasoning": "The guidance to provide a single sentence alongside the UI card avoids redundant scrollback text when the GUI client renders the card natively."
+    },
+    {
+      "file": "tool-result-artifact-private-terminal-gallery.md",
+      "verdict": "keep",
+      "reasoning": "The tool result provides purely informational shortcut and gallery references with no brevity restrictions."
+    },
+    {
+      "file": "skill-run-example-tui.md",
+      "verdict": "keep",
+      "reasoning": "This document provides technical examples and patterns for driving interactive TUI programs inside tmux sessions without any capability restrictions."
+    },
+    {
+      "file": "data-claude-api-reference-csharp.md",
+      "verdict": "keep",
+      "reasoning": "Recommending compiler diagnostics over dotnet reflection scripts avoids execution backgrounding and polling traps in automated environments."
+    },
+    {
+      "file": "skill-prototype-description.md",
+      "verdict": "keep",
+      "reasoning": "The short intake limit was already lifted by an existing registered rule and no further hold-backs remain."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "All substantive intake, assumptions, and reporting limits have been lifted in existing rules; the remaining unprompted offer limit is UX-appropriate per calibration example 2."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "Chat narration brevity caps were already lifted; board text limits reflect the spatial nature of a visual canvas rather than an artificial nerf."
+    },
+    {
+      "file": "tool-parameter-feedback-report-body.md",
+      "verdict": "keep",
+      "reasoning": "This is a structured parameter format specification for the feedback tool ingestion pipeline per calibration example 3."
+    },
+    {
+      "file": "tool-description-artifact-resolve-threads.md",
+      "verdict": "keep",
+      "reasoning": "Brief thread resolution replies match comment-thread conventions per calibration example 3 and do not restrict substantive task reasoning."
+    },
+    {
+      "file": "system-reminder-plan-mode-prototype-option.md",
+      "verdict": "keep",
+      "reasoning": "The substantive 'short plan' cap was already lifted, and keeping an unsolicited prototype offer to one line is calibrated UX per example 2."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "The chat reply limits were already unnerfed in existing rules; remaining board label constraints match the physical medium of the multiplayer canvas."
+    },
+    {
+      "file": "skill-claude-code-docs-config-guide.md",
+      "verdict": "keep",
+      "reasoning": "This skill sets factual verification and documentation lookup precedence to prevent hallucination from outdated training data."
+    },
+    {
+      "file": "tool-description-artifacttool-2.md",
+      "verdict": "keep",
+      "reasoning": "Offering an artifact page in one line when answering a terminal question is an unsolicited offer per calibration example 2; title instructions are HTML format rules."
+    }
+  ]
+}

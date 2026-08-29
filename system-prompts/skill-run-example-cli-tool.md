@@ -3,11 +3,11 @@ name: 'Skill: run example — CLI tool'
 description: >-
   Bundled example doc (examples/cli.md) for the run skill: installing, invoking,
   and testing a command-line tool
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 # Example: CLI tool
 
-CLIs are the simplest case — there's usually no background process to
+CLIs are the simplest case - there's usually no background process to
 manage, no ports, no lifecycle. The skill focuses on **installation**,
 **representative invocations**, and **testing**.
 
@@ -37,7 +37,7 @@ manage, no ports, no lifecycle. The skill focuses on **installation**,
 >
 > ```bash
 > mytool --version
-> # → mytool 0.3.1
+> # -> mytool 0.3.1
 > ```
 >
 > ## Run
@@ -46,7 +46,7 @@ manage, no ports, no lifecycle. The skill focuses on **installation**,
 >
 > ```bash
 > mytool process input.json
-> # → Processed 42 records, wrote output.json
+> # -> Processed 42 records, wrote output.json
 > ```
 >
 > Read from stdin, write to stdout:
@@ -70,6 +70,6 @@ manage, no ports, no lifecycle. The skill focuses on **installation**,
 
 ## Keep it short
 
-A CLI's run skill can be very compact. Don't pad it with every flag —
+A CLI's run skill can be very compact. Don't pad it with every flag -
 the `--help` output covers that. Just show enough that an agent can
 (a) build it, (b) confirm it works, (c) run the tests.

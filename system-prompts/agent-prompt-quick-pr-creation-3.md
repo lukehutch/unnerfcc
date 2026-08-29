@@ -3,14 +3,13 @@ name: 'Agent Prompt: Quick PR creation'
 description: >-
   Streamlined prompt for creating a commit and pull request with pre-populated
   git context
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 variables:
-  - PR_PROMPT_PREAMBLE
   - SAFE_USER
   - WHOAMI_OUTPUT
   - PR_BASE_REF
 -->
-${PR_PROMPT_PREAMBLE}## Context
+## Context
 
 - `SAFEUSER`: ${SAFE_USER}
 - `whoami`: ${WHOAMI_OUTPUT}

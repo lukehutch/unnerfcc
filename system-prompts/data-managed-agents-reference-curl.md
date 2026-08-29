@@ -3,9 +3,9 @@ name: 'Data: Managed Agents reference — cURL'
 description: >-
   Provides cURL and raw HTTP request examples for the Managed Agents API
   including environment, agent, and session lifecycle operations
-ccVersion: 2.1.231
+ccVersion: 2.1.251
 -->
-# Managed Agents — cURL / Raw HTTP
+# Managed Agents - cURL / Raw HTTP
 
 Use these examples when the user needs raw HTTP requests or is working without an SDK.
 
@@ -62,7 +62,7 @@ curl -X POST https://api.anthropic.com/v1/environments \
 
 ## Create an Agent (required first step)
 
-> ⚠️ **There is no inline agent config.** Under `managed-agents-2026-04-01`, `model`/`system`/`tools` are top-level fields on `POST /v1/agents`, not on the session. Always create the agent first — the session only takes `"agent": {"type": "agent", "id": "..."}`.
+> Warning: **There is no inline agent config.** Under `managed-agents-2026-04-01`, `model`/`system`/`tools` are top-level fields on `POST /v1/agents`, not on the session. Always create the agent first - the session only takes `"agent": {"type": "agent", "id": "..."}`.
 
 ### Minimal
 
@@ -75,7 +75,7 @@ curl -X POST https://api.anthropic.com/v1/agents \
     "model": "{{OPUS_ID}}",
     "tools": [{ "type": "agent_toolset_20260401" }]
   }'
-# → { "id": "agent_abc123", ... }
+# -> { "id": "agent_abc123", ... }
 
 # 2. Start a session
 curl -X POST https://api.anthropic.com/v1/sessions \
@@ -84,7 +84,7 @@ curl -X POST https://api.anthropic.com/v1/sessions \
     "agent": { "type": "agent", "id": "agent_abc123", "version": 1 },
     "environment_id": "env_abc123"
   }'
-# → { "id": "sesn_abc123", ... }
+# -> { "id": "sesn_abc123", ... }
 # Trace: https://platform.claude.com/workspaces/default/sessions/sesn_abc123  (swap 'default' for your workspace ID if the API key is not in the Default workspace)
 ```
 
@@ -150,13 +150,13 @@ curl -X POST https://api.anthropic.com/v1/sessions \
     }
   }'
 
-# Change the cap — higher or lower, but it must exceed the consumed list cost.
+# Change the cap - higher or lower, but it must exceed the consumed list cost.
 # An accepted update resumes work paused at budget_reached
 curl -X POST https://api.anthropic.com/v1/sessions/$SESSION_ID \
   "${HEADERS[@]}" \
   -d '{ "budget": { "type": "limit", "max_list_cost": { "amount": "4000", "currency": "USD" } } }'
 
-# Remove the cap entirely — one-way; a removed budget can never be re-added
+# Remove the cap entirely - one-way; a removed budget can never be re-added
 curl -X POST https://api.anthropic.com/v1/sessions/$SESSION_ID \
   "${HEADERS[@]}" \
   -d '{ "budget": null }'
@@ -212,7 +212,7 @@ data: {"type":"session.status_idle","id":"sevt_...","processed_at":"..."}
 curl https://api.anthropic.com/v1/sessions/$SESSION_ID/events \
   "${HEADERS[@]}"
 
-# Paginated — get next page of events
+# Paginated - get next page of events
 curl "https://api.anthropic.com/v1/sessions/$SESSION_ID/events?page=page_abc123" \
   "${HEADERS[@]}"
 ```
@@ -328,7 +328,7 @@ curl https://api.anthropic.com/v1/agents \
 ## MCP Server Integration
 
 ```bash
-# 1. Agent declares MCP server (no auth here — auth goes in a vault)
+# 1. Agent declares MCP server (no auth here - auth goes in a vault)
 curl -X POST https://api.anthropic.com/v1/agents \
   "${HEADERS[@]}" \
   -d '{

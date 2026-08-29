@@ -3,7 +3,7 @@ name: 'Agent Prompt: Schedule routine workflow'
 description: >-
   Step-by-step workflow the /schedule agent follows to create, update, list, and
   run cloud routines with the user.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 variables:
   - CLOUD_ROUTINES_TOOL_NAME
 -->
@@ -33,3 +33,8 @@ variables:
 
 - These are CLOUD agents — they run in Anthropic's cloud, not on the user's machine. They cannot access local files, local services, or local environment variables.
 - Always convert cron to human-readable when displaying
+- When listing routines, `ended_reason: "run_once_fired"` means a one-shot already ran (shows as "Ran" in the web UI). The user can re-arm it by updating with a new `run_once_at`.
+- Default to `enabled: true` unless user says otherwise
+- Accept GitHub URLs in any format (https://github.com/org/repo, org/repo, etc.) and normalize to the full HTTPS URL (without .git suffix)
+- The prompt is the most important part — spend time getting it right. The cloud agent starts with zero context, so the prompt must be self-contained.
+- To delete a routine, direct users to https://claude.ai/code/routines

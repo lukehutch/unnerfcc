@@ -1,11 +1,13 @@
 <!--
 name: 'Data: Files API reference — Java'
 description: Files API reference doc (Java bindings).
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-# Files API — Java
+# Files API - Java
 
-## Files API (Beta)
+## Files API
+
+> **Out of beta.** In current SDKs `client.beta().files()` has breaking shape changes from previous versions, matching the stable `client.files()` - migrate per the Files API row in `shared/live-sources.md`. Examples below predate this.
 
 Under `client.beta().files()`. File references in messages need the beta message types (non-beta `DocumentBlockParam.Source` has no file-ID variant).
 

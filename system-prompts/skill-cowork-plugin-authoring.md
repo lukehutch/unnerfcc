@@ -3,7 +3,7 @@ name: 'Skill: Cowork Plugin Authoring'
 description: >-
   Skill for creating a new Cowork plugin from scratch or customizing an existing
   one for an organization, delivering an installable .plugin file
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 # Cowork Plugin Authoring
 
@@ -13,8 +13,8 @@ Create a new Cowork plugin from scratch, or customize an existing one for a spec
 
 Decide from the user's request:
 
-- **Customize** — the user names an existing installed plugin ("customize the X plugin", "configure X for my company", "set up the X plugin", "update the X skill"). Follow **Customizing an Existing Plugin** below.
-- **Create** — the user wants to build a plugin from scratch ("create a plugin for X", "make a new plugin", "build a plugin that does X"). Follow **Creating a New Plugin** below.
+- **Customize** - the user names an existing installed plugin ("customize the X plugin", "configure X for my company", "set up the X plugin", "update the X skill"). Follow **Customizing an Existing Plugin** below.
+- **Create** - the user wants to build a plugin from scratch ("create a plugin for X", "make a new plugin", "build a plugin that does X"). Follow **Creating a New Plugin** below.
 
 > **Nontechnical output**: Keep all user-facing conversation in plain language. Never mention file paths, directory structures, schema fields, `~~` prefixes, or placeholders unless the user asks. Frame everything in terms of what the plugin will do.
 
@@ -28,18 +28,18 @@ A plugin is a self-contained directory that extends Claude with skills, agents, 
 
 ```
 plugin-name/
-├── .claude-plugin/
-│   └── plugin.json           # Required: plugin manifest
-├── skills/                   # Skills (subdirectories with SKILL.md)
-│   └── skill-name/
-│       ├── SKILL.md
-│       └── references/
-├── agents/                   # Subagent definitions (.md files)
-├── .mcp.json                 # MCP server definitions
-└── README.md                 # Plugin documentation
+|-- .claude-plugin/
+|   `-- plugin.json           # Required: plugin manifest
+|-- skills/                   # Skills (subdirectories with SKILL.md)
+|   `-- skill-name/
+|       |-- SKILL.md
+|       `-- references/
+|-- agents/                   # Subagent definitions (.md files)
+|-- .mcp.json                 # MCP server definitions
+`-- README.md                 # Plugin documentation
 ```
 
-> **Legacy `commands/` format**: Older plugins may include a `commands/` directory with single-file `.md` slash commands. This format still works, but new plugins should use `skills/*/SKILL.md` instead — the Cowork UI presents both as a single "Skills" concept, and the skills format supports progressive disclosure via `references/`. Treat `commands/*.md` files the same way you would `skills/*/SKILL.md` when customizing.
+> **Legacy `commands/` format**: Older plugins may include a `commands/` directory with single-file `.md` slash commands. This format still works, but new plugins should use `skills/*/SKILL.md` instead - the Cowork UI presents both as a single "Skills" concept, and the skills format supports progressive disclosure via `references/`. Treat `commands/*.md` files the same way you would `skills/*/SKILL.md` when customizing.
 
 **Rules:**
 
@@ -91,7 +91,7 @@ Detailed schemas for each component type are in `references/component-schemas.md
 | Hooks (rarely used in Cowork)      | `hooks/hooks.json`  | JSON                        |
 | Commands (legacy)                  | `commands/*.md`     | Markdown + YAML frontmatter |
 
-This schema is shared with Claude Code's plugin system, but you're building for Claude Cowork, a desktop app for knowledge work. Cowork users will usually find skills the most useful. **Scaffold new plugins with `skills/*/SKILL.md` — do not create `commands/` unless the user explicitly needs the legacy single-file format.**
+This schema is shared with Claude Code's plugin system, but you're building for Claude Cowork, a desktop app for knowledge work. Cowork users will usually find skills the most useful. **Scaffold new plugins with `skills/*/SKILL.md` - do not create `commands/` unless the user explicitly needs the legacy single-file format.**
 
 ### Customizable plugins with `~~` placeholders
 
@@ -107,7 +107,7 @@ If any tool categories are used, write a `CONNECTORS.md` file at the plugin root
 ## How tool references work
 
 Plugin files use `~~category` as a placeholder for whatever tool the user
-connects in that category. Plugins are tool-agnostic — they describe
+connects in that category. Plugins are tool-agnostic - they describe
 workflows in terms of categories rather than specific products.
 
 ## Connectors for this plugin
@@ -128,7 +128,7 @@ Build from scratch through a five-phase guided conversation.
 
 ### Phase 1: Discovery
 
-Understand what the user wants to build and why. Ask (only what is unclear — skip questions the user's initial request already answers):
+Understand what the user wants to build and why. Ask (only what is unclear - skip questions the user's initial request already answers):
 
 - What should this plugin do? What problem does it solve?
 - Who will use it and in what context?
@@ -141,10 +141,10 @@ Summarize understanding and confirm before proceeding.
 
 Based on discovery, determine which component types are needed:
 
-- **Skills** — Specialized knowledge Claude loads on-demand, or user-initiated actions (domain expertise, reference schemas, workflow guides, deploy/configure/analyze/review actions)
-- **MCP Servers** — External service integration (databases, APIs, SaaS tools)
-- **Agents (uncommon)** — Autonomous multi-step tasks (validation, generation, analysis)
-- **Hooks (rare)** — Automatic behavior on certain events (enforce policies, load context, validate operations)
+- **Skills** - Specialized knowledge Claude loads on-demand, or user-initiated actions (domain expertise, reference schemas, workflow guides, deploy/configure/analyze/review actions)
+- **MCP Servers** - External service integration (databases, APIs, SaaS tools)
+- **Agents (uncommon)** - Autonomous multi-step tasks (validation, generation, analysis)
+- **Hooks (rare)** - Automatic behavior on certain events (enforce policies, load context, validate operations)
 
 Present a component plan table including types you decided not to create:
 
@@ -179,7 +179,7 @@ Specify each component in detail. Resolve all ambiguities before implementation.
 **Hooks:**
 
 - Which events? (PreToolUse, PostToolUse, Stop, SessionStart, etc.)
-- What behavior — validate, block, modify, add context?
+- What behavior - validate, block, modify, add context?
 - Prompt-based (LLM-driven) or command-based (deterministic script)?
 
 **MCP Servers:**
@@ -201,19 +201,19 @@ Create all plugin files following best practices.
 
 **Guidelines:**
 
-- **Skills** use progressive disclosure: lean SKILL.md body (under 3,000 words), detailed content in `references/`. Frontmatter description must be third-person with specific trigger phrases. Skill bodies are instructions FOR Claude, not messages to the user — write them as directives.
+- **Skills** use progressive disclosure: lean SKILL.md body (under 3,000 words), detailed content in `references/`. Frontmatter description must be third-person with specific trigger phrases. Skill bodies are instructions FOR Claude, not messages to the user - write them as directives.
 - **Agents** need a description with `<example>` blocks showing triggering conditions, plus a system prompt in the markdown body.
 - **Hooks** config goes in `hooks/hooks.json`. Use `${CLAUDE_PLUGIN_ROOT}` for script paths. Prefer prompt-based hooks for complex logic.
 - **MCP configs** go in `.mcp.json` at plugin root. Use `${CLAUDE_PLUGIN_ROOT}` for local server paths. Document required env vars in README.
 
 ### Phase 5: Review
 
-1. Summarize what was created — list each component and its purpose
+1. Summarize what was created - list each component and its purpose
 2. Ask if the user wants any adjustments
 3. Run `claude plugin validate <path-to-plugin-json>` to check the plugin structure. If this command is unavailable (e.g., when running inside Cowork), verify manually:
    - `.claude-plugin/plugin.json` exists and contains valid JSON with at least a `name` field
    - The `name` field is kebab-case (lowercase letters, numbers, and hyphens only)
-   - Any component directories referenced by the plugin (`commands/`, `skills/`, `agents/`, `hooks/`) actually exist and contain files in the expected formats — `.md` for commands/skills/agents, `.json` for hooks
+   - Any component directories referenced by the plugin (`commands/`, `skills/`, `agents/`, `hooks/`) actually exist and contain files in the expected formats - `.md` for commands/skills/agents, `.json` for hooks
    - Each skill subdirectory contains a `SKILL.md`
    - Report what passed and what didn't, the same way the CLI validator would
 
@@ -221,7 +221,7 @@ Create all plugin files following best practices.
 
 ## Customizing an Existing Plugin
 
-Customize a plugin for a specific organization — either by setting up a generic plugin template for the first time, or by tweaking an already-configured plugin.
+Customize a plugin for a specific organization - either by setting up a generic plugin template for the first time, or by tweaking an already-configured plugin.
 
 ### Finding the plugin
 
@@ -235,11 +235,11 @@ After locating the plugin, check for `~~`-prefixed placeholders: `grep -rn '~~\w
 
 > **Default rule**: If `~~` placeholders exist, default to **Generic plugin setup** unless the user explicitly asks to customize a specific part of the plugin.
 
-**1. Generic plugin setup** — The plugin contains `~~`-prefixed placeholders. These are customization points in a template that need to be replaced with real values (e.g., `~~Jira` → `Asana`, `~~your-team-channel` → `#engineering`).
+**1. Generic plugin setup** - The plugin contains `~~`-prefixed placeholders. These are customization points in a template that need to be replaced with real values (e.g., `~~Jira` -> `Asana`, `~~your-team-channel` -> `#engineering`).
 
-**2. Scoped customization** — No `~~` placeholders exist, and the user asked to customize a specific part of the plugin (e.g., "customize the connectors", "update the standup skill", "change the ticket tool"). Read the plugin files to find the relevant section(s) and focus only on those. Do not scan the entire plugin or present unrelated customization items.
+**2. Scoped customization** - No `~~` placeholders exist, and the user asked to customize a specific part of the plugin (e.g., "customize the connectors", "update the standup skill", "change the ticket tool"). Read the plugin files to find the relevant section(s) and focus only on those. Do not scan the entire plugin or present unrelated customization items.
 
-**3. General customization** — No `~~` placeholders exist, and the user wants to modify the plugin broadly. Read the plugin's files to understand its current configuration, then ask the user what they'd like to change.
+**3. General customization** - No `~~` placeholders exist, and the user wants to modify the plugin broadly. Read the plugin's files to understand its current configuration, then ask the user what they'd like to change.
 
 > **Important**: Never change the name of the plugin or skill being customized. Do not rename directories, files, or the plugin/skill name fields.
 
@@ -247,10 +247,10 @@ After locating the plugin, check for `~~`-prefixed placeholders: `grep -rn '~~\w
 
 #### Phase 0: Gather User Intent (scoped and general customization only)
 
-Check whether the user provided free-form context alongside their request (e.g., "customize the standup skill — we do async standups in #eng-updates every morning").
+Check whether the user provided free-form context alongside their request (e.g., "customize the standup skill - we do async standups in #eng-updates every morning").
 
-- **If the user provided context**: Record it and use it to pre-fill answers in Phase 3 — skip asking questions the user already answered here.
-- **If the user did not provide context**: Ask a single open-ended question using AskUserQuestion before proceeding. Tailor it to what they asked to customize — e.g., "What changes do you have in mind for the brief skill?" or "What would you like to change about how this plugin works?" Keep it short and specific.
+- **If the user provided context**: Record it and use it to pre-fill answers in Phase 3 - skip asking questions the user already answered here.
+- **If the user did not provide context**: Ask a single open-ended question using AskUserQuestion before proceeding. Tailor it to what they asked to customize - e.g., "What changes do you have in mind for the brief skill?" or "What would you like to change about how this plugin works?" Keep it short and specific.
 
 #### Phase 1: Gather Context from Knowledge MCPs
 
@@ -265,9 +265,9 @@ Use company-internal knowledge MCPs to collect information relevant to the custo
 
 **Sources to search:**
 
-1. **Chat/Slack MCPs** — tool mentions, integrations, workflow discussions
-2. **Document MCPs** — onboarding docs, tool guides, setup instructions
-3. **Email MCPs** — license notifications, admin emails, setup invitations
+1. **Chat/Slack MCPs** - tool mentions, integrations, workflow discussions
+2. **Document MCPs** - onboarding docs, tool guides, setup instructions
+3. **Email MCPs** - license notifications, admin emails, setup invitations
 
 Record all findings for use in Phase 3.
 
@@ -290,13 +290,13 @@ Work through each item using context from Phase 0 and Phase 1.
 
 **If the user's free-form input (Phase 0) or knowledge MCPs (Phase 1) provided a clear answer**: Apply directly without confirmation.
 
-**Otherwise**: Use AskUserQuestion. Don't assume "industry standard" defaults are correct — if neither the user's input nor knowledge MCPs provided a specific answer, ask.
+**Otherwise**: Use AskUserQuestion. Don't assume "industry standard" defaults are correct - if neither the user's input nor knowledge MCPs provided a specific answer, ask.
 
 **Types of changes:**
 
-1. **Placeholder replacements** (generic setup): `~~Jira` → `Asana`, `~~your-org-channel` → `#engineering`
+1. **Placeholder replacements** (generic setup): `~~Jira` -> `Asana`, `~~your-org-channel` -> `#engineering`
 2. **Content updates**: Modifying instructions, skills, workflows, or references to match the organization
-3. **URL pattern updates**: `tickets.example.com/your-team/123` → `app.asana.com/0/PROJECT_ID/TASK_ID`
+3. **URL pattern updates**: `tickets.example.com/your-team/123` -> `app.asana.com/0/PROJECT_ID/TASK_ID`
 4. **Configuration values**: Workspace IDs, project names, team identifiers
 
 If the user doesn't know or skips, leave the value unchanged (or the `~~`-prefixed placeholder, for generic setup).
@@ -308,10 +308,10 @@ After customization items are resolved, connect MCPs for any tools that were ide
 For each tool identified during customization:
 
 1. Search the registry: `search_mcp_registry(keywords=[...])` using category keywords from `references/mcp-servers.md`, or search for the specific tool name if already known
-2. If unconnected: `suggest_connectors(directoryUuids=["chosen-uuid"])` — user completes auth
+2. If unconnected: `suggest_connectors(directoryUuids=["chosen-uuid"])` - user completes auth
 3. Update the plugin's MCP config file (check `plugin.json` for custom location, otherwise `.mcp.json` at root)
 
-Collect all MCP results and present them together in the summary output — don't present MCPs one at a time during this phase.
+Collect all MCP results and present them together in the summary output - don't present MCPs one at a time during this phase.
 
 ### Summary Output
 
@@ -352,7 +352,7 @@ After create or customize completes, package the plugin as a `.plugin` file and 
 
 The `.plugin` file will appear in the chat as a rich preview where the user can browse the files and accept the plugin by pressing a button.
 
-> **Naming**: Use the plugin name from `plugin.json` (for create) or the original plugin directory name (for customize) as the `.plugin` filename. Do not rename the plugin or its files during customization — only replace placeholder values and update content.
+> **Naming**: Use the plugin name from `plugin.json` (for create) or the original plugin directory name (for customize) as the `.plugin` filename. Do not rename the plugin or its files during customization - only replace placeholder values and update content.
 
 ## Best Practices
 
@@ -366,7 +366,7 @@ The `.plugin` file will appear in the chat as a rich preview where the user can 
 
 ## Additional Resources
 
-- **`references/component-schemas.md`** — Detailed format specifications for every component type (skills, agents, hooks, MCP, legacy commands, CONNECTORS.md)
-- **`references/example-plugins.md`** — Three complete example plugin structures at different complexity levels
-- **`references/mcp-servers.md`** — MCP discovery workflow, category-to-keywords mapping, config file locations, example `.mcp.json`
-- **`references/search-strategies.md`** — Knowledge MCP query patterns for finding tool names and org values
+- **`references/component-schemas.md`** - Detailed format specifications for every component type (skills, agents, hooks, MCP, legacy commands, CONNECTORS.md)
+- **`references/example-plugins.md`** - Three complete example plugin structures at different complexity levels
+- **`references/mcp-servers.md`** - MCP discovery workflow, category-to-keywords mapping, config file locations, example `.mcp.json`
+- **`references/search-strategies.md`** - Knowledge MCP query patterns for finding tool names and org values

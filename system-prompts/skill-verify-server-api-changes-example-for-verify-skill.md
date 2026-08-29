@@ -3,7 +3,7 @@ name: 'Skill: Verify server/API changes (example for Verify skill)'
 description: >-
   Example workflow for verifying a server/API change, as part of the Verify
   skill.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 # Verifying a server/API change
 
@@ -11,7 +11,7 @@ The handle is `curl` (or equivalent). The evidence is the response.
 
 ## Pattern
 
-1. Start the server (background, with a readiness poll — see below)
+1. Start the server (background, with a readiness poll - see below)
 2. `curl` the route the diff touches, with inputs that hit the changed branch
 3. Capture the full response (status + headers + body)
 4. Compare to expected
@@ -47,24 +47,24 @@ in the response headers. It didn't before.
 
 **Execute:**
 ```bash
-# trigger the limit — 10 fast requests, limit is 5/sec per the diff
+# trigger the limit - 10 fast requests, limit is 5/sec per the diff
 for i in {1..10}; do curl -s -o /dev/null -w "%{http_code}\n" localhost:3000/api/thing; done
-# → 200 200 200 200 200 429 429 429 429 429
+# -> 200 200 200 200 200 429 429 429 429 429
 
 # capture the 429 headers
 curl -si localhost:3000/api/thing | head -20
-# → HTTP/1.1 429 Too Many Requests
-# → Retry-After: 12
-# → ...
+# -> HTTP/1.1 429 Too Many Requests
+# -> Retry-After: 12
+# -> ...
 ```
 
-**Verdict:** PASS — `Retry-After: 12` present, positive integer.
+**Verdict:** PASS - `Retry-After: 12` present, positive integer.
 
 ## What FAIL looks like
 
-- Header absent → the diff didn't take effect, or you're not actually
+- Header absent -> the diff didn't take effect, or you're not actually
   hitting the 429 path (check the status code first)
-- Header present but value is `NaN` / `undefined` / negative → the
+- Header present but value is `NaN` / `undefined` / negative -> the
   logic is wrong
-- You got 200s all the way through → you never triggered the changed
+- You got 200s all the way through -> you never triggered the changed
   path. Tighten the request burst or check the rate limit config.

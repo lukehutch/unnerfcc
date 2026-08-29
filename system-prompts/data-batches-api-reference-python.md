@@ -3,9 +3,9 @@ name: 'Data: Message Batches API reference — Python'
 description: >-
   Python Batches API reference including batch creation, status polling, and
   result retrieval at 50% cost
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-# Message Batches API — Python
+# Message Batches API - Python
 
 The Batches API (`POST /v1/messages/batches`) processes Messages API requests asynchronously at 50% of standard prices.
 
@@ -109,7 +109,7 @@ print(f"Status: {cancelled.processing_status}")  # "canceling"
 
 ## List Batches (auto-pagination)
 
-Iterating the return value of any `list()` call auto-paginates across all pages — do not index into `.data` if you want the full set:
+Iterating the return value of any `list()` call auto-paginates across all pages - do not index into `.data` if you want the full set:
 
 ```python
 for batch in client.messages.batches.list(limit=20):

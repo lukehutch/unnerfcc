@@ -4,7 +4,7 @@
     "xhigh": 1,
     "max": 0
   },
-  "effortEnumCapped": 1,
+  "effortEnumCapped": 2,
   "effortEnumUncapped": 9,
   "validatorCapped": 1,
   "maxFallback": "high",

@@ -3,7 +3,9 @@ name: 'System Reminder: Plan mode re-entry'
 description: >-
   System reminder sent when the user enters Plan mode after having previously
   exited it either via shift+tab or by approving Claude's plan.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
+variables:
+  - EXIT_PLAN_MODE_TOOL_NAME
 -->
  from your previous planning session.
 
@@ -13,4 +15,6 @@ ccVersion: 2.1.219
 3. Decide how to proceed:
    - **Different task**: If the user's request is for a different task—even if it's similar or related—start fresh by overwriting the existing plan
    - **Same task, continuing**: If this is explicitly a continuation or refinement of the exact same task, modify the existing plan while cleaning up outdated or irrelevant sections
-4. Continue on with the plan process and most importantly you should always edit the plan file one way or the other before calling 
+4. Continue on with the plan process and most importantly you should always edit the plan file one way or the other before calling ${EXIT_PLAN_MODE_TOOL_NAME}
+
+Treat this as a fresh planning session. Do not assume the existing plan is relevant without evaluating it first.

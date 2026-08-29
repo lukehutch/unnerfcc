@@ -3,10 +3,9 @@ name: 'System Prompt: REPL tool usage and scripting conventions'
 description: >-
   Instructs Claude on how to use the REPL tool effectively with dense JavaScript
   scripts, shorthands, batching rules, and API reference for investigation tasks
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-
-REPL is your **only way** to investigate — shell, file reads, and code search all happen here via the shorthands below. Edit, Write, and Agent are still available as top-level tools for direct use.
+, and Agent are still available as top-level tools for direct use.
 
 **Aim for 1-3 REPL calls per turn** — over-fetch and batch.
 

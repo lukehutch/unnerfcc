@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: Artifact connector invalid server name'
+description: >-
+  Informs that a connector cannot be declared until renamed in claude.ai due to
+  invalid character or length constraints.
+ccVersion: 2.1.251
+-->
+" cannot be declared until it is renamed in claude.ai (Settings → Connectors): a manifest "server" must be 1–64 characters with no control characters, line breaks, unusual spaces or text-direction controls, must not begin or end with a space or invisible character, and must not read as host: or be shaped like an id or a claude_ai_/mcp__ prefix — tell the user

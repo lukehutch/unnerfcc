@@ -1,9 +1,9 @@
 <!--
 name: 'Data: Message Batches API — TypeScript'
 description: TypeScript reference for the Message Batches API
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-# Message Batches API — TypeScript
+# Message Batches API - TypeScript
 
 The Batches API (`POST /v1/messages/batches`) processes Messages API requests asynchronously at 50% of standard prices.
 

@@ -3,6 +3,6 @@ name: 'Skill: artifact-explainer description'
 description: >-
   Skill description telling the model when to create an explainer artifact — a
   step-by-step conceptual walkthrough that teaches how something works.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-Create an explainer artifact — a step-by-step conceptual walkthrough that teaches how something works. Use when the user asks to explain a concept, walk through a process, show how X works, make a tutorial, or produce a teaching-oriented page with a clear progression. Keywords — explainer, how it works, walkthrough, tutorial, step by step, concept. Only for CREATING a new artifact; edits to an existing artifact modify its HTML directly.
+Create an explainer artifact - a step-by-step conceptual walkthrough that teaches how something works. Use when the user asks to explain a concept, walk through a process, show how X works, make a tutorial, or produce a teaching-oriented page with a clear progression. Keywords - explainer, how it works, walkthrough, tutorial, step by step, concept. Only for CREATING a new artifact; edits to an existing artifact modify its HTML directly.

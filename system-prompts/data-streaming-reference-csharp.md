@@ -1,9 +1,9 @@
 <!--
 name: 'Data: Streaming reference — C#'
 description: Streaming API reference doc (C# bindings).
-ccVersion: 2.1.183
+ccVersion: 2.1.251
 -->
-# Streaming — C#
+# Streaming - C#
 
 ## Streaming
 
@@ -27,7 +27,7 @@ await foreach (RawMessageStreamEvent streamEvent in client.Messages.CreateStream
 }
 ```
 
-**`RawMessageStreamEvent` TryPick methods** (naming drops the `Message`/`Raw` prefix): `TryPickStart`, `TryPickDelta`, `TryPickStop`, `TryPickContentBlockStart`, `TryPickContentBlockDelta`, `TryPickContentBlockStop`. There is no `TryPickMessageStop` — use `TryPickStop`.
+**`RawMessageStreamEvent` TryPick methods** (naming drops the `Message`/`Raw` prefix): `TryPickStart`, `TryPickDelta`, `TryPickStop`, `TryPickContentBlockStart`, `TryPickContentBlockDelta`, `TryPickContentBlockStop`. There is no `TryPickMessageStop` - use `TryPickStop`.
 
 ---
 

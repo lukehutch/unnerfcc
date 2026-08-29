@@ -4,6 +4,8 @@ description: >-
   Tells the model reading or listing another person's artifact assets needs a
   consent surface nobody can answer in this session, so it should raise the read
   with the user in chat instead of retrying.
-ccVersion: 2.1.235
+ccVersion: 2.1.251
+variables:
+  - RESOURCE_DESCRIPTION
 -->
-Reading or listing another person's artifact assets needs a consent surface, and no one can answer the prompt in this session — raise the read with the user in chat; do not retry it in this session.
+Reading or listing ${RESOURCE_DESCRIPTION} needs a consent surface, and no one can answer the prompt in this session — raise the read with the user in chat; do not retry it in this session.

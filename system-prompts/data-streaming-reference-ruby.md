@@ -1,9 +1,9 @@
 <!--
 name: 'Data: Streaming reference (Ruby)'
 description: Ruby streaming code sample in the Claude API reference skill
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-# Streaming — Ruby
+# Streaming - Ruby
 
 ## Streaming
 

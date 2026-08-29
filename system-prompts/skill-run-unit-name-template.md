@@ -4,7 +4,7 @@ description: >-
   Template skeleton for a per-project run-<unit-name> skill, bundled as
   template.md inside run-skill-generator — prerequisites, setup, build,
   agent/human run paths, test, and gotchas sections
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 ---
 name: run-<unit-name>
@@ -12,17 +12,17 @@ description: Build, run, and drive <unit-name>. Use when asked to start <unit-na
 ---
 
 <One-sentence description: what this is and how an agent drives it.
-Name the handle here — "drive it via
+Name the handle here - "drive it via
 `.claude/skills/run-<unit-name>/driver.mjs` under xvfb" for a desktop
 app, or "start the dev server then drive it via `chromium-cli`" for a
-web app — so an agent knows where to look first.>
+web app - so an agent knows where to look first.>
 
 <If the unit isn't at repo root:>
 All paths below are relative to `<unit-dir>/`.
 
 ## Prerequisites
 
-<System-level requirements. The exact `apt-get install` line you ran —
+<System-level requirements. The exact `apt-get install` line you ran -
 not a generic list, the one that actually worked. Target Ubuntu.>
 
 ```bash
@@ -45,11 +45,11 @@ patches (feature-gate overrides, config stubs) with the exact command.>
 <commands>
 ```
 
-<Env vars — required vs optional, with sensible defaults:>
+<Env vars - required vs optional, with sensible defaults:>
 
 ```bash
-export FOO_API_KEY=...   # required — get from <where>
-export BAR_MODE=dev      # optional — default is prod
+export FOO_API_KEY=...   # required - get from <where>
+export BAR_MODE=dev      # optional - default is prod
 ```
 
 ## Build
@@ -72,7 +72,7 @@ that one-liner goes here.>
 ```
 
 <For REPL-style drivers, show the tmux wrapping. Poll for a ready marker
-between send-keys and capture-pane — faster than a fixed sleep and fails
+between send-keys and capture-pane - faster than a fixed sleep and fails
 loudly instead of capturing a half-rendered screen:>
 
 ```bash
@@ -83,9 +83,9 @@ tmux send-keys -t app '<first driver command>' Enter
 tmux capture-pane -t app -p
 ```
 
-<Where artifacts land (screenshots, logs) — absolute paths:>
+<Where artifacts land (screenshots, logs) - absolute paths:>
 
-Screenshots → `/tmp/shots/`. Logs → `/tmp/<app>.log`.
+Screenshots -> `/tmp/shots/`. Logs -> `/tmp/<app>.log`.
 
 <If the driver has commands, a table:>
 
@@ -95,11 +95,11 @@ Screenshots → `/tmp/shots/`. Logs → `/tmp/<app>.log`.
 
 ## Run (human path)
 
-<If meaningfully different from the agent path. Brief — agents won't
+<If meaningfully different from the agent path. Brief - agents won't
 use this, humans can figure it out.>
 
 ```bash
-<command>   # → <what happens>. <how to stop>.
+<command>   # -> <what happens>. <how to stop>.
 ```
 
 ## Test
@@ -108,11 +108,11 @@ use this, humans can figure it out.>
 <command>
 ```
 
-<Expected result — "N suites pass", or specific known-flaky tests.>
+<Expected result - "N suites pass", or specific known-flaky tests.>
 
 ---
 
-<Optional sections below — include only if relevant and only with
+<Optional sections below - include only if relevant and only with
 content you actually hit, not generic advice.>
 
 ## Gotchas
@@ -120,11 +120,11 @@ content you actually hit, not generic advice.>
 <Non-obvious traps. The things that look like they should work but
 don't, with the workaround. If this section is generic, delete it.>
 
-- **<specific thing>** — <why it breaks> → <what to do instead>
+- **<specific thing>** - <why it breaks> -> <what to do instead>
 
 ## Troubleshooting
 
-<Symptom → fix. Only errors you actually encountered.>
+<Symptom -> fix. Only errors you actually encountered.>
 
 - **<exact error message or symptom>**: <cause>. <fix>.
 
@@ -135,16 +135,16 @@ NOTE ON THE FRONTMATTER ABOVE:
   becomes the slash command (/run-<unit-name>) and must match the
   directory name.
 - The `description:` is what Claude scans to decide whether to load this
-  skill automatically. Keep the verbs — "start," "run," "build," "test,"
-  "screenshot" — they're what an asking agent will actually type.
+  skill automatically. Keep the verbs - "start," "run," "build," "test,"
+  "screenshot" - they're what an asking agent will actually type.
 
 NOTE ON THE DRIVER:
 - If you wrote a driver script, it lives in this same directory (next
   to this file) by default. Reference it from the Run section.
-- For a web app there's usually no driver file — the `chromium-cli`
+- For a web app there's usually no driver file - the `chromium-cli`
   heredoc in the Run section is the harness.
-- If the driver grows into something the project's test suite wants —
-  shared launch helpers, a real e2e harness — move it to scripts/ or
+- If the driver grows into something the project's test suite wants -
+  shared launch helpers, a real e2e harness - move it to scripts/ or
   e2e/ in the unit, and update the paths here. The skill stays put.
 
 Delete everything from `---` above onwards before committing. --->

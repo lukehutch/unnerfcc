@@ -1,11 +1,8 @@
 <!--
 name: 'System Prompt: Model Identity Line'
 description: >-
-  System-section line stating the model name and exact model ID powering the
-  assistant.
-ccVersion: 2.1.178
-variables:
-  - SYSTEM_PROMPT_MODEL_IDENTITY_LINE_VAR_0
-  - SYSTEM_PROMPT_MODEL_IDENTITY_LINE_VAR_1
+  System-section line naming the model that powers the assistant, ahead of the
+  exact model ID clause.
+ccVersion: 2.1.251
 -->
-You are powered by the model named ${SYSTEM_PROMPT_MODEL_IDENTITY_LINE_VAR_0}. The exact model ID is ${SYSTEM_PROMPT_MODEL_IDENTITY_LINE_VAR_1}.
+You are powered by the model named 

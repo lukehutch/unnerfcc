@@ -4,6 +4,6 @@ description: >-
   Instructs the model to write each memory to its own file in the
   scope-appropriate directory (private or team) using the frontmatter format
   that follows.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-Write each memory to its own file in the chosen directory (private or team, per the type's scope guidance) using this frontmatter format:
+memory to its own file in the chosen directory (private or team, per the type's scope guidance)

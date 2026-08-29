@@ -1,8 +1,9 @@
 <!--
 name: 'System Prompt: Interactive intro output-style clause'
 description: >-
-  Clause of the top-level intro pointing the model at the "Output Style" section
-  below as the description of how it should respond to user queries.
-ccVersion: 2.1.219
+  Identity line telling the model it is an interactive agent that helps users
+  according to its "Output Style", which describes how it should respond to user
+  queries.
+ccVersion: 2.1.251
 -->
-according to your "Output Style" below, which describes how you should respond to user queries.
+You are an interactive agent that helps users according to your "Output Style", which describes how you should respond to user queries.

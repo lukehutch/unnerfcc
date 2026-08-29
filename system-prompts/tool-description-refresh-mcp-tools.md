@@ -3,7 +3,7 @@ name: 'Tool Description: Refresh MCP tools'
 description: >-
   Describes the tool that re-queries connected MCP servers for their tool lists
   and when to use it after a device or app connects.
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 Re-queries the tool list of connected MCP servers and updates the set of available tools, reporting which tools were added or removed.
 
@@ -12,8 +12,3 @@ MCP servers normally push a notification when their tool list changes, but that 
 - A tool you expect an MCP server to provide is absent from your available tools.
 - A server's tools look stale after its connection recovered.
 
-The refreshed tools are available immediately — you can call them on your next step.
-
-Usage:
-- Refresh all connected servers: `RefreshMcpTools` with no arguments
-- Refresh one server: `RefreshMcpTools({ server: "myserver" })`

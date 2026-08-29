@@ -1,12 +1,14 @@
 <!--
 name: 'Tool Description: Bash — committing changes with git'
 description: >-
-  Bash-tool commit workflow (the non-/commit branch of the old conditional): the
-  git safety protocol, the commit-only-when-asked rule, and the numbered
-  parallel-command status/diff/log then stage-and-commit sequence.
-ccVersion: 2.1.219
+  Bash-tool commit workflow: git safety protocol, commit-only-when-asked rule,
+  and parallel-command status/diff/log then stage-and-commit sequence.
+ccVersion: 2.1.251
 variables:
   - BASH_TOOL_NAME
+  - COMMIT_MESSAGE_FLAGS
+  - TASK_TOOL_NAME
+  - TODO_TOOL_NAME
 -->
 # Committing changes with git
 
@@ -34,4 +36,19 @@ Git Safety Protocol:
   - Ensure it accurately reflects the changes and their purpose
 3. Run the following commands in parallel:
    - Add relevant untracked files to the staging area.
-   - Create the commit with a message
+   - Create the commit with a message${COMMIT_MESSAGE_FLAGS}
+   - Run git status after the commit completes to verify success.
+   Note: git status depends on the commit completing, so run it sequentially after the commit.
+4. If the commit fails due to pre-commit hook: fix the issue and create a NEW commit
+
+Important notes:
+- NEVER run additional commands to read or explore code, besides git bash commands
+- NEVER use the ${TASK_TOOL_NAME} or ${TODO_TOOL_NAME} tools
+- DO NOT push to the remote repository unless the user explicitly asks you to do so
+- IMPORTANT: Never use git commands with the -i flag (like git rebase -i or git add -i) since they require interactive input which is not supported.
+- IMPORTANT: Do not use --no-edit with git rebase commands, as the --no-edit flag is not a valid option for git rebase.
+- If there are no changes to commit (i.e., no untracked files and no modifications), do not create an empty commit
+- In order to ensure good formatting, ALWAYS pass the commit message via a HEREDOC, a la this example:
+<example>
+git commit -m "$(cat <<'EOF'
+   Commit message here.

@@ -1,9 +1,9 @@
 <!--
 name: 'Data: Message Batches API reference — C#'
 description: Message Batches API reference doc (C# bindings).
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
-# Message Batches — C#
+# Message Batches - C#
 
 ## Message Batches API
 

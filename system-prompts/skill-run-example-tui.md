@@ -3,12 +3,12 @@ name: 'Skill: run example — TUI / interactive terminal app'
 description: >-
   Bundled example doc (examples/tui.md) for the run skill: driving an
   interactive terminal app by wrapping it in tmux send-keys / capture-pane
-ccVersion: 2.1.219
+ccVersion: 2.1.251
 -->
 # Example: TUI / interactive terminal app
 
 Interactive terminal apps (text editors, REPLs, curses-based UIs) can't
-be driven directly by an agent's bash tool — they take over the terminal.
+be driven directly by an agent's bash tool - they take over the terminal.
 The skill must show how to wrap them in `tmux` so the agent can send
 input, capture output, and take screenshots.
 
@@ -36,7 +36,7 @@ the skill body are enough.
 > tmux new-session -d -s app -x 120 -y 40 './myapp'
 > ```
 >
-> Poll until the ready marker appears (faster + more reliable than a fixed sleep —
+> Poll until the ready marker appears (faster + more reliable than a fixed sleep -
 > returns the instant the app is up, fails loudly if it isn't):
 >
 > ```bash
@@ -79,10 +79,10 @@ the skill body are enough.
 - **Terminal size.** Some TUIs break or hide content at small widths.
   Specify a known-good size in the `tmux new-session -x -y` args.
 - **Startup time.** Poll for a ready marker (`until tmux capture-pane | grep -q X`)
-  rather than a fixed `sleep N` — returns the instant the app is up, and fails
+  rather than a fixed `sleep N` - returns the instant the app is up, and fails
   usefully when it never does. Say what string means ready.
 - **Keybinding reference.** A table of the main keys. This is the "API"
-  of a TUI — an agent needs it to drive the app.
+  of a TUI - an agent needs it to drive the app.
 - **Exit cleanly.** Show the quit keystroke *and* `tmux kill-session` as
   a fallback.
 - **Color/unicode quirks.** If `capture-pane` output is hard to read,

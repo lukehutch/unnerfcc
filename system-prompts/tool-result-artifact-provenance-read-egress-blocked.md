@@ -4,6 +4,8 @@ description: >-
   Republish refusal telling the model this environment's network allowlist
   blocks reading the published page, so the decision-provenance check every
   republish performs cannot run here.
-ccVersion: 2.1.231
+ccVersion: 2.1.251
+variables:
+  - REASON
 -->
-). This environment's network allowlist blocks the read, so republish cannot proceed from here — every republish verifies decision provenance against the published page.
+could not read the published page to verify decision provenance (${REASON}). This environment's network allowlist blocks the read, so republish cannot proceed from here — every republish verifies decision provenance against the published page.
