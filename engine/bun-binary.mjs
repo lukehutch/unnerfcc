@@ -208,16 +208,49 @@ function spContent(blob, sp, what = "string pointer") {
   return blob.subarray(sp.offset, sp.offset + sp.length);
 }
 
-function detectModuleStruct(modulesListLen) {
-  const fitsNew = modulesListLen % MODULE_NEW === 0;
-  const fitsOld = modulesListLen % MODULE_OLD === 0;
-  if (fitsNew && !fitsOld) return MODULE_NEW;
-  if (fitsOld && !fitsNew) return MODULE_OLD;
-  // Ambiguous (divisible by both) or neither → we can't reliably pick the module
-  // struct size; the layout isn't one we recognize. Fail loud rather than guess.
+// Does the module table parse cleanly at this struct size? Divisibility alone
+// is not enough to tell 52 from 36: 52 and 36 share a factor of 4, so any table
+// whose length is a multiple of 468 (lcm) divides evenly by both — which is
+// exactly what the Linux x64 v2.1.251 binary does (102492 = 219 × 468, i.e.
+// 1971 modules at 52 bytes or a bogus 2847 at 36). So actually read the table:
+// at the wrong struct size the fields land on the wrong bytes and most entries
+// stop looking like modules. Every entry must have an in-bounds, non-empty,
+// absolute-path name (Bun's import specifiers are always "/…"), in-bounds
+// content/sourcemap/bytecode pointers, and small enum bytes.
+function moduleTableIsValid(blob, modulesListSP, structSize) {
+  const list = spContent(blob, modulesListSP, "modules list");
+  const n = list.length / structSize;
+  if (!Number.isInteger(n) || n === 0) return false;
+  const nSP = structSize === MODULE_NEW ? 6 : 4;
+  for (let i = 0; i < n; i++) {
+    const b = i * structSize;
+    for (let k = 0; k < nSP; k++) {
+      const off = list.readUInt32LE(b + k * SIZEOF_SP);
+      const len = list.readUInt32LE(b + k * SIZEOF_SP + 4);
+      if (off + len > blob.length) return false;
+      if (k === 0) {
+        if (len === 0 || blob[off] !== 0x2f /* "/" */) return false;
+        if (blob.indexOf(0, off) < off + len) return false; // NUL inside the name
+      }
+    }
+    // encoding / loader / moduleFormat / side are small enums, never large bytes.
+    for (let k = 0; k < 4; k++) if (list[b + nSP * SIZEOF_SP + k] > 0x1f) return false;
+  }
+  return true;
+}
+
+function detectModuleStruct(blob, offsets) {
+  const candidates = [MODULE_NEW, MODULE_OLD].filter(
+    (s) => offsets.modulesPtr.length % s === 0 && moduleTableIsValid(blob, offsets.modulesPtr, s)
+  );
+  if (candidates.length === 1) return candidates[0];
+  // Neither layout parses (unknown format), or — never yet observed — both do,
+  // in which case guessing could silently rebuild a corrupt blob. Fail loud.
   throw fmtErr(
-    `cannot determine module struct size: modulesPtr.length=${modulesListLen} ` +
-    `is ${fitsNew ? "divisible by both 52 and 36 (ambiguous)" : "divisible by neither 52 nor 36"}`
+    `cannot determine module struct size: modulesPtr.length=${offsets.modulesPtr.length} ` +
+    (candidates.length === 0
+      ? "parses as neither the 52-byte nor the 36-byte module struct"
+      : "parses as both the 52-byte and 36-byte module struct (ambiguous)")
   );
 }
 
@@ -301,7 +334,7 @@ export function parseBinary(binaryPath) {
   else throw fmtErr("unrecognized .bun section size header");
   const blob = section.subarray(headerSize);
   const offsets = parseOffsets(blob);
-  const structSize = detectModuleStruct(offsets.modulesPtr.length);
+  const structSize = detectModuleStruct(blob, offsets);
   const modules = parseModules(blob, offsets, structSize);
   if (!modules[offsets.entryPointId]) {
     throw fmtErr(`entry-point module (id=${offsets.entryPointId}) not found among ${modules.length} module(s)`);
