@@ -270,7 +270,22 @@ function merge(workDir, applyUnnerfsPath, ccVersion) {
     return;
   }
 
+  const before = (readFileSync(applyUnnerfsPath, "utf-8").match(/^        Rule\($/gm) || []).length;
   insertRules(applyUnnerfsPath, ccVersion, accepted);
+  const after = (readFileSync(applyUnnerfsPath, "utf-8").match(/^        Rule\($/gm) || []).length;
+  // Count what actually landed rather than trusting accepted.length. This
+  // reported success while writing nothing at v2.1.251 (see insertRules), and
+  // the --dry-run gate below cannot catch that: a rule that was never written
+  // has nothing to fail. Fail loudly instead — a silently-dropped un-nerf is
+  // exactly the failure mode this whole pipeline exists to prevent.
+  if (after - before !== accepted.length) {
+    console.error(
+      `bucket-analyze: FAILED to insert every accepted rule — expected ${accepted.length} new Rule() entr(ies), ` +
+      `the file gained ${after - before}. apply-unnerfs.py has NOT been left in a trustworthy state; ` +
+      `inspect it (git diff) and add the missing rule(s) by hand.`
+    );
+    process.exit(1);
+  }
   console.log(`inserted ${accepted.length} new rule(s) into ${applyUnnerfsPath}`);
 
   // Verify the newly-inserted rule(s) actually MATCH — i.e. would be APPLIED,
@@ -309,11 +324,35 @@ function pyStr(s) {
   return `"${escaped}"`;
 }
 
+// Render one `Rule(...)` entry at the dict's standard 8-space indent.
+function renderRule(r, provenanceComment) {
+  let s = `        Rule(\n`;
+  if (provenanceComment) s += provenanceComment;
+  s += `            stock=${pyStr(r.stock)},\n`;
+  s += `            unnerf=${pyStr(r.unnerf)},\n`;
+  s += `            description=${pyStr(r.description)},\n`;
+  s += `        ),\n`;
+  return s;
+}
+
+// Locate an existing `"<file>": [ ... ],` block, returning the offset of its
+// closing `    ],` line (where new Rule()s get spliced in), or -1 if the file
+// has no block yet. Safe to delimit on `\n    ],\n` because pyStr renders every
+// real newline as the two-character `\n` escape, so no string literal in the
+// file ever contains a raw newline that could fake a block closer (asserted by
+// this file's own tests and true of every rule apply-unnerfs.py ships).
+function findExistingBlockClose(src, file, dictEnd) {
+  const keyIdx = src.indexOf(`\n    "${file}": [\n`);
+  if (keyIdx < 0 || keyIdx >= dictEnd) return -1;
+  const closeIdx = src.indexOf("\n    ],\n", keyIdx);
+  if (closeIdx < 0) throw new Error(`found "${file}" rule block but not its closing "    ]," — apply-unnerfs.py formatting changed?`);
+  return closeIdx + 1; // start of the `    ],` line itself
+}
+
 function insertRules(applyUnnerfsPath, ccVersion, accepted) {
-  const src = readFileSync(applyUnnerfsPath, "utf-8");
+  let src = readFileSync(applyUnnerfsPath, "utf-8");
   const marker = "\n}\n";
-  const idx = src.lastIndexOf(marker);
-  if (idx < 0) throw new Error("could not find the RULES dict's closing brace to insert before");
+  if (src.lastIndexOf(marker) < 0) throw new Error("could not find the RULES dict's closing brace to insert before");
 
   const byFile = new Map();
   for (const { file, rule } of accepted) {
@@ -322,36 +361,54 @@ function insertRules(applyUnnerfsPath, ccVersion, accepted) {
   }
 
   const date = new Date().toISOString().slice(0, 10);
-  let block = `\n    # -------------------------------------------------------------------------\n`;
-  block += `    # v${ccVersion} sync (bucket-analyze.mjs, ${date}): AI-proposed, mechanically\n`;
-  block += `    # validated (stock occurs exactly once, no new \${VAR} introduced, no overlap\n`;
-  block += `    # with an existing rule, confirmed to actually match via --dry-run). Full\n`;
-  block += `    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-${ccVersion}.json\n`;
-  block += `    # -------------------------------------------------------------------------\n`;
+  const provenance =
+    `            # v${ccVersion} bucket-analysis (bucket-analyze.mjs, ${date}): AI-proposed,\n` +
+    `            # mechanically validated (stock occurs exactly once, no new \${VAR}\n` +
+    `            # introduced, no overlap with an existing rule, --dry-run confirmed).\n` +
+    `            # Full keep/lift review: data/bucket-analysis-${ccVersion}.json\n`;
+
+  // Split by whether the file already has a rule block. A file that does must
+  // have its new Rule()s SPLICED INTO that block: emitting a second
+  // `"file.md": [...]` key would be a duplicate Python dict key, and the later
+  // one silently wins — dropping every rule the first block held. This used to
+  // `continue` here instead, which avoided the duplicate key but discarded the
+  // new rule outright, and the caller still reported it as inserted. Both
+  // v2.1.251 bucket-analysis lifts were lost that way (recovered by hand);
+  // nothing downstream caught it, because --dry-run below can only fail a rule
+  // that actually made it into the file.
+  const splices = [], appends = [];
   for (const [file, rules] of byFile) {
-    const existingIdx = src.indexOf(`"${file}": [`);
-    if (existingIdx >= 0 && existingIdx < idx) {
-      // A rule for this file already exists elsewhere in the dict (added earlier
-      // this same run, or a file with a pre-existing block from a prior sync) —
-      // never emit a second `"file.md": [...]` key, Python would just let the
-      // later one win and silently drop the first. Skip; this run's candidates
-      // already passed the overlap check against those entries.
-      console.error(`  note: ${file} already has a rule block elsewhere; not adding a duplicate key`);
-      continue;
-    }
-    block += `    "${file}": [\n`;
-    for (const r of rules) {
-      block += `        Rule(\n`;
-      block += `            stock=${pyStr(r.stock)},\n`;
-      block += `            unnerf=${pyStr(r.unnerf)},\n`;
-      block += `            description=${pyStr(r.description)},\n`;
-      block += `        ),\n`;
-    }
-    block += `    ],\n`;
+    const closeIdx = findExistingBlockClose(src, file, src.lastIndexOf(marker));
+    if (closeIdx >= 0) splices.push({ file, rules, closeIdx });
+    else appends.push({ file, rules });
   }
 
-  const out = src.slice(0, idx) + block + src.slice(idx + 1); // +1 keeps the marker's own leading \n
-  writeFileSync(applyUnnerfsPath, out);
+  // Splice highest-offset-first so each insertion leaves the earlier offsets valid.
+  splices.sort((a, b) => b.closeIdx - a.closeIdx);
+  for (const { file, rules, closeIdx } of splices) {
+    const added = rules.map((r) => renderRule(r, provenance)).join("");
+    src = src.slice(0, closeIdx) + added + src.slice(closeIdx);
+    console.error(`  ${file}: spliced ${rules.length} rule(s) into its existing block`);
+  }
+
+  if (appends.length) {
+    const idx = src.lastIndexOf(marker); // re-resolve: the splices above moved it
+    let block = `\n    # -------------------------------------------------------------------------\n`;
+    block += `    # v${ccVersion} sync (bucket-analyze.mjs, ${date}): AI-proposed, mechanically\n`;
+    block += `    # validated (stock occurs exactly once, no new \${VAR} introduced, no overlap\n`;
+    block += `    # with an existing rule, confirmed to actually match via --dry-run). Full\n`;
+    block += `    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-${ccVersion}.json\n`;
+    block += `    # -------------------------------------------------------------------------\n`;
+    for (const { file, rules } of appends) {
+      block += `    "${file}": [\n`;
+      for (const r of rules) block += renderRule(r, null);
+      block += `    ],\n`;
+      console.error(`  ${file}: added a new rule block with ${rules.length} rule(s)`);
+    }
+    src = src.slice(0, idx) + block + src.slice(idx + 1); // +1 keeps the marker's own leading \n
+  }
+
+  writeFileSync(applyUnnerfsPath, src);
 }
 
 // JSON Schema for the verdicts array. `rule` is always a present object
