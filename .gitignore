@@ -46,3 +46,8 @@ __pycache__/
 # per-run logs). The committed outputs are docs/benchmark.svg + the README
 # section; everything under data/benchmark/ is large, local, regenerable.
 data/benchmark/
+
+# upgrade.sh's mid-build marker: prompts-<version>.json.incomplete sits next to
+# a catalog that is still being built and is removed once the run reaches its
+# final repack + boot-check. Purely local run state — see latest_complete_catalog().
+data/prompts/*.incomplete

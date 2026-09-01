@@ -58,6 +58,17 @@ ok()   { printf '%s  ✓%s %s\n' "$B$G" "$N" "$*"; }
 warn() { printf '%s!! %s%s\n' "$Y" "$*" "$N" >&2; }
 die()  { printf '%sERROR:%s %s\n' "$R$B" "$N" "$*" >&2; exit 1; }
 run()  { if [ "$DRY_RUN" = 1 ]; then printf '%s[dry-run]%s %s\n' "$B" "$N" "$*"; else eval "$@"; fi; }
+# True if $1 is a binary we have already patched. The un-nerf sentinels are plain
+# text in the module blob, so a raw grep of the executable finds them; no stock
+# build contains any of them.
+is_unnerfed() {
+  local s
+  for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
+           "thorough, clear, and rich with explanation"; do
+    grep -qaF "$s" "$1" 2>/dev/null && return 0
+  done
+  return 1
+}
 bun_incompatible() {
   printf '%s\nBUN FORMAT INCOMPATIBLE — engine/bun-binary.mjs could not parse this\n' "$R$B" >&2
   printf 'Claude Code binary. Bun likely changed its standalone container format.\n' >&2
@@ -161,6 +172,24 @@ else
   [ "$RESOLVED_VERSION" = "$CC_VERSION" ] || \
     warn "resolved binary reports v$RESOLVED_VERSION but targeting v$CC_VERSION — a stale launcher may be shadowing it"
   ok "binary: $CC_BIN (v$CC_VERSION)"
+  # Re-patching our own output is not a no-op: the un-nerfs have no stock anchor
+  # left to match, so every one of them silently drops (patched=0), and the
+  # repack has to re-locate a blob pointer whose value we ourselves chose --
+  # a round vaddr that occurs by chance dozens of times in the binary's data,
+  # which the repack correctly refuses to guess between. Restore stock first;
+  # this is the same "reinstall stock CC before re-patching" the splice step
+  # tells you to do by hand.
+  if [ "$DRY_RUN" != 1 ] && is_unnerfed "$CC_BIN"; then
+    command -v npm >/dev/null || die "the installed v$CC_VERSION binary is already un-nerfed and npm is unavailable to restore a stock copy — reinstall Claude Code manually, then re-run"
+    log "Installed binary is already un-nerfed — restoring stock v$CC_VERSION before re-patching"
+    run "npm install -g '@anthropic-ai/claude-code@$CC_VERSION'"
+    hash -r 2>/dev/null || true
+    LAUNCHER="$(command -v claude)"
+    CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
+    [ -f "$CC_BIN" ] || die "could not resolve the claude binary from $LAUNCHER after restoring stock"
+    is_unnerfed "$CC_BIN" && die "restored v$CC_VERSION from npm but the binary still contains un-nerf sentinels — refusing to patch it twice"
+    ok "restored stock binary: $CC_BIN"
+  fi
 fi
 
 # --- rebuild stock + replay un-nerfs ---------------------------------------

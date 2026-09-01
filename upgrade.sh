@@ -84,6 +84,18 @@ bun_incompatible() {
   exit 3
 }
 
+# True if $1 is a binary this tool has already patched. The un-nerf sentinels are
+# plain text in the module blob, so a raw grep of the executable finds them; no
+# stock build contains any of them. Used to refuse to unpack our own output.
+is_unnerfed() {
+  local s
+  for s in "senior-engineer standard" "never trade away rigor, depth, or correctness" \
+           "thorough, clear, and rich with explanation"; do
+    grep -qaF "$s" "$1" 2>/dev/null && return 0
+  done
+  return 1
+}
+
 # --- preconditions ----------------------------------------------------------
 command -v node >/dev/null || die "node not found"
 command -v python3 >/dev/null || die "python3 not found"
@@ -144,12 +156,36 @@ fi
 log "Resolving target Claude Code version"
 mkdir -p "$PROMPTS_DIR"
 
-# Newest version we already ship a catalog for. (The carry-forward seed is
-# re-resolved below, once CC_VERSION is known — see PREV_CATALOG there.)
+# Newest COMPLETE catalog on disk, optionally excluding one version.
+#
+# A run that dies anywhere between gen-catalog (step 2) and the final repack
+# (step 6) leaves a half-built prompts-<v>.json behind, and that file must not
+# be mistaken for a finished one. gen-catalog is preceded by `touch
+# prompts-<v>.json.incomplete` and the marker is removed only once step 6 has
+# passed, so the marker's presence is exactly "this catalog is mid-build".
+# Treating a half-built catalog as real breaks the next run two ways: it
+# satisfies the already-supported check (the run silently no-ops), and it can be
+# picked as the carry-forward seed (every id "carries" from a catalog whose new
+# entries are still anonymous, so the diff reports `removed 0` and the whole
+# curated-id reuse path is skipped — the same failure the exclude-the-target
+# guard below exists to prevent).
+#
 # `.candidates.json` sidecars live in the same dir and match the same glob, so
 # they must be filtered out or `sort -V | tail -1` can select one and yield a
 # bogus SUPPORTED_LATEST like "2.1.219.candidates".
-PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candidates\.json$' | sort -V | tail -1 || true)"
+latest_complete_catalog() {
+  local exclude="${1:-}" c v
+  for c in $(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candidates\.json$' | sort -V || true); do
+    [ -e "$c.incomplete" ] && continue
+    v="$(basename "$c" | sed -E 's/prompts-(.*)\.json/\1/')"
+    [ -n "$exclude" ] && [ "$v" = "$exclude" ] && continue
+    printf '%s\n' "$c"
+  done | tail -1
+}
+
+# Newest version we already ship a catalog for. (The carry-forward seed is
+# re-resolved below, once CC_VERSION is known — see PREV_CATALOG there.)
+PREV_CATALOG="$(latest_complete_catalog)"
 SUPPORTED_LATEST=""
 [ -n "$PREV_CATALOG" ] && SUPPORTED_LATEST="$(basename "$PREV_CATALOG" | sed -E 's/prompts-(.*)\.json/\1/')"
 
@@ -176,15 +212,21 @@ else
 fi
 
 [ -n "$SUPPORTED_LATEST" ] && ok "newest catalog we ship: v$SUPPORTED_LATEST" \
-                           || warn "no existing catalog in $PROMPTS_DIR — first run (no id carry-forward)."
+                           || warn "no completed catalog in $PROMPTS_DIR — gen-catalog needs one to seed id carry-forward (see the seed resolution below)."
 [ -n "$NPM_LATEST" ] && ok "newest on npm: v$NPM_LATEST"
 [ -n "$INSTALLED_VERSION" ] && ok "installed: v$INSTALLED_VERSION"
 ok "target version: v$CC_VERSION"
 
-# Nothing-to-do: we already have a catalog for the target and no --force.
-if [ -f "$PROMPTS_DIR/prompts-$CC_VERSION.json" ] && [ "$FORCE" -eq 0 ]; then
-  ok "already support v$CC_VERSION — nothing to do (use --force to regenerate, or --version to target another release)."
-  exit 0
+# Nothing-to-do: we already have a FINISHED catalog for the target and no
+# --force. A catalog left behind by a run that died mid-pipeline does not count
+# — resume it instead of reporting success and doing nothing.
+if [ -f "$PROMPTS_DIR/prompts-$CC_VERSION.json" ]; then
+  if [ -e "$PROMPTS_DIR/prompts-$CC_VERSION.json.incomplete" ]; then
+    warn "a previous run for v$CC_VERSION did not finish — regenerating its catalog (classification results already in data/string-catalog.json are reused, not re-billed)."
+  elif [ "$FORCE" -eq 0 ]; then
+    ok "already support v$CC_VERSION — nothing to do (use --force to regenerate, or --version to target another release)."
+    exit 0
+  fi
 fi
 if [ -n "$SUPPORTED_LATEST" ] && [ "$CC_VERSION" != "$SUPPORTED_LATEST" ]; then
   newer() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]; }
@@ -194,15 +236,31 @@ if [ -n "$SUPPORTED_LATEST" ] && [ "$CC_VERSION" != "$SUPPORTED_LATEST" ]; then
 fi
 
 NEW_CATALOG="$PROMPTS_DIR/prompts-$CC_VERSION.json"
+SEED_FROM_SELF=0
 
-# The carry-forward seed must never be the TARGET's own catalog. An interrupted
-# run (or a --force regenerate) leaves prompts-$CC_VERSION.json on disk, and the
-# glob above then selects it as PREV_CATALOG — which silently destroys the sync:
-# every id is "carried" from a catalog whose new entries are still anonymous, so
-# the diff reports `removed 0`, relabel's removed-id pool comes back EMPTY, and
-# the whole curated-id reuse path is skipped. Re-resolve excluding the target.
-PREV_CATALOG="$(ls "$PROMPTS_DIR"/prompts-*.json 2>/dev/null | grep -vE '\.candidates\.json$' | grep -v "/prompts-$CC_VERSION\.json$" | sort -V | tail -1 || true)"
-[ -n "$PREV_CATALOG" ] && ok "carry-forward seed: $(basename "$PREV_CATALOG")"
+# The carry-forward seed is preferably the PREVIOUS release's catalog, never a
+# half-built one. An interrupted run leaves an anonymous-entry
+# prompts-$CC_VERSION.json on disk, and seeding from that silently destroys the
+# sync: every id is "carried" from a catalog whose new entries are still
+# anonymous, so the diff reports `removed 0`, relabel's removed-id pool comes
+# back EMPTY, and the whole curated-id reuse path is skipped. The .incomplete
+# marker is what tells the two apart, so latest_complete_catalog() can exclude
+# exactly the dangerous case.
+PREV_CATALOG="$(latest_complete_catalog "$CC_VERSION")"
+if [ -n "$PREV_CATALOG" ]; then
+  ok "carry-forward seed: $(basename "$PREV_CATALOG")"
+elif [ -f "$NEW_CATALOG" ] && [ ! -e "$NEW_CATALOG.incomplete" ]; then
+  # Nothing older survives — the normal state after a successful sync, since
+  # step 6b prunes every superseded catalog. Re-syncing a version whose OWN
+  # catalog is complete can safely seed from it: it is fully labeled, so every
+  # id carries because nothing actually moved, which is precisely what a --force
+  # re-run of an already-synced version means. (Copied into $WORK below so
+  # gen-catalog is never reading the file it is writing.)
+  ok "carry-forward seed: prompts-$CC_VERSION.json (this version's own completed catalog — no older one survives pruning)"
+  SEED_FROM_SELF=1
+else
+  die "no catalog to seed id carry-forward from: $PROMPTS_DIR has no completed prompts-*.json. Restore one from git (git checkout -- $PROMPTS_DIR) — gen-catalog cannot assign curated ids without a seed."
+fi
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/unnerfcc-upgrade-$CC_VERSION-XXXX")"
 CLI_JS="$WORK/cli-js"  # a directory (one file per Bun module) since v2.1.251's multi-module build; see engine/bun-binary.mjs unpackToDir
@@ -217,12 +275,29 @@ trap 'st=$?; if [ "$st" -eq 0 ]; then rm -rf "$WORK"; else warn "work dir PRESER
 # EXACT version into a temp prefix under $WORK — the maintainer's global install
 # is never touched (install.cjs's postinstall materializes bin/claude.exe from
 # the platform-matching optional dep).
+#
+# The installed binary is only usable if it is STOCK. On any machine that has run
+# ./install.sh it is unnerfcc's OWN patched build, and unpacking that feeds our
+# un-nerfed prose back in as if it were Anthropic's: classify sees ~100 unknown
+# strings and stores our own replacement text as newly-classified prompts,
+# gen-catalog then admits them as new prompts and reports the stock originals
+# they displaced as removed, and relabel dies on duplicate names. Nothing
+# downstream can tell the difference, so the check has to happen here. Grepping
+# the raw binary for the un-nerf sentinels is enough: they are plain text in the
+# module blob and appear in no stock build.
 log "Resolving the v$CC_VERSION native binary"
 CC_BIN=""
 if [ "$INSTALLED_VERSION" = "$CC_VERSION" ] && command -v claude >/dev/null 2>&1; then
   LAUNCHER="$(command -v claude)"
   CC_BIN="$(readlink -f "$LAUNCHER" 2>/dev/null || echo "$LAUNCHER")"
-  [ -f "$CC_BIN" ] && ok "using installed binary: $CC_BIN (v$CC_VERSION)" || CC_BIN=""
+  if [ -f "$CC_BIN" ] && is_unnerfed "$CC_BIN"; then
+    warn "installed v$CC_VERSION is unnerfcc's own patched build — fetching a stock copy instead (unpacking a patched binary would poison the catalog with our own un-nerfs)."
+    CC_BIN=""
+  elif [ -f "$CC_BIN" ]; then
+    ok "using installed binary: $CC_BIN (v$CC_VERSION, stock)"
+  else
+    CC_BIN=""
+  fi
 fi
 if [ -z "$CC_BIN" ]; then
   command -v npm >/dev/null || die "need the v$CC_VERSION binary but npm is unavailable to fetch it"
@@ -303,8 +378,18 @@ else
 fi
 
 # --- 2. extract a fresh catalog (seeded) -----------------------------------
+# Mark the catalog mid-build BEFORE writing a byte of it, and leave the marker
+# there until step 6 has verified the patched binary. Everything between here
+# and there can fail, and until it passes, prompts-$CC_VERSION.json is a
+# half-built artifact — see latest_complete_catalog() for what the marker
+# protects against.
 log "Extracting prompt catalog (seeded from previous for id carry-forward)"
-node "$REPO/scripts/gen-catalog.mjs" "$CLI_JS" "$CC_VERSION" "$NEW_CATALOG" "${PREV_CATALOG:-}"
+if [ "$SEED_FROM_SELF" -eq 1 ]; then
+  PREV_CATALOG="$WORK/seed-prompts-$CC_VERSION.json"
+  cp "$NEW_CATALOG" "$PREV_CATALOG"
+fi
+: > "$NEW_CATALOG.incomplete"
+node "$REPO/scripts/gen-catalog.mjs" "$CLI_JS" "$CC_VERSION" "$NEW_CATALOG" "$PREV_CATALOG"
 ok "catalog: $NEW_CATALOG"
 
 # --- 3. diff + relabel worklist --------------------------------------------
@@ -385,26 +470,9 @@ else
 fi
 ok "catalog gates pass"
 
-# --- 4b. prune superseded catalogs (ship only the latest) ------------------
-# We only ever need the newest prompts-*.json: it is BOTH what ships AND the
-# carry-forward seed for the next upgrade (PREV_CATALOG = highest present).
-# Now that the new catalog has passed its gates and nothing downstream reads
-# the previous one, drop every other per-version catalog so the repo only ever
-# ships data for the latest synced CC version.
-# The `.candidates.json` sidecar matches this same glob, so it needs the same
-# exemption the version-resolution glob above already gives it. Without it this
-# loop deletes the review artifact gen-catalog wrote (and pointed at) seconds
-# earlier, so `prompts-$CC_VERSION.candidates.json` never survives to be
-# committed while the previous release's tracked copy still shows as deleted.
-PRUNED=0
-NEW_CANDIDATES="${NEW_CATALOG%.json}.candidates.json"
-for old in "$PROMPTS_DIR"/prompts-*.json; do
-  [ -e "$old" ] || continue
-  [ "$old" = "$NEW_CATALOG" ] && continue
-  [ "$old" = "$NEW_CANDIDATES" ] && continue
-  rm -f "$old" && PRUNED=$((PRUNED+1))
-done
-[ "$PRUNED" -gt 0 ] && ok "pruned $PRUNED superseded catalog(s) — only prompts-$CC_VERSION.json remains (git will show them deleted)"
+# NOTE: pruning the superseded catalogs used to happen here, right after the
+# gates. It now runs in step 6b, once the patched binary has actually been
+# built and booted — see the comment there for why.
 
 # --- 5. reconstruct stock .md -----------------------------------------------
 log "Reconstructing stock prompts"
@@ -523,6 +591,37 @@ if [ "$PATCH_VERIFY" -eq 1 ] && [ -f "$PATCH_CLI" ]; then
 else
   warn "skipping patch-verify (${PATCH_CLI##*/} not built or --no-patch-verify)"
 fi
+
+# --- 6b. finalize: prune superseded catalogs, clear the mid-build marker ----
+# We only ever need the newest prompts-*.json: it is BOTH what ships AND the
+# carry-forward seed for the next upgrade (PREV_CATALOG = newest complete one).
+#
+# This deliberately runs LAST, not right after the step-4 gates. The previous
+# catalog is the only seed a re-run has, so deleting it before the pipeline can
+# actually finish is unrecoverable-by-script: a failure in steps 5–6 (a repack
+# that can't parse the binary, say) would leave the repo with a half-built
+# catalog and NO seed, and the next run dies in gen-catalog with a bare usage
+# error. Nothing between step 4 and here reads PREV_CATALOG, so there is no
+# reason to prune early. Recovery from a failed run is then just "run it again":
+# the previous catalog is still on disk, and the classification store
+# (data/string-catalog.json, keyed by SHA-256 and written after every job) means
+# the model work already paid for is reused rather than re-billed.
+#
+# The `.candidates.json` sidecar matches this same glob, so it needs the same
+# exemption the version-resolution glob above already gives it. Without it this
+# loop deletes the review artifact gen-catalog wrote (and pointed at) earlier,
+# so `prompts-$CC_VERSION.candidates.json` never survives to be committed while
+# the previous release's tracked copy still shows as deleted.
+PRUNED=0
+NEW_CANDIDATES="${NEW_CATALOG%.json}.candidates.json"
+for old in "$PROMPTS_DIR"/prompts-*.json; do
+  [ -e "$old" ] || continue
+  [ "$old" = "$NEW_CATALOG" ] && continue
+  [ "$old" = "$NEW_CANDIDATES" ] && continue
+  rm -f "$old" "$old.incomplete" && PRUNED=$((PRUNED+1))
+done
+[ "$PRUNED" -gt 0 ] && ok "pruned $PRUNED superseded catalog(s) — only prompts-$CC_VERSION.json remains (git will show them deleted)"
+rm -f "$NEW_CATALOG.incomplete"
 
 # --- 7. OPTIONAL benchmark (--benchmark) -----------------------------------
 # Stock vs patched accuracy on SWE-bench. OPT-IN and HEAVY (Docker + hours);

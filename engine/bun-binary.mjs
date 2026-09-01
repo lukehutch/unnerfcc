@@ -50,8 +50,8 @@
  *   ELF: the section grows, so it is moved to a fresh page-aligned vaddr past
  *   the writable segment, the segment is extended, and the single 8-byte
  *   pointer the Bun runtime dereferences to find the blob (which holds the OLD
- *   .bun vaddr, aligned in the writable PT_LOAD segment) is patched to the new
- *   vaddr.
+ *   .bun vaddr, u64-aligned somewhere in the writable PT_LOAD segment) is
+ *   patched to the new vaddr.
  *
  *   Mach-O: the `__BUN` segment is the second-to-last segment (before
  *   `__LINKEDIT`), so LIEF's `extendSegment()` grows it in place — the
@@ -595,19 +595,30 @@ async function repackELF(binaryPath, newSection, outPath) {
   if (!rwSegs.length) throw fmtErr("no writable PT_LOAD segment");
   const rwSeg = rwSegs[0]; // segment we extend to place the new .bun
 
-  // Find the 8-byte pointer holding the OLD .bun vaddr. Bun stores it
-  // BLOB_HEADER_ALIGNMENT-aligned somewhere in a writable segment; the runtime
-  // dereferences it to find the blob. Scan ALL writable segments and require
-  // EXACTLY ONE match — zero means the layout changed, more than one means we
-  // can't tell which to patch, and silently picking one could brick the binary.
+  // Find the 8-byte pointer holding the OLD .bun vaddr. Bun stores it somewhere
+  // in a writable segment and the runtime dereferences it to find the blob. It
+  // is a naturally-aligned u64, nothing stronger: through v2.1.251 it happened
+  // to land on a 16384-byte boundary, but in v2.1.258 it sits at a vaddr that is
+  // only 8-aligned, so scanning on the coarse boundary found nothing at all.
+  //
+  // Scanning every 8 bytes does mean the .bun section's own content gets
+  // searched (the blob lives inside the writable segment), and ~122MB of
+  // arbitrary JS/data hits the pattern by chance — v2.1.258 has exactly one
+  // such coincidence. Those bytes are data we are about to replace wholesale,
+  // never the pointer, so skip the section's own vaddr range.
+  //
+  // Require EXACTLY ONE match outside it: zero means the layout changed, more
+  // than one means we can't tell which to patch, and silently picking one could
+  // brick the binary.
   const oldVaddr = BigInt(bunSection.virtualAddress);
+  const oldVaddrEnd = oldVaddr + BigInt(bunSection.size);
   const want = Buffer.alloc(8); want.writeBigUInt64LE(oldVaddr);
-  const align = BigInt(BLOB_HEADER_ALIGNMENT);
   const hits = [];
   for (const seg of rwSegs) {
     const rw = Buffer.from(seg.content);
     const segStart = BigInt(seg.virtualAddress);
-    for (let va = alignBig(segStart, align); va <= segStart + BigInt(rw.length) - 8n; va += align) {
+    for (let va = alignBig(segStart, 8n); va <= segStart + BigInt(rw.length) - 8n; va += 8n) {
+      if (va >= oldVaddr && va < oldVaddrEnd) { va = alignBig(oldVaddrEnd, 8n) - 8n; continue; }
       const o = Number(va - segStart);
       if (rw.subarray(o, o + 8).equals(want)) hits.push(va);
     }
