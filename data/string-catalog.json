@@ -36838,6 +36838,17 @@
    "ccFirstSeen": "2.1.205",
    "sample": "**Recent releases (you are running v${{ISSUES_EXPLAINER:\"report the issue at https://github.com/anthropics/claude-code/issues\",PACKAGE_URL:\"@anthropic-ai/claude-code\",README_URL:\"https://code.claude.c"
   },
+  "11687bf0ec4df7658a2e7733db1fe339a9130b0e97f5f403e980c116dda08d36": {
+   "class": "non-prompt",
+   "unnerf": false,
+   "proposedName": "",
+   "proposedDescription": "",
+   "slots": "",
+   "notes": "path resolution error message",
+   "policyVersion": 1,
+   "ccFirstSeen": "2.1.258",
+   "sample": "resolved outside its directory"
+  },
   "116a0b8d65530e16014c2b9954af6949ecada46cb93302f0ef3876deaf6653c8": {
    "class": "non-prompt",
    "unnerf": false,
@@ -74998,6 +75009,17 @@
    "policyVersion": 1,
    "ccFirstSeen": "2.1.257",
    "sample": "[publishedCatalog] cached document is past its expires_at; refreshing"
+  },
+  "239d5a458ce2e524491fac10afddac411946493cb1a5bcd148cb0d56adeb046c": {
+   "class": "non-prompt",
+   "unnerf": false,
+   "proposedName": "",
+   "proposedDescription": "",
+   "slots": "",
+   "notes": "UDS messaging warning/log message",
+   "policyVersion": 1,
+   "ccFirstSeen": "2.1.258",
+   "sample": "[uds-messaging] Connect when the data is ready (e.g. out=$(cmd); printf '%s\\n' \"$out\" | nc -N -U \"$CLAUDE_CODE_MESSAGING_SOCKET\" \u2014 or the socat form above): a connection that sends no complete line wi"
   },
   "239db6b7552f6f443732463ad28259cf78447435b0bdb2df9992ebdf666a210f": {
    "class": "non-prompt",
@@ -150908,6 +150930,17 @@
    "policyVersion": 1,
    "ccFirstSeen": "2.1.219",
    "sample": "[Sandbox Windows] WFP installed: "
+  },
+  "470d60f90ee81431706c97bc5be3d09761eeab7f2751932d7e22455cd4e9164e": {
+   "class": "non-prompt",
+   "unnerf": false,
+   "proposedName": "",
+   "proposedDescription": "",
+   "slots": "",
+   "notes": "internal storage diagnostic log",
+   "policyVersion": 1,
+   "ccFirstSeen": "2.1.258",
+   "sample": "storage: /proc descriptor record unreadable for hardened reads on this host; using the post-open recheck"
   },
   "470d634b722cb0ccb0545f8c550cab19a04d9fc7298be633e0445b873bc71049": {
    "class": "prompt",
@@ -435496,6 +435529,17 @@
    "policyVersion": 1,
    "ccFirstSeen": "2.1.199",
    "sample": "All bash commands invoked by the model must run in the sandbox unless they are explicitly listed in excludedCommands."
+  },
+  "cdcdd0ea5ca8098832d10e45d80e5b1fdf9a747527dfab45b2cf8d2f1adabb01": {
+   "class": "non-prompt",
+   "unnerf": false,
+   "proposedName": "",
+   "proposedDescription": "",
+   "slots": "",
+   "notes": "turn control flow log message",
+   "policyVersion": 1,
+   "ccFirstSeen": "2.1.258",
+   "sample": "Orphaned permission could not be applied and the turn has no prompt: ending the turn without a model call"
   },
   "cdcea2bb60094aa3dfddc79c83470ebc51b3b1de71bc65fb8cb4aef81d1c01b0": {
    "class": "non-prompt",
