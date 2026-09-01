@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Helper scripts for the un-nerfed system-prompts repo. Pinned to gray-matter@4.0.3 — the same version tweakcc uses — so generated .md files are byte-identical to what tweakcc itself produces.",
+  "description": "Helper scripts for the un-nerfed system-prompts repo. gray-matter writes the frontmatter block on every generated .md; sync-version.mjs is the only consumer.",
   "scripts": {
     "sync": "node sync-version.mjs"
   },
   "dependencies": {
-    "gray-matter": "4.0.3",
-    "js-yaml": "3.15.1"
+    "gray-matter": "^4.0.3"
   }
 }
