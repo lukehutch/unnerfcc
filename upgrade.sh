@@ -21,7 +21,9 @@
 # It does NOT depend on the tweakcc-fixed project: extract/re-package the binary
 # (engine/bun-binary.mjs), un-minify (engine/beautify.mjs), extract the catalog
 # (engine/extract-prompts.mjs), and patch (engine/patch-prompts.mjs) are all OUR OWN
-# code. The only external "AI" call is `claude` itself for relabeling.
+# code. The AI steps (classify, relabel, bucket-analyze) run on Gemini by
+# default and on the `claude` CLI with LLM_PROVIDER=claude — see LLM_PROVIDER
+# below.
 #
 # BUN FORMAT: if engine/bun-binary.mjs reports the binary's Bun container format is
 # one it doesn't understand, this script STOPS — update engine/bun-binary.mjs for
@@ -29,6 +31,10 @@
 #
 # USAGE
 #   ./upgrade.sh [--version X.Y.Z] [--force] [--no-patch-verify] [--benchmark[=N]] [--yes]
+#
+# LLM_PROVIDER=gemini|claude  which model runs classify/relabel/bucket-analyze
+#   (default gemini; needs GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
+#   ~/.env). GEMINI_MODEL overrides the model id (default gemini-3.7-flash).
 #
 # --benchmark[=N]: after a clean upgrade, run the SWE-bench harness on the STOCK
 #   and just-PATCHED binaries and update the accuracy bar chart in README.md
@@ -103,6 +109,31 @@ fi
 if [ ! -d "$SCRIPTS_DIR/node_modules/gray-matter" ]; then
   log "Installing scripts/ dependencies (first run: gray-matter)"
   ( cd "$SCRIPTS_DIR" && npm install --ignore-scripts --save-exact )
+fi
+
+# Which model runs the three AI steps: classify, relabel, bucket-analyze. All
+# three scripts speak both providers (scripts/llm-provider.mjs). gemini is the
+# default because it is what this pipeline was measured on — 3m16s against a
+# backlog that extrapolated to ~4.8h through the claude CLI. LLM_PROVIDER=claude
+# selects the agentic `claude -p` path instead: it can grep the unpacked bundle
+# to disambiguate a hard string, where gemini gets everything inlined into one
+# non-agentic request. GEMINI_MODEL overrides the model id (llm-provider.mjs
+# reads that straight from the environment, so it needs no flag here).
+#
+# Both the name and the key are resolved among the preconditions, before the
+# version probe and the ~100MB binary fetch below: the AI steps are separated by
+# minutes of download and extraction, so a bad provider name or a missing key
+# that only surfaced at relabel would waste all of it. Same lookup the scripts
+# themselves use (environment, ./.env, ~/.env), so agreeing here means agreeing
+# there.
+LLM_PROVIDER="${LLM_PROVIDER:-gemini}"
+case "$LLM_PROVIDER" in
+  claude|gemini) ;;
+  *) die "LLM_PROVIDER must be 'claude' or 'gemini' (got: '$LLM_PROVIDER')";;
+esac
+if [ "$LLM_PROVIDER" = "gemini" ]; then
+  node -e 'import("./scripts/llm-provider.mjs").then(m=>process.exit(m.findGeminiApiKey(process.cwd())?0:1)).catch(()=>process.exit(1))' \
+    || die "LLM_PROVIDER=gemini but GOOGLE_GEMINI_API_KEY was not found — checked the environment, $REPO/.env, and ~/.env. Set it, or re-run with LLM_PROVIDER=claude."
 fi
 
 # --- resolve the TARGET version (works whether or not CC is installed) ------
@@ -216,6 +247,12 @@ CLAUDE_FOR_RELABEL="$(command -v claude 2>/dev/null || echo "$CC_BIN")"
 # whatever default is configured would silently degrade the run.
 RELABEL_MODEL="${RELABEL_MODEL:-claude-opus-5}"
 
+if [ "$LLM_PROVIDER" = "gemini" ]; then
+  ok "AI steps (classify, relabel, bucket-analyze): gemini (${GEMINI_MODEL:-gemini-3.7-flash})"
+else
+  ok "AI steps (classify, relabel, bucket-analyze): claude CLI ($RELABEL_MODEL)"
+fi
+
 # --- 1. unpack the binary (Bun-format-change aware) ------------------------
 log "Unpacking JS bundle from the native binary"
 set +e
@@ -234,10 +271,10 @@ ok "unpacked $(awk -v b="$UNPACK_BYTES" 'BEGIN{printf "%.1fMB", b/1048576}') of 
 
 # --- 1b. classify new strings via Claude (prompt/non-prompt + un-nerf) ------
 # SHA-256-fingerprint every string; only strings NEW to this build (or prompts
-# judged under an older un-nerf policy version) are sent to Claude. The store
+# judged under an older un-nerf policy version) are sent to the model. The store
 # (data/string-catalog.json) persists, so this is cheap on a normal upgrade and
 # only large on the one-time bootstrap.
-log "Classifying new strings via Claude (cached by SHA-256)"
+log "Classifying new strings via $LLM_PROVIDER (cached by SHA-256)"
 # classify.mjs's own "ONE JOB, NOT MANY" policy puts every pending string in a
 # single Claude call by default (--batch 0) — right for a normal release's few
 # hundred new fragments, but a single spawnSync call is hard-capped at 30 min
@@ -248,18 +285,20 @@ log "Classifying new strings via Claude (cached by SHA-256)"
 # 11k+ pending strings cannot finish in one 30-minute call). CLASSIFY_BATCH
 # keeps each call comfortably under that ceiling; below it, a batch this size
 # never triggers (the whole pending set fits in one chunk, unchanged from
-# today), so this is a no-op for every normal release.
+# today), so this is a no-op for every normal release. Under gemini there is no
+# spawnSync cap to survive, but the batch still bounds how many result objects
+# one response has to carry, so the same size is kept for both providers.
 CLASSIFY_BATCH="${CLASSIFY_BATCH:-300}"
-PENDING="$(node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --dry-run 2>/dev/null | grep -oE '"toClassify":[0-9]+' | grep -oE '[0-9]+' || echo '?')"
+PENDING="$(node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --dry-run 2>/dev/null | grep -oE '"toClassify":[0-9]+' | grep -oE '[0-9]+' || echo '?')"
 if [ "$PENDING" = "0" ]; then
   ok "no new strings — classification store is current"
 elif [ "$PENDING" -gt 2000 ] && [ "$ASSUME_YES" -eq 0 ]; then
-  warn "$PENDING strings need classifying (a first-run bootstrap — a large Claude job, chunked at $CLASSIFY_BATCH/call so it survives the 30-min per-call cap)."
+  warn "$PENDING strings need classifying (a first-run bootstrap — a large $LLM_PROVIDER job, chunked at $CLASSIFY_BATCH/call)."
   printf '  Run it now? [y/N] '; read -r a
-  case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
-    *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION --batch $CLASSIFY_BATCH' later";; esac
+  case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
+    *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION --provider $LLM_PROVIDER --batch $CLASSIFY_BATCH' later";; esac
 else
-  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
+  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
   [ -f "$REPO/data/unnerf-candidates.json" ] && ok "un-nerf candidates for review: data/unnerf-candidates.json"
 fi
 
@@ -280,18 +319,24 @@ if [ -n "${PREV_CATALOG:-}" ]; then
   if [ "${N:-0}" -gt 0 ]; then
     # ONE job per chunk. A single job asked to emit ~1000 objects truncates and
     # the merge then hard-fails on missing refs; `collect` re-checks every ref
-    # and we re-run only the chunks that came back short. Pin the model — the
-    # relabel quality bar is the same as classification's, and inheriting
-    # whatever default is configured would silently degrade it.
-    log "Launching Claude Code to label $N new/changed fragment(s) in $(ls "$RL_WORK"/chunk-*.json | wc -l) chunk(s)"
+    # and we re-run only the chunks that came back short. On the claude path the
+    # model is pinned, not inherited — relabel decides the `<id>.md` filenames
+    # every un-nerf rule is keyed to, so leaving it to whatever default is
+    # configured would silently degrade the run. Both paths write the same
+    # labels-NNN.json, so collect/merge below are provider-blind.
+    log "Labeling $N new/changed fragment(s) via $LLM_PROVIDER in $(ls "$RL_WORK"/chunk-*.json | wc -l) chunk(s)"
     for attempt in 1 2 3; do
       for chunk in "$RL_WORK"/chunk-*.json; do
         cn=$(basename "$chunk" .json); cn=${cn#chunk-}
         [ -f "$RL_WORK/labels-$cn.json" ] && continue   # already labeled (earlier attempt)
         log "  labeling chunk $cn (attempt $attempt)"
-        ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
-            --model "$RELABEL_MODEL" \
-            "Read LABELING-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your labels to labels-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Also read removed.json (ids that vanished this release — a reworded prompt appears as a removed id plus a new worklist item, and you MUST re-use its id verbatim or its un-nerf rule is orphaned). Do not ask questions; complete the task and write the file." ) || true
+        if [ "$LLM_PROVIDER" = "gemini" ]; then
+          node "$REPO/scripts/relabel.mjs" label "$RL_WORK" "$cn" || true
+        else
+          ( cd "$RL_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
+              --model "$RELABEL_MODEL" \
+              "Read LABELING-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your labels to labels-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Also read removed.json (ids that vanished this release — a reworded prompt appears as a removed id plus a new worklist item, and you MUST re-use its id verbatim or its un-nerf rule is orphaned). Do not ask questions; complete the task and write the file." ) || true
+        fi
       done
       if node "$REPO/scripts/relabel.mjs" collect "$RL_WORK" "$NEW_CATALOG"; then break; fi
       [ "$attempt" = 3 ] && die "relabel incomplete after 3 attempts (see $RL_WORK)"
@@ -346,10 +391,17 @@ ok "catalog gates pass"
 # Now that the new catalog has passed its gates and nothing downstream reads
 # the previous one, drop every other per-version catalog so the repo only ever
 # ships data for the latest synced CC version.
+# The `.candidates.json` sidecar matches this same glob, so it needs the same
+# exemption the version-resolution glob above already gives it. Without it this
+# loop deletes the review artifact gen-catalog wrote (and pointed at) seconds
+# earlier, so `prompts-$CC_VERSION.candidates.json` never survives to be
+# committed while the previous release's tracked copy still shows as deleted.
 PRUNED=0
+NEW_CANDIDATES="${NEW_CATALOG%.json}.candidates.json"
 for old in "$PROMPTS_DIR"/prompts-*.json; do
   [ -e "$old" ] || continue
   [ "$old" = "$NEW_CATALOG" ] && continue
+  [ "$old" = "$NEW_CANDIDATES" ] && continue
   rm -f "$old" && PRUNED=$((PRUNED+1))
 done
 [ "$PRUNED" -gt 0 ] && ok "pruned $PRUNED superseded catalog(s) — only prompts-$CC_VERSION.json remains (git will show them deleted)"
@@ -371,15 +423,19 @@ if [ -f "$BUCKET_ANALYZE" ]; then
   M=$(node "$BUCKET_ANALYZE" prepare "$CC_VERSION" "$BA_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
 
   if [ "${M:-0}" -gt 0 ]; then
-    log "Launching Claude Code to bucket-analyze $M new un-nerf candidate(s) in $(ls "$BA_WORK"/chunk-*.json | wc -l) chunk(s)"
+    log "Bucket-analyzing $M new un-nerf candidate(s) via $LLM_PROVIDER in $(ls "$BA_WORK"/chunk-*.json | wc -l) chunk(s)"
     for attempt in 1 2 3; do
       for chunk in "$BA_WORK"/chunk-*.json; do
         cn=$(basename "$chunk" .json); cn=${cn#chunk-}
         [ -f "$BA_WORK/verdicts-$cn.json" ] && continue   # already analyzed (earlier attempt)
         log "  analyzing chunk $cn (attempt $attempt)"
-        ( cd "$BA_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
-            --model "$RELABEL_MODEL" \
-            "Read BUCKET-ANALYSIS-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your verdicts to verdicts-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; read its Part 1 in full before deciding anything. Do not ask questions; complete the task and write the file." ) || true
+        if [ "$LLM_PROVIDER" = "gemini" ]; then
+          node "$BUCKET_ANALYZE" label "$BA_WORK" "$cn" || true
+        else
+          ( cd "$BA_WORK" && "$CLAUDE_FOR_RELABEL" -p --dangerously-skip-permissions \
+              --model "$RELABEL_MODEL" \
+              "Read BUCKET-ANALYSIS-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your verdicts to verdicts-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; read its Part 1 in full before deciding anything. Do not ask questions; complete the task and write the file." ) || true
+        fi
       done
       if node "$BUCKET_ANALYZE" collect "$BA_WORK"; then break; fi
       [ "$attempt" = 3 ] && die "bucket-analysis incomplete after 3 attempts (see $BA_WORK)"
