@@ -3,7 +3,7 @@ name: 'System Reminder: Deferred tools available'
 description: >-
   Announces newly available deferred tools and instructs the agent to load their
   schemas through ToolSearch
-ccVersion: 2.1.219
+ccVersion: 2.1.257
 variables:
   - TOOL_SEARCH_TOOL_NAME
 -->

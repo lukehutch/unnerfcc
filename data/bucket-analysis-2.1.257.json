@@ -1,0 +1,86 @@
+{
+  "ccVersion": "2.1.257",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-workflow-hooks-and-patterns-reference.md",
+      "verdict": "keep",
+      "reasoning": "This provides architectural advice on scaling subagent pools to match user intent (research vs quick checks), rather than imposing an artificial brevity cap on Claude's direct response."
+    },
+    {
+      "file": "tool-parameter-artifact-label-suffix.md",
+      "verdict": "keep",
+      "reasoning": "The 60-character maximum and 'a few words, not a description' constraint reflect the physical layout constraints of a UI version picker label where long text would break rendering."
+    },
+    {
+      "file": "system-prompt-saving-skills-propose-instead.md",
+      "verdict": "keep",
+      "reasoning": "This accurately describes the underlying system architecture where on-disk skill files are read-only caches and modifications must go through the proposal tool to reach the review UI."
+    },
+    {
+      "file": "system-prompt-saving-skills.md",
+      "verdict": "keep",
+      "reasoning": "This conveys a mechanical delivery requirement that skills must be delivered via the dedicated tool because direct disk writes do not mutate user skills."
+    },
+    {
+      "file": "system-reminder-artifact-thread-reply-and-resolve-tail.md",
+      "verdict": "keep",
+      "reasoning": "Per Calibration 3, framing a comment-thread reply as brief matches the appropriate communication medium and UX without holding back substantive reasoning."
+    },
+    {
+      "file": "system-prompt-code-review-post-ignored-local-review.md",
+      "verdict": "keep",
+      "reasoning": "Requesting a single short line for a minor CLI flag warning keeps secondary system notices from derailing or dominating the primary review output."
+    },
+    {
+      "file": "system-prompt-autonomous-execution-and-turn-ending.md",
+      "verdict": "keep",
+      "reasoning": "Ending the turn while background tasks run is an efficiency instruction that prevents wasteful polling loops in an asynchronous notification environment."
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "lift",
+      "reasoning": "The stock instruction enforces an artificial process cap ('look once', 'without a second look', 'no repeated screenshots') that prevents proper iterative verification and testing of artifacts.",
+      "rule": {
+        "stock": "**Write, look once, publish.** Before publishing you may look at the rendered page once - one screenshot of the local file, or the Artifact tool's preview where it offers one - then one pass of edits for what it shows, without a second look. For a page that charts real numbers, take that look rather than skip it, and spend it on the chart. Don't build a test loop around your own file: no repeated screenshots, no pulling the script out to run it through node, no scripts that probe the DOM. That loop spends the session re-checking what a careful write already settled, while the user waits for a link. Then publish, check once any `window.claude` call the preview couldn't run, and stop: the live page is the review surface, and further polish is the user's to ask for. If the user reports something visibly broken - a clipped column, unreadable text, a control that does nothing - fix that and republish once.",
+        "unnerf": "**Verify and publish.** Before publishing, inspect the rendered page — via screenshot or the Artifact preview — and iterate on layout, styling, and charts until they meet the design plan. Test scripts or DOM interactions as needed to ensure functionality. Once published, verify any live integrations (such as `window.claude` calls) and resolve any visual or interactive defects.",
+        "description": "artifact-design: remove single-screenshot cap and permit verification loops"
+      }
+    },
+    {
+      "file": "system-prompt-do-not-call-agent-tool-unrequested.md",
+      "verdict": "lift",
+      "reasoning": "Restricting subagent tool usage strictly to explicit user requests holds back autonomous task decomposition and parallel execution.",
+      "rule": {
+        "stock": "Do not call the AgentTool unless the user",
+        "unnerf": "Use the Agent tool whenever sub-tasks benefit from autonomous delegation or parallel execution, or when the user requests it.",
+        "description": "agent tool: allow autonomous subagent delegation"
+      }
+    },
+    {
+      "file": "agent-prompt-auto-mode-config-proposal-field-guidance.md",
+      "verdict": "keep",
+      "reasoning": "The notes field constraints represent a structured machine-output format requirement for the auto-mode configuration proposal classifier."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "This provides high-level architectural guidance for designing LLM applications, rather than a restriction on Claude's execution depth."
+    },
+    {
+      "file": "agent-prompt-artifact-analyst-analysis-brief-rules.md",
+      "verdict": "keep",
+      "reasoning": "This specifies an inter-agent protocol contract between the artifact analyst and composer agent where compact, structured briefs are required for automated handoff."
+    },
+    {
+      "file": "tool-description-propose-skills.md",
+      "verdict": "keep",
+      "reasoning": "Per Calibration 2, limits on proactive unprompted skill suggestions (max 3, skipping one-offs) prevent intrusive UI interruptions."
+    },
+    {
+      "file": "tool-description-artifact-comments.md",
+      "verdict": "keep",
+      "reasoning": "Per Calibration 3, recommending a brief reply upon resolving an artifact comment thread aligns with standard comment-thread conventions."
+    }
+  ]
+}

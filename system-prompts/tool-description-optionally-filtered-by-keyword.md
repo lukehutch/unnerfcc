@@ -3,6 +3,6 @@ name: 'Tool Description: Optionally filtered by keyword'
 description: >-
   Tail of a listing tool's description noting the results can optionally be
   filtered by keyword.
-ccVersion: 2.1.219
+ccVersion: 2.1.257
 -->
-s, optionally filtered by keyword.
+, optionally filtered by keyword.

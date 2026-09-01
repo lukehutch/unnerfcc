@@ -3,7 +3,7 @@ name: 'Data: Tool use concepts'
 description: >-
   Conceptual foundations of tool use with the Claude API including tool
   definitions, tool choice, and best practices
-ccVersion: 2.1.251
+ccVersion: 2.1.257
 -->
 # Tool Use Concepts
 
@@ -61,6 +61,8 @@ Control when Claude uses tools:
 | `{"type": "none"}`                | Claude cannot use tools                       |
 
 Any `tool_choice` value can also include `"disable_parallel_tool_use": true` to force Claude to use at most one tool per response. By default, Claude may request multiple tool calls in a single response.
+
+**{{FABLE_NAME}}, {{MYTHOS_NAME}}, and Mythos Preview reject forced tool use:** `{"type": "any"}` and `{"type": "tool", "name": ...}` return a 400 there (`tool_choice: type "tool" and "any" are not supported for this model.` - on `count_tokens` and Batches too). It is a model-specific restriction ({{PREV_FABLE_NAME}} and {{OPUS_NAME}} accept them). Use `{"type": "auto"}` and state the expectation in the prompt ("Use the get_weather tool to answer") - `strict: true` on the tool keeps the schema-valid-arguments guarantee `any` gave you - or structured outputs (`output_config.format`) when the forced call only existed to extract JSON. `auto` and `none` are unaffected; `disable_parallel_tool_use` with `auto` still means at most one call (the "exactly one" combination with `any`/`tool` is gone). Combining `tool_choice` `any` with `strict: true` applies only on models that support forced tool use. See `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} from {{PREV_FABLE_NAME}}.
 
 ---
 
@@ -386,18 +388,19 @@ Optional fields on the tool definition:
 
 | Executor (request `model`) | Valid advisor (tool `model`) |
 |---|---|
-| `claude-haiku-4-5` / `claude-sonnet-4-6` / `{{SONNET_ID}}` / `claude-opus-4-6` / `claude-opus-4-7` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, `claude-opus-4-8`, or `claude-opus-4-7` |
-| `claude-opus-4-8` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, or `claude-opus-4-8` |
-| `{{OPUS_ID}}` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, or `{{MYTHOS_ID}}` |
-| `{{FABLE_ID}}` | `{{FABLE_ID}}` or `{{OPUS_ID}}` |
-| `{{MYTHOS_ID}}` | `{{MYTHOS_ID}}` or `{{OPUS_ID}}` |
+| `claude-haiku-4-5` / `claude-sonnet-4-6` / `{{SONNET_ID}}` / `claude-opus-4-6` / `claude-opus-4-7` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `claude-opus-4-8`, or `claude-opus-4-7` |
+| `claude-opus-4-8` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, or `claude-opus-4-8` |
+| `{{OPUS_ID}}` | `{{OPUS_ID}}`, `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, or `{{PREV_MYTHOS_ID}}` |
+| `{{PREV_FABLE_ID}}` | `{{FABLE_ID}}`, `{{MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, or `{{OPUS_ID}}` |
+| `{{PREV_MYTHOS_ID}}` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, or `{{OPUS_ID}}` |
+| `{{FABLE_ID}}` / `{{MYTHOS_ID}}` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, or `{{OPUS_ID}}` - and these executors reject forced `tool_choice`, so nudge the advisor call from the prompt (the `-5-1` advisors return the encrypted `advisor_redacted_result`, like {{OPUS_ID}} / {{PREV_FABLE_ID}} / {{PREV_MYTHOS_ID}}) |
 
 > Warning: **The advisor's payload shape differs by advisor model.** The response block is always `advisor_tool_result`; what varies is its **`content`**, a discriminated union:
 >
 > | `content` type | Fields | When |
 > |---|---|---|
 > | `advisor_result` | `text`, `stop_reason` | Advisor returns plaintext (e.g. Opus 4.8) |
-> | `advisor_redacted_result` | `encrypted_content`, `stop_reason` | Advisor returns encrypted output - {{OPUS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}} |
+> | `advisor_redacted_result` | `encrypted_content`, `stop_reason` | Advisor returns encrypted output - {{OPUS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}} |
 > | `advisor_tool_result_error` | `error_code` | Consultation failed - `max_uses_exceeded`, `prompt_too_long`, `too_many_requests`, `overloaded`, `unavailable`, `execution_time_exceeded`, or `model_not_found` |
 >
 > So switch on `advisor_tool_result.content` type, not on the block type. Code that reads `.text` unconditionally gets nothing back from an {{OPUS_NAME}} advisor, because the payload is under `encrypted_content` instead - and you cannot read it, only replay it.
@@ -483,7 +486,7 @@ Two features are available:
 - **JSON outputs** (`output_config.format`): Control Claude's response format
 - **Strict tool use** (`strict: true`): Guarantee valid tool parameter schemas
 
-**Supported models:** {{FABLE_NAME}}, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{SONNET_NAME}}, and {{HAIKU_NAME}}. Legacy models (Claude Opus 4.5, Claude Opus 4.1) also support structured outputs.
+**Supported models:** {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{SONNET_NAME}}, and {{HAIKU_NAME}}. Legacy models (Claude Opus 4.5, Claude Opus 4.1) also support structured outputs.
 
 > **Recommended:** Use `client.messages.parse()` which automatically validates responses against your schema. When using `messages.create()` directly, use `output_config: {format: {...}}`. The `output_format` convenience parameter is also accepted by some SDK methods (e.g., `.parse()`), but `output_config.format` is the canonical API-level parameter.
 

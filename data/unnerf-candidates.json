@@ -145,6 +145,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": " opts.effort overrides the reasoning effort for this agent call ('low' | 'medium' | 'high' | 'xhigh' | 'max') \u2014 omit to inherit the session effort; use 'low' for cheap mechanical stages and higher tie",
+  "notes": "process brevity: 'toward brevity for quick checks'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "IMPORTANT: Assist with authorized security testing, defensive security, CTF challenges, and educational contexts. Refuse requests for destructive techniques, DoS attacks, mass targeting, supply chain ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -270,6 +275,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": " makes, max 60 chars (e.g. \"Draft to legal\"). Shown in the version picker. Optional \u2014 a few words, not a description.",
+  "notes": "brevity: 'a few words, not a description'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "---\nname: run-<unit-name>\ndescription: Build, run, and drive <unit-name>. Use when asked to start <unit-name>, run its tests, build it, take a screenshot of its UI, or interact with the running app.\n-",
   "notes": "template with brevity and conciseness guidance",
   "ccFirstSeen": "2.1.251"
@@ -383,6 +393,11 @@
   "sample": "\n\n3. Return the PR URL when you're done, so the user can see it.\n\nYou have the capability to call multiple tools in a single response. Branch, push, and create the PR using a single message. Do not ru",
   "notes": "\"Do not run additional commands to read or explore code beyond the git context above\"",
   "ccFirstSeen": "2.1.231"
+ },
+ {
+  "sample": "Do not use the ${} tool, workflows, or deep-research unless the user, a CLAUDE.md file, or a skill asks for it",
+  "notes": "process cap: restricts research and workflows unless prompted",
+  "ccFirstSeen": "2.1.257"
  },
  {
   "sample": "## Step 1 \u2014 Role\n\nYour initial message should frame what Cowork is: it autonomously handles tasks like reading your email, searching your docs, drafting reports, etc. Educate the user on _Skills_, reu",
@@ -520,6 +535,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Saving skills\n\nTo create a skill for the user, or change one they ask to change, call the `${}` tool: it shows them a review card where they can save it. When the user wants a skill added or updated",
+  "notes": "Process restriction: 'the proposal is the deliverable... don't send them a SKILL.md or a packaged skill file to save themselves'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "Output at most **4 findings**, most-severe first, one line each:\n`path/to/file.ext:123 \u2014 what's wrong and the concrete failure`. If nothing\nqualifies, output exactly `(none)`. Do not call the\n${} tool",
   "notes": "process brevity: 'at most 4 findings', 'one line each'",
   "ccFirstSeen": "2.1.219"
@@ -575,6 +595,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": " Once you have finished acting on the thread, post a brief reply saying what you did \u2014 first check the thread (",
+  "notes": "brevity: 'post a brief reply'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "Respond with exactly one word: PASS or FAIL.",
   "notes": "model instruction constraining response to one word",
   "ccFirstSeen": "2.1.199"
@@ -593,6 +618,11 @@
   "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "${}(The typed `--post` applies only to the `/code-review ultra` cloud review and was ignored \u2014 ${}. Tell the user this in one short line.)\n\n",
+  "notes": "tone: 'Tell the user this in one short line'",
+  "ccFirstSeen": "2.1.257"
  },
  {
   "sample": " Insight \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`\n[2-3 key educational points]\n`\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`\"\n\nThese insights should be included in the conversation, not in the cod",
@@ -1005,6 +1035,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "Execute autonomously and minimize interruptions. If the only work left is waiting for a background task or monitor you started, end your turn now: you will be notified when it finishes or fires. Do no",
+  "notes": "process: 'minimize interruptions' and turn termination cap",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "You are Claude Code, an AI assistant that orchestrates software engineering tasks across multiple workers.\n\n## 1. Your Role\n\nYou are a **coordinator**. Your job is to:\n- Help the user achieve their go",
   "notes": "caps fan-out: do not parallelize simple tasks and keep corrections brief",
   "ccFirstSeen": "2.1.235"
@@ -1018,6 +1053,11 @@
   "sample": "-\u0000-\u0000-\u0000\n\u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000D\u0000a\u0000t\u0000a\u0000 \u0000V\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000z\u0000a\u0000t\u0000i\u0000o\u0000n\u0000\n\u0000d\u0000e\u0000s\u0000c\u0000r\u0000i\u0000p\u0000t\u0000i\u0000o\u0000n\u0000:\u0000 \u0000>\u0000\n\u0000 \u0000 \u0000P\u0000r\u0000o\u0000d\u0000u\u0000c\u0000e\u0000 \u0000a\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000,\u0000 \u0000g\u0000r\u0000a\u0000p\u0000h\u0000,\u0000 \u0000d\u0000a\u0000s\u0000h\u0000b\u0000o\u0000a\u0000r\u0000d\u0000,\u0000 \u0000o\u0000r\u0000 \u0000a\u0000n\u0000y\u0000 \u0000d\u0000a\u0000t\u0000a\u0000 \u0000v\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000",
   "notes": "chart simplicity and labeling brevity constraints",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
+  "notes": "process brevity: 'write, look once, publish', forbids repeated screenshot verification",
+  "ccFirstSeen": "2.1.257"
  },
  {
   "sample": "# Example: CLI tool\n\nCLIs are the simplest case - there's usually no background process to\nmanage, no ports, no lifecycle. The skill focuses on **installation**,\n**representative invocations**, and **",
@@ -1205,6 +1245,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "Do not call the AgentTool unless the user",
+  "notes": "process cap: restricts subagent spawning",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "one short sentence naming the finished deliverable \u2014 no sub-clauses or bullet summaries",
   "notes": "format constraint directive capping response to 'one short sentence'",
   "ccFirstSeen": "2.1.199"
@@ -1390,6 +1435,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "\n\n## What goes in `environment`\n\nThe environment array is a flat list of markdown strings the classifier\nreads as prose. Render two sub-headed groups (`\"### Org-wide\"` and\n`\"### User-specific\"`), each",
+  "notes": "process brevity constraint: 'A few short bullets \u2014 each note one line of plain text'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "\\`high effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify (recall-biased) \u2192 \u226410 findings\\`\n\nYou are reviewing for **recall** at high effort: catch every real bug a careful\nreviewer would catch in one ",
   "notes": "caps findings: 'high effort \u2192 ... \u2192 \u226410 findings' and 'up to 6 candidate findings' per angle",
   "ccFirstSeen": "2.1.218"
@@ -1423,6 +1473,11 @@
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
   "notes": "process brevity: 'Briefly confirm' and 'reason: one short sentence'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
+  "notes": "implementation brevity: 'start simple. Default to the simplest tier that meets your needs'",
+  "ccFirstSeen": "2.1.257"
  },
  {
   "sample": "\n\nLead with the outcome. Your first sentence after finishing should answer \"what happened\" or \"what did you find\" \u2014 the thing the user would ask for if they said \"just give me the TLDR.\" Supporting de",
@@ -1845,6 +1900,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": ". If the session's permissions refuse the read, continue from the thread alone and note the gap in your brief.\n3. Output your ANALYSIS BRIEF as your final message: plain text, under 30 lines, and the ",
+  "notes": "output brevity: 'under 30 lines' and 'minimal edit'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "---\nname: workshop\ndescription: Build a design together with the user, one decision at a time \u2014 publish an evolving plan document as an Artifact, surface each open decision on the page for the reader ",
   "notes": "\"sized by selection, never completeness\" caps the draft's depth",
   "ccFirstSeen": "2.1.231"
@@ -1955,6 +2015,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "Surface recurring multi-step procedures from this session as skill proposals. Render-only \u2014 calling this shows a review card in the conversation; it does not write any files or create the skill. The u",
+  "notes": "Process brevity: 'Call once with all proposals (max 3)' and 'Do not call it for one-off tasks'",
+  "ccFirstSeen": "2.1.257"
+ },
+ {
   "sample": "- Limit changes to what your task requires\n\n## Resumed Tasks\n\nYou may be resumed with follow-up instructions after completing a previous task. When this happens:\n- You retain full context from your pr",
   "notes": "process/implementation brevity: 'Limit changes to what your task requires' and 'Summary: One sentence'",
   "ccFirstSeen": "2.1.219"
@@ -1963,6 +2028,11 @@
   "sample": "You're writing an \"At a Glance\" summary for a Claude Code usage insights report for Claude Code users. The goal is to help them understand their usage and improve how they can use Claude better, espec",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "**Comments**: Viewers can leave comment threads on a published artifact. Pass `action: \"comments\"` with the artifact's `url` to read them \u2014 each thread shows whether a person has activated Claude on i",
+  "notes": "brevity: 'a brief reply saying what you did'",
+  "ccFirstSeen": "2.1.257"
  },
  {
   "sample": "${.commit?`# Git\n- Never use git commands with the -i flag (like git rebase -i or git add -i) since they require interactive input which is not supported.\n- Only commit when the user explicitly asks. ",

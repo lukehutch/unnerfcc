@@ -1437,7 +1437,11 @@ RULES: dict[str, list[Rule]] = {
             description="dream consolidation: drop the transcript-reading cap",
         ),
     ],
-    "agent-prompt-artifact-comment-thread-analyst.md": [
+    # v2.1.257 retarget: upstream split the analyst prompt at an interpolation,
+    # so the ANALYSIS BRIEF format rules (and this cap) now extract as their own
+    # sibling fragment. The passage is unchanged — only the file carrying it
+    # moved, so this is a key rename, not a rule edit (UNNERF-GUIDE Part 6).
+    "agent-prompt-artifact-analyst-analysis-brief-rules.md": [
         Rule(
             stock="plain text, under 30 lines, and the first line",
             unnerf="plain text, as long as the thread's detail warrants, and the first line",
@@ -1509,6 +1513,15 @@ RULES: dict[str, list[Rule]] = {
             unnerf="Before writing code, write the design plan - a token system with color, type, and layout, specified so every build decision derives from it:",
             description="artifact-design process: drop the 'short'/'compact' cap on the design plan",
         ),
+        Rule(
+            # v2.1.257 bucket-analysis (bucket-analyze.mjs, 2026-09-01): AI-proposed,
+            # mechanically validated (stock occurs exactly once, no new ${VAR}
+            # introduced, no overlap with an existing rule, --dry-run confirmed).
+            # Full keep/lift review: data/bucket-analysis-2.1.257.json
+            stock="**Write, look once, publish.** Before publishing you may look at the rendered page once - one screenshot of the local file, or the Artifact tool's preview where it offers one - then one pass of edits for what it shows, without a second look. For a page that charts real numbers, take that look rather than skip it, and spend it on the chart. Don't build a test loop around your own file: no repeated screenshots, no pulling the script out to run it through node, no scripts that probe the DOM. That loop spends the session re-checking what a careful write already settled, while the user waits for a link. Then publish, check once any `window.claude` call the preview couldn't run, and stop: the live page is the review surface, and further polish is the user's to ask for. If the user reports something visibly broken - a clipped column, unreadable text, a control that does nothing - fix that and republish once.",
+            unnerf="**Verify and publish.** Before publishing, inspect the rendered page — via screenshot or the Artifact preview — and iterate on layout, styling, and charts until they meet the design plan. Test scripts or DOM interactions as needed to ensure functionality. Once published, verify any live integrations (such as `window.claude` calls) and resolve any visual or interactive defects.",
+            description="artifact-design: remove single-screenshot cap and permit verification loops",
+        ),
     ],
     "tool-description-product-feedback-draft.md": [
         Rule(
@@ -1564,6 +1577,26 @@ RULES: dict[str, list[Rule]] = {
     # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.251.json
+    # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # v2.1.257 sync (bucket-analyze.mjs, 2026-09-01): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.257.json
+    #
+    # REJECTED BY HAND from that same batch:
+    # "system-prompt-do-not-call-agent-tool-unrequested.md" — bucket-analysis
+    # read "Do not call the AgentTool unless the user" as a directive and drafted
+    # a lift for it. In the bundle that string is the constant J5o, and it occurs
+    # exactly twice: its own definition, and as an operand of an includes() guard
+    # (`if (_e?.includes(c3n) || _e?.includes(J5o)) return null; return c3n`).
+    # It is a needle compared against the user's existing value to suppress a
+    # duplicate injection — never rendered into a prompt. The text that IS
+    # injected is c3n. Rewriting the needle breaks the de-duplication check and
+    # un-nerfs nothing, so this is a Part 1 step-1 keep (machine-parsed string).
+    # The mechanical merge gates cannot see this: they check occurrence count,
+    # ${VAR} introduction and rule overlap, not whether a match is compared
+    # rather than rendered.
     # -------------------------------------------------------------------------
 }
 

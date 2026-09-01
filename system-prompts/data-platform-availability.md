@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Platform Availability'
 description: Provider-platform feature-availability table the model consults.
-ccVersion: 2.1.251
+ccVersion: 2.1.257
 -->
 # Platform Availability
 
@@ -46,7 +46,11 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | &nbsp;&nbsp;Files API | Yes | Yes | No | No | beta | |
 | &nbsp;&nbsp;Models API | Yes | Yes | No | No | No | |
 | **Other** | | | | | | |
-| &nbsp;&nbsp;Mid-conversation system messages | Yes | Yes | No | No | No | {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}; not {{SONNET_NAME}} |
+| &nbsp;&nbsp;Mid-conversation system messages | Yes | Yes | Yes | Yes | No | {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{PREV_FABLE_NAME}}, {{FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{MYTHOS_NAME}}; not {{SONNET_NAME}}. Bedrock: InvokeModel passthrough, not ARN-versioned models |
+| &nbsp;&nbsp;Turn-scoped (`clear_at`) system messages | beta | beta | beta | beta | No | Same models as mid-conversation system messages; beta `mid-conversation-system-clear-at-2026-08-21` (on Bedrock/Vertex pass the value as a beta) |
+| &nbsp;&nbsp;Per-message `effort` (system message `output_config`) | beta | No | No | No | No | {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{OPUS_NAME}}; beta `mid-conversation-output-config-2026-07-01`; Claude API at launch (Bedrock/Vertex/Foundry unconfirmed; {{OPUS_NAME}} excluded on Bedrock) |
+| &nbsp;&nbsp;`thinking.display: "updates"` | beta | beta | beta | beta | beta | {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_FABLE_NAME}}; beta `thinking-display-updates-2026-08-18` (pass the beta value per platform); without it `"updates"` is rejected as an unknown `display` value |
+| &nbsp;&nbsp;Thinking block-binding controls | beta | beta | per model | per model | No | `thinking.block_binding` + `input_transformations`; beta `thinking-binding-controls-2026-08-01` (on Bedrock via the `anthropic_beta` body field); the controls beta arrives per model on Bedrock/Vertex - until then the header is rejected; the history-editing enforcement itself follows the account-age rule in `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} from {{PREV_FABLE_NAME}} |
 | &nbsp;&nbsp;Server-side `fallbacks` | beta | beta | No | No | No | `"default"` -> beta `server-side-fallback-2026-07-01`; array form -> beta `server-side-fallback-2026-06-01` |
 | &nbsp;&nbsp;Fast mode | beta | No | No | No | No | Research preview, beta `fast-mode-2026-02-01`, first-party API only |
 | &nbsp;&nbsp;Cache diagnostics | beta | No | No | No | No | First-party API only |
