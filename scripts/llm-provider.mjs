@@ -81,7 +81,7 @@ const THINKING_BUDGET = {
   max: parseInt(process.env.GEMINI_THINKING_BUDGET_MAX ?? "-1", 10),
 };
 
-export const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.7-flash";
+export const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 /**
  * Call Gemini's generateContent endpoint once. Returns:

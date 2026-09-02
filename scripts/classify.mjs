@@ -70,7 +70,7 @@
  *                        GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
  *                        ~/.env (checked in that order) — a missing key is a
  *                        hard error, not a silent fallback to claude.
- *     --gemini-model M   Gemini model id (default gemini-3.7-flash, or
+ *     --gemini-model M   Gemini model id (default gemini-3.8-flash, or
  *                        $GEMINI_MODEL) — MODEL/--model above is claude-only
  *   Test seam: env CLASSIFY_CLAUDE_CMD, if set, is run (sh -c) in the work dir
  *   instead of spawning claude (it must read batch.json → write result.json) —

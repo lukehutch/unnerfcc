@@ -34,7 +34,7 @@
 #
 # LLM_PROVIDER=gemini|claude  which model runs classify/relabel/bucket-analyze
 #   (default gemini; needs GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
-#   ~/.env). GEMINI_MODEL overrides the model id (default gemini-3.7-flash).
+#   ~/.env). GEMINI_MODEL overrides the model id (default gemini-3.8-flash).
 #
 # --benchmark[=N]: after a clean upgrade, run the SWE-bench harness on the STOCK
 #   and just-PATCHED binaries and update the accuracy bar chart in README.md
@@ -130,7 +130,9 @@ fi
 # selects the agentic `claude -p` path instead: it can grep the unpacked bundle
 # to disambiguate a hard string, where gemini gets everything inlined into one
 # non-agentic request. GEMINI_MODEL overrides the model id (llm-provider.mjs
-# reads that straight from the environment, so it needs no flag here).
+# reads that straight from the environment, so it needs no flag here); the key
+# check below reports back whichever model id that resolves to, so the banner
+# names the model actually used rather than a second copy of the default.
 #
 # Both the name and the key are resolved among the preconditions, before the
 # version probe and the ~100MB binary fetch below: the AI steps are separated by
@@ -144,7 +146,7 @@ case "$LLM_PROVIDER" in
   *) die "LLM_PROVIDER must be 'claude' or 'gemini' (got: '$LLM_PROVIDER')";;
 esac
 if [ "$LLM_PROVIDER" = "gemini" ]; then
-  node -e 'import("./scripts/llm-provider.mjs").then(m=>process.exit(m.findGeminiApiKey(process.cwd())?0:1)).catch(()=>process.exit(1))' \
+  GEMINI_MODEL_RESOLVED="$(node -e 'import("./scripts/llm-provider.mjs").then(m=>{if(!m.findGeminiApiKey(process.cwd()))process.exit(1);console.log(m.DEFAULT_GEMINI_MODEL)}).catch(()=>process.exit(1))')" \
     || die "LLM_PROVIDER=gemini but GOOGLE_GEMINI_API_KEY was not found — checked the environment, $REPO/.env, and ~/.env. Set it, or re-run with LLM_PROVIDER=claude."
 fi
 
@@ -323,7 +325,7 @@ CLAUDE_FOR_RELABEL="$(command -v claude 2>/dev/null || echo "$CC_BIN")"
 RELABEL_MODEL="${RELABEL_MODEL:-claude-opus-5}"
 
 if [ "$LLM_PROVIDER" = "gemini" ]; then
-  ok "AI steps (classify, relabel, bucket-analyze): gemini (${GEMINI_MODEL:-gemini-3.7-flash})"
+  ok "AI steps (classify, relabel, bucket-analyze): gemini ($GEMINI_MODEL_RESOLVED)"
 else
   ok "AI steps (classify, relabel, bucket-analyze): claude CLI ($RELABEL_MODEL)"
 fi
