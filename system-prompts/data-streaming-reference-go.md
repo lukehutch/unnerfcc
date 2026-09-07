@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Streaming reference — Go'
 description: Streaming API reference doc (Go bindings).
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Streaming - Go
 
@@ -9,7 +9,7 @@ ccVersion: 2.1.251
 
 ```go
 stream := client.Messages.NewStreaming(context.Background(), anthropic.MessageNewParams{
-    Model:     anthropic.ModelClaudeOpus4_8,
+    Model:     "{{OPUS_ID}}",
     MaxTokens: 64000,
     Messages: []anthropic.MessageParam{
         anthropic.NewUserMessage(anthropic.NewTextBlock("Write a haiku")),

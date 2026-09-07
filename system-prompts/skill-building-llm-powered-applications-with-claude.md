@@ -6,7 +6,7 @@ description: >-
   vs Managed Agents), model and thinking/effort defaults, per-language
   documentation reading, and the prompt-audit subcommand that reviews existing
   prompts for dated patterns.
-ccVersion: 2.1.257
+ccVersion: 2.1.263
 -->
 # Building LLM-Powered Applications with Claude
 
@@ -61,6 +61,8 @@ If the User Request at the bottom of this prompt is a bare subcommand string (no
 | `prompt-audit` | Audit existing prompts, skills, and tool descriptions for dated patterns ("cruft") written for older models. **Read `shared/prompt-audit.md` immediately** and follow it in order: Step 0 (establish scope and target model from the request and the repository - state the assumptions in the report, do not stop to ask), inventory, provenance, then the pattern scan. Produce both deliverables in full - the audit report (findings with `file:line`, pattern, why it's obsolete for the target model, confidence) and a proposed diff - without pausing for confirmation; apply edits only if the request explicitly asked for them. Do not summarize the guide - execute it. |
 | `upgrade` | Upgrade the project's Anthropic SDK dependency across a major version - currently the Python SDK, `anthropic` 0.x -> 1.x. Trailing words may name the language and/or a scope (`upgrade python`, `upgrade python sdk src/`). **Read `python/claude-api/sdk-upgrade.md` immediately** and follow it in order: Step 0 (confirm scope, then establish the current and target versions - a published 1.x must exist before you write a pin), the Step 1 inventory, each numbered section, then verification and the report. Do not summarize the guide - execute it. If the detected or named language has no `sdk-upgrade.md` in this skill, say that no major-version upgrade guide is bundled for that SDK yet and point the user at that SDK's CHANGELOG (repositories in `shared/live-sources.md`); do not improvise one from the Python guide. This is not model migration - to move code to a newer Claude model, use `migrate`. |
 | `cost-optimize` | Reduce what existing Claude API code costs to run, without sacrificing output quality. **Read `shared/cost-optimization.md` immediately** and follow it in order: Step 0 (establish scope, quality bar, and baseline), the token profile - measured through the Usage and Cost Admin API when the user has an Admin API key, from the app's own `response.usage` logs when it has those (ask), or estimated from the code otherwise - then a savings-ranked shortlist of levers (quoted in dollars, % of bill, or relative buckets depending on which of those data sources you have), free wins (caching, input-token hygiene, loop hygiene, output-token hygiene, batch) before tradeoffs (budgets, effort, model choice, multi-model); any lever that earns a place becomes its own diff - proposed by default, applied and measured against the eval covering the traffic it touches when the user asks and approves - and "no changes recommended" is a valid outcome. Two standing rules: every run that exercises the model spends real money, so get the user's approval first; and when context for a lever is missing, work through it interactively with the user - this workflow is not expected to one-shot the audit. Do not summarize the guide - execute it; presenting the profile and the ranked plan to the user is part of executing it. |
+| `build-eval` | Help the user build an eval set for their Claude-powered app. **Read `shared/evals/build-eval.md` immediately** and run its interview: Step 0 (what's being evaluated), Step 1 (source the prompts - existing eval / transcripts / synthesized), Step 2 (grading method), Step 3 (runnable script + measured cost). Get the user's explicit sign-off on the inputs, the grading method, and the cost before producing the eval. |
+| `hillclimb` | Iteratively improve the user's app against an existing eval. **Read `shared/evals/eval-hillclimb.md` immediately** and follow it: Step 0 (confirm a runnable eval exists - if not, route to `build-eval`), Step 1 (what to change / what's off-limits), Step 2 (budget + stopping condition from measured per-run cost), get the plan approved, then the read->propose->apply->run->record loop with on-disk state and a train/validation/test split. |
 <!-- TODO(prompt-audit): remaining trigger question - whether the skill trigger description should also name auditing directly (it is eval-pinned; re-validate before changing it). The migrate-row cross-reference above is the no-revalidation half, already applied. -->
 
 ---
@@ -71,31 +73,31 @@ Before reading code examples, determine which language the user is working in (e
 
 1. **Look at project files** to infer the language:
 
-   - `*.py`, `requirements.txt`, `pyproject.toml`, `setup.py`, `Pipfile` -> **Python** - read from `python/`
-   - `*.ts`, `*.tsx`, `package.json`, `tsconfig.json` -> **TypeScript** - read from `typescript/`
-   - `*.js`, `*.jsx` (no `.ts` files present) -> **TypeScript** - JS uses the same SDK, read from `typescript/`
-   - `*.java`, `pom.xml`, `build.gradle` -> **Java** - read from `java/`
-   - `*.kt`, `*.kts`, `build.gradle.kts` -> **Java** - Kotlin uses the Java SDK, read from `java/`
-   - `*.scala`, `build.sbt` -> **Java** - Scala uses the Java SDK, read from `java/`
-   - `*.go`, `go.mod` -> **Go** - read from `go/`
-   - `*.rb`, `Gemfile` -> **Ruby** - read from `ruby/`
-   - `*.cs`, `*.csproj` -> **C#** - read from `csharp/`
-   - `*.php`, `composer.json` -> **PHP** - read from `php/`
+ - `*.py`, `requirements.txt`, `pyproject.toml`, `setup.py`, `Pipfile` -> **Python** - read from `python/`
+ - `*.ts`, `*.tsx`, `package.json`, `tsconfig.json` -> **TypeScript** - read from `typescript/`
+ - `*.js`, `*.jsx` (no `.ts` files present) -> **TypeScript** - JS uses the same SDK, read from `typescript/`
+ - `*.java`, `pom.xml`, `build.gradle` -> **Java** - read from `java/`
+ - `*.kt`, `*.kts`, `build.gradle.kts` -> **Java** - Kotlin uses the Java SDK, read from `java/`
+ - `*.scala`, `build.sbt` -> **Java** - Scala uses the Java SDK, read from `java/`
+ - `*.go`, `go.mod` -> **Go** - read from `go/`
+ - `*.rb`, `Gemfile` -> **Ruby** - read from `ruby/`
+ - `*.cs`, `*.csproj` -> **C#** - read from `csharp/`
+ - `*.php`, `composer.json` -> **PHP** - read from `php/`
 
 2. **If multiple languages detected** (e.g., both Python and TypeScript files):
 
-   - Check which language the user's current file or question relates to
-   - If still ambiguous, ask: "I detected both Python and TypeScript files. Which language are you using for the Claude API integration?"
+ - Check which language the user's current file or question relates to
+ - If still ambiguous, ask: "I detected both Python and TypeScript files. Which language are you using for the Claude API integration?"
 
 3. **If language can't be inferred** (empty project, no source files, or unsupported language):
 
-   - Use AskUserQuestion with options: Python, TypeScript, Java, Go, Ruby, cURL/raw HTTP, C#, PHP
-   - If AskUserQuestion is unavailable, default to Python examples and note: "Showing Python examples. Let me know if you need a different language."
+ - Use AskUserQuestion with options: Python, TypeScript, Java, Go, Ruby, cURL/raw HTTP, C#, PHP
+ - If AskUserQuestion is unavailable, default to Python examples and note: "Showing Python examples. Let me know if you need a different language."
 
 4. **If unsupported language detected** (Rust, Swift, C++, Elixir, etc.):
 
-   - Suggest cURL/raw HTTP examples from `curl/` and note that community SDKs may exist
-   - Offer to show Python or TypeScript examples as reference implementations
+ - Suggest cURL/raw HTTP examples from `curl/` and note that community SDKs may exist
+ - Offer to show Python or TypeScript examples as reference implementations
 
 5. **If user needs cURL/raw HTTP examples**, read from `curl/`.
 
@@ -191,7 +193,7 @@ Everything goes through `POST /v1/messages`. Tools and output constraints are fe
 
 **Partner pricing:** The prices above are Anthropic first-party API rates - they also apply to Claude on Microsoft Foundry, which is billed through the Microsoft Marketplace at standard API rates. Claude on Amazon Bedrock and Vertex AI is partner-operated with separate pricing - see [Bedrock](https://aws.amazon.com/bedrock/pricing/) or [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/pricing#claude-models). For WebFetch, use the Pricing row in `shared/live-sources.md`.
 
-**ALWAYS use `{{OPUS_ID}}` unless the user explicitly names a different model.** This is non-negotiable. Do not use `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, or any other model unless the user literally says "use sonnet" or "use haiku". Never downgrade for cost - that's the user's decision, not yours. Use `{{FABLE_ID}}` only when the user explicitly asks for {{FABLE_NAME}}, "fable", or Anthropic's most capable model - it has different API behavior than the Opus family (see below) and pricing that exceeds Opus-tier. **Use only the exact model ID strings from the table - they are complete as-is; never append date suffixes** (`claude-sonnet-4-6`, never `claude-sonnet-4-6-20251114` or any other date-suffixed variant you might recall from training data). If the user requests an older model not in the table (e.g., "opus 4.5", "sonnet 3.7"), read `shared/models.md` for the exact ID - do not construct one yourself.
+**ALWAYS use `{{OPUS_ID}}` unless the user explicitly names a different model.** This is non-negotiable. Do not use `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, or any other model unless the user literally says "use sonnet" or "use haiku". Never downgrade for cost - that's the user's decision, not yours. Where a second, cheaper model is in play alongside the main one (worker or sub-agent threads, bulk extractors, LLM judges, the executor under an advisor) - because the user asked for one or a guide in this skill calls for it - or the user says "sonnet" or "haiku" without a version, that means the current generation from the table above (`{{SONNET_ID}}`, `{{HAIKU_ID}}`); previous-generation IDs such as `{{PREV_SONNET_ID}}` are only for users who name that version. Use `{{FABLE_ID}}` only when the user explicitly asks for {{FABLE_NAME}}, "fable", or Anthropic's most capable model - it has different API behavior than the Opus family (see below) and pricing that exceeds Opus-tier. **Use only the exact model ID strings from the table - they are complete as-is; never append date suffixes** (`{{OPUS_ID}}`, never `{{OPUS_ID}}-20260401` or any other date-suffixed variant you might recall from training data). If the user requests an older model not in the table (e.g., "opus 4.5", "sonnet 3.7"), read `shared/models.md` for the exact ID - do not construct one yourself.
 
 ### {{FABLE_NAME}} (`{{FABLE_ID}}`) - most capable widely released model
 
@@ -229,7 +231,7 @@ Full auth details (named profiles, scopes, the API-key-shadows-profile trap, ref
 
 ## Thinking & Effort (Quick Reference)
 
-Use adaptive thinking (`thinking: {type: "adaptive"}`) on every current model - Claude dynamically decides when and how much to think. Per-model rules:
+Use adaptive thinking (`thinking: {type: "adaptive"}`) on every current model except Haiku 4.5, which still takes `budget_tokens` (table below) - Claude dynamically decides when and how much to think. Per-model rules:
 
 | Model | Thinking config | Omitting `thinking` | `budget_tokens` | Sampling (`temperature`/`top_p`/`top_k`) | Effort levels |
 |---|---|---|---|---|---|
@@ -238,7 +240,7 @@ Use adaptive thinking (`thinking: {type: "adaptive"}`) on every current model - 
 | Opus 4.8 / 4.7 | `{type: "adaptive"}` is the only on-mode; `{type: "disabled"}` accepted | Runs **without** thinking - set `{type: "adaptive"}` explicitly | Removed - 400 | Removed - 400 | `low`/`medium`/`high`/`xhigh`/`max` |
 | Sonnet 5 | `{type: "adaptive"}` is the only on-mode; `{type: "disabled"}` accepted | Runs adaptive | Removed - 400 | Removed - 400 | `low`/`medium`/`high`/`xhigh`/`max` |
 | Opus 4.6 / Sonnet 4.6 | `{type: "adaptive"}` (recommended; auto-enables interleaved thinking, no beta header) | Set `{type: "adaptive"}` explicitly | Deprecated - do not use in new code; transitional escape hatch only (see below) | Allowed | `low`/`medium`/`high`/`max` (`xhigh` arrived with Opus 4.7) |
-| Older (Sonnet 4.5, Haiku 4.5, ...) - only if explicitly requested | `{type: "enabled", budget_tokens: N}` | No thinking | Required for thinking; must be less than `max_tokens`, minimum 1024 - errors otherwise | Allowed | `effort` works on Opus 4.5 (`low`/`medium`/`high` only - no `xhigh`/`max`); errors on Sonnet 4.5 / Haiku 4.5 |
+| Haiku 4.5; older models (Sonnet 4.5, ...) only if explicitly requested | `{type: "enabled", budget_tokens: N}` | No thinking | Required for thinking; must be less than `max_tokens`, minimum 1024 - errors otherwise | Allowed | `effort` works on Opus 4.5 (`low`/`medium`/`high` only - no `xhigh`/`max`); errors on Sonnet 4.5 / Haiku 4.5 |
 
 Opus 4.8 keeps the same request surface as 4.7 (no new breaking changes) - see `shared/model-migration.md` -> Migrating to Opus 4.8 for the behavioral re-tuning, and -> Migrating to Opus 4.7 for the full breaking-change list when coming from 4.6 or earlier. With `thinking` disabled, Opus 4.8 may write longer reasoning into the visible response - leave adaptive thinking on, or add a final-answer-only instruction (see the migration guide).
 
@@ -416,7 +418,7 @@ Availability: `shared/platform-availability.md`. For agents on Bedrock / Vertex 
 
 **When the user wants the agent to run on a schedule** (cron, "every night", "weekly report"): read `shared/managed-agents-scheduled-deployments.md` - deployments fire sessions autonomously on a cron cadence, with per-firing run records and lifecycle controls (pause/unpause/archive).
 
-**When the agent's work fans out** (research across several sources, per-file or per-record work, "look into N things, then summarize") **or one loop would fill its context with reading:** read `shared/managed-agents-multiagent.md` and recommend a multiagent session - start with just `{"type": "self"}` in the roster so the agent can delegate to copies of itself, then move reading-heavy sub-tasks to a cheaper worker agent (e.g. {{HAIKU_NAME}}) referenced by ID.
+**When the agent's work fans out** (research across several sources, per-file or per-record work, "look into N things, then summarize") **or one loop would fill its context with reading:** read `shared/managed-agents-multiagent.md` and recommend a multiagent session - start with just `{"type": "self"}` in the roster so the agent can delegate to copies of itself, then move reading-heavy sub-tasks to a cheaper worker agent (e.g. {{HAIKU_NAME}}, or {{SONNET_NAME}} when the worker needs more judgment) referenced by ID.
 
 ---
 
@@ -492,6 +494,14 @@ The Quick Task Reference below uses the `{lang}/claude-api/FILE.md` path notatio
 -> Read `shared/model-migration.md`
 **Upgrading the Anthropic SDK package itself across a major version (`anthropic` 0.x -> 1.x: `httpx2`, awaited async `.with_raw_response`, removed deprecated parameters / aliases / Text Completions, Python >= 3.10) - or writing new code against a project already on 1.x:**
 -> Read `{lang}/claude-api/sdk-upgrade.md` (currently Python only; other SDKs have no bundled major-version guide yet - use that SDK's CHANGELOG via `shared/live-sources.md`)
+**Building an eval set for a Claude app (or "how do I know if my change helped"):**
+-> Read `shared/evals/build-eval.md` - it loads `shared/evals/eval-audit.md` (the health checklist every eval must satisfy) before Step 0.
+**Checking whether an existing eval is trustworthy ("is my eval any good?"):**
+-> Read `shared/evals/eval-audit.md` and run it against the eval; report per its section 6.
+**Iteratively improving an app against an eval (prompt tuning, hill-climbing):**
+-> Read `shared/evals/eval-hillclimb.md` - runs Step 0 -> Step 5 with a train/test split; test is scored every round and is the headline.
+**Rendering an eval-hillclimb HTML report:**
+-> Run `shared/evals/report/build-report.mjs` when it is on disk (EAP install), else `shared/evals/report/build-report-lite.mjs` (always extracted with this skill) - both consume the `_state.json` / `vN/` layout produced by the hillclimb guide and write the same `trajectory/scores.tsv`. Don't write a parallel one.
 **Prompting or tuning Fable 5/5.1 (long turns, effort, verbosity, autonomous runs, sub-agents):**
 -> Read `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} -> Behavioral shifts (prompt-tunable) + Long-running agent recommendations
 **Prompting or tuning {{FABLE_NAME}} (progress updates, parallel tool calls, writing density / formatting, autonomy, test sprawl, whole-file rewrites) or making a harness compatible with preserved thinking's history-editing check (history edits, compaction, per-turn reminders):**
@@ -556,7 +566,7 @@ Live documentation URLs are in `shared/live-sources.md`.
 - **Error handling - catch a chain, not one broad class.** A single `except APIStatusError` / `catch (AnthropicServiceException)` / `rescue APIError` loses the distinction between retryable (429, >=500, network) and non-retryable (400/404) failures. Write a most-specific-first chain - e.g. `NotFoundError` -> `RateLimitError` -> `APIStatusError` -> `APIConnectionError` (or the Go equivalent: `errors.As` into `*anthropic.Error` then `switch apierr.StatusCode { case 404: ...; case 429: ...; default: ... }`). Per-language class names and namespaces are in `shared/error-codes.md`.
 - **Don't research SDK types - write first.** If a type name isn't shown in the documentation included in this skill, write the code file from the namespace/package tables in the language-specific doc and let the compiler's error point you to the right name. Do not spend turns on WebFetch, SDK-repo clones, or compiling-and-running a separate reflection program to discover type names before writing - produce the source file first, then fix what the compiler reports. A quick `strings` / `jar tf` / `javap` against the installed SDK is acceptable for locating names (it returns in seconds), but don't escalate beyond that. A file with a wrong type name is recoverable; a session spent on discovery with no file written is not.
 - **Bash and text editor tools are Anthropic-defined, schema-less.** Declare `{"type": "bash_20250124", "name": "bash"}` / `{"type": "text_editor_20250728", "name": "str_replace_based_edit_tool"}` - no `input_schema`. A custom tool with your own schema named `"bash"` is a different tool. Handler paths and security checks are in `shared/tool-use-concepts.md` § Client-Side Tools.
-- **Advisor tool model pairing.** The advisor tool's `model` must be at least as capable as the request's top-level `model` - e.g. executor `claude-sonnet-5` -> advisor `claude-opus-4-8` or `claude-opus-4-7`. An invalid pair returns 400. Pairing table in `shared/tool-use-concepts.md` § Advisor. Availability: `shared/platform-availability.md`.
+- **Advisor tool model pairing.** The advisor tool's `model` must be at least as capable as the request's top-level `model` - e.g. executor `{{SONNET_ID}}` -> advisor `{{OPUS_ID}}` or `claude-opus-4-8`. An invalid pair returns 400. Pairing table (and which advisors return plaintext vs encrypted `advisor_redacted_result` advice) in `shared/tool-use-concepts.md` § Advisor. Availability: `shared/platform-availability.md`.
 - **Agent Skills != Managed Agents.** To have Claude generate a `.pptx`/`.xlsx`/etc. via Agent Skills, call `client.beta.messages.create` with `container={"skills": [...]}`, the `code_execution_20260521` tool, and the `code-execution-2025-08-25` beta (Skills is out of beta - no `skills-2025-10-02` header needed). Do not use `client.beta.agents` / `sessions` / `environments` here - those are the Managed Agents surface, not Agent Skills.
 - **MCP connector needs both halves.** `mcp_servers=[{type:"url", url, name}]` alone is rejected as a validation error - also add `tools=[{type:"mcp_toolset", mcp_server_name:<same name>}]` with beta `mcp-client-2025-11-20`. Availability: `shared/platform-availability.md`.
 - **`inference_geo` is a direct top-level request parameter** - `client.messages.create(..., inference_geo="us")` / `.inferenceGeo("us")`. Do not put it in `extra_body` / `putAdditionalBodyProperty`. (Messages API only - on Managed Agents, `inference_geo` instead nests inside the agent's `model` object, never top-level; see `shared/managed-agents-core.md` § Pinning inference geography.) Supported on Opus 4.6 / Sonnet 4.6 and later; availability: `shared/platform-availability.md`. `response.usage.inference_geo` reports where inference ran.
@@ -568,5 +578,6 @@ Live documentation URLs are in `shared/live-sources.md`.
 - **Report and document output:** For tasks that produce reports, documents, or visualizations, the code execution sandbox has `python-docx`, `python-pptx`, `matplotlib`, `pillow`, and `pypdf` pre-installed. Claude can generate formatted files (DOCX, PDF, charts) and return them via the Files API - consider this for "report" or "document" type requests instead of plain stdout text.
 - **Server-tool errors don't raise.** Web search and web fetch errors return HTTP 200 with a `web_search_tool_result` / `web_fetch_tool_result` block whose `content` is a single error object (e.g. `{error_code: "max_uses_exceeded"}`) - not a raised exception. For web search, a success `content` is a *list*; an error `content` is an *object* - branch on that before indexing.
 - **Managed Agents web tools ignore the environment's `networking`.** `web_search` / `web_fetch` run on Anthropic's servers in cloud *and* self-hosted environments, and Console org-level web settings apply to the Messages API only. Restrict them per tool with `allowed_domains` **or** `blocked_domains` (never both; 1-64 plain hostnames per list, subdomains covered; IPs, bare TLDs, single-label and `localhost`-style names rejected on both tools; a path suffix is allowed only on `web_search`) on the toolset `configs` entry - `shared/managed-agents-tools.md` § Web search & web fetch settings.
+- **Eval / hillclimb work has dedicated guides:** If the user says "hillclimb", "improve my eval score", "iterate on my prompt against an eval", or "build me an eval" - load `shared/evals/eval-hillclimb.md` or `shared/evals/build-eval.md` rather than improvising. The bundled HTML report builder is `shared/evals/report/build-report.mjs` when it is on disk (EAP install), else `shared/evals/report/build-report-lite.mjs` (always extracted with this skill); don't write a parallel one.
 - **Code execution output block type:** `code_execution_20260521` returns `bash_code_execution_tool_result` (with `.content.stdout`), **not** the legacy bare `code_execution_tool_result`. Iterate `response.content` and match on the correct type.
 - **Tool search: never defer everything.** The search tool itself must not have `defer_loading: true`, and at least one tool in `tools` must be non-deferred, or the API returns 400 `All tools have defer_loading set`.

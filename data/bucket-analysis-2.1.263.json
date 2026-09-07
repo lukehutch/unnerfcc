@@ -1,0 +1,131 @@
+{
+  "ccVersion": "2.1.263",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "tool-description-artifacttool-2.md",
+      "verdict": "keep",
+      "reasoning": "An unprompted offer to build an artifact when the user did not ask for one describes interruption-appropriate UX rather than a nerf on substantive work, matching Calibration 2."
+    },
+    {
+      "file": "tool-result-artifact-saved-version-read-all-lines.md",
+      "verdict": "keep",
+      "reasoning": "Requiring every line of an artifact version to be read before counting as viewed enforces thoroughness rather than holding Claude back."
+    },
+    {
+      "file": "tool-parameter-ask-user-question-description.md",
+      "verdict": "keep",
+      "reasoning": "This is a parameter description specifying the single helper line UI element shown below a question in AskUserQuestion, not a reasoning cap."
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "keep",
+      "reasoning": "The flagged passage regarding 'Write, look once, publish' and verification loops is already handled by an existing rule in this file."
+    },
+    {
+      "file": "skill-eval-building-guide.md",
+      "verdict": "keep",
+      "reasoning": "Instructing the runner to keep chat updates concise while directing detailed case results and metrics to report.html prevents context-window exhaustion and terminal spam during automated eval runs."
+    },
+    {
+      "file": "skill-hill-climbing-guide.md",
+      "verdict": "keep",
+      "reasoning": "Routing run detail to report.html and narrative.md rather than flooding chat during multi-round hill climbing is appropriate operational UX for background evaluations."
+    },
+    {
+      "file": "skill-setup-cowork.md",
+      "verdict": "lift",
+      "reasoning": "The ground rule restricts all messages in the engaged setup workflow to an arbitrary two or three sentences, artificially capping explanations of tools, plugins, and connectors.",
+      "rule": {
+        "stock": "- Keep each message short. Two or three sentences plus the widget, not a wall.",
+        "unnerf": "- Keep each message focused and clear alongside the widget, giving whatever context the step requires without filler.",
+        "description": "setup-cowork: drop two-to-three sentence message cap"
+      }
+    },
+    {
+      "file": "agent-prompt-claude-guide-agent.md",
+      "verdict": "keep",
+      "reasoning": "The concise and actionable response restriction in this guide agent prompt is already replaced by an existing rule in existingRules."
+    },
+    {
+      "file": "skill-workflow-hooks-and-patterns-reference.md",
+      "verdict": "keep",
+      "reasoning": "This reference text guides scaling workflow harnesses to the user's explicit scope and explicitly instructs thoroughness for audits and deep tasks rather than capping capability."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "Diagram sparsity and short labels are functional design requirements of the visual whiteboard canvas medium, and the chat response brevity cap is already lifted in existingRules."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "Canvas element counts and label constraints are formatting requirements for the whiteboard sketch medium, while chat response length is already addressed by an existing rule."
+    },
+    {
+      "file": "tool-parameter-ask-user-questions-list.md",
+      "verdict": "keep",
+      "reasoning": "The 1-4 question bounds are hard schema constraints enforced by the AskUserQuestion tool implementation; exceeding them causes tool validation errors."
+    },
+    {
+      "file": "skill-setup-cowork-role-selection.md",
+      "verdict": "lift",
+      "reasoning": "Imposing a two-to-three-sentence cap on the initial intake message that educates the user on skills, connectors, and plugins restricts substantive onboarding guidance.",
+      "rule": {
+        "stock": "Two or three sentences. Hit the beats: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
+        "unnerf": "Hit the beats thoroughly and clearly: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
+        "description": "setup-cowork role selection: remove two-to-three-sentence cap on initial framing"
+      }
+    },
+    {
+      "file": "tool-parameter-ask-user-questions-title.md",
+      "verdict": "keep",
+      "reasoning": "This is a tool parameter description specifying a single-line heading for a UI card header in AskUserQuestion, not a hold-back restriction on Claude."
+    },
+    {
+      "file": "data-claude-api-reference-csharp.md",
+      "verdict": "keep",
+      "reasoning": "Discouraging dotnet run reflection probes prevents CLI timeouts and background polling loops in favor of faster direct alternatives (strings/grep and compiler diagnostics)."
+    },
+    {
+      "file": "skill-eval-health-checklist.md",
+      "verdict": "keep",
+      "reasoning": "Handling large case sets through a three-tiered approach (programmatic checks, stratified sampling, LLM auditor) is a genuine context-budget constraint directly matching Calibration 1."
+    },
+    {
+      "file": "tool-parameter-ask-user-number-unit.md",
+      "verdict": "keep",
+      "reasoning": "Specifying a short unit like 'px' or '%' describes the UI display string next to a numeric input widget rather than nerfing substantive output."
+    },
+    {
+      "file": "skill-workshop.md",
+      "verdict": "keep",
+      "reasoning": "Keeping internal scratchpad notes and DOM manipulation mechanics silent prevents polluting the user conversation with implementation plumbing while focusing on the deliverable."
+    },
+    {
+      "file": "data-claude-api-reference-java.md",
+      "verdict": "keep",
+      "reasoning": "This is a genuine execution environment constraint to prevent Claude Code from backgrounding slow builds and getting trapped in polling loops. Fast local inspection via javap or compiler error feedback is recommended instead."
+    },
+    {
+      "file": "data-tool-use-reference-go.md",
+      "verdict": "keep",
+      "reasoning": "This is standard SDK usage documentation explaining when to use the high-level BetaToolRunner versus dropping down to a manual loop. It guides API users on SDK design rather than restricting Claude's capabilities."
+    },
+    {
+      "file": "tool-parameter-save-skill-description.md",
+      "verdict": "keep",
+      "reasoning": "This specifies constraints for skill metadata that is displayed on terminal review cards and indexed for semantic routing. The length guidance reflects UI card sizing and context limits rather than an artificial capability nerf."
+    },
+    {
+      "file": "tool-parameter-ask-user-option-description.md",
+      "verdict": "keep",
+      "reasoning": "This is a UI display constraint for interactive terminal choice options in AskUserQuestion. Keeping option descriptions concise prevents terminal prompt overflow and unnecessary visual noise."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "This is architectural guidance advising users to choose the simplest viable integration tier when building LLM applications. It is engineering domain advice rather than a hold-back restriction on Claude."
+    }
+  ]
+}

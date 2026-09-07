@@ -7,7 +7,7 @@ description: >-
   page's machine-readable record, apply them and republish the evolved draft
   each round, then kick off the build when the reader clicks Start and keep the
   page updated with links to whatever ships.
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 ---
 name: workshop
@@ -105,7 +105,7 @@ calls, one turn, never one per turn. Then read ONLY the parts of your
 copy you author, as two parallel ranged Reads in ONE turn: lines
 1-56 (the in-file contract) and lines 1438-1526 (the fillable
 `<article>` and the `ws-decisions` island right after it). The
-template is 3,041 lines, and everything outside those two ranges -
+template is 3,094 lines, and everything outside those two ranges -
 the theme script, the `<style>` block, and the decisions script - is
 fixed template bytes your copy must keep byte-identical: you never
 edit it, so never spend a turn or your context reading it (a

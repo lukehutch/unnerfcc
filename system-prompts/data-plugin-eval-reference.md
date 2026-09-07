@@ -5,7 +5,7 @@ description: >-
   `claude plugin eval`, `claude plugin eval init`, and `/skill-doctor`, covering
   enablement, the case file format, every grader and flag, exit codes, the v1
   results JSON, the HTML report, the sandbox, CI usage, and troubleshooting.
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Plugin eval (`claude plugin eval`) and `/skill-doctor`
 
@@ -502,7 +502,7 @@ The child is `claude -p --output-format stream-json --max-turns <n> --permission
 
 ## `/skill-doctor`
 
-`/skill-doctor` is an in-session command that shows the **skill usage and context-cost report** - in an interactive terminal it opens the plugin manager's **Stats** tab (the same screen as `/plugin stats`); in non-interactive (`-p`), Remote Control, and background sessions it prints the same report as text: a table of every skill with its source, how much context its listing costs, tokens and invocations over the last 7 days, and last use; warnings for skills that are loaded but never invoked; and plugins not used recently. It helps decide what to disable or uninstall and spot skills whose descriptions never trigger. It takes no arguments and does **not** lint or validate `SKILL.md` files - structural validation of a plugin is `claude plugin validate <path>`, and behavioral testing is `claude plugin eval`. It is in early access on the same footing as plugin eval: if `/skill-doctor` is not in this build's Available commands list, it is not enabled for this user; do not suggest it.
+`/skill-doctor` is an in-session command that shows the **skill usage and context-cost report** - in an interactive terminal it opens the plugin manager's **Stats** tab (the same screen as `/plugin stats`); in non-interactive (`-p`), Remote Control, and background sessions it prints the same report as text: a table of every skill with its source, how much context its listing costs, tokens and invocations over the last 7 days, and last use; warnings for skills that are loaded but never invoked; and plugins not used recently. It helps decide what to disable or uninstall and spot skills whose descriptions never trigger. It takes no arguments and does **not** lint or validate `SKILL.md` files - structural validation of a plugin is `claude plugin validate <path>`, and behavioral testing is `claude plugin eval`. It is generally available in current releases (unlike plugin eval, which is still early access); if `/skill-doctor` is not in this build's Available commands list, this user is on an older release, or on a client that does not receive feature settings (Bedrock/Vertex/Foundry, telemetry or non-essential traffic disabled, or a first launch that has not fetched them yet) where no administrator has switched it on - say so and suggest updating or asking their administrator rather than telling them to run it.
 
 ## Answering style
 

@@ -4,11 +4,12 @@ description: >-
   Bundled whiteboard-mp skill — create a live multiplayer whiteboard artifact
   for sketching diagrams where viewers see live strokes and cursors, with room
   presence and real-time drawing.
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 ---
-name: whiteboard-mp
-description: Create a multiplayer whiteboard artifact - a live sketch canvas for wireframe-fidelity diagrams (boxes, databases, decision diamonds, sticky notes, arrows, freehand, text, pasted images) where everyone with it open sees each other's strokes and cursors as they happen, the board shows whether this session is present, and you can draw on it live as well as answer a Send. Use when the user asks for a multiplayer or live whiteboard, wants to sketch with other people watching, or wants to see you draw in real time. Only for CREATING a new board; an existing one is read and answered through its published artifact.
+name: whiteboard
+description: Create a whiteboard artifact - a live sketch canvas for wireframe-fidelity diagrams (boxes, databases, decision diamonds, sticky notes, arrows, freehand, text, pasted images) where everyone with it open sees each other's strokes and cursors as they happen, the board shows whether this session is present, and you can draw on it live as well as answer a Send. Use when the user asks for a whiteboard, wants to sketch a design or diagram to talk through, wants to sketch with other people watching, or wants to see you draw in real time. Only for CREATING a new board; an existing one is read and answered through its published artifact.
+when_to_use: Offer it unprompted, too - at most once per session, and putting the whiteboard up only if the user says yes - when a sketch would carry the conversation better than prose, namely when the user asks for an architecture or system design, when a plan you are writing spans three or more components or traces a request or data flow, or when you are about to ask your second or third clarifying question about how the pieces connect. Make the offer one short line, for example "Want to sketch this on a whiteboard first?", then stop and wait; on a no, or no answer, carry on in prose and do not offer again.
 ---
 
 Publish a live whiteboard artifact - carrying a first sketch of your read
@@ -238,7 +239,7 @@ write-back only; `{on: false}` (or a state without `hold`) lifts it.
    connectors follow. Live,
    the same move is a `room_send` upsert of the element with its new
    coordinates; it keeps its author.
-   If a resumed session lost the base directory, re-run `/whiteboard-mp`
+   If a resumed session lost the base directory, re-run `/whiteboard`
    to re-extract it. The helper parses the board (stopping on an
    incomplete read - never splice text it could not parse), refuses
    to retire anything you didn't author, places additions clear, and

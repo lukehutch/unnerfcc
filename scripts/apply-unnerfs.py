@@ -1598,6 +1598,26 @@ RULES: dict[str, list[Rule]] = {
     # ${VAR} introduction and rule overlap, not whether a match is compared
     # rather than rendered.
     # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # v2.1.263 sync (bucket-analyze.mjs, 2026-09-07): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.263.json
+    # -------------------------------------------------------------------------
+    "skill-setup-cowork.md": [
+        Rule(
+            stock="- Keep each message short. Two or three sentences plus the widget, not a wall.",
+            unnerf="- Keep each message focused and clear alongside the widget, giving whatever context the step requires without filler.",
+            description="setup-cowork: drop two-to-three sentence message cap",
+        ),
+    ],
+    "skill-setup-cowork-role-selection.md": [
+        Rule(
+            stock="Two or three sentences. Hit the beats: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
+            unnerf="Hit the beats thoroughly and clearly: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
+            description="setup-cowork role selection: remove two-to-three-sentence cap on initial framing",
+        ),
+    ],
 }
 
 

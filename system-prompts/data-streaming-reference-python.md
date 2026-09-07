@@ -3,7 +3,7 @@ name: 'Data: Streaming reference — Python'
 description: >-
   Python streaming reference including sync/async streaming and handling
   different content types
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Streaming - Python
 
@@ -59,7 +59,7 @@ Claude may return text, thinking blocks, or tool use. Handle each appropriately:
 with client.messages.stream(
     model="{{OPUS_ID}}",
     max_tokens=64000,
-    thinking={"type": "adaptive", "display": "summarized"},  # display opt-in: default is omitted (empty thinking text) on Fable 5 / Mythos 5 / {{OPUS_NAME}} / Opus 4.8 / 4.7
+    thinking={"type": "adaptive", "display": "summarized"},  # display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, Opus 4.8/4.7, and {{SONNET_NAME}}
     messages=[{"role": "user", "content": "Analyze this problem"}]
 ) as stream:
     for event in stream:

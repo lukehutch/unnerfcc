@@ -1,6 +1,57 @@
 {
- "from": "2.1.257",
- "to": "2.1.258",
- "changes": [],
+ "from": "2.1.258",
+ "to": "2.1.263",
+ "changes": [
+  {
+   "id": "data-tool-use-reference-go",
+   "name": "Data: Tool use reference — Go",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "d71df68e6ac8",
+   "newHash": "ea89f6aa962d",
+   "sample": "# Tool Use - Go\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## Tool Use\n\n### Tool Runner (Beta - Recommended)"
+  },
+  {
+   "id": "tool-description-artifacttool-2",
+   "name": "Tool Description: ArtifactTool",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "7442fabb9c31",
+   "newHash": "08afb8933aa2",
+   "sample": "Render an HTML file to an Artifact — a default-private web page hosted on claude.ai. Use this when communicating visually would be clearer than terminal text, or when the user or their team would use "
+  },
+  {
+   "id": "tool-parameter-save-skill-description",
+   "name": "Tool Parameter: Skill save — description",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "ec4f9147f8b2",
+   "newHash": "f79fc47b2266",
+   "sample": "One short sentence saying when to use this skill: aim for under 200 characters, never more than 1024. Shown on the review card and saved as the skill's description, which is what decides when the skil"
+  },
+  {
+   "id": "data-managed-agents-multiagent-sessions",
+   "name": "Data: Managed Agents multiagent sessions",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "0ae4d6209dd7",
+   "newHash": "5ad526191521",
+   "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont"
+  },
+  {
+   "id": "skill-claude-code-docs-config-guide",
+   "name": "Skill: claude-code-docs config guide",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "fbd757161ea3",
+   "newHash": "0897f982f761",
+   "sample": "#\u0000 \u0000C\u0000l\u0000a\u0000u\u0000d\u0000e\u0000 \u0000C\u0000o\u0000d\u0000e\u0000 \u0000C\u0000o\u0000n\u0000f\u0000i\u0000g\u0000u\u0000r\u0000a\u0000t\u0000i\u0000o\u0000n\u0000 \u0000G\u0000u\u0000i\u0000d\u0000e\u0000\n\u0000\n\u0000Y\u0000o\u0000u\u0000 \u0000a\u0000r\u0000e\u0000 \u0000a\u0000n\u0000s\u0000w\u0000e\u0000r\u0000i\u0000n\u0000g\u0000 \u0000a\u0000 \u0000q\u0000u\u0000e\u0000s\u0000t\u0000i\u0000o\u0000n\u0000 \u0000a\u0000b\u0000o\u0000u\u0000t\u0000 \u0000C\u0000l\u0000a\u0000u\u0000d\u0000e\u0000 \u0000C\u0000o\u0000d\u0000e\u0000 \u0000i\u0000t\u0000s\u0000e\u0000l\u0000f\u0000:\u0000 \u0000i\u0000t\u0000s\u0000 \u0000c\u0000o\u0000m\u0000m\u0000a\u0000n\u0000"
+  }
+ ],
  "unverifiable": []
 }

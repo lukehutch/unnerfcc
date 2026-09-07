@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Tool use reference — Go'
 description: Tool-use API reference doc (Go bindings).
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Tool Use - Go
 
@@ -49,7 +49,7 @@ runner := client.Beta.Messages.NewToolRunner(
     []anthropic.BetaTool{weatherTool},
     anthropic.BetaToolRunnerParams{
         BetaMessageNewParams: anthropic.BetaMessageNewParams{
-            Model:     anthropic.ModelClaudeOpus4_8,
+            Model:     "{{OPUS_ID}}",
             MaxTokens: 16000,
             Messages: []anthropic.BetaMessageParam{
                 anthropic.NewBetaUserMessage(anthropic.NewBetaTextBlock("What's the weather in Paris?")),
@@ -125,7 +125,7 @@ func main() {
 
     for {
         resp, err := client.Messages.New(context.Background(), anthropic.MessageNewParams{
-            Model:     anthropic.ModelClaudeSonnet4_6,
+            Model:     "{{OPUS_ID}}",
             MaxTokens: 16000,
             Messages:  messages,
             Tools:     tools,
@@ -209,11 +209,11 @@ Server-side - no tool_result round-trip. The advisor model must be >= the execut
 
 ```go
 response, err := client.Beta.Messages.New(ctx, anthropic.BetaMessageNewParams{
-    Model:     anthropic.ModelClaudeSonnet4_6,
+    Model:     "{{SONNET_ID}}", // executor
     MaxTokens: 4096,
     Tools: []anthropic.BetaToolUnionParam{
         {OfAdvisorTool20260301: &anthropic.BetaAdvisorTool20260301Param{
-            Model: anthropic.ModelClaudeOpus4_8,
+            Model: "{{OPUS_ID}}", // advisor
         }},
     },
     Messages: []anthropic.BetaMessageParam{ /* ... */ },

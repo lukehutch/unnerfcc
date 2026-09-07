@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Claude API reference — PHP'
 description: PHP SDK reference
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Claude API - PHP
 
@@ -104,7 +104,7 @@ use Anthropic\Messages\ThinkingBlock;
 $message = $client->messages->create(
     model: '{{OPUS_ID}}',
     maxTokens: 16000,
-    thinking: ['type' => 'adaptive', 'display' => 'summarized'], // display opt-in: default is omitted (empty thinking text) on Fable 5 / Mythos 5 / {{OPUS_NAME}} / Opus 4.8 / 4.7
+    thinking: ['type' => 'adaptive', 'display' => 'summarized'], // display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, Opus 4.8/4.7, and {{SONNET_NAME}}
     messages: [
         ['role' => 'user', 'content' => 'Solve: 27 * 453'],
     ],

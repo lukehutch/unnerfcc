@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Streaming reference — Java'
 description: Streaming API reference doc (Java bindings).
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Streaming - Java
 
@@ -12,7 +12,7 @@ import com.anthropic.core.http.StreamResponse;
 import com.anthropic.models.messages.RawMessageStreamEvent;
 
 MessageCreateParams params = MessageCreateParams.builder()
-    .model(Model.CLAUDE_OPUS_4_8)
+    .model("{{OPUS_ID}}")
     .maxTokens(64000L)
     .addUserMessage("Write a haiku")
     .build();

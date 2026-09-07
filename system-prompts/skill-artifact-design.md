@@ -3,7 +3,7 @@ name: 'Skill: artifact-design'
 description: >-
   Bundled artifact-design skill — Design guidance and fundamentals for
   Artifacts.
-ccVersion: 2.1.257
+ccVersion: 2.1.263
 -->
 ---
 name: artifact-design
@@ -66,6 +66,8 @@ Fundamentals below apply to everything. The editorial process after that runs on
 <!-- dataviz-callout -->
 
 ## Process
+
+Start with what the viewer should be able to do on the page, not only what they will read: if it should take input, keep what people change for whoever opens it next, show live data, or ask Claude something, load the `artifact-capabilities` skill now and design around what it makes available to this user; a page that is only read needs none of that.
 
 Before writing code, write the design plan - a token system with color, type, and layout, specified so every build decision derives from it:
 - **Color**: describe the palette as 4-6 named hex values.

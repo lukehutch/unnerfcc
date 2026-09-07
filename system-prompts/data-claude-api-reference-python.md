@@ -3,7 +3,7 @@ name: 'Data: Claude API reference — Python'
 description: >-
   Python SDK reference including installation, client initialization,
   per-request options, timeouts, streaming, and retry/backoff patterns
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Claude API - Python
 
@@ -265,7 +265,7 @@ If `cache_read_input_tokens` is zero across repeated identical-prefix requests, 
 response = client.messages.create(
     model="{{OPUS_ID}}",
     max_tokens=16000,
-    thinking={"type": "adaptive", "display": "summarized"},  # display opt-in: default is omitted (empty thinking text) on Fable 5 / Mythos 5 / {{OPUS_NAME}} / Opus 4.8 / 4.7
+    thinking={"type": "adaptive", "display": "summarized"},  # display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, Opus 4.8/4.7, and {{SONNET_NAME}}
     output_config={"effort": "high"},  # low | medium | high | xhigh | max
     messages=[{"role": "user", "content": "Solve this step by step..."}]
 )

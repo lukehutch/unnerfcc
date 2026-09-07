@@ -3,7 +3,7 @@ name: 'Data: Claude API reference — Java'
 description: >-
   Java SDK reference including installation, client initialization, basic
   requests, streaming, and beta tool use
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Claude API - Java
 
@@ -88,7 +88,7 @@ import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.Message;
 
 MessageCreateParams params = MessageCreateParams.builder()
-    .model("{{OPUS_ID}}")  // .model(String) overload - use it for ids with no typed Model constant yet
+    .model("{{OPUS_ID}}")  // .model(String) overload - works for every model id; typed Model.* constants lag model launches
     .maxTokens(16000L)
     .addUserMessage("What is the capital of France?")
     .build();
@@ -112,13 +112,13 @@ response.content().stream()
 ```java
 import com.anthropic.models.messages.ContentBlock;
 import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.Model;
 import com.anthropic.models.messages.ThinkingConfigAdaptive;
 
 MessageCreateParams params = MessageCreateParams.builder()
-    .model(Model.CLAUDE_SONNET_4_6)
+    .model("{{OPUS_ID}}")
     .maxTokens(16000L)
-    .thinking(ThinkingConfigAdaptive.builder().build())
+    // display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, Opus 4.8/4.7, and {{SONNET_NAME}}
+    .thinking(ThinkingConfigAdaptive.builder().display(ThinkingConfigAdaptive.Display.SUMMARIZED).build())
     .addUserMessage("Solve this step by step: 27 * 453")
     .build();
 
@@ -178,7 +178,7 @@ import com.anthropic.models.messages.MessageCountTokensParams;
 
 long tokens = client.messages().countTokens(
     MessageCountTokensParams.builder()
-        .model(Model.CLAUDE_SONNET_4_6)
+        .model("{{OPUS_ID}}")
         .addUserMessage("Hello")
         .build()
 ).inputTokens();

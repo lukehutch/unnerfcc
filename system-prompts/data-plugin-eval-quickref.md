@@ -5,7 +5,7 @@ description: >-
   orientation for `claude plugin eval`, `claude plugin eval init`, and
   `/skill-doctor`, covering availability and enablement, suite layout, graders,
   the common flags, results, and when to fall back to the full reference.
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Plugin eval and `/skill-doctor` - quick reference
 
@@ -27,6 +27,6 @@ Offline orientation for `claude plugin eval` (Claude Code's plugin evaluation ha
 
 **Sandbox.** Per run: throwaway workspace, fresh `CLAUDE_CONFIG_DIR` and `HOME`, only the plugin under test, `dontAsk` mode with read-only tools unless granted, credentials copied in after the scaffold and deleted at the end, child pinned to essential traffic only (no telemetry, feature flags at defaults, **Artifact tool unavailable in-run** - grade what a skill produces before publishing). Not an OS sandbox; network is not blocked. `ANTHROPIC_MODEL` is not inherited (pin `--model`); provider selectors, `AWS_*`, gcloud config, `ANTHROPIC_API_KEY`, proxies pass through.
 
-**`/skill-doctor`.** In-session skill **usage and context-cost report** - interactively it opens the plugin manager's Stats tab (same as `/plugin stats`); in `-p`, Remote Control, and background sessions it prints the report as text (per-skill listing cost, 7-day tokens/uses, never-invoked warnings, unused plugins). No arguments; not a linter (`claude plugin validate <path>` validates structure; `claude plugin eval` tests behavior). Early access like plugin eval - only suggest it if it is in the build's command list.
+**`/skill-doctor`.** In-session skill **usage and context-cost report** - interactively it opens the plugin manager's Stats tab (same as `/plugin stats`); in `-p`, Remote Control, and background sessions it prints the report as text (per-skill listing cost, 7-day tokens/uses, never-invoked warnings, unused plugins). No arguments; not a linter (`claude plugin validate <path>` validates structure; `claude plugin eval` tests behavior). Generally available in current releases (plugin eval itself is still early access) - but only suggest it if it is in the build's command list; if it is missing, the user is on an older release, or on a client that does not receive feature settings (Bedrock/Vertex/Foundry, telemetry or non-essential traffic disabled, or a first launch that has not fetched them yet) where no administrator has switched it on.
 
 **Style.** Verify enablement first; give exact commands and keys; there is no docs URL to link yet - say so and suggest `/feedback` for gaps (or the public issues page when `/feedback` is disabled for the user); never guess an enablement variable name.

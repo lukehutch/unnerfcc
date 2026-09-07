@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Streaming reference — C#'
 description: Streaming API reference doc (C# bindings).
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Streaming - C#
 
@@ -12,7 +12,7 @@ using Anthropic.Models.Messages;
 
 var parameters = new MessageCreateParams
 {
-    Model = Model.ClaudeOpus4_8,
+    Model = "{{OPUS_ID}}",
     MaxTokens = 64000,
     Messages = [new() { Role = Role.User, Content = "Write a haiku" }]
 };

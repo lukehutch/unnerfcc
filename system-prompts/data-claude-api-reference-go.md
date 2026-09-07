@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Claude API reference — Go'
 description: Go SDK reference
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Claude API - Go
 
@@ -32,11 +32,11 @@ client := anthropic.NewClient(
 
 ---
 
-## Model Constants
+## Model IDs
 
-The Go SDK provides typed model constants: `anthropic.ModelClaudeFable5`, `anthropic.ModelClaudeOpus4_8`, `anthropic.ModelClaudeOpus4_7`, `anthropic.ModelClaudeSonnet4_6`, `anthropic.ModelClaudeHaiku4_5_20251001`. Default to {{OPUS_NAME}} unless the user specifies otherwise; if they ask for Fable or the most powerful model, use `anthropic.ModelClaudeFable5` (see `shared/models.md` for the full resolution table).
+`anthropic.Model` is an alias for `string`, so pass the model as its plain id: `Model: "{{OPUS_ID}}"`. Default to {{OPUS_NAME}} unless the user specifies otherwise; if they ask for Fable or the most powerful model, use `"{{FABLE_ID}}"`; if they ask for a cheaper tier, use the current generation - `"{{SONNET_ID}}"` or `"{{HAIKU_ID}}"` (see `shared/models.md` for the full resolution table).
 
-`anthropic.Model` is an alias for `string`, so a model with no typed constant yet - including {{OPUS_NAME}} - is passed as the plain id: `Model: "{{OPUS_ID}}"`. Check the SDK release notes for a typed `{{OPUS_NAME}}` constant before assuming one exists.
+The SDK also ships typed `anthropic.ModelClaude*` constants, but they lag model launches - a given SDK release may have constants only for previous-generation models. Do not pick a model because it has a typed constant; the string id works for every model on every SDK version. Check the SDK release notes before assuming a typed constant exists for a current model.
 
 ---
 
@@ -74,9 +74,10 @@ Derived from `anthropic-sdk-go/message.go` (`ThinkingConfigParamUnion`, `Thinkin
 ```go
 // There is no ThinkingConfigParamOfAdaptive helper - construct the union
 // struct-literal directly and take the address of the variant.
-adaptive := anthropic.ThinkingConfigAdaptiveParam{}
+// display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, Opus 4.8/4.7, and {{SONNET_NAME}}
+adaptive := anthropic.ThinkingConfigAdaptiveParam{Display: anthropic.ThinkingConfigAdaptiveDisplaySummarized}
 params := anthropic.MessageNewParams{
-    Model:     anthropic.ModelClaudeSonnet4_6,
+    Model:     "{{OPUS_ID}}",
     MaxTokens: 16000,
     Thinking:  anthropic.ThinkingConfigParamUnion{OfAdaptive: &adaptive},
     Messages: []anthropic.MessageParam{
@@ -163,7 +164,7 @@ Use `Beta.Messages.New` with `ContextManagement` on `BetaMessageNewParams`. Ther
 
 ```go
 params := anthropic.BetaMessageNewParams{
-    Model:     "{{OPUS_ID}}",  // also supported: ModelClaudeOpus4_8, ModelClaudeSonnet4_6
+    Model:     "{{OPUS_ID}}",
     MaxTokens: 16000,
     Betas:     []anthropic.AnthropicBeta{"compact-2026-01-12"},
     ContextManagement: anthropic.BetaContextManagementConfigParam{

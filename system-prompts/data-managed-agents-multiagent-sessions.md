@@ -4,7 +4,7 @@ description: >-
   Reference documentation for Managed Agents multiagent sessions, covering when
   to delegate, coordinator rosters, threads, session stream events, the advisor,
   subagent tool permissions, and pitfalls
-ccVersion: 2.1.251
+ccVersion: 2.1.263
 -->
 # Managed Agents - Multiagent Sessions
 
@@ -33,7 +33,7 @@ agent = client.beta.agents.create(
 session = client.beta.sessions.create(agent=agent.id, environment_id=env.id)  # unchanged
 ```
 
-**Step 2 - move the reading-heavy work to a cheaper model.** Delegated research work is mostly searching, reading, and extracting: many input tokens, little hard reasoning. Create a second agent on a smaller model with a narrow `system` prompt and only the tools it needs, and list it next to `self`. A roster entry is only a reference: the worker runs on its own `model`, `system`, and `tools`, and its tokens are billed at its own model's rates. The large model spends its tokens on planning, checking, and synthesis; the small model does the bulk reading.
+**Step 2 - move the reading-heavy work to a cheaper model.** Delegated research work is mostly searching, reading, and extracting: many input tokens, little hard reasoning. Create a second agent on a smaller current-generation model ({{HAIKU_NAME}}, or {{SONNET_NAME}} when the worker needs more judgment) with a narrow `system` prompt and only the tools it needs, and list it next to `self`. A roster entry is only a reference: the worker runs on its own `model`, `system`, and `tools`, and its tokens are billed at its own model's rates. The large model spends its tokens on planning, checking, and synthesis; the small model does the bulk reading.
 
 ```python
 worker = client.beta.agents.create(
