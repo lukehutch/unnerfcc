@@ -3,8 +3,6 @@ name: 'Tool Description: Artifact page contract intro when skills unavailable'
 description: >-
   Introduces the embedded page contract when skills are unavailable in the
   current session.
-ccVersion: 2.1.257
-variables:
-  - ADDITIONAL_INSTRUCTIONS
+ccVersion: 2.1.270
 -->
-**Before writing the file**: the page contract below — author HTML, the publish-time skeleton, the title, which libraries a page may load, browser storage, the size cap, responsive layout, theming and the favicon — is this tool's own; skills are not available in this session, so read it here. Then write the content to a file (via Write/Edit) and call Artifact with its path. ${ADDITIONAL_INSTRUCTIONS}
+**Before writing the file**, Claude reads the page contract below, from the authoring format to the title, libraries, storage, size limit, layout, theming and favicon: it is this tool's own contract, and skills are not available in this session. Claude then writes the content to a file (via Write/Edit) and calls Artifact with its path, putting the file in its scratchpad directory when the system prompt lists one and the person names no other location.

@@ -1,56 +1,86 @@
 {
- "from": "2.1.258",
- "to": "2.1.263",
+ "from": "2.1.263",
+ "to": "2.1.270",
  "changes": [
   {
-   "id": "data-tool-use-reference-go",
-   "name": "Data: Tool use reference — Go",
+   "id": "agent-prompt-batch-slash-command",
+   "name": "Agent Prompt: /batch slash command",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "d71df68e6ac8",
-   "newHash": "ea89f6aa962d",
-   "sample": "# Tool Use - Go\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## Tool Use\n\n### Tool Runner (Beta - Recommended)"
-  },
-  {
-   "id": "tool-description-artifacttool-2",
-   "name": "Tool Description: ArtifactTool",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "7442fabb9c31",
-   "newHash": "08afb8933aa2",
-   "sample": "Render an HTML file to an Artifact — a default-private web page hosted on claude.ai. Use this when communicating visually would be clearer than terminal text, or when the user or their team would use "
-  },
-  {
-   "id": "tool-parameter-save-skill-description",
-   "name": "Tool Parameter: Skill save — description",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "ec4f9147f8b2",
-   "newHash": "f79fc47b2266",
-   "sample": "One short sentence saying when to use this skill: aim for under 200 characters, never more than 1024. Shown on the review card and saved as the skill's description, which is what decides when the skil"
+   "oldHash": "a10685241d51",
+   "newHash": "93b96310dc73",
+   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${USER_INSTRUCTIONS}\n\n## Phase 1: Research and Plan (Plan Mode)\n\n"
   },
   {
    "id": "data-managed-agents-multiagent-sessions",
    "name": "Data: Managed Agents multiagent sessions",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "0ae4d6209dd7",
-   "newHash": "5ad526191521",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "5ad526191521",
+   "newHash": "a05204f2ca88",
    "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont"
   },
   {
-   "id": "skill-claude-code-docs-config-guide",
-   "name": "Skill: claude-code-docs config guide",
+   "id": "tool-description-bash-creating-pull-requests",
+   "name": "Tool Description: Bash — creating pull requests",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "a0ad793b883d",
+   "newHash": "da090e52e665",
+   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
+  },
+  {
+   "id": "agent-prompt-eval-authoring-interview",
+   "name": "Agent Prompt: Eval-authoring Interview",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "fbd757161ea3",
-   "newHash": "0897f982f761",
-   "sample": "#\u0000 \u0000C\u0000l\u0000a\u0000u\u0000d\u0000e\u0000 \u0000C\u0000o\u0000d\u0000e\u0000 \u0000C\u0000o\u0000n\u0000f\u0000i\u0000g\u0000u\u0000r\u0000a\u0000t\u0000i\u0000o\u0000n\u0000 \u0000G\u0000u\u0000i\u0000d\u0000e\u0000\n\u0000\n\u0000Y\u0000o\u0000u\u0000 \u0000a\u0000r\u0000e\u0000 \u0000a\u0000n\u0000s\u0000w\u0000e\u0000r\u0000i\u0000n\u0000g\u0000 \u0000a\u0000 \u0000q\u0000u\u0000e\u0000s\u0000t\u0000i\u0000o\u0000n\u0000 \u0000a\u0000b\u0000o\u0000u\u0000t\u0000 \u0000C\u0000l\u0000a\u0000u\u0000d\u0000e\u0000 \u0000C\u0000o\u0000d\u0000e\u0000 \u0000i\u0000t\u0000s\u0000e\u0000l\u0000f\u0000:\u0000 \u0000i\u0000t\u0000s\u0000 \u0000c\u0000o\u0000m\u0000m\u0000a\u0000n\u0000"
+   "oldHash": "5542f0ed8f8d",
+   "newHash": "699531506241",
+   "sample": " Walk the user through building an eval suite under `${EVAL_DIR}/`.${ADDITIONAL_SETUP_NOTE} Start by reading the plugin yourself and opening with what you found.${ADDITIONAL_CONTEXT_BLOCK}\n\n**Hard rul"
+  },
+  {
+   "id": "skill-loop-self-pacing-mode",
+   "name": "Skill: /loop self-pacing mode",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "b2992c88e8e5",
+   "newHash": "1fde155eaacc",
+   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v"
+  },
+  {
+   "id": "system-prompt-coordinator-mode",
+   "name": "System Prompt: Coordinator mode",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "160a818a34f3",
+   "newHash": "bec40f341043",
+   "sample": " and end your response. Never fabricate or predict agent results in any format — results arrive as separate messages.\n\n### ${AGENT_TOOL_NAME} Results\n\nWorker results arrive as **user-role messages** c"
+  },
+  {
+   "id": "tool-description-artifacttool-2",
+   "name": "Tool Description: ArtifactTool",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "08afb8933aa2",
+   "newHash": "b288529ace9e",
+   "sample": "Render an HTML file to an Artifact — a default-private web page hosted on claude.ai. Use this when communicating visually would be clearer than terminal text, or when the user or their team would use "
+  },
+  {
+   "id": "tool-parameter-artifact-label-suffix",
+   "name": "Tool Parameter: Artifact label suffix",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "1cda39349876",
+   "newHash": "c74da0b42f1a",
+   "sample": "A short name for this publish, max 60 chars (e.g. \"Draft to legal\"). Optional — a few words, not a description."
   }
  ],
  "unverifiable": []

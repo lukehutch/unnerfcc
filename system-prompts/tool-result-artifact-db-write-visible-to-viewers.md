@@ -3,6 +3,9 @@ name: 'Tool Result: Artifact database write is visible to every viewer'
 description: >-
   Tail of an artifact database write result reminding the model that every
   viewer of the artifact sees the change it just wrote.
-ccVersion: 2.1.231
+ccVersion: 2.1.270
+variables:
+  - VERSION_NUMBER
+  - EXTRA_NOTE
 -->
-. Every viewer of the artifact sees this change.
+${VERSION_NUMBER}. Every viewer of the artifact sees this change.${EXTRA_NOTE}

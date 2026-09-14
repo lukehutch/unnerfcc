@@ -3,7 +3,7 @@ name: 'Skill: artifact-design'
 description: >-
   Bundled artifact-design skill — Design guidance and fundamentals for
   Artifacts.
-ccVersion: 2.1.263
+ccVersion: 2.1.270
 -->
 ---
 name: artifact-design
@@ -39,7 +39,7 @@ Fundamentals below apply to everything. The editorial process after that runs on
 
 **Design both themes.** The page renders in the viewer's theme, and the viewer has three states, not two: an explicit choice stamps `data-theme="dark"` / `data-theme="light"` on the root element, and the default "system" setting stamps *nothing* - most viewers see the un-stamped document, where only `prefers-color-scheme` separates light from dark. Structure the CSS token-level for all three: the bare `:root` block defines the complete light palette (for a deliberately dark-first design, swap light and dark consistently through this whole pattern); `@media (prefers-color-scheme: dark)` redefines only the tokens, guarded as `:root:not([data-theme="light"])` so an explicit light choice beats a dark OS; `:root[data-theme="dark"]` redefines them again so the toggle also wins in the other direction. Style components through the tokens, never directly inside a media or `[data-theme]` block - a color whose only definition sits behind `[data-theme]` never applies in the un-stamped state, and the page renders one theme's text on the other theme's ground. Two more rules keep each theme resolving as a set: the artifact composites over a ground the viewer paints in *its* theme, so `body` must set an explicit `background` from a token - a transparent body silently borrows the host's ground; and every element that sets a color takes it from the same token set as the surface behind it, never a literal that only works in one theme. Declare every token in the bare `:root` block before any media or `[data-theme]` block redefines it - a color that exists only inside one of those blocks is the classic unreadable-artifact bug. Give the second theme the same care as the first - don't naively invert; keep contrast legible and the accent working on both grounds. A design that deliberately commits to one visual world (a neon arcade screen, a letterpress invitation) may stay single-theme - then skip the media query and stamps entirely but still paint the background and every color explicitly, so the page holds on either host ground; make it a choice, not an omission.
 
-**Let layout do the spacing.** Lay out sibling groups with flex or grid and `gap`, not per-element margins that silently collapse or double. Wide content - tables, code, diagrams - gets `overflow-x: auto` on its own container so the page body never scrolls sideways. Reach for `font-variant-numeric: tabular-nums` wherever digits line up in columns.
+**Let layout do the spacing.** Lay out sibling groups with flex or grid and `gap`, not per-element margins that silently collapse or double. Keep a side gutter of at least 16px at every width - set once as side padding on `body` or one outer wrapper, whose vertical padding uses `padding-block`, never a `padding` shorthand that zeroes the sides - and let rows wrap or stack to one column at phone width (~400px). Images and any `aspect-ratio` box get `max-width: 100%`, and nothing gets a `min-width` wider than the screen; only wide tables, code and diagrams may run past it - each gets `overflow-x: auto` on its own container so the page body never scrolls sideways. Reach for `font-variant-numeric: tabular-nums` wherever digits line up in columns.
 
 **Compose repeated things as one object.** Cards in a row, label/value pairs down a list, badges on siblings: same edges, baselines and inner padding from one to the next, and a recurring element sits in the same place on each. Let content set a container's height and pick a column count the items fill, so nothing stretches over dead space or sits alone in a row. Text that can outgrow its track wraps or scrolls in its own container; clipped text is a bug.
 
@@ -51,7 +51,7 @@ Fundamentals below apply to everything. The editorial process after that runs on
 
 **Avoid AI-generated design** AI-generated design currently clusters around a few looks: warm cream (#F4F1EA) with a serif display and terracotta accent; near-black with a lone acid-green or vermilion pop; broadsheet hairline rules with dense columns; a purple-to-blue gradient hero on white; Inter or Space Grotesk as the "safe" face; emoji as section markers; everything centered; `rounded-lg` everywhere; accent bar/rail on rounded cards. Where the user pins down a visual direction, follow it exactly - their words always win, including when they ask for one of these looks. Where nothing is specified, don't spend that freedom on one of these defaults.
 
-**Build cleanly** Be cognizant of overlapping elements, cascade collisions, silent font fallbacks. Close every non-void element, double-quote attributes, give keyboard focus a visible state, respect `prefers-reduced-motion`. For generative or decorative graphics, reach for Canvas or WebGL rather than hand-authoring long SVG path data.
+**Build cleanly** Be cognizant of overlapping elements, cascade collisions, silent font fallbacks. Close every non-void element, double-quote attributes, give keyboard focus a visible state, respect `prefers-reduced-motion`. Give every form control a stable `id` (the platform carries form values, focus and scroll across a republish). For generative or decorative graphics, reach for Canvas or WebGL rather than hand-authoring long SVG path data.
 
 **CSS rules** When writing the CSS, watch your selector specificities. It is easy to generate classes that cancel each other out - a type-based selector like `.section` fighting an element-based one like `.cta` over padding and margins between sections. Structure the cascade so it doesn't silently undo your spacing.
 
@@ -77,6 +77,8 @@ Before writing code, write the design plan - a token system with color, type, an
 Then build, following the plan and deriving every color and type decision from it.
 
 **Verify and publish.** Before publishing, inspect the rendered page — via screenshot or the Artifact preview — and iterate on layout, styling, and charts until they meet the design plan. Test scripts or DOM interactions as needed to ensure functionality. Once published, verify any live integrations (such as `window.claude` calls) and resolve any visual or interactive defects.
+
+**Open viewers** You don't need to do anything for viewers who already have the page open - published changes reach them automatically at their next quiet moment, with state carried where possible. If your page holds state a viewer would miss (a game, a long form), register `window.claude?.hot?.snapshot(...)` and boot through `window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {})`.
 
 ## When the request is editorial
 

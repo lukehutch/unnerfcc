@@ -50,6 +50,11 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
+  "notes": "process brevity: 'Write, look once, publish' and 'without a second look'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background \u2014 this tool returns immediately with a task ID, and a <task-notification> arrives when",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -225,6 +230,11 @@
   "ccFirstSeen": "2.1.202"
  },
  {
+  "sample": "Retry once; if the retry is refused the same way, stop and tell the user.",
+  "notes": "process brevity: 'Retry once; if the retry is refused the same way, stop and tell the user'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
   "notes": "chat/report brevity: 'keep your review concise'",
   "ccFirstSeen": "2.1.202"
@@ -355,6 +365,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "You are a worker agent executing a task assigned by the coordinator.\n\n## Environment\n\n- Other workers may be making changes on this branch. If you encounter confusing file state, unexpected changes, o",
+  "notes": "implementation brevity: 'Complete exactly what was asked. Don't fix unrelated issues'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "${}\n\n## Action\n\n1. Convert `${}` to a 5-field cron expression. Supported suffixes: `s` \u2192 ceil to nearest minute, `m` (minutes), `h` (hours), `d` (days). Examples: `5m` \u2192 `*/5 * * * *`, `1h` \u2192 `0 * * *",
   "notes": "process brevity: 'Briefly confirm'",
   "ccFirstSeen": "2.1.219"
@@ -460,6 +475,11 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": "\n```\n\nUse `subagent_type: \"general-purpose\"` unless a more specific agent type fits.\n\n## Phase 3: Track Progress\n\nAfter launching all workers, render an initial status table:\n\n| # | Unit | Status | PR",
+  "notes": "brevity caps: 'brief failure note', 'one-line summary'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "\n\n**Do not spawn agents unless the user asks.** Each spawn starts cold and re-derives context you already have \u2014 it's the expensive path on this plan. A task with \"multiple angles,\" \"thorough,\" or sev",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -473,6 +493,11 @@
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
   "notes": "process brevity: 'concise report', 'only needs the essentials', 'don't gold-plate'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": " This thread is already resolved and stays resolved. Once you have finished acting on it, post a brief reply there saying what you did: the thread most likely already holds an earlier reply of yours f",
+  "notes": "brevity: 'post a brief reply there saying what you did'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": " * P.perAngle,\n    text: CLEANUP_TEXT,\n  }])\n\nconst finderOuts = await parallel(FINDERS.map(f => () =>\n  agent(FINDER_PROMPT(f), { label: f.label, phase: \"Find\", schema: CANDIDATES_SCHEMA }).then(r =>",
@@ -570,6 +595,16 @@
   "ccFirstSeen": "2.1.257"
  },
  {
+  "sample": "In this session /design only manages agent access to Claude Design projects: tell the user to run `/design consent` or `/design revoke`, and stop.",
+  "notes": "process refusal: 'and stop'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
+  "sample": "# Committing changes with git\n\nOnly create commits when requested by the user. If unclear, ask first. When the user asks you to create a new git commit, follow these steps carefully:\n\nYou can call mul",
+  "notes": "caps process/implementation: 'Draft a concise (1-2 sentences) commit message', 'NEVER run additional commands to read or explore code'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "Output at most **4 findings**, most-severe first, one line each:\n`path/to/file.ext:123 \u2014 what's wrong and the concrete failure`. If nothing\nqualifies, output exactly `(none)`. Do not call the\n${} tool",
   "notes": "process brevity: 'at most 4 findings', 'one line each'",
   "ccFirstSeen": "2.1.219"
@@ -600,6 +635,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
+  "notes": "implementation brevity: 'Start simple. Default to the simplest tier'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
   "notes": "chat brevity: 'Make the offer one short line', 'Open with a short note, not a briefing', 'no plan dumped in either'",
   "ccFirstSeen": "2.1.232"
@@ -628,6 +668,11 @@
   "sample": "If the input is incomplete or you cannot confidently parse it into a valid date, respond with exactly \"INVALID\" (nothing else).",
   "notes": "model instruction with strict response constraint",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "When a finished piece of work is meant for other people or agents, such as a report for a team or the case for a decision the team has yet to make, Claude does not treat it as finished while it exists",
+  "notes": "tone / brevity: 'offers the page in one line instead of publishing it'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": " Once you have finished acting on the thread, post a brief reply saying what you did \u2014 first check the thread (",
@@ -688,6 +733,11 @@
   "sample": "`${}`\n\n${}\n\n${}\n## Phase 1 \u2014 Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 6 each)\n\nRun **8 independent finder angles** in sequence yourself,",
   "notes": "process brevity: 'do NOT spawn subagents', 'up to 6 each', 'Do NOT run verifiers'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "\n3. **Briefly confirm**: that you're self-pacing, whether a ${} is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling",
+  "notes": "tone: 'Briefly confirm' and 'one short sentence'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "---\nname: verify\ndescription: Verify that a code change actually does what it's supposed to by exercising it end-to-end and observing behavior \u2014 drive the affected flow, not just tests or typecheck. R",
@@ -935,6 +985,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": " Your final report to the main session is one or two lines: what the thread asked for and what you did.",
+  "notes": "length cap: 'one or two lines: what the thread asked for and what you did'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "${}\n\nYou are a reply-only composer with NO tools: you CANNOT edit the artifact, change files, or perform any action \u2014 the only thing that happens is this one comment being posted. If the thread asks a",
   "notes": "tone: 'directly useful, brief, no preamble'",
   "ccFirstSeen": "2.1.251"
@@ -1165,6 +1220,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "\n3. **Briefly confirm**: ${}, whether a ${} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${} \u2014 the turn ends as soon as that tool retur",
+  "notes": "tone: 'Briefly confirm' and 'one short sentence'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "Keep the whole body under 250 words: what changed, why now / what was broken without it, how you verified it, and anything deliberately out of scope. Define project-specific shorthand the first time i",
   "notes": "length cap: 'keep the whole body under 250 words' (stylistic, not a UI/parser limit)",
   "ccFirstSeen": "2.1.205"
@@ -1173,6 +1233,11 @@
   "sample": "Don't add error handling, fallbacks, or validation for scenarios that can't happen. Trust internal code and framework guarantees. Only validate at system boundaries (user input, external APIs). Don't ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "`/design ${}` is for the user to type themselves, in an interactive Claude Code terminal signed in to claude.ai; if they already did, this session does not offer it (organization policy or sign-in). S",
+  "notes": "brevity and refusal cap: 'Say so in one line and stop'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "The user changed their workflow size guideline in /config: ${()}. ${()}",
@@ -1390,6 +1455,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "\"${}\" is a Claude Design account or project command, not a brief, and this session does not offer it (for import, export or status, claude.ai/design is the place). Tell the user that in one line and s",
+  "notes": "brevity and refusal cap: 'in one line and stop'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "Show me where this session's tokens went.\n\nThe transcript is a *.jsonl file at `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/`. Break the usage into groups (approximate is fine): Claude's instructio",
   "notes": "chat brevity: 'explain it briefly ... a few short bullet points, not paragraphs'",
   "ccFirstSeen": "2.1.217"
@@ -1400,9 +1470,19 @@
   "ccFirstSeen": "2.1.205"
  },
  {
+  "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${}\n\n## Phase 1: Research and Plan (Plan Mode)\n\nCall the `${}` to",
+  "notes": "process brevity: 'short, concrete set of steps'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "\". So that you and the user never work on two different versions of the project, ${} Nothing was changed on the user's machine \u2014 it has all of the user's files and everything of yours that reached it.",
   "notes": "caps the explanation at 'one or two sentences'",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "If the person asks where to find their artifacts again, the gallery at claude.ai/code/artifacts lists them.\n\n**After publishing**, the person's app shows a card with the page's title and link. Claude ",
+  "notes": "tone / chat brevity: 'Claude says in one sentence what the page is'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "Analyze this Claude Code usage data and identify what's working well for this user. Use second person (\"you\").\n\nRESPOND WITH ONLY A VALID JSON OBJECT:\n{\n  \"intro\": \"1 sentence of context\",\n  \"impressi",
@@ -1498,6 +1578,11 @@
   "sample": "# Eval health checklist\n\nThis file is loaded whenever an eval is being **built** (`build-eval.md`) or **climbed on** (`eval-hillclimb.md`). It has two jobs. When you are writing the eval, every item b",
   "notes": "Limits exploration: 'Do not try to read every case inline. Work in three tiers'",
   "ccFirstSeen": "2.1.263"
+ },
+ {
+  "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont",
+  "notes": "process brevity: 'report concise findings' prompt instruction",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "Don't add features, refactor, or introduce abstractions beyond what the task requires. A bug fix doesn't need surrounding cleanup; a one-shot operation doesn't need a helper. Don't design for hypothet",
@@ -1685,6 +1770,11 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nSay what the command does in plain word",
+  "notes": "caps length/style: 'Clear, concise description', 'keep it brief (5-10 words)'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "The report to deliver to your report target. Be concise and specific.",
   "notes": "brevity: 'Be concise and specific'",
   "ccFirstSeen": "2.1.218"
@@ -1865,6 +1955,11 @@
   "ccFirstSeen": "2.1.217"
  },
  {
+  "sample": "One short sentence saying when to use this skill: aim for under 200 characters, never more than 1024, and no angle brackets. Shown on the review card and saved as the skill's description, which is wha",
+  "notes": "brevity: 'under 200 characters, never more than 1024'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "# Writing commit messages and PR descriptions\n\nWrite for a reader with zero context who was not part of this session:\n- Say what the change is in plain words before any mechanism or implementation det",
   "notes": "brevity: 'Short beats complete', one idea per sentence",
   "ccFirstSeen": "2.1.219"
@@ -1878,6 +1973,11 @@
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": " Once you have finished acting on the thread, post a brief reply there saying what you did. A comment the read marks \"awaiting reply\" is not yet answered: reply to it even if an earlier reply of yours",
+  "notes": "brevity: 'post a brief reply there saying what you did'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "# Claude API - Java\n\n> **Note:** The Java SDK supports the Claude API and beta tool use with annotated classes. Agent SDK is not yet available for Java.\n\n## Package Reference\n\nTypes are organized by p",
@@ -1933,6 +2033,11 @@
   "sample": " **Learn by Doing**\n\n**Context:** The user reported that number inputs aren't working correctly in the calculator. I've identified the handleInput() function as the likely source, but need to understa",
   "notes": "'Share one insight' caps the response",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command ",
+  "notes": "brevity cap: 'Keep the PR title short (under 70 characters)'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
@@ -2085,6 +2190,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": " opts.effort overrides the reasoning effort for this agent call ('low' | 'medium' | 'high' | 'xhigh' | 'max') \u2014 omit to inherit the session effort; use 'low' for cheap mechanical stages and higher tie",
+  "notes": "brevity: 'lean toward brevity for quick checks'",
+  "ccFirstSeen": "2.1.270"
+ },
+ {
   "sample": "This diff is about ${} lines. Spawn about ${} finder subagents (min 2, max 8) \u2014 scale your investigation depth to the diff size rather than using a fixed large fleet.\n\n",
   "notes": "process cap: 'min 2, max 8 ... rather than using a fixed large fleet' limits investigation breadth",
   "ccFirstSeen": "2.1.202"
@@ -2103,6 +2213,11 @@
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are the Claude guide agent. Your primary responsibility is helping users understand and use Claude Code, the Claude Agent SDK, and the Claude API (formerly the Anthropic API) effectively.\n\n**Your ",
+  "notes": "tone: 'Keep responses concise and actionable'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "${}\n\nYou are a reply-only composer with NO tools: you CANNOT edit the artifact, change files, or perform any action \u2014 the only thing that happens is this one comment being posted. If the thread asks a",
@@ -2128,6 +2243,11 @@
   "sample": "You're writing an \"At a Glance\" summary for a Claude Code usage insights report for Claude Code users. The goal is to help them understand their usage and improve how they can use Claude better, espec",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "\"sync ${}\" is the Claude Design sync command with a design-system hint, not a brief. Tell the user to run `/design-sync ${}` instead (the dedicated command takes the hint) and stop \u2014 do not make anyth",
+  "notes": "process refusal: 'and stop \u2014 do not make anything'",
+  "ccFirstSeen": "2.1.270"
  },
  {
   "sample": "**Comments**: Viewers can leave comment threads on a published artifact. Pass `action: \"comments\"` with the artifact's `url` to read them \u2014 each thread shows whether a person has activated Claude on i",

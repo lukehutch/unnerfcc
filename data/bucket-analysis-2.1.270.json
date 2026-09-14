@@ -1,0 +1,121 @@
+{
+  "ccVersion": "2.1.270",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "keep",
+      "reasoning": "The flagged restriction ('Write, look once, publish') is already un-nerfed by an existing rule for this file."
+    },
+    {
+      "file": "tool-result-artifact-retry-once-then-stop.md",
+      "verdict": "keep",
+      "reasoning": "Retrying once and stopping if refused the same way is a standard circuit breaker against infinite loops on permission or API refusals, not an artificial brevity nerf."
+    },
+    {
+      "file": "agent-prompt-worker-environment-and-scope.md",
+      "verdict": "keep",
+      "reasoning": "The flagged instruction is already addressed by an existing rule in existingRules for this file."
+    },
+    {
+      "file": "agent-prompt-batch-track-progress.md",
+      "verdict": "lift",
+      "reasoning": "Restricting failure reporting to a 'brief failure note' and final summary to a 'one-line summary' caps substantive reporting on worker failures and orchestration outcomes.",
+      "rule": {
+        "stock": "Keep a brief failure note for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a one-line summary (e.g., \"22/24 units landed as PRs\").",
+        "unnerf": "Record the failure reason and error details for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a closing summary covering landed PRs, failed units with root causes, and recommended next steps.",
+        "description": "batch progress: thorough failure notes and closing summary"
+      }
+    },
+    {
+      "file": "agent-prompt-artifact-thread-already-resolved.md",
+      "verdict": "keep",
+      "reasoning": "Per calibration rule 3, asking for a brief reply inside a comment thread matches the medium's genre rather than artificially constraining substantive work."
+    },
+    {
+      "file": "agent-prompt-design-access-management-only.md",
+      "verdict": "keep",
+      "reasoning": "This is a structural routing boundary informing the user that /design only handles access consent in this session, not an artificial capability restriction."
+    },
+    {
+      "file": "tool-description-bash-committing-changes-with-git.md",
+      "verdict": "keep",
+      "reasoning": "Drafting a concise commit message and restricting commands to git operations during commit creation reflect standard git conventions and prevent tangential exploration."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "This is architectural advice guiding the developer on selecting the appropriate LLM tier for their application, not a brevity nerf on Claude's capabilities."
+    },
+    {
+      "file": "tool-description-artifact-publishing-criteria-and-connectors.md",
+      "verdict": "keep",
+      "reasoning": "Per calibration example 2, offering an unsolicited artifact in one short line provides interruption-appropriate UX rather than constraining requested work."
+    },
+    {
+      "file": "agent-prompt-artifact-thread-final-report-format.md",
+      "verdict": "lift",
+      "reasoning": "Per calibration example 2, capping the background agent's closing report to the main session at one or two lines restricts substantive reporting on what was changed and verified.",
+      "rule": {
+        "stock": "Your final report to the main session is one or two lines: what the thread asked for and what you did.",
+        "unnerf": "Your final report to the main session should clearly explain what the thread asked for, the changes you made, and any verification results or context the main session needs.",
+        "description": "artifact thread: drop one-or-two-line cap on final report"
+      }
+    },
+    {
+      "file": "agent-prompt-batch-slash-command.md",
+      "verdict": "keep",
+      "reasoning": "The flagged wording is already replaced by an existing rule for this file."
+    },
+    {
+      "file": "tool-description-artifact-post-publish-app-presentation.md",
+      "verdict": "keep",
+      "reasoning": "Accompanying an in-app visual artifact card with a single introductory sentence fits the application UI context where the card itself is the primary review surface."
+    },
+    {
+      "file": "data-managed-agents-multiagent-sessions.md",
+      "verdict": "keep",
+      "reasoning": "This phrase appears in sample code within reference documentation for multiagent sessions, not in an active system prompt governing Claude Code."
+    },
+    {
+      "file": "agent-prompt-bash-command-description-writer.md",
+      "verdict": "keep",
+      "reasoning": "This prompt governs UI microcopy displayed to the user when describing bash commands for approval; keeping simple command summaries brief while adding context for complex commands is appropriate UX framing."
+    },
+    {
+      "file": "tool-parameter-powershell-command-description.md",
+      "verdict": "keep",
+      "reasoning": "This is a parameter description in a tool input schema requesting a concise summary of a PowerShell command, not an artificial restriction on task execution."
+    },
+    {
+      "file": "tool-parameter-save-skill-description.md",
+      "verdict": "keep",
+      "reasoning": "Skill description length limits are mechanical constraints for skill routing metadata and review card display to prevent prompt bloat across sessions."
+    },
+    {
+      "file": "agent-prompt-artifact-thread-action-and-reply-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Per calibration rule 3, posting a brief reply in an artifact comment thread matches comment-thread conventions rather than artificially constraining substantive work."
+    },
+    {
+      "file": "system-reminder-artifact-thread-reply-and-resolve-tail.md",
+      "verdict": "keep",
+      "reasoning": "Per calibration rule 3, asking for a brief reply when resolving an artifact comment thread reflects appropriate genre conventions for comment threads."
+    },
+    {
+      "file": "tool-description-bash-creating-pull-requests.md",
+      "verdict": "keep",
+      "reasoning": "Keeping PR titles under 70 characters while putting details in the description is standard GitHub/git subject line convention and UI formatting, not a capability restriction."
+    },
+    {
+      "file": "skill-workflow-hooks-and-patterns-reference.md",
+      "verdict": "keep",
+      "reasoning": "This instruction calibrates workflow orchestration depth to user intent, explicitly prescribing thoroughness for audit/research while reserving brevity for explicitly quick checks."
+    },
+    {
+      "file": "agent-prompt-claude-guide-agent.md",
+      "verdict": "keep",
+      "reasoning": "The flagged guideline ('Keep responses concise and actionable') is already un-nerfed by an existing rule for this file."
+    }
+  ]
+}

@@ -271,23 +271,30 @@ RULES: dict[str, list[Rule]] = {
     ],
 
     # -------------------------------------------------------------------------
-    # skill-dynamic-pacing-loop-execution.md — thorough confirmation
+    # skill-dynamic-pacing-loop-confirmation-and-continuation.md — thorough confirmation
     # -------------------------------------------------------------------------
-    "skill-dynamic-pacing-loop-execution.md": [
+    "skill-dynamic-pacing-loop-confirmation-and-continuation.md": [
         Rule(
-            # v2.1.251 renamed the slot CONFIRMATION_MESSAGE -> CONFIRMATION_TEXT
-            # (verified against the file's own frontmatter variables: list).
-            stock="3. **Briefly confirm**: ${CONFIRMATION_TEXT}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
-            unnerf="3. **Confirm thoroughly**: ${CONFIRMATION_TEXT}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you're about to pick and the reasoning that drove the choice, and any observations from this turn that should inform future iterations. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            # v2.1.251 renamed the slot CONFIRMATION_MESSAGE -> CONFIRMATION_TEXT;
+            # v2.1.270 renamed it again to CONFIRMATION_TOPIC and split the prompt,
+            # moving these steps into skill-dynamic-pacing-loop-confirmation-and-
+            # continuation.md. Both verified against the file's own frontmatter
+            # variables: list. Text is otherwise byte-identical, so this stays a
+            # retarget plus slot rename, not a rule rewrite (UNNERF-GUIDE Part 6).
+            stock="3. **Briefly confirm**: ${CONFIRMATION_TOPIC}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
+            unnerf="3. **Confirm thoroughly**: ${CONFIRMATION_TOPIC}, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, the fallback delay you're about to pick and the reasoning that drove the choice, and any observations from this turn that should inform future iterations. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             description="dynamic pacing confirm: thorough with reasoning",
         ),
     ],
 
     # -------------------------------------------------------------------------
-    # skill-loop-self-pacing-mode.md — thorough self-pacing confirmation
+    # skill-loop-self-pacing-steps-3-to-6.md — thorough self-pacing confirmation
     # -------------------------------------------------------------------------
-    "skill-loop-self-pacing-mode.md": [
+    "skill-loop-self-pacing-steps-3-to-6.md": [
         Rule(
+            # v2.1.270 split the self-pacing skill: steps 3-6 now extract as their
+            # own fragment, so the rule moves with the passage. Text and slots are
+            # unchanged (UNNERF-GUIDE Part 6, "the extractor re-fragmented a prompt").
             stock="3. **Briefly confirm**: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             unnerf="3. **Confirm thoroughly**: that you're self-pacing, whether a ${MONITOR_TOOL_NAME} is the primary wake signal (and why you chose that approach), that you ran the task now, what fallback delay you're about to pick, and the reasoning behind the pacing choice so the user can evaluate whether it's right. Write this as text *before* calling ${SCHEDULE_WAKEUP_TOOL_NAME} — the turn ends as soon as that tool returns.",
             description="self-pacing confirm: thorough with pacing reasoning",
@@ -1616,6 +1623,26 @@ RULES: dict[str, list[Rule]] = {
             stock="Two or three sentences. Hit the beats: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
             unnerf="Hit the beats thoroughly and clearly: multi-step and autonomous, uses your real tools, skills/plugins/connectors defined.",
             description="setup-cowork role selection: remove two-to-three-sentence cap on initial framing",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.270 sync (bucket-analyze.mjs, 2026-09-14): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.270.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-batch-track-progress.md": [
+        Rule(
+            stock="Keep a brief failure note for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a one-line summary (e.g., \"22/24 units landed as PRs\").",
+            unnerf="Record the failure reason and error details for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a closing summary covering landed PRs, failed units with root causes, and recommended next steps.",
+            description="batch progress: thorough failure notes and closing summary",
+        ),
+    ],
+    "agent-prompt-artifact-thread-final-report-format.md": [
+        Rule(
+            stock="Your final report to the main session is one or two lines: what the thread asked for and what you did.",
+            unnerf="Your final report to the main session should clearly explain what the thread asked for, the changes you made, and any verification results or context the main session needs.",
+            description="artifact thread: drop one-or-two-line cap on final report",
         ),
     ],
 }

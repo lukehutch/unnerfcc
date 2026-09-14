@@ -1,6 +1,6 @@
 <!--
 name: 'Tool Description: Artifact open action'
 description: Describes the open action for displaying an existing artifact to the user.
-ccVersion: 2.1.257
+ccVersion: 2.1.270
 -->
-- **open**: `url` — shows the user that existing artifact where they view artifacts and changes nothing; use it right after another tool created or updated an artifact the user should now see, or when they ask to see one — never for one you just published (a publish already shows its artifact).
+- **open**: takes `url` and shows the person that existing artifact without changing it. Claude uses it right after another tool created or updated an artifact the person should now see, or when the person asks to see one. Claude never uses it for an artifact it just published.

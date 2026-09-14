@@ -1,0 +1,11 @@
+<!--
+name: 'Tool Description: App menu'
+description: Describes accessing an application's menu bar in the background with app_menu.
+ccVersion: 2.1.270
+variables:
+  - BACKGROUND_NOTE
+-->
+Reach the menu bar of one granted application without bringing it to the front. Two modes:
+  • path: ["File", "Export as PDF…"] — walk the menu bar by title and press the leaf item. Match is case-insensitive and ignores trailing …/...
+  • list: "File" — return the item titles under that menu; list: null — return the top-level menu titles.
+Provide exactly one of path or list. Use this instead of app_key for ⌘-shortcuts (e.g. app_menu {path: ["Edit", "Undo"]} instead of "cmd+z").${BACKGROUND_NOTE}
