@@ -32,7 +32,8 @@
  *       collision.
  *
  *   merge <nextCatalog> <workDir>/labels.json <outCatalog>
- *       Validate Claude's labels (id uniqueness, slot coverage, no UNKNOWN_),
+ *       Validate Claude's labels (id uniqueness, slot coverage, no bare
+ *       UNKNOWN placeholder),
  *       patch them into the catalog, and write <outCatalog>. Exits non-zero if
  *       any worklist entry is still anonymous or a gate fails.
  *
@@ -389,8 +390,16 @@ function merge(nextPath, labelsPath, outPath) {
       const names = Object.values(map);
       if (new Set(names).size !== names.length)
         errors.push(`ref ${item.ref}: duplicate identifierMap names`);
-      if (names.some((v) => /^UNKNOWN_/.test(String(v))))
-        errors.push(`ref ${item.ref}: UNKNOWN_ placeholder left in identifierMap`);
+      // A slot the labeler could not name comes back as a bare placeholder:
+      // UNKNOWN, UNKNOWN_2, UNKNOWN_SLOT. Match that shape exactly rather than
+      // the UNKNOWN_ prefix. UNKNOWN_AUTHOR_TAG is a real semantic name — CC's
+      // own prompts describe forwarded turns "whose author the harness could
+      // not establish" — and the prefix test failed the entire merge over it,
+      // with no way to re-run out of it because the label was already correct.
+      // The slot-coverage and uniqueness gates above catch a genuinely unnamed
+      // slot; this one only has to catch a named-but-meaningless one.
+      if (names.some((v) => /^UNKNOWN(_(\d+|SLOT|PLACEHOLDER|VALUE|NAME))?$/i.test(String(v).trim())))
+        errors.push(`ref ${item.ref}: UNKNOWN placeholder left in identifierMap`);
     }
     for (const entry of entries) {
       if (map) entry.identifierMap = { ...entry.identifierMap, ...map };
