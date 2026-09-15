@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Description: Artifact watching comment auto-replies'
+description: >-
+  Explains when comment auto-replies wake the local session on watched
+  artifacts.
+ccVersion: 2.1.272
+-->
+ A comment sent to Claude on a watched artifact wakes this session only while that artifact's `status` row says auto-replies armed. A publish arms that when comment auto-replies are on for this session; so does `action: "watch"` on an artifact the person can edit whose link they gave in their own message. Plain comments never notify this session; Claude reads them with `action: "comments"` when the person asks.

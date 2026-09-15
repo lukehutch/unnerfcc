@@ -3,7 +3,7 @@ name: 'Data: Tool use concepts'
 description: >-
   Conceptual foundations of tool use with the Claude API including tool
   definitions, tool choice, and best practices
-ccVersion: 2.1.257
+ccVersion: 2.1.272
 -->
 # Tool Use Concepts
 
@@ -46,6 +46,54 @@ Each tool requires a name, description, and JSON Schema for its inputs:
 - Include descriptions for each property
 - Use `enum` for parameters with a fixed set of values
 - Mark truly required parameters in `required`; make others optional with defaults
+
+---
+
+### Eager input streaming (default for streaming requests with client tools)
+
+By default the API **buffers and validates each tool-input parameter** before it emits any `input_json_delta` for it. For a small `{"location": "Paris"}` that is invisible; for a tool that takes a file body, a code block, or a document, nothing arrives until the whole parameter is generated (a 20K-token parameter is a multi-minute silent gap on the stream). Setting `eager_input_streaming: true` on the tool turns off that buffering for that tool: fragments stream as they are generated, the first fragment arrives immediately, and the fragments are longer. The events are the same (`content_block_start` -> `input_json_delta` × N -> `content_block_stop`) - only the timing and the validation guarantee change.
+
+**Default rule:** when a request is streamed (`client.messages.stream(...)`, `stream=True`, tool runner with streaming on) and defines user-defined tools, set `eager_input_streaming: true` on each of those tools. Do not set it on non-streaming requests (it is ignored), on server tools (`web_search`, `code_execution`, `mcp_toolset`, etc. - it is not a valid field there), or when the client has no way to handle invalid JSON.
+
+```json
+{
+  "name": "write_file",
+  "description": "Write text to a file",
+  "eager_input_streaming": true,
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": {"type": "string"},
+      "contents": {"type": "string", "description": "Full file contents"}
+    },
+    "required": ["path", "contents"]
+  }
+}
+```
+
+Tool runner: Python `@beta_tool(eager_input_streaming=True)` passes it through. TypeScript `betaZodTool()` has no option for it - spread the field onto the returned tool: `{ ...betaZodTool({ name, description, inputSchema, run }), eager_input_streaming: true }`. Go/Java/Ruby/C#/PHP: the field is on the tool param type (`EagerInputStreaming`, `.eagerInputStreaming(true)`, `eager_input_streaming:`).
+
+**What you give up, and how to handle it.** Without buffering the API does not validate or coerce the parameter, so the accumulated `partial_json` can be (a) cut off at `max_tokens` mid-parameter or (b) invalid JSON the model emitted. Both SDKs accumulate it with a *tolerant* partial-JSON parser, so malformed input often comes back as a silently truncated object (an unescaped inner quote ends the string early; trailing garbage is dropped) rather than an exception. Do not rely on an exception. Always:
+
+1. **Validate the parsed input against the tool's schema before running the tool.** The typed runner helpers do this for you and never call `run` on input that fails: TS `betaZodTool` (Zod), Python `@beta_tool` on a function with typed parameters, Java's annotated classes, Go's struct tags, Ruby's `BaseTool`. The raw JSON-Schema helpers do **not** validate at runtime - TS `betaTool()` and PHP's `BetaRunnableTool` hand `run` whatever was parsed - so with those, validate inside `run` (or leave `eager_input_streaming` off for that tool). In a manual loop, validate yourself (`schema.safeParse(block.input)` in TS, a pydantic model or explicit type checks in Python) and treat a failure exactly like invalid JSON. A raw SSE / cURL client should `JSON.parse` the accumulated fragments strictly and then validate.
+2. Check `stop_reason == "max_tokens"` when a `tool_use` block is present: a truncated input usually parses as a valid partial object, so this is what catches it; retry with a higher `max_tokens` rather than running the tool. Also stop on `stop_reason == "refusal"` - a refusal can cut a `tool_use` off mid-input, so never execute that turn's tools.
+3. Still guard the exceptions the SDKs do raise for JSON they cannot parse at all: **Python** raises `ValueError` from the stream iterator (wrap the `with client.messages.stream(...)` block); **TypeScript** materializes the input at `content_block_stop`, so the error rejects whatever you are awaiting at that moment - the `for await (const event of stream)` loop if you iterate events, otherwise `await stream.finalMessage()` - so wrap the whole consumption of the stream (iteration and final read together), as the Python guidance wraps the whole `with` block; the **tool runners** surface the same error from their iteration (wrap the loop). Catch only that error - rethrow the SDK's typed API errors (`RateLimitError`, `AuthenticationError`, ...) so an auth or rate-limit failure is not mistaken for bad JSON - and cap retries.
+4. When validation fails and you still hold the `tool_use` block (manual loop after `finalMessage()` / `get_final_message()`, raw SSE), do not run the tool; return the raw text to Claude as an error result so it can retry:
+
+```json
+{
+  "type": "tool_result",
+  "tool_use_id": "toolu_01...",
+  "is_error": true,
+  "content": "{\"INVALID_JSON\": \"<the unparseable input you received>\"}"
+}
+```
+
+When the SDK raised before the block completed (Python stream, either tool runner), there is no `tool_use_id` to answer, so re-issue the request instead.
+
+Build that wrapper with the JSON library (not string concatenation) so quotes in the bad input are escaped. With the buffered default the server would have delivered the same broken parameter as a single string value instead; eager mode moves that failure to the client, it does not create it.
+
+**Availability:** Claude API, Claude Platform on AWS, Vertex AI, and Microsoft Foundry for all current models (`shared/platform-availability.md`). On Amazon Bedrock only the newer serving stack accepts the field (Opus 4.7 / 4.8 / 5, Fable 5, Sonnet 4.6 / 5); older Bedrock deployments (Opus 4.5 / 4.6, Sonnet 4.0 / 4.5, Haiku 4.5) return 400 on the unknown field - drop it there. `shared/platform-availability.md` is the source of truth for this list. Any proxy or gateway in front of the API may likewise reject it; if the user's code points at a custom `base_url`, leave it off unless they confirm the upstream is the real API.
 
 ---
 

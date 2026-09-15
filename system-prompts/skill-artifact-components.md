@@ -6,7 +6,7 @@ description: >-
   verifier's script-pinning and one-island limits, the own-island escape hatch
   and what it costs in read-back, and the per-file markup, script, and style
   contract for the decision component.
-ccVersion: 2.1.263
+ccVersion: 2.1.272
 -->
 ---
 name: artifact-components
@@ -84,9 +84,11 @@ Files in this skill's `decision/` directory:
 ## How to embed
 
 1. Read the files above from this skill's base directory.
-2. Build the page: `theme-script.html` early in the head, right after
-   `<title>` (it mirrors the stored theme to `data-mode` before first
-   paint - the template ships it there); `tokens.css` then `component.css`
+2. Build the page: `<meta name="viewport" content="width=device-width, initial-scale=1">`
+   and `theme-script.html` early in the head, right after `<title>` (the
+   meta keeps the pinned footer and painter where the template has them on
+   a phone; the script mirrors the stored theme to `data-mode` before first
+   paint - the template ships both there); `tokens.css` then `component.css`
    with your own styles; one filled `skeleton.html` block per decision; the
    island (one per page, entries in lockstep with the markup); then
    `decisions-script.html`, unmodified, last.

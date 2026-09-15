@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Platform Availability'
 description: Provider-platform feature-availability table the model consults.
-ccVersion: 2.1.257
+ccVersion: 2.1.272
 -->
 # Platform Availability
 
@@ -21,7 +21,7 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | Token counting | Yes | Yes | Yes | Yes | beta | |
 | Citations | Yes | Yes | Yes | Yes | beta | |
 | Search results content blocks | Yes | Yes | Yes | Yes | beta | |
-| Fine-grained tool streaming | Yes | Yes | Yes | Yes | Yes | |
+| Fine-grained tool streaming | Yes | Yes | Yes | Yes | Yes | Bedrock: `eager_input_streaming` on the newer serving stack only (Opus 4.7/4.8/5, Fable 5, Sonnet 4.6/5); older deployments (Opus 4.5/4.6, Sonnet 4.0/4.5, Haiku 4.5) 400 on the field |
 | Compaction | beta | beta | beta | beta | beta | |
 | Context editing | beta | beta | beta | beta | beta | |
 | Context windows (1M) | Yes | Yes | Yes | Yes | beta | |

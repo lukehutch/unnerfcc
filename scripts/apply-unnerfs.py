@@ -155,6 +155,17 @@ RULES: dict[str, list[Rule]] = {
     # agent-prompt-batch-slash-command.md — recipe writing: thorough not short
     # -------------------------------------------------------------------------
     "agent-prompt-batch-slash-command.md": [
+        # v2.1.272 folded agent-prompt-batch-track-progress back into this
+        # prompt, so the rule bucket-analysis added for it in v2.1.270 moves
+        # here rather than being retired: the passage is byte-identical and
+        # still occurs exactly once (UNNERF-GUIDE Part 6 -> search the catalog
+        # before retiring). It joins this file's existing block instead of a
+        # second dict key, which Python would silently collapse.
+        Rule(
+            stock="Keep a brief failure note for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a one-line summary (e.g., \"22/24 units landed as PRs\").",
+            unnerf="Record the failure reason and error details for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a closing summary covering landed PRs, failed units with root causes, and recommended next steps.",
+            description="batch progress: thorough failure notes and closing summary",
+        ),
         Rule(
             stock="   Write the recipe as a short, concrete set of steps that a worker can execute autonomously. Include any setup (start a dev server, build first) and the exact command/interaction to verify.",
             unnerf="   Write the recipe as concrete, thorough steps a worker can execute autonomously without asking clarifying questions. Include setup (dev server, build first), the exact commands to verify, expected output or signals, and any gotchas you hit while researching.",
@@ -1631,13 +1642,6 @@ RULES: dict[str, list[Rule]] = {
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.270.json
     # -------------------------------------------------------------------------
-    "agent-prompt-batch-track-progress.md": [
-        Rule(
-            stock="Keep a brief failure note for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a one-line summary (e.g., \"22/24 units landed as PRs\").",
-            unnerf="Record the failure reason and error details for any agent that did not produce a PR.\n\nWhen all agents have reported, render the final table and a closing summary covering landed PRs, failed units with root causes, and recommended next steps.",
-            description="batch progress: thorough failure notes and closing summary",
-        ),
-    ],
     "agent-prompt-artifact-thread-final-report-format.md": [
         Rule(
             stock="Your final report to the main session is one or two lines: what the thread asked for and what you did.",

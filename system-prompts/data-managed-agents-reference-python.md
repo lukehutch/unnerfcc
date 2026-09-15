@@ -4,7 +4,7 @@ description: >-
   Reference guide for using the Anthropic Python SDK to create and manage
   agents, sessions, environments, streaming, custom tools, files, and MCP
   servers
-ccVersion: 2.1.251
+ccVersion: 2.1.272
 -->
 # Managed Agents - Python
 
@@ -131,6 +131,34 @@ client.beta.sessions.events.send(
 ```
 
 > Tip: **Stream-first:** Open the stream *before* (or concurrently with) sending the message. The stream only delivers events that occur after it opens - stream-after-send means early events arrive buffered in one batch. See [Steering Patterns](../../shared/managed-agents-events.md#steering-patterns).
+
+---
+
+## Define an Outcome (default kickoff for deliverables)
+
+When the session's job is to produce something checkable - an artifact, a report, a PR - kick off with `user.define_outcome` instead of `user.message`: the harness grades each iteration against your rubric and the agent revises until it passes. Send one or the other, never both. See [Outcomes](../../shared/managed-agents-outcomes.md) for the event reference and rubric-writing guidance.
+
+```python
+STARTER_RUBRIC = """# Report rubric - starter, tune the criteria
+- Output is a single `report.md` in /mnt/session/outputs/
+- Every claim cites a source URL
+- Includes a summary table with one row per competitor
+- Prices are current as of the run date and each row says where it was read from
+- No placeholder text, TODOs, or empty sections remain
+"""
+
+client.beta.sessions.events.send(
+    session_id=session.id,
+    events=[
+        {
+            "type": "user.define_outcome",
+            "description": "Write a competitor-pricing report as report.md",
+            "rubric": {"type": "text", "content": STARTER_RUBRIC},
+            "max_iterations": 5,  # optional; default 3, max 20
+        }
+    ],
+)
+```
 
 ---
 

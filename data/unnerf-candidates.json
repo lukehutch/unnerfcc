@@ -270,6 +270,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "---\nname: doc\ndescription: Create a document artifact - a working document that looks and edits like a word processor page, published for the team to read and edit in place - a memo, proposal, plan, s",
+  "notes": "brevity caps: 'PURPOSE: One sentence', 'keep paragraphs short'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "\n## Goal\n\nProduce a **shareable PR walkthrough artifact** \u2014 a self-contained HTML page a\nreviewer can read before opening the diff to understand what this change does,\nwhy it's being made, and where t",
   "notes": "'two or three sentences' lede and 'trimmed snippet' cap the write-up",
   "ccFirstSeen": "2.1.219"
@@ -288,6 +293,11 @@
   "sample": "Optional single helper line shown under the question.",
   "notes": "Length brevity: 'Optional single helper line'",
   "ccFirstSeen": "2.1.263"
+ },
+ {
+  "sample": "This thread's author, who had sent you a comment in it, MOVED the thread to a different part of an artifact you published, which sends that comment to you again from the new spot \u2014 its text is unchang",
+  "notes": "tone and brevity: 'say briefly that this still fits'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "---\nname: run-skill-generator\ndescription: Author or improve the run-<unit> skill \u2014 a per-project skill that tells agents how to build, launch, and drive this project's app. Use when the user asks to ",
@@ -505,6 +515,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
+  "notes": "implementation brevity: 'Start simple. Default to the simplest tier that meets your needs'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "\\`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u2265min(files,4) findings\\`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (\\`git diff @{upstream}...HEAD; git diff HEAD\\`\nto cover both committed and un",
   "notes": "'1 diff pass -> no verify', 'No subagents, no full-file reads'",
   "ccFirstSeen": "2.1.217"
@@ -630,6 +645,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au",
+  "notes": "process brevity / loop avoidance: 'stay focused on the specific task', 'stop and ask'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "\nAnalyze the changes and provide a thorough code review that includes:\n- An overview of what the PR does\n- Analysis of code quality and style\n- Specific suggestions for improvements\n- Any potential is",
   "notes": "'Keep your review concise but thorough'",
   "ccFirstSeen": "2.1.219"
@@ -643,6 +663,11 @@
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
   "notes": "chat brevity: 'Make the offer one short line', 'Open with a short note, not a briefing', 'no plan dumped in either'",
   "ccFirstSeen": "2.1.232"
+ },
+ {
+  "sample": "Make that Bash call (and the artifact read itself, ",
+  "notes": "process brevity: skip read unless edited",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "You are a web-reading specialist for Claude Code, Anthropic's official CLI for Claude. The caller gives you one or more URLs and says what it needs from them. You fetch the pages with ${}, read them, ",
@@ -680,6 +705,11 @@
   "ccFirstSeen": "2.1.257"
  },
  {
+  "sample": "# Managed Agents - Onboarding Flow\n\n> **Invoked via `/claude-api managed-agents-onboard`?** You're in the right place. Run the interview below - don't summarize it back to the user, ask the questions.",
+  "notes": "process brevity: 'At most one batched follow-up', 'no preamble, no lecture'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "Respond with exactly one word: PASS or FAIL.",
   "notes": "model instruction constraining response to one word",
   "ccFirstSeen": "2.1.199"
@@ -693,6 +723,11 @@
   "sample": "---\nname: workshop\ndescription: Build a design together with the user, one decision at a time - publish an evolving plan document as an Artifact, surface each open decision on the page for the reader ",
   "notes": "process constraints on output length and narration brevity",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au",
+  "notes": "process brevity / loop avoidance: 'stay focused on the specific task', 'stop and ask'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
@@ -718,6 +753,11 @@
   "sample": "Offer it unprompted, too \u2014 at most once per session, as one short line before you stop and wait, and building the prototype only if the user says yes; on a no, or no answer, carry on and do not offer ",
   "notes": "process: 'at most once per session, as one short line'",
   "ccFirstSeen": "2.1.222"
+ },
+ {
+  "sample": "A fresh agent costs more than it looks. It knows only what you put in the prompt, and you see only the summary it sends back \u2014 both handoffs drop detail, and neither of you can tell what the other mis",
+  "notes": "discourages subagent usage: 'When in doubt, don\\'t spawn', 'keep the scope explicit and narrow'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running \u2014 a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v",
@@ -940,6 +980,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact - a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
+  "notes": "brevity and scope caps: limits bottom line to 900 chars and caps diff reading",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "You are an interactive CLI tool that helps users with software engineering tasks. Keep your responses short and direct while doing the work just as thoroughly.\n\n# Concise Style Active\n${}",
   "notes": "length cap: 'Keep your responses short and direct'",
   "ccFirstSeen": "2.1.251"
@@ -1038,6 +1083,11 @@
   "sample": "\\`${} effort \u2192 5+5 angles \u00d7 8 candidates \u2192 1-vote verify \u2192 sweep \u2192 \u226415 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact - a live sketch canvas for wireframe-fidelity diagrams (boxes, databases, decision diamonds, sticky notes, arrows, freehand, text, pasted",
+  "notes": "brevity caps: 'under a dozen elements', 'no element carries a second sentence', 'under 60 characters'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "Target **min(files_changed, 4) findings**, most-severe first, one\nline each: `path/to/file.ext:123 \u2014 what's wrong and the concrete failure`.\nIf you have fewer, do one more pass focused on the largest ",
@@ -1153,6 +1203,11 @@
   "sample": "`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u2265min(files,4) findings`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncomm",
   "notes": "process brevity: '1 diff pass, no verify, no subagents, no full-file reads', one tool call",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
+  "notes": "process brevity: 'Write, look once, publish... without a second look', forbids test loops",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "Execute autonomously and minimize interruptions. If the only work left is waiting for a background task or monitor you started, end your turn now: you will be notified when it finishes or fires. Do no",
@@ -1308,6 +1363,16 @@
   "sample": "\n\n## Goal\n\nProduce an **interactive explainer artifact** for the target above \u2014 a\nself-contained HTML page a newcomer can read top-to-bottom to understand what\nthis code does, how it fits together, an",
   "notes": "brevity: 'say so briefly and move on - don't pad'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": " (fresh = a new comment addressed to you; redesignated = someone pressed Send to Claude again on an existing comment; moved = the commenter moved this thread to a different part of the Artifact, which",
+  "notes": "process restriction: 'output 0', 'When unsure, output 0'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
+  "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000D\u0000e\u0000s\u0000i\u0000g\u0000n\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000e\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000F\u0000i\u0000r\u0000s\u0000t\u0000 \u0000l\u0000i\u0000s\u0000t\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000'\u0000s\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000.\u0000 \u0000I\u0000f\u0000 \u0000`\u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000",
+  "notes": "process brevity: 'print only what you need, never whole bodies', 'change only what was asked'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
@@ -1640,6 +1705,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "Read and update the user's claude.ai/design design-system projects through their claude.ai login (or, for sessions without one, a dedicated design authorization from /design-login). Use this only with",
+  "notes": "implementation brevity: 'incrementally, one component at a time, never as a wholesale replace'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t",
   "notes": "implementation brevity: 'start simple. Default to the simplest tier that meets your needs'",
   "ccFirstSeen": "2.1.257"
@@ -1693,6 +1763,11 @@
   "sample": "You have been working on the task described above but have not yet completed it. Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently in a futu",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Read it only if the user may have edited it; its result repeats these instructions.",
+  "notes": "process brevity: skip read unless edited",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running \u2014 a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v",
@@ -1785,6 +1860,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "Reach for this when the task matches an available agent type, when you have independent work to run in parallel, or when answering would mean reading across several files \u2014 delegate it and you keep th",
+  "notes": "process restriction: 'search directly', 'don\\'t also run it yourself'",
+  "ccFirstSeen": "2.1.272"
+ },
+ {
   "sample": "\n## Git Safety Protocol\n\n- NEVER update the git config\n- NEVER run destructive git commands (push --force, reset --hard, checkout ., restore ., clean -f, branch -D) unless the user explicitly requests",
   "notes": "\"Draft a concise (1-2 sentences) commit message\" caps the deliverable",
   "ccFirstSeen": "2.1.231"
@@ -1848,6 +1928,11 @@
   "sample": "If the thread asks for a change to the artifact, do NOT say you are working on it \u2014 changes to this page are made in its workshop file: say that in one plain sentence, answering any question alongside",
   "notes": "caps the reply at 'one plain sentence'",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "## Loading deferred tools\n\nIf the mcp__claude-in-chrome__* tools are deferred (must be loaded via ToolSearch before use), load every tool you expect to need in ONE ToolSearch call \u2014 the select query a",
+  "notes": "process restriction: 'in ONE ToolSearch call... never one call per tool'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "${}\n\nYou are an edit-capable composer for this thread: a writer on this artifact activated Claude with edit capability, so you may update the artifact itself in response to the thread. You still have ",
@@ -1928,6 +2013,11 @@
   "sample": "# Claude API - Java\n\n> **Note:** The Java SDK supports the Claude API and beta tool use with annotated classes. Agent SDK is not yet available for Java.\n\n## Package Reference\n\nTypes are organized by p",
   "notes": "fast compilation iteration over reflection scripts",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000S\u0000l\u0000i\u0000d\u0000e\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000F\u0000i\u0000r\u0000s\u0000t\u0000 \u0000l\u0000i\u0000s\u0000t\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000'\u0000s\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000.\u0000 \u0000I\u0000f\u0000 \u0000`\u0000d\u0000e\u0000c\u0000k\u0000.\u0000j\u0000s\u0000o\u0000n\u0000`\u0000 \u0000",
+  "notes": "process brevity: 'print only what you need, never whole bodies', 'change only what was asked'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "---\nname: design\ndescription: \"Create a design canvas - a multi-artboard visual design published as an Artifact that runs Claude Design's canvas editor (an early preview of Claude Design inside Claude",
@@ -2153,6 +2243,11 @@
   "sample": " 'comments' reads the comment threads on a published artifact (pass `url`; add `thread_id` to read just that one thread, or `cursor`, from a prior result's \"more threads not listed\" line, to continue ",
   "notes": "asks for \"a brief reply saying what you did before resolving\"",
   "ccFirstSeen": "2.1.231"
+ },
+ {
+  "sample": "${}\n\nYou are a reply-only composer with NO tools: you CANNOT edit the artifact, change files, or perform any action \u2014 the only thing that happens is this one comment being posted.${} If the thread ask",
+  "notes": "brevity and format caps: 'brief, no preamble', 'Reply with ONLY the comment text'",
+  "ccFirstSeen": "2.1.272"
  },
  {
   "sample": "Finish with a brief summary of what was fixed\nand what was skipped.",

@@ -1,0 +1,121 @@
+{
+  "ccVersion": "2.1.272",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-doc.md",
+      "verdict": "keep",
+      "reasoning": "The single-sentence purpose and short paragraph guidelines are typographic and layout conventions for a word processor document template rather than artificial brevity caps on Claude's work."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-thread-moved-handling.md",
+      "verdict": "keep",
+      "reasoning": "Comment-thread replies naturally match a brief register, and acknowledging that a moved thread still fits is an interaction note rather than an artificial capability cap (Calibration 3)."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "Advising 'start simple' when architecting LLM applications is standard engineering guidance for developers, not a nerf on Claude Code's own problem-solving capability."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-browser-automation-core.md",
+      "verdict": "keep",
+      "reasoning": "Halting execution after repeated browser tool failures or unresponsive page elements is a genuine safeguard against infinite loops and hung browser extensions."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-browser-automation.md",
+      "verdict": "keep",
+      "reasoning": "Pausing when browser automation repeatedly errors or hangs protects against runaway loops in external browser sessions."
+    },
+    {
+      "file": "system-reminder-artifact-bash-and-conditional-read-prefix.md",
+      "verdict": "keep",
+      "reasoning": "Skipping redundant artifact reads when the user has not edited the artifact preserves context budget and prevents repetitive instruction replay; moreover, this prompt is a sentence fragment prefix."
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-flow.md",
+      "verdict": "keep",
+      "reasoning": "The one-follow-up cap is already lifted in existingRules, and directing the model to emit code directly without lecturing on setup-vs-runtime is clean output formatting rather than a capability restriction."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-browser-automation-core.md",
+      "verdict": "keep",
+      "reasoning": "Instructing the agent to ask for user input when browser automation fails repeatedly prevents runaway loops in Chrome automation sessions."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-browser-automation.md",
+      "verdict": "keep",
+      "reasoning": "Stopping execution when browser tool calls fail repeatedly prevents infinite retry loops and runaway exploration on unresponsive web pages."
+    },
+    {
+      "file": "tool-description-agent-cost-and-delegation-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Subagent delegation guidance reflects genuine coordination and context handoff costs rather than an artificial capability nerf, directing routine checks inline to avoid unnecessary token and latency overhead."
+    },
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The diff reading threshold for diffs over 4,000 lines is a genuine context-budget constraint with honest coverage disclosure (Calibration 1), and the length limits on UI payload fields preserve the artifact rendering template."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "Capping raw diff reading for PRs exceeding 4,000 lines is an explicit mechanical context limit with mandatory disclosure (Calibration 1), and character constraints ensure structured fields fit the artifact UI."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "Constraints on seed sketch density, speech bubble length, and sticky notes are canvas visual formatting conventions and UI constraints rather than artificial work restrictions (Calibration 2 and 3)."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "Opening sketch limits and concise element labels are visual design requirements for a whiteboard canvas, and unsolicited offer brevity is appropriate UX (Calibration 2)."
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "keep",
+      "reasoning": "The flagged restriction on test loops and the single-look publication cap is already fully addressed by existing rules registered for this file."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-ack-selection-rules.md",
+      "verdict": "keep",
+      "reasoning": "This is a discrete classification selector where outputting 0 is the safe fallback category for out-of-scope or ambiguous input, not a capability restriction."
+    },
+    {
+      "file": "skill-design-canvas-iteration.md",
+      "verdict": "keep",
+      "reasoning": "Limiting print output addresses a hard REPL stdout cap ('the output is capped'), and modifying only targeted boards prevents unwanted collateral overwrites in multi-board canvas projects."
+    },
+    {
+      "file": "tool-description-designsync.md",
+      "verdict": "keep",
+      "reasoning": "Requiring incremental updates rather than wholesale replacement is an essential safety and sync protocol requirement for design system synchronization, preventing destructive overwrites of local component libraries."
+    },
+    {
+      "file": "system-reminder-artifact-read-only-if-user-edited.md",
+      "verdict": "keep",
+      "reasoning": "Avoiding redundant reads of an unedited artifact prevents re-injecting duplicate system instructions and wasting context budget when the artifact state is already known."
+    },
+    {
+      "file": "tool-description-agent-simple-usage-notes.md",
+      "verdict": "keep",
+      "reasoning": "Searching directly for known single facts and waiting for delegated search results avoids redundant concurrent tool execution and wasteful token expenditure."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-loading-deferred-tools.md",
+      "verdict": "keep",
+      "reasoning": "Batching deferred tool loading into a single ToolSearch call minimizes unnecessary round trips and tool call overhead when activating Chrome automation tools."
+    },
+    {
+      "file": "skill-slides-deck-iteration.md",
+      "verdict": "keep",
+      "reasoning": "Limiting REPL output respects the tool's execution output token ceiling, and focusing changes prevents accidental corruption of unmodified slides."
+    },
+    {
+      "file": "agent-prompt-artifact-comment-reply-composer.md",
+      "verdict": "keep",
+      "reasoning": "Comment-thread replies require a brief register matching the medium, and outputting only the comment text without preamble ensures clean formatting when the text is posted directly to the thread (Calibration 3)."
+    }
+  ]
+}

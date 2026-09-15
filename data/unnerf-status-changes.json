@@ -1,86 +1,66 @@
 {
- "from": "2.1.263",
- "to": "2.1.270",
+ "from": "2.1.270",
+ "to": "2.1.272",
  "changes": [
   {
-   "id": "agent-prompt-batch-slash-command",
-   "name": "Agent Prompt: /batch slash command",
+   "id": "agent-prompt-artifact-comment-ack-selection-rules",
+   "name": "Agent Prompt: Artifact comment acknowledgment selection rules",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "a10685241d51",
-   "newHash": "93b96310dc73",
-   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${USER_INSTRUCTIONS}\n\n## Phase 1: Research and Plan (Plan Mode)\n\n"
+   "oldHash": "c41229bb4ae1",
+   "newHash": "868d96312044",
+   "sample": " (fresh = a new comment addressed to you; redesignated = someone pressed Send to Claude again on an existing comment; moved = the commenter moved this thread to a different part of the Artifact, which"
   },
   {
-   "id": "data-managed-agents-multiagent-sessions",
-   "name": "Data: Managed Agents multiagent sessions",
+   "id": "system-prompt-claude-in-chrome-browser-automation",
+   "name": "System Prompt: Claude in Chrome browser automation",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "5ad526191521",
-   "newHash": "a05204f2ca88",
-   "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont"
-  },
-  {
-   "id": "tool-description-bash-creating-pull-requests",
-   "name": "Tool Description: Bash — creating pull requests",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "a0ad793b883d",
-   "newHash": "da090e52e665",
-   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
-  },
-  {
-   "id": "agent-prompt-eval-authoring-interview",
-   "name": "Agent Prompt: Eval-authoring Interview",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "5542f0ed8f8d",
-   "newHash": "699531506241",
-   "sample": " Walk the user through building an eval suite under `${EVAL_DIR}/`.${ADDITIONAL_SETUP_NOTE} Start by reading the plugin yourself and opening with what you found.${ADDITIONAL_CONTEXT_BLOCK}\n\n**Hard rul"
-  },
-  {
-   "id": "skill-loop-self-pacing-mode",
-   "name": "Skill: /loop self-pacing mode",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "b2992c88e8e5",
-   "newHash": "1fde155eaacc",
-   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v"
+   "oldHash": "e2f9e7f17ce6",
+   "newHash": "3c11e16bee15",
+   "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au"
   },
   {
    "id": "system-prompt-coordinator-mode",
    "name": "System Prompt: Coordinator mode",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "160a818a34f3",
-   "newHash": "bec40f341043",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "bec40f341043",
+   "newHash": "160a818a34f3",
    "sample": " and end your response. Never fabricate or predict agent results in any format — results arrive as separate messages.\n\n### ${AGENT_TOOL_NAME} Results\n\nWorker results arrive as **user-role messages** c"
   },
   {
-   "id": "tool-description-artifacttool-2",
-   "name": "Tool Description: ArtifactTool",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "08afb8933aa2",
-   "newHash": "b288529ace9e",
-   "sample": "Render an HTML file to an Artifact — a default-private web page hosted on claude.ai. Use this when communicating visually would be clearer than terminal text, or when the user or their team would use "
+   "id": "tool-description-agent-simple-usage-notes",
+   "name": "Tool Description: Agent (simple usage notes)",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "1d14c8398fc2",
+   "newHash": "bd67e6c88599",
+   "sample": "Reach for this when the task matches an available agent type, when you have independent work to run in parallel, or when answering would mean reading across several files — delegate it and you keep th"
   },
   {
-   "id": "tool-parameter-artifact-label-suffix",
-   "name": "Tool Parameter: Artifact label suffix",
+   "id": "tool-description-designsync",
+   "name": "Tool Description: DesignSync",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "6e6be65c3d48",
+   "newHash": "a92f87789571",
+   "sample": "Read and update the user's claude.ai/design design-system projects through their claude.ai login (or, for sessions without one, a dedicated design authorization from /design-login). Use this only with"
+  },
+  {
+   "id": "agent-prompt-batch-slash-command",
+   "name": "Agent Prompt: /batch slash command",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "1cda39349876",
-   "newHash": "c74da0b42f1a",
-   "sample": "A short name for this publish, max 60 chars (e.g. \"Draft to legal\"). Optional — a few words, not a description."
+   "oldHash": "93b96310dc73",
+   "newHash": "a10685241d51",
+   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${USER_INSTRUCTIONS}\n\n## Phase 1: Research and Plan (Plan Mode)\n\n"
   }
  ],
  "unverifiable": []
