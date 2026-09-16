@@ -154,6 +154,40 @@ node scripts/prune-subsumed.mjs <cli.js> <ccVersion> [--dry-run]
 
 ---
 
+## `drift-check.mjs`
+
+Node ES module. Answers **"do we need to upgrade, and what would break?"** for a
+release we don't ship a catalog for yet, without running a sync. Read-only: it
+never touches `data/`, `system-prompts/`, or the installed binary.
+
+```bash
+node scripts/drift-check.mjs                 # vs npm latest
+node scripts/drift-check.mjs 2.1.273         # vs a specific release
+node scripts/drift-check.mjs <unpacked-dir>  # vs an already-unpacked bundle
+```
+
+| Reports | Meaning |
+|---|---|
+| **catalog survival** | how many shipped prompts still exist byte-identically in the target build |
+| **rules at risk** | rules whose prompt was reworded or deleted — the ones that go FAIL/MISSING on the next sync |
+| **effort surface** | the `default_effort` / enum counters, so a new effort surface shows up before a full run |
+
+Exit `0` no rule at risk · `1` some rule needs re-anchoring · `2` bad usage.
+
+**Do not grep the bundle for prompt text instead.** Catalog `pieces` hold
+DECODED runtime text; the bundle holds QUOTED literals (`\n`, `\"`, escaped
+backticks), so a multi-line body never appears verbatim and a substring probe
+reports it missing. Measured: a raw-text probe called **19.6%** of the v2.1.272
+catalog missing *from the very bundle it was generated from*, where the true
+answer is 0%. This script decodes both sides through the same extractor + AST
+normalizer `gen-catalog.mjs` uses and compares identity keys, which scores that
+same catalog at 100.0%. Two judgement calls were nearly made on the bad number —
+an upgrade recommendation citing "20% churn" (the real figure for that release
+pair was ~1%), and the `ACK_REMOVED` verification for the v2.1.270 gate-6
+removals. Use this for both.
+
+---
+
 ## `apply-code-patches.mjs`
 
 Node ES module. unnerfcc's **best-effort effort un-nerfs** — edits CC's own
