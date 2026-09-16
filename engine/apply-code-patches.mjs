@@ -124,6 +124,9 @@ import { join, dirname } from "node:path";
 // would spell it, so it survives the next run's parse -> generate unchanged.
 // normalize-ast.mjs has no imports of its own, so this stays dependency-free.
 import { encodeQuoted } from "./normalize-ast.mjs";
+// P1 decides WHAT to edit from the AST, never from a text match — see
+// defaultEffortSites() for why a regex cannot be the authority here.
+import { parse } from "@babel/parser";
 
 // The resolver's max-unsupported fallback, matched by string-literal shape (not
 // symbol): `X==="max"&&!F(Y))X="high"`. GUARD_STOCK is the stock "drop to high"
@@ -217,39 +220,144 @@ function p0_cascadeMaxFallback(js) {
 // The multi-module orchestrator resolves this GLOBALLY first (one scan of
 // every module) and passes the answer in here, rather than this function
 // trying to see across file boundaries itself.
+// Locate every `default_effort: "<level>"` that is genuinely an object property,
+// by parsing rather than by matching text.
+//
+// WHY NOT A REGEX. `js.replace(/default_effort:"high"/g, ...)` cannot tell an
+// object property from the same characters sitting inside a string literal, a
+// comment, or one of the ~130 markdown/doc assets this bundle ships — several of
+// which document model configuration and could plausibly print
+// `default_effort:"high"` as prose. A global replace would silently rewrite that
+// documentation, and nothing downstream would notice: the ASCII check passes, the
+// bundle still parses, the binary still boots. Parsing makes the property
+// position the thing we match on, so prose is untouchable by construction.
+//
+// A cheap `/default_effort/` pre-filter still runs first, so only the handful of
+// modules that could contain the field are ever parsed — the other ~1900 cost one
+// regex test each, as before.
+//
+// Returns [{ start, end, level, declaresMax }] where start/end bracket the VALUE
+// string literal, so the caller splices those bytes and leaves every other byte
+// of the module identical. `declaresMax` records whether the same object also
+// declares max support (`effort_levels` containing "max", as the newer model
+// registry does, or `capabilities` containing "max_effort", as the original
+// catalog does) — reported, not enforced; see p1 for why.
+function defaultEffortSites(js) {
+  const ast = parse(js, { sourceType: "unambiguous", errorRecovery: true });
+  const sites = [];
+  const seen = new Set();
+
+  const arrayHas = (node, wanted) =>
+    node && node.type === "ArrayExpression" &&
+    node.elements.some((e) => e && e.type === "StringLiteral" && e.value === wanted);
+
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) { for (const c of node) visit(c); return; }
+    if (typeof node.type !== "string") return;
+    if (seen.has(node)) return;
+    seen.add(node);
+
+    if (node.type === "ObjectExpression") {
+      // max support is declared by a SIBLING key in the same object, in both
+      // shapes CC uses, so this never has to walk outward.
+      let declaresMax = false;
+      for (const prop of node.properties) {
+        if (prop.type !== "ObjectProperty" || prop.computed) continue;
+        const key = prop.key.type === "Identifier" ? prop.key.name
+                  : prop.key.type === "StringLiteral" ? prop.key.value : null;
+        if (key === "effort_levels" && arrayHas(prop.value, "max")) declaresMax = true;
+        if (key === "capabilities" && arrayHas(prop.value, "max_effort")) declaresMax = true;
+      }
+      for (const prop of node.properties) {
+        if (prop.type !== "ObjectProperty" || prop.computed) continue;
+        const key = prop.key.type === "Identifier" ? prop.key.name
+                  : prop.key.type === "StringLiteral" ? prop.key.value : null;
+        if (key !== "default_effort") continue;
+        if (!prop.value || prop.value.type !== "StringLiteral") continue;
+        sites.push({ start: prop.value.start, end: prop.value.end, level: prop.value.value, declaresMax });
+      }
+    }
+
+    for (const k of Object.keys(node)) {
+      if (k === "loc" || k === "start" || k === "end" || k === "range" ||
+          k === "leadingComments" || k === "trailingComments" || k === "innerComments" || k === "extra") continue;
+      visit(node[k]);
+    }
+  };
+  visit(ast.program);
+  return sites;
+}
+
+// P1 — floor every model's default_effort to "max".
+//
+// Splices the located value literals back-to-front so earlier offsets stay valid,
+// and writes the replacement through encodeQuoted() so it is spelled exactly as a
+// regenerated bundle would spell it.
 function p1_floorDefaultEffort(js, opts = {}) {
   try {
-    if (!/default_effort:"[a-z]+"/.test(js)) {
-      return { js, status: "failed", detail: `anchor MISSING: no \`default_effort:"..."\` field found — CC's model catalog likely changed its effort-default shape; effort floor NOT applied` };
+    if (!/default_effort/.test(js)) {
+      return { js, status: "failed", detail: `anchor MISSING: no \`default_effort\` field found — CC's model catalog likely changed its effort-default shape; effort floor NOT applied` };
     }
-    const nHigh = (js.match(/default_effort:"high"/g) || []).length;
-    const nXhigh = (js.match(/default_effort:"xhigh"/g) || []).length;
+    let sites;
+    try {
+      sites = defaultEffortSites(js);
+    } catch (e) {
+      return { js, status: "failed", detail: `could not parse this module to locate default_effort (${e.message}) — refusing to fall back to a text replace, which cannot tell a property from prose` };
+    }
+    if (sites.length === 0) {
+      return { js, status: "failed", detail: `anchor MISSING: \`default_effort\` appears in this module but never as an object property with a string value — shape changed; effort floor NOT applied` };
+    }
+
     const cascadeSafe = GUARD_CASCADED.test(js) || !!opts.cascadeAppliedElsewhere;
+    const high = sites.filter((s) => s.level === "high");
+    const xhigh = sites.filter((s) => s.level === "xhigh");
+    const already = sites.filter((s) => s.level === "max");
 
-    let out = js;
-    const raised = [];
-    if (nHigh > 0) { out = out.replace(/default_effort:"high"/g, 'default_effort:"max"'); raised.push(`${nHigh}× "high"`); }
-    let skippedXhigh = 0;
-    if (nXhigh > 0) {
-      if (cascadeSafe) { out = out.replace(/default_effort:"xhigh"/g, 'default_effort:"max"'); raised.push(`${nXhigh}× "xhigh"`); }
-      else skippedXhigh = nXhigh;
-    }
+    // Flooring an unsupported "max" is safe because the resolver's capability
+    // guard degrades it (max -> xhigh -> high with P0's cascade), so we floor
+    // every site rather than gating on declaresMax: a gate that silently skipped
+    // a record whose capability is spelled some new way would be exactly the
+    // silent degradation this file exists to prevent. declaresMax is reported so
+    // a shape change is visible instead.
+    const toFloor = cascadeSafe ? [...high, ...xhigh] : [...high];
+    const skippedXhigh = cascadeSafe ? 0 : xhigh.length;
 
-    if (raised.length === 0) {
+    if (toFloor.length === 0) {
       if (skippedXhigh > 0) {
         return { js, status: "failed", detail: `${skippedXhigh}× \`default_effort:"xhigh"\` NOT raised: P0's resolver cascade is absent, so raising them could regress a non-max model to "high" — refusing (fix P0's anchor first)` };
       }
-      return { js, status: "already", detail: `all model default_effort already floored to "max" (none at "high"/"xhigh")` };
+      return { js, status: "already", detail: `all ${already.length} model default_effort already floored to "max"` };
     }
 
-    const remHigh = (out.match(/default_effort:"high"/g) || []).length;
-    if (remHigh !== 0) return { js, status: "failed", detail: `verify failed: ${remHigh} \`default_effort:"high"\` still present after replace` };
+    let out = js;
+    for (const site of [...toFloor].sort((a, b) => b.start - a.start)) {
+      out = out.slice(0, site.start) + encodeQuoted("max") + out.slice(site.end);
+    }
+
+    // Re-parse the result and confirm nothing we meant to floor survived. This
+    // checks the edit the same way it was decided — by position, not by text.
+    let after;
+    try {
+      after = defaultEffortSites(out);
+    } catch (e) {
+      return { js, status: "failed", detail: `verify failed: patched module no longer parses (${e.message})` };
+    }
+    const remHigh = after.filter((s) => s.level === "high").length;
+    if (remHigh !== 0) return { js, status: "failed", detail: `verify failed: ${remHigh} \`default_effort:"high"\` still present after splice` };
     if (cascadeSafe) {
-      const remXhigh = (out.match(/default_effort:"xhigh"/g) || []).length;
-      if (remXhigh !== 0) return { js, status: "failed", detail: `verify failed: ${remXhigh} \`default_effort:"xhigh"\` still present after replace` };
+      const remXhigh = after.filter((s) => s.level === "xhigh").length;
+      if (remXhigh !== 0) return { js, status: "failed", detail: `verify failed: ${remXhigh} \`default_effort:"xhigh"\` still present after splice` };
     }
 
-    let detail = `floored model default_effort to "max" (${raised.join(", ")}); the capability guard degrades an unsupported "max" (max -> xhigh -> high) so no model drops below stock`;
+    const raised = [];
+    if (high.length) raised.push(`${high.length}× "high"`);
+    if (cascadeSafe && xhigh.length) raised.push(`${xhigh.length}× "xhigh"`);
+    const ungated = toFloor.filter((s) => !s.declaresMax).length;
+    let detail = `floored model default_effort to "max" (${raised.join(", ")}) at AST-located object properties; the capability guard degrades an unsupported "max" (max -> xhigh -> high) so no model drops below stock`;
+    detail += ungated
+      ? `; ${ungated} of ${toFloor.length} did not declare max support in the same object (relying on the runtime guard — check whether the capability field was renamed)`
+      : `; all ${toFloor.length} declare max support in the same object`;
     if (skippedXhigh > 0) detail += `; SKIPPED ${skippedXhigh}× "xhigh" (P0 cascade absent — fail-safe, no regression)`;
     return { js: out, status: "applied", detail };
   } catch (e) {
@@ -490,14 +598,27 @@ function applyAcrossModules(modules) {
     PATCHES.map((p) => [p.name, { status: "failed", relPath: null, detail: `anchor MISSING: not found in any of ${modules.length} modules` }])
   );
 
+  // Count the modules each patch actually landed in, not just the one whose
+  // detail line we print. A patch can legitimately apply in several modules --
+  // P1's default_effort fields live in BOTH the original model catalog and the
+  // newer model registry -- and reporting only the best single module made that
+  // look like a partial apply. It was misread exactly that way once, as "only 6
+  // of 31 sites floored", when all 31 had been.
+  const appliedIn = new Map(PATCHES.map((p) => [p.name, 0]));
   for (const m of modules) {
     const { js: out, results } = applyCodePatches(m.source, { cascadeAppliedElsewhere });
     if (out !== m.source) touched.set(m.relPath, out);
     for (const r of results) {
       if (!PATCH_NAMES.has(r.name)) continue; // exclude ascii-invariant entries
+      if (r.status === "applied") appliedIn.set(r.name, appliedIn.get(r.name) + 1);
       const cur = byPatch.get(r.name);
       if (RANK[r.status] > RANK[cur.status]) byPatch.set(r.name, { status: r.status, relPath: m.relPath, detail: r.detail });
     }
+  }
+  for (const [name, n] of appliedIn) {
+    if (n <= 1) continue;
+    const cur = byPatch.get(name);
+    byPatch.set(name, { ...cur, detail: `${cur.detail} [applied in ${n} modules; the counts above are for ${cur.relPath} only]` });
   }
 
   const ok = [...byPatch.values()].every((v) => v.status === "applied" || v.status === "already");

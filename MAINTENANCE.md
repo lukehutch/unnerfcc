@@ -214,7 +214,14 @@ P0 didn't apply), **uncap-effort-enum** (P2), **validator-accepts-max** (P3).
 |---|---|
 | **APPLIED** | Anchor found, patch spliced + verified. |
 | **ALREADY** | Effort un-nerf already present (idempotent re-run). |
-| **FAILED** | Anchor missing/ambiguous — CC's effort code likely changed. Reported, not fatal; update the string-literal anchors in `apply-code-patches.mjs`. `upgrade.sh` also diffs `data/effort-posture.json` (now including `maxFallback`) to surface this. |
+| **FAILED** | Anchor missing/ambiguous — CC's effort code likely changed. Reported, not fatal; update the string-literal anchors in `apply-code-patches.mjs`. P1 instead locates its edits in the **AST**, so a P1 failure means the object *shape* changed, not the spelling. `upgrade.sh` also diffs `data/effort-posture.json` (now including `maxFallback`) to surface this. |
+
+`default_effort` has lived in **two** modules since v2.1.272 — the original model
+catalog and a newer model registry — and P1 floors both. The summary names only
+the module with the best single outcome, so it appends `[applied in N modules;
+the counts above are for <module> only]` when a patch landed in more than one.
+Without that, `6× "high"` on a build with 31 sites reads as a partial apply; it
+isn't.
 
 ---
 

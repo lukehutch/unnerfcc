@@ -753,8 +753,25 @@ restructuring:**
   capability** — `max → xhigh → high` — instead of collapsing to `high`. This is
   what makes flooring *any* starting default to `max` regression-proof.
 - **P1 floor `default_effort` → `"max"`, for both `"high"` and `"xhigh"`
-  defaults.** The `"high"` raise is always safe (an unsupported `max` falls to
-  `high` = stock). The `"xhigh"` raise is applied **only when P0's cascade is
+  defaults.** *P1 is the exception to "string-literal contracts" above: it
+  locates its edits in the **AST**, not by text.* A global
+  `default_effort:"high"` replace cannot tell an object property from the same
+  characters inside a string literal or one of the ~130 markdown/doc assets the
+  bundle ships — several of which document model configuration — and would
+  silently rewrite that prose with nothing downstream noticing (ASCII check
+  passes, bundle parses, binary boots). P1 parses, collects the value literals of
+  genuine `default_effort` object properties, and splices those byte ranges back
+  to front, so every other byte of the module is untouched. A cheap
+  `/default_effort/` test still pre-filters, so only the two modules carrying the
+  field are ever parsed. It also reports whether each floored record declares max
+  support in the same object (`effort_levels` containing `"max"` in the newer
+  model registry, `capabilities` containing `"max_effort"` in the original
+  catalog) — reported, never enforced, because a gate that silently skipped a
+  record whose capability field was renamed would be the exact silent degradation
+  this file exists to prevent. Since v2.1.272 `default_effort` lives in **two**
+  modules and P1 floors both; the summary appends `[applied in N modules]` so a
+  per-module count can't be misread as a partial apply. The `"high"` raise is
+  always safe (an unsupported `max` falls to `high` = stock). The `"xhigh"` raise is applied **only when P0's cascade is
   present** (otherwise SKIPPED — fail-safe, never a regression). This is the
   piece that readies the floor for **future Opus** whether it ships a `"high"`
   default (like Opus 4.8) or an `"xhigh"` default (like Opus 4.7): either way it
