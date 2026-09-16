@@ -1,66 +1,36 @@
 {
- "from": "2.1.270",
- "to": "2.1.272",
+ "from": "2.1.272",
+ "to": "2.1.273",
  "changes": [
   {
-   "id": "agent-prompt-artifact-comment-ack-selection-rules",
-   "name": "Agent Prompt: Artifact comment acknowledgment selection rules",
+   "id": "agent-prompt-quick-pr-creation-2",
+   "name": "Agent Prompt: Quick PR creation",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "c41229bb4ae1",
-   "newHash": "868d96312044",
-   "sample": " (fresh = a new comment addressed to you; redesignated = someone pressed Send to Claude again on an existing comment; moved = the commenter moved this thread to a different part of the Artifact, which"
+   "oldHash": "bf098b57197f",
+   "newHash": "0b947869a32f",
+   "sample": "\n3. Push the branch to the repo's remote (usually `origin`; use the remote this repo is actually configured with)\n4. If a PR already exists for this branch (check the gh pr view output above), update "
   },
   {
-   "id": "system-prompt-claude-in-chrome-browser-automation",
-   "name": "System Prompt: Claude in Chrome browser automation",
+   "id": "tool-description-artifact-db-batch-atomic-approval",
+   "name": "Tool Description: Artifact database batch write atomicity and approval",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "e2f9e7f17ce6",
-   "newHash": "3c11e16bee15",
-   "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au"
+   "oldHash": "99d80941496c",
+   "newHash": "43ab84dbb2a7",
+   "sample": "}` entries (no top-level `collection`/`doc_id`); the batch is one approval, applied atomically (all or nothing) where the server supports batches and otherwise one write at a time in order (the result"
   },
   {
-   "id": "system-prompt-coordinator-mode",
-   "name": "System Prompt: Coordinator mode",
+   "id": "tool-description-artifact-db-delete-and-batch",
+   "name": "Tool Description: Artifact database delete and batch writes",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "bec40f341043",
-   "newHash": "160a818a34f3",
-   "sample": " and end your response. Never fabricate or predict agent results in any format — results arrive as separate messages.\n\n### ${AGENT_TOOL_NAME} Results\n\nWorker results arrive as **user-role messages** c"
-  },
-  {
-   "id": "tool-description-agent-simple-usage-notes",
-   "name": "Tool Description: Agent (simple usage notes)",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "1d14c8398fc2",
-   "newHash": "bd67e6c88599",
-   "sample": "Reach for this when the task matches an available agent type, when you have independent work to run in parallel, or when answering would mean reading across several files — delegate it and you keep th"
-  },
-  {
-   "id": "tool-description-designsync",
-   "name": "Tool Description: DesignSync",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "6e6be65c3d48",
-   "newHash": "a92f87789571",
-   "sample": "Read and update the user's claude.ai/design design-system projects through their claude.ai login (or, for sessions without one, a dedicated design authorization from /design-login). Use this only with"
-  },
-  {
-   "id": "agent-prompt-batch-slash-command",
-   "name": "Agent Prompt: /batch slash command",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "93b96310dc73",
-   "newHash": "a10685241d51",
-   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${USER_INSTRUCTIONS}\n\n## Phase 1: Research and Plan (Plan Mode)\n\n"
+   "oldHash": "454a1f393c16",
+   "newHash": "88d1ab5a58f9",
+   "sample": " \"delete\" removes one, and \"batch\" applies up to ${MAX_BATCH_WRITES} writes listed in `writes` (with no top-level `collection` or `doc_id`) under one approval; Claude prefers a batch whenever it write"
   }
  ],
  "unverifiable": []

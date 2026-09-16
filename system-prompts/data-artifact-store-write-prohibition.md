@@ -1,6 +1,6 @@
 <!--
 name: 'Data: Artifact store write prohibition'
 description: Instructs writing nothing directly to the artifact document store.
-ccVersion: 2.1.272
+ccVersion: 2.1.273
 -->
-Write nothing to the store.
+never write its store for its content

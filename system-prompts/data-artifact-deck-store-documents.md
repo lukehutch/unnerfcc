@@ -2,7 +2,7 @@
 name: 'Data: Artifact deck store documents'
 description: >-
   Identifies store documents associated with slide deck artifacts such as
-  deck/meta.
-ccVersion: 2.1.272
+  deck/meta, fonts, slides, and notes.
+ccVersion: 2.1.273
 -->
-its store documents (such as `deck/meta`)
+`deck/meta`, `deck/design-systems`, `fonts/<family-id>`, `slides/<id>` or `notes/<id>` store documents

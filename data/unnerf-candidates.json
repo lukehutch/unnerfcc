@@ -105,6 +105,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "\n3. Push the branch to the repo's remote (usually `origin`; use the remote this repo is actually configured with)\n4. If a PR already exists for this branch (check the gh pr view output above), update ",
+  "notes": "tone: 'Keep PR titles short (under 70 characters)'",
+  "ccFirstSeen": "2.1.273"
+ },
+ {
   "sample": "# Example: Browser-driven web app\n\nYou have a dev server that serves HTML to a browser. An agent in a\nheadless container can't open a browser window - so \"run the app\" means\nlaunching the dev server, ",
   "notes": "minimalist verification and off-the-shelf driver advice",
   "ccFirstSeen": "2.1.251"
@@ -695,6 +700,16 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "}` entries (no top-level `collection`/`doc_id`); the batch is one approval, applied atomically (all or nothing) where the server supports batches and otherwise one write at a time in order (the result",
+  "notes": "implementation: 'prefer it over separate calls whenever you write more than a couple of documents'",
+  "ccFirstSeen": "2.1.273"
+ },
+ {
+  "sample": "page code: not this skill's own (${}) \u2014 an older version of the skill may have written it, or someone republished the board with altered page code; this output is the clean rebuild, so publish it now ",
+  "notes": "chat brevity: 'tell the user in one plain line'",
+  "ccFirstSeen": "2.1.273"
+ },
+ {
   "sample": "When a finished piece of work is meant for other people or agents, such as a report for a team or the case for a decision the team has yet to make, Claude does not treat it as finished while it exists",
   "notes": "tone / brevity: 'offers the page in one line instead of publishing it'",
   "ccFirstSeen": "2.1.270"
@@ -723,6 +738,11 @@
   "sample": "---\nname: workshop\ndescription: Build a design together with the user, one decision at a time - publish an evolving plan document as an Artifact, surface each open decision on the page for the reader ",
   "notes": "process constraints on output length and narration brevity",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000D\u0000e\u0000s\u0000i\u0000g\u0000n\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000e\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000T\u0000h\u0000i\u0000s\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000'\u0000s\u0000 \u0000c\u0000o\u0000n\u0000t\u0000e\u0000n\u0000t\u0000 \u0000l\u0000i\u0000v\u0000e\u0000s\u0000 \u0000i\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000 \u0000u\u0000n\u0000d\u0000e\u0000r\u0000",
+  "notes": "implementation brevity: 'change only what was asked', output cap",
+  "ccFirstSeen": "2.1.273"
  },
  {
   "sample": "# Claude in Chrome browser automation\n\nYou have access to browser automation tools (mcp__claude-in-chrome__*) for interacting with web pages in Chrome. Follow these guidelines for effective browser au",
@@ -758,6 +778,11 @@
   "sample": "A fresh agent costs more than it looks. It knows only what you put in the prompt, and you see only the summary it sends back \u2014 both handoffs drop detail, and neither of you can tell what the other mis",
   "notes": "discourages subagent usage: 'When in doubt, don\\'t spawn', 'keep the scope explicit and narrow'",
   "ccFirstSeen": "2.1.272"
+ },
+ {
+  "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact - a live sketch canvas for wireframe-fidelity diagrams (boxes, databases, decision diamonds, sticky notes, arrows, freehand, text, pasted",
+  "notes": "chat and element brevity: 'short note, not a briefing', element caps",
+  "ccFirstSeen": "2.1.273"
  },
  {
   "sample": "The user wants you to self-pace. Decide what makes the next iteration worth running \u2014 a passage of time, or an observable event.\n\n1. **Run the parsed prompt now.** If it's a slash command, invoke it v",
@@ -1405,6 +1430,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": " \"delete\" removes one, and \"batch\" applies up to ${} writes listed in `writes` (with no top-level `collection` or `doc_id`) under one approval; Claude prefers a batch whenever it writes more than a co",
+  "notes": "implementation: 'Claude prefers a batch whenever it writes more than a couple of documents'",
+  "ccFirstSeen": "2.1.273"
+ },
+ {
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
   "notes": "process brevity: 'Briefly confirm' and 'one short sentence' on the reason",
   "ccFirstSeen": "2.1.251"
@@ -1600,6 +1630,11 @@
   "ccFirstSeen": "2.1.222"
  },
  {
+  "sample": "When a finished piece of work is meant for other people or agents, such as a report for a team or the case for a decision the team has yet to make, Claude does not treat it as finished while it exists",
+  "notes": "process brevity: 'offers the page in one line instead of saying nothing / publishing it'",
+  "ccFirstSeen": "2.1.273"
+ },
+ {
   "sample": "This session has the default workflow size guideline:",
   "notes": "process brevity: caps agent fan-out ('keep workflows under N agents')",
   "ccFirstSeen": "2.1.219"
@@ -1608,6 +1643,11 @@
   "sample": "post a one-line \"launched X\" via your comms tool",
   "notes": "brief communication instruction with 'one-line' constraint",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000S\u0000l\u0000i\u0000d\u0000e\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000T\u0000h\u0000i\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000'\u0000s\u0000 \u0000c\u0000o\u0000n\u0000t\u0000e\u0000n\u0000t\u0000 \u0000l\u0000i\u0000v\u0000e\u0000s\u0000 \u0000i\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000 \u0000u\u0000n\u0000d\u0000e\u0000r\u0000 \u0000`\u0000p\u0000r\u0000o\u0000",
+  "notes": "implementation brevity: 'change only what was asked', output cap",
+  "ccFirstSeen": "2.1.273"
  },
  {
   "sample": " and posted a summary reply. Review the change \u2014 if it missed the mark, edit the artifact yourself or deactivate the thread. The thread may not be resolved \u2014 check it (action \"comments\"); if the chang",
@@ -1908,6 +1948,11 @@
   "sample": "# Managed Agents - Onboarding Flow\n\n> **Invoked via `/claude-api managed-agents-onboard`?** You're in the right place. Run the interview below - don't summarize it back to the user, ask the questions.",
   "notes": "interview brevity and direct code output",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "page code: not this skill's own (${}) \u2014 an older version of the skill may have written it, or someone republished the board with altered page code; rebuild it clean with a write-back now and tell the ",
+  "notes": "chat brevity: 'tell the user in one plain line'",
+  "ccFirstSeen": "2.1.273"
  },
  {
   "sample": "You are the Claude guide agent. Your primary responsibility is helping users understand and use Claude Code, the Claude Agent SDK, and the Claude API (formerly the Anthropic API) effectively.\n\n**Your ",

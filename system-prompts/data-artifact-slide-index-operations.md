@@ -1,6 +1,6 @@
 <!--
 name: 'Data: Artifact slide index operations'
 description: Lists slide operations that require updating the slides index.
-ccVersion: 2.1.272
+ccVersion: 2.1.273
 -->
-add, remove or reorder slides, or change anything else that index holds
+retitle the deck, reorder, add or remove slides, or change its sections or faces

@@ -3,7 +3,7 @@ name: 'Skill: plugin-authoring'
 description: >-
   Bundled plugin-authoring skill — instructions for writing, extending, or
   debugging Claude Code plugins made of function hooks.
-ccVersion: 2.1.272
+ccVersion: 2.1.273
 -->
 ---
 name: plugin-authoring
@@ -82,8 +82,8 @@ refused, so a plugin that seems to do nothing has usually been told why.
 ## Drawing: ui.render
 
 A `ui.render` hook receives one component instance. `e.component` says
-which component, `e.surface` where it is drawn (`terminal`, `desktop` or
-`mobile`), `e.requestId` which instance (the tool_use_id for a tool row or
+which component, `e.surface` where it is drawn (`terminal`, `desktop`,
+`mobile` or `vscode`), `e.requestId` which instance (the tool_use_id for a tool row or
 dialog, the message id for a message or a command's output row, the agent id for a spinner), `e.props`
 the component's plain-data props, and `e.viewport`, when the surface has
 measured, the size it draws into in character cells: `columns` and `rows`.
@@ -94,8 +94,8 @@ when the hook's own state changed.
 
 Build trees from the table `$.ui.resolve(e)` returns: the surface's element constructors,
 destructured into the hook's JSX tags (a module has no element globals). Tables differ per
-surface, see `Elements` (`mobile` has no `Input`, `Select` or `Client`, `terminal` no `Svg`
-but alone `Raster`); narrowing `e.surface` narrows the table. A grid of colored cells
+surface, see `Elements` (`mobile` has no `Input`, `Select` or `Client`, `vscode` no `Client`,
+`terminal` no `Svg` but alone `Raster`); narrowing `e.surface` narrows the table. A grid of colored cells
 (sparkline, heat map, rendered frame) is one `Raster`, its cells packed per `RasterProps`,
 never a `Box` per cell; `$.ui.blit` repaints a mounted one without a render pass. Return a
 tree, or `next({ ...e, props })` to change what the engine draws, or `next(e)` to leave it.
@@ -103,7 +103,7 @@ A tree that does not validate (an element the surface lacks, a prop it does not 
 child where none goes) is not drawn: the engine draws its own instead and writes to the
 debug log a line beginning `ui.render (<Component>): a hook returned a tree that does not
 validate`, followed by the reason. When a drawing silently falls back, that line and the
-element's props type are the two things to read. Buttons, text fields and selects keep their
+element's props type are the two things to read. A Button is `[ label ]` on the terminal, or with `plain` no brackets: `1: label` beside its `hotkey` and the label alone without one, so a one-glyph label is a one-glyph control the focus still inverts. Buttons, text fields and selects keep their
 handlers in the plugin and raise `ui.press`, `ui.input` and `ui.select`; keys reach one only
 while it has focus, Esc returns to the prompt, except that a Button naming one of the engine's keybinding actions (`action: "app:cycleDiffBase"`) is also pressed by the person's chord for it from the prompt while it is mounted: chords, or a modified key Global or an active context binds, and not while an engine handler of that action is mounted. A pane opened with `focus`, `closeOnEscape` and `holdToasts` behaves as a dialog: it takes the keys, Tab and the arrows walk its buttons, Esc closes it, and toasts wait behind it; an element drawn `autoFocus` holds the ring from the start, every move of the ring is the `ui.focus` event first (its `element` the key now holding it, absent on the engine's close mark; `{ deny }` keeps it) and `$.ui.focus({ requestId, key })` moves it while the site holds the keys; `rows` opens it inline as tall as its content needs (up to what the layout spares, and the person's own size wins), so a short dialog shows whole and its arrows walk rather than scroll; the `command.run` input's `presentation` says whether the answer shows fullscreen and how wide the terminal is. A keyed `Box` scopes `hover` styles. A slash command's output row is the `CommandOutput` site: a plugin whose command answers `command.run` with `{ text }` (what the model reads) hooks it with `{ component: 'CommandOutput', props: { command: 'mine' } }` and draws that text as a tree inline in the transcript, where a built-in command's lines would sit.
 

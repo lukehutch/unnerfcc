@@ -1,6 +1,10 @@
 <!--
-name: 'Tool Result: Artifact README fetch failed prefix'
-description: Opening prefix indicating that an artifact's README could not be fetched.
-ccVersion: 2.1.272
+name: 'Tool Result: Artifact resource fetch failed'
+description: Informs the model that an artifact resource could not be fetched.
+ccVersion: 2.1.273
+variables:
+  - RESOURCE
+  - REASON
+  - DETAILS
 -->
-its README.md could not be fetched (
+its ${RESOURCE} could not be fetched (${REASON}) — ${DETAILS}

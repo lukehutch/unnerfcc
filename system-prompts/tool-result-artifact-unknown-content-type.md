@@ -3,6 +3,10 @@ name: 'Tool Result: Artifact unknown content type for extension'
 description: >-
   Validation error for files with unmapped extensions, suggesting renaming or
   specifying contentType.
-ccVersion: 2.1.251
+ccVersion: 2.1.273
+variables:
+  - EXTENSION_REASON
+  - SERVED_TYPES_LIST
+  - DOCUMENT_ARCHIVE_GUIDANCE
 -->
- has no known content type for its extension — rename it to a known one (e.g. .json or .txt), or make another file the `file_path` and list this one under `files` in map form with an explicit servable contentType (e.g. {"published/name": {"from": "source/path", "contentType": "text/plain"}})
+ (${EXTENSION_REASON}) — nothing was published. ${SERVED_TYPES_LIST} Rename a text or data file to one of these (.txt .json .csv), or make another file the `file_path` and list this one under `files` with contentType "text/plain". ${DOCUMENT_ARCHIVE_GUIDANCE}

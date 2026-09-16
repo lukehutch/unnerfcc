@@ -1,8 +1,8 @@
 <!--
 name: 'Data: Artifact design system store documents'
 description: >-
-  Identifies store documents associated with design systems including ds/meta
-  and per-file documents.
-ccVersion: 2.1.272
+  Identifies store documents associated with design systems including ds/meta,
+  ds/tokens, and per-file collections.
+ccVersion: 2.1.273
 -->
-its store documents (`ds/meta` and one document per file)
+`ds/meta`, `ds/tokens` or one-document-per-file store collections

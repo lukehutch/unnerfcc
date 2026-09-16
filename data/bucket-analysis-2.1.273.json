@@ -1,0 +1,41 @@
+{
+  "ccVersion": "2.1.273",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "agent-prompt-quick-pr-creation-2.md",
+      "verdict": "keep",
+      "reasoning": "The 70-character limit on PR titles adheres to standard Git and GitHub subject line formatting conventions to avoid UI truncation, while explicitly instructing Claude to place full details in the PR body."
+    },
+    {
+      "file": "tool-description-artifact-db-batch-atomic-approval.md",
+      "verdict": "keep",
+      "reasoning": "Recommending batch writes when updating multiple documents is technical API guidance for atomicity and single-approval efficiency, rather than a capability or brevity nerf."
+    },
+    {
+      "file": "skill-design-canvas-iteration.md",
+      "verdict": "keep",
+      "reasoning": "The directive to avoid printing entire file bodies explicitly states 'the output is capped', which is a genuine mechanical limit of the REPL output buffer (Calibration Example 1), and 'change only what was asked' preserves existing user boards."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "The chat reply length cap is already addressed by existingRules. The remaining constraints cover wireframe canvas readability and interruption-appropriate unprompted suggestions (Calibration Example 2)."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "The chat reply cap is already handled in existingRules. The remaining guidance governs whiteboard diagram spatial constraints and concise unsolicited skill offers per Calibration Example 2."
+    },
+    {
+      "file": "tool-description-artifact-publishing-criteria-and-connectors.md",
+      "verdict": "keep",
+      "reasoning": "Limiting the offer of a published page to one line applies to unprompted suggestions where the user did not request an artifact, matching Calibration Example 2 for interruption-appropriate UX."
+    },
+    {
+      "file": "skill-slides-deck-iteration.md",
+      "verdict": "keep",
+      "reasoning": "Avoiding full body dumps is explicitly tied to 'the output is capped', reflecting a real execution environment constraint (Calibration Example 1), and restricting edits to requested slides avoids clobbering unchanged user content."
+    }
+  ]
+}

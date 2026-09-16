@@ -3,26 +3,39 @@ name: 'Skill: Slides deck in two steps'
 description: >-
   Two-step workflow for creating a Slides deck using preloaded disk files and
   parallel AppifactRepl calls.
-ccVersion: 2.1.272
+ccVersion: 2.1.273
 -->
-[This deck in two steps] Everything this deck needs is already on disk, in the files listed with this note and with your design system's note. Two steps make the deck.
+[This deck in two steps] Everything this deck needs is already on disk, in the files listed with this note. Two steps make the deck.
 
-Step 1, one message: the Bash call or calls given with those lists, if any, copied as they are. In that same message, read this artifact's url with the Artifact tool (the read call given below, the url alone, no path): it returns the type's instructions (SKILL.md) and records that you have seen this version. Unless the user says they have written in it, the deck is new and empty: the read is for the instructions and the version, not for content. You do not need the ArtifactData tool, Read, Skill or ToolSearch for any of this, nor a second read step: everything else is already printed. Where this session's opening lines or the printed instructions tell you to read_file the design system's README.md, tokens.json or a card, or one of the type's reference pages, that reading is this step: those files are on disk, and the ones you need are the ones you have just printed.
+Step 1, one message: the Bash call or calls the notes give, if any, copied as they are. In that same message, read this artifact's url with the Artifact tool (the read call given below, the url alone, no path): it returns the type's instructions (SKILL.md) and records that you have seen this version. Unless the user says they have written in it, the deck is new and empty: the read is for the instructions and the version, not for content. You do not need the ArtifactData tool, Read, Skill or ToolSearch for any of this, nor a second read step: everything else is already printed. Where the printed instructions tell you to read one of the type's reference pages, that reading is this step: those pages are on disk, and the ones you need are the ones you have just printed.
 
-Step 2, one message: this deck's files were listed before this turn and `deck.json` is not among them, so its content is in the store and the section below needs no list call from you. For this NEW deck, where that section says "Create: one call", send instead one AppifactRepl call per slide, ALL in this one message (parallel tool calls), in deck order. The FIRST call writes only the deck's frame, in one batch:
+Step 2, one message: for this NEW deck, where the section below says "Create: one call", send instead one AppifactRepl call per slide, each called as `{artifact: <this Artifact's url>, code}`, ALL in this one message (parallel tool calls), in deck order, after ONE first call that writes only the deck's frame. The deck is kept as files under `project/`, nothing in the store: the index is `project/deck.json` and each slide is `project/slides/<id>.html`. The FIRST call, the frame alone:
 ```js
-const db = await claude.use("db");
-await db.batch([
-  { op:"set", path:"deck/meta", data:{ v:3, title, order:["cover","plan","risks"], sections:{ s1:{ description:"<one line>", start:"cover" } } } },
-  { op:"set", path:"deck/design-systems", data: require("<the tokens.json path listed with your design system's files>") }, // only with a design system
-]);
+const files = await claude.use("files");
+const fs = require("fs"), path = require("path");
+// the index: read it when it is listed, else start it with its createdOnFiles key; name EVERY planned slide in order, keep every other key, publish that one file
+const listed = (await files.list()).some(f => f.path === "project/deck.json");
+const deck = listed ? JSON.parse(await files.read("project/deck.json")) : { v:4, order:[], sections:{}, faces:{}, designSystems:[], attachments:{}, createdOnFiles:{ v:1, at:new Date().toISOString() } };
+deck.title = title;
+deck.order = ["cover","plan","risks"];
+deck.sections = { s1:{ description:"<one line>", start:"cover" } };
+fs.mkdirSync(path.join(files.dir(), "project"), { recursive: true });
+fs.writeFileSync(path.join(files.dir(), "project/deck.json"), JSON.stringify(deck, null, 2) + "\n");
+await files.publish({ file_path: "project/deck.json" });
 ```
-Then one call per slide, each a complete small program of its own, with the `html` typed inline:
+Then one call per slide, each a complete small program of its own, with the `html` typed inline once; speaker notes, if any, are the `<aside>` that is the last child of the `<section>`, plain text:
 ```js
-const db = await claude.use("db");
-await db.doc("slides/cover").set({ html: `<section id="cover">...</section>` });
+const html = `<section id="cover">...
+  <aside>what to say on this slide</aside>
+</section>
+`;
+const files = await claude.use("files");
+const fs = require("fs"), path = require("path"), file = path.join(files.dir(), "project/slides/cover.html");
+fs.mkdirSync(path.dirname(file), { recursive: true });
+fs.writeFileSync(file, html); // ONE new file, published alone
+await files.publish({ file_path: "project/slides/cover.html" });
 ```
-Each program starts fresh: no call uses a variable of an earlier one, and nothing is read between them. The calls run one at a time, in the order you send them, each as soon as its block is complete, so the page shows each slide the moment its call returns, while you are still writing the next: send them in the order a reader would want to see them. No file needs writing first, and these calls stand in for ArtifactData, write_db and read_db calls on this deck. With a design system, the colours, type and spacing are the ones in the files you printed.
-A revision works the same way: one message, one call per changed slide, each reading the document it changes before it changes it.
+The frame names every planned slide, so a later call writes only its own new file: no read first, no index rewrite, no placeholder (a named slide with no file yet keeps its place and shows once its file lands). Each program has its own `files.dir()`, removed when it ends, so a call publishes what it writes. Each program starts fresh: no call uses a variable of an earlier one. The calls run one at a time, in the order you send them, each as soon as its block is complete, so each slide is published the moment its call returns, while you are still writing the next: send them in the order a reader would want to see them. These calls stand in for Artifact publishes and for ArtifactData, write_db and read_db calls on this deck.
+A revision works the same way: one message, one call per changed slide, each reading what it changes before it changes it (with `files.read`).
 
-If a call reports an error, fix the line it names and send THAT call again, not the others; neither write_db nor a read of the artifact is needed for that. If a later listing does show `deck.json`, the deck has moved to files: from then on do what the section below says for that case.
+If a call reports an error, fix the line it names and send THAT call again, not the others; write_db is not needed for that, nor another read of the artifact unless the error asks for one: the url read in step 1 still counts as having seen this version. If the error names a file that changed or was not read, add a `files.read` of that file to the call.
