@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Result: Public artifact files not readable outside organization'
 description: >-
-  Explains that files of a public artifact cannot be read this way from outside
-  its organization.
-ccVersion: 2.1.263
+  Explains that files of a public artifact from outside the organization are not
+  returned inline.
+ccVersion: 2.1.277
 -->
-: the files of a public artifact read from outside its organization are not readable this way.
+: files of a public artifact from outside your organization are not returned inline.

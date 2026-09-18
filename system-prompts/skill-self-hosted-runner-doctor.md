@@ -4,12 +4,12 @@ description: >-
   Diagnostic skill for a self-hosted runner deployment — context detection, the
   signature/check/root-cause/fix tables per category, and the redacted
   escalation bundle.
-ccVersion: 2.1.263
+ccVersion: 2.1.277
 variables:
-  - API_ORIGIN
-  - API_HOSTNAME
+  - BASE_URL
+  - RUNNER_HOST
 -->
-You are diagnosing a **self-hosted runner** deployment for Claude Code on the web. Work through the diagnostic categories below, gather evidence with the typed `self_hosted_runner_*` read tools (admin-API state, `/healthz`, `/metrics`, redacted log tail) and Bash for everything else, fix what you can, and escalate cleanly when you can't.
+You are diagnosing a **self-hosted runner** deployment for Claude Code cloud sessions. Work through the diagnostic categories below, gather evidence with the typed `self_hosted_runner_*` read tools (admin-API state, `/healthz`, `/metrics`, redacted log tail) and Bash for everything else, fix what you can, and escalate cleanly when you can't.
 
 ## Step 0 — Detect context
 
@@ -29,7 +29,7 @@ Each row: **signature** (what the operator or logs show) → **check** → **roo
 
 | Signature | Check | Root cause | Fix |
 |---|---|---|---|
-| `[runner:fatal] RegisterRunner auth failed — environment secret invalid or revoked` | Bash `curl -sS -H "Authorization: Bearer $(cat <environment-secret-file>)" "${API_ORIGIN}/v1/code/runners/self-hosted/runners/register" -X POST -d '{}'` | environment secret revoked or wrong | Re-issue via **Issue new key** on the environment's Configuration tab (Admin settings → Cloud environments); remount on the runner |
+| `[runner:fatal] RegisterRunner auth failed — environment secret invalid or revoked` | Bash `curl -sS -H "Authorization: Bearer $(cat <environment-secret-file>)" "${BASE_URL}/v1/code/runners/self-hosted/runners/register" -X POST -d '{}'` | environment secret revoked or wrong | Re-issue via **Issue new key** on the environment's Configuration tab (Admin settings → Cloud environments); remount on the runner |
 | `RegisterRunner auth failed` but secret was just minted | Decode the secret's `ccr:org_id` claim: `sed 's/^sk-ant-[a-z]*-//' <secret-file> \| cut -d. -f2 \| tr '_-' '/+' \| base64 -d 2>/dev/null \| jq .` | Secret issued by a *different* org | Use a secret minted from **this** org's environment |
 | Runner fatal at startup before any network call: `ENOENT` / `EACCES` reading environment secret | `ls -l <environment-secret-file> && cat <environment-secret-file> >/dev/null` | Secret file unreadable, missing, or volume mount hung | Fix file perms / re-mount the secret volume |
 | `[runner:fatal] poll auth failed — token expired or revoked. Draining and exiting for clean restart.` after running fine for a while | Check whether the runner restarted cleanly (orchestrator logs / pod restart count) | runner_token TTL hit or was revoked. Runner does **not** self-heal — it drains and exits cleanly so the orchestrator restarts it, which re-registers. | If the restart loop persists across fresh pods, the **environment secret** itself was revoked → re-issue |
@@ -40,14 +40,14 @@ Each row: **signature** (what the operator or logs show) → **check** → **roo
 
 | Signature | Check | Root cause | Fix |
 |---|---|---|---|
-| `getaddrinfo ENOTFOUND ${API_HOSTNAME}` | `nslookup ${API_HOSTNAME}` | DNS resolution broken | Fix resolver / `/etc/resolv.conf` / cluster DNS |
-| `connect ETIMEDOUT` / `ECONNREFUSED` | `curl -sI --max-time 5 ${API_ORIGIN}/` | Firewall blocks egress on 443 | Allow egress to `${API_HOSTNAME}:443` |
+| `getaddrinfo ENOTFOUND ${RUNNER_HOST}` | `nslookup ${RUNNER_HOST}` | DNS resolution broken | Fix resolver / `/etc/resolv.conf` / cluster DNS |
+| `connect ETIMEDOUT` / `ECONNREFUSED` | `curl -sI --max-time 5 ${BASE_URL}/` | Firewall blocks egress on 443 | Allow egress to `${RUNNER_HOST}:443` |
 | `ECONNRESET` mid-poll | How long was the connection open before reset? | NAT / proxy idle-connection timeout dropping long-lived polls | Raise NAT/proxy idle timeouts |
-| `unable to verify the first certificate` | `openssl s_client -connect ${API_HOSTNAME}:443 </dev/null` | Corporate TLS interception / missing CA | Install CA bundle; set `NODE_EXTRA_CA_CERTS` |
+| `unable to verify the first certificate` | `openssl s_client -connect ${RUNNER_HOST}:443 </dev/null` | Corporate TLS interception / missing CA | Install CA bundle; set `NODE_EXTRA_CA_CERTS` |
 | `curl` from the host works but the runner process can't connect | Dump `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY` from the runner's env | Proxy env vars set (or missing) on the runner process only | Match proxy env between host and runner |
-| `404` on every API path | `echo $ANTHROPIC_BASE_URL` — compare to expected `${API_ORIGIN}` | `ANTHROPIC_BASE_URL` mis-set | Fix or unset `ANTHROPIC_BASE_URL` |
+| `404` on every API path | `echo $ANTHROPIC_BASE_URL` — compare to expected `${BASE_URL}` | `ANTHROPIC_BASE_URL` mis-set | Fix or unset `ANTHROPIC_BASE_URL` |
 | `Rate limited (429). Polling too frequently.` on PollWork | Custom poll interval below 5s? Many replicas sharing one environment? | Backend rate-limiting | Restore default poll interval; reduce replica fan-out |
-| Mid-run `poll auth failed` on an otherwise-healthy runner | `date -u` vs `curl -sI ${API_ORIGIN}/ \| grep -i '^date:'` | Runner clock skew throws off the 80%-TTL refresh schedule | Fix NTP on the host |
+| Mid-run `poll auth failed` on an otherwise-healthy runner | `date -u` vs `curl -sI ${BASE_URL}/ \| grep -i '^date:'` | Runner clock skew throws off the 80%-TTL refresh schedule | Fix NTP on the host |
 
 ### 3. Runner lifecycle
 
@@ -116,12 +116,12 @@ curl -s http://localhost:8080/healthz | jq .
 | Signature | Check | Root cause | Fix |
 |---|---|---|---|
 | `/healthz` unreachable (`curl` connection refused) | Is the orchestrator process up? `--health-port` set to something other than 8080, or `0`? | Process down, wrong port, or listener disabled | Start it / point at the right port |
-| `"connected": false` | `last_error` field in the same body | Can't reach `${API_HOSTNAME}` (network/DNS/TLS — see §2) or environment secret rejected (see §1) | Fix per the referenced section; the orchestrator exits non-zero on 400/401/403/404/426 so a restart loop here means a permanent config/auth/version problem (400 = invalid request body, usually a flag mismatch) |
-| `"clock_skew_ms"` ≥ 60000 (or ≤ −60000) | `date -u` on the orchestrator host vs `curl -sI ${API_ORIGIN}/ \| grep -i '^date:'` | Host clock drifted; hooks that verify the work-order JWT `exp` will mis-fire | Fix NTP on the host |
+| `"connected": false` | `last_error` field in the same body | Can't reach `${RUNNER_HOST}` (network/DNS/TLS — see §2) or environment secret rejected (see §1) | Fix per the referenced section; the orchestrator exits non-zero on 400/401/403/404/426 so a restart loop here means a permanent config/auth/version problem (400 = invalid request body, usually a flag mismatch) |
+| `"clock_skew_ms"` ≥ 60000 (or ≤ −60000) | `date -u` on the orchestrator host vs `curl -sI ${BASE_URL}/ \| grep -i '^date:'` | Host clock drifted; hooks that verify the work-order JWT `exp` will mis-fire | Fix NTP on the host |
 | `"last_poll_at"` more than ~60s old while `connected: true` | Orchestrator log for the last `dispatching N hint(s)` line and matching hook completions; `ps`/`kubectl exec` for stuck `spawn-runner` children. (Backoff after poll errors flips `connected: false` first, so it appears on row 2 — not here.) | Poll loop wedged between successful polls on a slow/stuck `spawn-runner` hook (D-state on a hung mount, or a hook that doesn't return within `--hook-timeout`) | Kill the stuck hook; check `hooksDir` mount health; the orchestrator abandons a D-state child after `--hook-timeout` + 2×5s grace. Restart the orchestrator if the log shows no progress |
-| `"last_error"` set (non-null) | Read the string — it's either `spawn-runner hook failed: <stderr tail>` or a poll failure (HTTP status or transport error) | Hook script failing / can't reach `${API_HOSTNAME}` | Fix the hook (run it by hand with a fake `CLAUDE_RUNNER_ORDER_ID`); for poll failures see §2 |
+| `"last_error"` set (non-null) | Read the string — it's either `spawn-runner hook failed: <stderr tail>` or a poll failure (HTTP status or transport error) | Hook script failing / can't reach `${RUNNER_HOST}` | Fix the hook (run it by hand with a fake `CLAUDE_RUNNER_ORDER_ID`); for poll failures see §2 |
 | `"queue_counts.backing_off" > 0` | `self_hosted_runner_list_sessions` → per-session `spawn_last_error` (sanitized hook stderr) | spawn-runner hook is failing intermittently; each session retries with exponential backoff | Fix the hook; sessions self-recover on the next retry |
-| `"queue_counts.circuit_broken" > 0` | `self_hosted_runner_list_sessions` → per-session `spawn_last_error` | spawn-runner hook failed 5× (or returned non-retryable) for those sessions; they are **paused** and will not be re-offered | Fix the infra (k8s quota, image pull, hook exit code), then for each paused session: Admin settings → Cloud environments → Self-hosted environments → (environment) → Activity tab → Sessions → **Retry**, or `curl -X POST -H "Authorization: Bearer $OAUTH" "${API_ORIGIN}/v1/code/runners/self-hosted/sessions/<session_id>/retry-spawn" -d '{}'` |
+| `"queue_counts.circuit_broken" > 0` | `self_hosted_runner_list_sessions` → per-session `spawn_last_error` | spawn-runner hook failed 5× (or returned non-retryable) for those sessions; they are **paused** and will not be re-offered | Fix the infra (k8s quota, image pull, hook exit code), then for each paused session: Admin settings → Cloud environments → Self-hosted environments → (environment) → Activity tab → Sessions → **Retry**, or `curl -X POST -H "Authorization: Bearer $OAUTH" "${BASE_URL}/v1/code/runners/self-hosted/sessions/<session_id>/retry-spawn" -d '{}'` |
 
 When bundling for escalation, also capture `orchestrator-healthz.json` alongside the runner's `healthz.json`.
 

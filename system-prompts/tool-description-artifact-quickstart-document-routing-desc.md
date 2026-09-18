@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Description: Quickstart document routing description'
 description: >-
-  Describes quickstart document routing lookup which returns fixed guidance
-  without reading.
-ccVersion: 2.1.272
+  Describes quickstart document routing lookup which reads published Artifact
+  types into conversation.
+ccVersion: 2.1.277
 -->
-Look up where a new document should go (read-only; nothing is listed or read).
+Look up what is needed before making a document: the published Artifact types — titles and descriptions their publishers wrote will be read into the conversation (read-only).

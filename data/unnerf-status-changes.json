@@ -1,36 +1,56 @@
 {
- "from": "2.1.272",
- "to": "2.1.273",
+ "from": "2.1.273",
+ "to": "2.1.277",
  "changes": [
   {
-   "id": "agent-prompt-quick-pr-creation-2",
-   "name": "Agent Prompt: Quick PR creation",
+   "id": "tool-description-artifact-types-and-quickstart",
+   "name": "Tool Description: Artifact types and quickstart workflow",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "bf098b57197f",
-   "newHash": "0b947869a32f",
-   "sample": "\n3. Push the branch to the repo's remote (usually `origin`; use the remote this repo is actually configured with)\n4. If a PR already exists for this branch (check the gh pr view output above), update "
+   "oldHash": "b009c912e210",
+   "newHash": "c4a0ecb0e595",
+   "sample": "**Artifact types**: published Artifact types (ready-made pages, such as slide decks, documents or designs, that take Claude's content as data) and the design systems that decks and designs are built w"
   },
   {
-   "id": "tool-description-artifact-db-batch-atomic-approval",
-   "name": "Tool Description: Artifact database batch write atomicity and approval",
+   "id": "tool-description-artifact-types-guidance",
+   "name": "Tool Description: Artifact types guidance",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "99d80941496c",
-   "newHash": "43ab84dbb2a7",
-   "sample": "}` entries (no top-level `collection`/`doc_id`); the batch is one approval, applied atomically (all or nothing) where the server supports batches and otherwise one write at a time in order (the result"
+   "oldHash": "2d872a9122af",
+   "newHash": "be4f99f0924d",
+   "sample": "**Artifact types**: published Artifact types may be available to this person. They are ready-made pages, such as slide decks, documents or designs, that take Claude's content as data (people may call "
   },
   {
-   "id": "tool-description-artifact-db-delete-and-batch",
-   "name": "Tool Description: Artifact database delete and batch writes",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "454a1f393c16",
-   "newHash": "88d1ab5a58f9",
-   "sample": " \"delete\" removes one, and \"batch\" applies up to ${MAX_BATCH_WRITES} writes listed in `writes` (with no top-level `collection` or `doc_id`) under one approval; Claude prefers a batch whenever it write"
+   "id": "skill-doc",
+   "name": "Skill: doc",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "1a680587ec3a",
+   "newHash": "3863fd950b3b",
+   "sample": "---\nname: doc\ndescription: Create a document artifact - a working document that looks and edits like a word processor page, published for the team to read and edit in place - a memo, proposal, plan, s"
+  },
+  {
+   "id": "tool-description-artifact-publishing-criteria-and-connectors",
+   "name": "Tool Description: Artifact publishing criteria and connectors",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "9a1d7e3fc970",
+   "newHash": "a3c726f80934",
+   "sample": "When a finished piece of work is meant for other people or agents, such as a report for a team or the case for a decision the team has yet to make, Claude does not treat it as finished while it exists"
+  },
+  {
+   "id": "tool-description-propose-skills",
+   "name": "Tool Description: Propose skills",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "ef34c0c65109",
+   "newHash": "abb155a913a1",
+   "sample": "Surface recurring multi-step procedures from this session as skill proposals. Render-only — calling this shows a review card in the conversation; it does not write any files or create the skill. The u"
   }
  ],
  "unverifiable": []

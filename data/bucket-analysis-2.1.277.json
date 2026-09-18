@@ -1,0 +1,126 @@
+{
+  "ccVersion": "2.1.277",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-artifact-pr-review-2.md",
+      "verdict": "keep",
+      "reasoning": "The diff line threshold (~4,000 changed lines) is a genuine mechanical context-budget constraint with explicit coverage disclosure, matching calibration example 1. The payload character and sentence bounds are structural schema constraints for the composed briefing template rather than artificial brevity nerfs."
+    },
+    {
+      "file": "skill-artifact-pr-review.md",
+      "verdict": "keep",
+      "reasoning": "The 4,000-line diff cap with required disclosure of what was sampled is a genuine resource limit that protects the context window, as outlined in calibration example 1. The synthesis and explainer schema length bounds serve to fit the rendered artifact UI and should not be lifted."
+    },
+    {
+      "file": "tool-result-artifact-private-app-card.md",
+      "verdict": "keep",
+      "reasoning": "The instruction to describe the page in a sentence and omit the URL in chat is UI presentation guidance for an artifact that already displays as a rich card with title and link in the client. It does not nerf substantive capability or reasoning."
+    },
+    {
+      "file": "skill-claude-test-run.md",
+      "verdict": "keep",
+      "reasoning": "The directive to keep steering messages concise and cut narration of internal actions maintains clean terminal UX while tests run in the background. Substantive test results, failures, and fixes remain fully detailed in section 5."
+    },
+    {
+      "file": "skill-design.md",
+      "verdict": "keep",
+      "reasoning": "The flagged phrasing covers clean exit paths for empty or unsupported command requests and artifact delivery handoff. Substantive reporting of matched design system tokens has already been un-nerfed in the existing rules."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "The opening handoff instruction delivers the whiteboard link and basic instructions on how to interact on the canvas, which is the primary workspace. Chat reasoning and reply constraints were already addressed by existing rules."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "keep",
+      "reasoning": "The two-to-three line guidance for the opening message is a standard artifact link handoff. The substantive chat reply constraint for drawing answers was already lifted in existing rules."
+    },
+    {
+      "file": "skill-claude-test-run.md",
+      "verdict": "keep",
+      "reasoning": "Limiting an unsolicited, unprompted offer to run tests to one short line matches calibration example 2 as interruption-appropriate UX. It does not restrict capability once the user engages."
+    },
+    {
+      "file": "skill-trigger-claude-test.md",
+      "verdict": "keep",
+      "reasoning": "Offering Claude Test in one line when unasked is an unprompted suggestion that respects user attention, exactly matching calibration example 2. It represents appropriate UX restraint rather than a capability nerf."
+    },
+    {
+      "file": "system-prompt-remote-plan-mode-ultraplan.md",
+      "verdict": "keep",
+      "reasoning": "The advice to keep diagrams focused on structure rather than creating an exhaustive map ensures diagram legibility in Mermaid and ASCII rendering. Full implementation detail is preserved in prose, which was already un-nerfed to require extensive specificity."
+    },
+    {
+      "file": "system-prompt-remote-planning-session.md",
+      "verdict": "keep",
+      "reasoning": "All artificial brevity constraints in this remote planning session prompt regarding lightweight exploration and implementer specificity are already covered by existing rules. No remaining un-nerfed restrictions exist in the stock text."
+    },
+    {
+      "file": "skill-claude-test-onboarding.md",
+      "verdict": "keep",
+      "reasoning": "The file constraints and line limits are structured UX choreography for an interactive onboarding flow that delegates deep analysis to background subagents. They prevent foreground latency rather than artificially restricting substantive capability."
+    },
+    {
+      "file": "skill-whiteboard-mp.md",
+      "verdict": "keep",
+      "reasoning": "The chat reply brevity restriction flagged in the notes was already lifted in existingRules. The remaining length caps govern canvas element sizing, live room protocol events, or unsolicited offer phrasing."
+    },
+    {
+      "file": "skill-whiteboard.md",
+      "verdict": "lift",
+      "reasoning": "The lead summary restricts chat explanation to 'at most a line of why', which conflicts with the already-lifted chat reply instruction to state what was drawn and why. Lifting it removes the arbitrary line cap on the explanation.",
+      "rule": {
+        "stock": "Chat carries at most a line of why; the board carries the work.",
+        "unnerf": "Chat carries the why; the board carries the work.",
+        "description": "whiteboard overview: drop 'at most a line of' chat explanation cap"
+      }
+    },
+    {
+      "file": "agent-prompt-claude-test-explorer.md",
+      "verdict": "keep",
+      "reasoning": "The 60-line cap is a protocol contract for a read-only subagent whose output is parsed by the parent orchestrator skill. Structured output between agent components is preserved per the decision procedure."
+    },
+    {
+      "file": "skill-prototype.md",
+      "verdict": "keep",
+      "reasoning": "All process brevity caps (intake questions, message limits, summary lines, skipped items) have already been lifted in existingRules. The directive to build the smallest page that proves the idea reflects the inherent definition of prototyping rather than a holdback constraint."
+    },
+    {
+      "file": "agent-prompt-claude-test-author.md",
+      "verdict": "keep",
+      "reasoning": "Returning the exact short report described by the drafting skill is a protocol constraint ensuring the parent orchestrator can parse the subagent's drafted spec filenames cleanly."
+    },
+    {
+      "file": "skill-setup-cowork.md",
+      "verdict": "keep",
+      "reasoning": "The flagged message brevity cap ('Two or three sentences plus the widget, not a wall') was already lifted in existingRules. The remaining instructions govern UI widget presentation and setup flow transitions."
+    },
+    {
+      "file": "tool-description-artifact-types-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Directing Claude to mention in one line that a design system can also be set up as files in the codebase is an unsolicited side-notice. Keeping unprompted suggestions concise prevents derailing the primary artifact generation task."
+    },
+    {
+      "file": "tool-description-artifact-types-and-quickstart.md",
+      "verdict": "keep",
+      "reasoning": "Specifying that Claude mention in one line that design systems can be set up as files is an unsolicited secondary suggestion during artifact creation, matching standard concise offer guidance."
+    },
+    {
+      "file": "system-prompt-remote-plan-mode-ultraplan.md",
+      "verdict": "keep",
+      "reasoning": "The process brevity restrictions ('lightweight planning' and subagent handling) were already lifted by existingRules. The remaining constraints enforce diagram structure and protocol strings for remote session handling."
+    },
+    {
+      "file": "system-prompt-remote-planning-session.md",
+      "verdict": "keep",
+      "reasoning": "Both the planning depth and implementation specificity restrictions have already been lifted in existingRules, with the remaining constraints handling remote session teleport protocol."
+    },
+    {
+      "file": "skill-claude-test-stop-and-tell-person.md",
+      "verdict": "keep",
+      "reasoning": "This is a single-purpose control-flow skill designed specifically to stop execution and relay a message verbatim to the user without executing further commands. It is a control handoff, not an artificial capability restriction."
+    }
+  ]
+}

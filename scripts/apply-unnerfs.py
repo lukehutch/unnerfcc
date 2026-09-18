@@ -1388,6 +1388,15 @@ RULES: dict[str, list[Rule]] = {
             unnerf="In chat, say what you drew and why (\"answered on the board - added a queue\n  between the API and the workers\"). If the user asked to keep it all\n  on the board, say nothing in chat unless something failed.",
             description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
         ),
+        Rule(
+            # v2.1.277 bucket-analysis (bucket-analyze.mjs, 2026-09-18): AI-proposed,
+            # mechanically validated (stock occurs exactly once, no new ${VAR}
+            # introduced, no overlap with an existing rule, --dry-run confirmed).
+            # Full keep/lift review: data/bucket-analysis-2.1.277.json
+            stock="Chat carries at most a line of why; the board carries the work.",
+            unnerf="Chat carries the why; the board carries the work.",
+            description="whiteboard overview: drop 'at most a line of' chat explanation cap",
+        ),
     ],
     # -------------------------------------------------------------------------
     # v2.1.231 sync (bucket-analyze.mjs, 2026-08-13): AI-proposed, mechanically

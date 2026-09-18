@@ -1,12 +1,11 @@
 <!--
 name: 'Tool Result: MCP tool moved to background'
 description: >-
-  Tells the model a slow MCP tool kept running as a background task, that a
-  notification will bring the result, and how to stop it.
-ccVersion: 2.1.219
+  Tells the model an MCP tool was moved to the background as a task so an
+  incoming message can reach it, while continuing to run.
+ccVersion: 2.1.277
 variables:
   - MCP_TOOL_NAME
-  - TIMEOUT_SECONDS
   - TASK_ID
 -->
-MCP tool "${MCP_TOOL_NAME}" is still running after ${TIMEOUT_SECONDS}s. It was moved to the background as task ${TASK_ID} and keeps running; you'll receive a notification with the result when it completes. You can keep working in the meantime. To stop it, use TaskStop with task_id "${TASK_ID}". Note: it does not survive exiting this session.
+MCP tool "${MCP_TOOL_NAME}" was moved to the background as task ${TASK_ID} so that a message that arrived while it was running can reach you; it was not interrupted and keeps running

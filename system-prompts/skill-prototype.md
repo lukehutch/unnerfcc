@@ -8,7 +8,7 @@ description: >-
   mock the rest, iterate on feedback (variants behind a visible switcher in the
   same artifact) by republishing the same file, and close with what a real build
   would still need.
-ccVersion: 2.1.251
+ccVersion: 2.1.277
 -->
 ---
 name: prototype
@@ -126,7 +126,7 @@ can mean no viewer has opened the page yet - that is not evidence the
 demo works, so say what you checked rather than claiming it works.
 
 Then publish with the Artifact tool, following its own instructions - a
-short stable title, a favicon emoji, and a one-sentence description. If the
+short stable title, a one-word `icon`, and a one-sentence description. If the
 Artifact tool is unavailable, say so in one plain line and point the
 user at the file instead - do not hunt for another way to host it.
 Give the user the link plus a summary of what the prototype shows,

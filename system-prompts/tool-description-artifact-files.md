@@ -3,6 +3,6 @@ name: 'Tool Description: Artifact files'
 description: >-
   Explains how to list and read individual files of a multi-file artifact using
   list_files and read_file actions.
-ccVersion: 2.1.272
+ccVersion: 2.1.277
 -->
-**Artifact files**: a multi-file artifact's files can be read one at a time: `action: "list_files"` (with `url`) prints each file's path, type and size, and `action: "read_file"` (with `url` and `path`) saves that file under its published path in Claude's scratchpad directory and says where; a small text file's contents also come back in the result, as data. Claude passes `out_dir` only when the person wants the file somewhere else, because saving outside the scratchpad asks them each time. Both work for artifacts the person can open in their organization.
+**Artifact files**: a multi-file artifact's files can be read one at a time: `action: "list_files"` (with `url`) prints each file's path, type and size, and `action: "read_file"` (with `url` and `path`) saves that file under its published path in Claude's scratchpad directory and says where; a small text file's contents also come back in the result, as data. Claude passes `out_dir` only when the person wants the file somewhere else, because saving outside the scratchpad asks them each time. Both work for artifacts the person can open.

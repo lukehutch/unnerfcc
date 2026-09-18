@@ -4,11 +4,11 @@ description: >-
   Setup skill that walks an operator from zero to a working self-hosted runner —
   the Admin UI steps they perform, the typed tools the model calls, the UI paths
   to surface, and the cheat sheet it leaves behind.
-ccVersion: 2.1.231
+ccVersion: 2.1.277
 variables:
-  - CONSOLE_BASE_URL
+  - BASE_URL
 -->
-You are guiding an operator from zero to a working **self-hosted runner** for Claude Code on the web. The operator must leave able to do this themselves — you have typed tools that make *you* efficient, but every API tool you call returns an `equivalent.ui` path. **After every API tool call, surface that `equivalent.ui` path to the operator** so they can repeat the action without you.
+You are guiding an operator from zero to a working **self-hosted runner** for Claude Code cloud sessions. The operator must leave able to do this themselves — you have typed tools that make *you* efficient, but every API tool you call returns an `equivalent.ui` path. **After every API tool call, surface that `equivalent.ui` path to the operator** so they can repeat the action without you.
 
 Tools handle what's error-prone (auth, JSON parsing, starting the runner). You narrate what's learnable (UI paths, the product surface, deployment patterns). Environment creation and secret issuance happen in the **Admin UI only** — never via tools. The operator copies the secret value into a file on disk themselves; you only ever refer to the file path.
 
@@ -18,7 +18,7 @@ If the user passed `quick`, run Phase 1 only and stop with a one-paragraph summa
 
 1. **Create the environment in the Admin UI (operator action).** Tell the operator:
 
-   > "Open ${CONSOLE_BASE_URL}/admin-settings/cloud-environments in your browser (Admin settings → Cloud environments). Make sure **Allow self-hosted environments** is toggled on, then scroll to the **Self-hosted environments** section and click **New**. Pick a name, click **Create**, then click **Copy environment key** — the environment key is the environment secret the CLI expects, and it's shown once. Paste it into `./runner-setup/ENVIRONMENT_SECRET` on this machine — I'll `chmod 600` it afterwards. Check the box confirming the key is saved and click **Finish**. Then click your new environment to open it, and copy the **Environment ID** from the **Configuration** tab (starts with `ccpool_`). Tell me the id and say 'done' when the file is saved."
+   > "Open ${BASE_URL}/admin-settings/cloud-environments in your browser (Admin settings → Cloud environments). Make sure **Allow self-hosted environments** is toggled on, then scroll to the **Self-hosted environments** section and click **New**. Pick a name, click **Create**, then click **Copy environment key** — the environment key is the environment secret the CLI expects, and it's shown once. Paste it into `./runner-setup/ENVIRONMENT_SECRET` on this machine — I'll `chmod 600` it afterwards. Check the box confirming the key is saved and click **Finish**. Then click your new environment to open it, and copy the **Environment ID** from the **Configuration** tab (starts with `ccpool_`). Tell me the id and say 'done' when the file is saved."
 
    When they respond, Bash `mkdir -p ./runner-setup && chmod 600 ./runner-setup/ENVIRONMENT_SECRET` and confirm the file exists + is mode 0600 (via Bash `ls -l`).
 
@@ -28,7 +28,7 @@ If the user passed `quick`, run Phase 1 only and stop with a one-paragraph summa
 
 4. **Watch the Admin UI flip from 0 → 1 alive.** Poll `self_hosted_runner_get_pool({pool_id})` every ~3 seconds (max ~30s) until `alive_runner_count > 0`. Also call `self_hosted_runner_list_runners({pool_id})` once to show the runner row (lease_expires_at, client_label). Tell the operator to refresh the Cloud environments page and open the environment — the **Active runners** tile flips to 1. **This is the moment of proof.**
 
-5. **Point them at /code.** *"Go to ${CONSOLE_BASE_URL}/code — your environment is in the environment picker, listed under the name you gave it. Select it and start a session; it runs on **this** machine."*
+5. **Point them at /code.** *"Go to ${BASE_URL}/code — your environment is in the environment picker, listed under the name you gave it. Select it and start a session; it runs on **this** machine."*
 
 ## Phase 2 — Teach the surface (narration only)
 

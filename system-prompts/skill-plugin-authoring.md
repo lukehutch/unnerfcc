@@ -3,7 +3,7 @@ name: 'Skill: plugin-authoring'
 description: >-
   Bundled plugin-authoring skill — instructions for writing, extending, or
   debugging Claude Code plugins made of function hooks.
-ccVersion: 2.1.273
+ccVersion: 2.1.277
 -->
 ---
 name: plugin-authoring
@@ -13,16 +13,16 @@ description: Write or debug a Claude Code plugin made of function hooks (a hooks
 You are about to write, extend or debug a plugin made of function hooks.
 This note is orientation: what such a plugin is, where its exact contract
 is written down for the build you are running in, and where to look when
-something does not take. The API is early access and moves between
-releases, so treat the generated declarations as the authority and this
-note as the map to them.
+something does not take. Run `claude plugin validate <dir>` on the plugin's folder early and often: it reads the manifest and the hooks
+module's source the way the engine will and reports what the module hooks and calls and everything the engine would refuse, before a
+session loads it. The API is early access and moves between releases: the generated declarations are the authority, this note the map.
 
 ## What a plugin of function hooks is
 
 A plugin is a folder with a `.claude-plugin/plugin.json` manifest. Its
 function hooks live in one hooks module: a TypeScript or JavaScript file
 that `hooks/hooks.json` names under `modules` (one path, relative to that
-file), exporting `register(on, options)`. `on(event, matcher?, hook)` adds a
+file), exporting `register(on, options)`; the module, and every file it imports from the plugin, is named `.ts`, `.tsx`, `.jsx`, `.js`, `.mjs`, `.cjs`, `.mts` or `.cts` (a file named otherwise is not loaded) and is an ES module whatever its suffix. `on(event, matcher?, hook)` adds a
 hook; `options` holds the values of the fields the manifest's `userConfig`
 declares. Every hook has the shape `($, e, next)`: `$` is the engine
 interface (display, model, session, prompt, tools, filesystem, store,
@@ -68,16 +68,16 @@ quickest check that the engine sees what you meant. A plugin that adds a noun to
 
 `claude --plugin-dir <folder>` loads the plugin from disk for that session
 only (repeat the flag for several). In an interactive session the folder is
-watched: saving a file reloads the hooks module, so `register` runs again in
-a fresh environment and the previous environment's timers are dropped.
+watched, as is a plugin auto-loaded from a skills folder (`~/.claude/skills/<name>`, the project's `.claude/skills/<name>`): saving a file reloads the hooks module, so
+`register` runs again in a fresh environment and the previous environment's timers are dropped; a headless `claude -p` always loads fresh.
 Options for a plugin loaded this way are read from settings under
 `pluginConfigs`, keyed by the plugin's `<name>` (or `<name>@inline`); each non-secret `userConfig` field is a row in the config menu too, and a change there reloads the module with the new `options`. A `string` field that lists `options` (`"options": ["gist", "turbo"]`, its `default` among them) is a picker over exactly those values there, and a stored value outside them counts as unset.
 
 Run with `claude --debug` while developing. A hook that fails is skipped and
 the chain continues without it, unless its registration's `.catch` handler
 answers in its place; the transcript says so once, in a dim line naming the
-plugin, the event and the reason, as it names a module that did not load. The debug log has every occurrence and each result the engine
-refused, so a plugin that seems to do nothing has usually been told why.
+plugin, the event and the reason, as it names a module that did not load. The debug log has a line for every occurrence and each result the engine
+refused; a skipped hook's line has the error's name and message length in place of its text (the first one's text, cut to a short line, is on that transcript line, which the debug log has too), so a plugin that seems to do nothing has usually been told why. `claude plugin test <folder>` runs the plugin's `*.test.ts` files against the engine itself: a test holds the engine's `$` and an `on` whose hooks sit beneath the plugin (import `test`, `expect`, `mock` from `claude-code/testing`; the typings say the rest). A UI test mounts a component through the plugin on a surface it names, never an assumed one (the kit's `mount` on the test's `ui` noun: `{ plugin, surface, component, props }`), and acts on the drawing by key (`press`, `input`, `find`, a `Client`'s `key` and `post`), each act typed by that surface's element table; write the body once and loop it over `['terminal', 'desktop'] as const` so the test shows the plugin does not depend on one surface. The kit exercises the plugin's hooks and the description they return under each surface's rules, not any surface's paint.
 
 ## Drawing: ui.render
 
@@ -86,18 +86,18 @@ which component, `e.surface` where it is drawn (`terminal`, `desktop`,
 `mobile` or `vscode`), `e.requestId` which instance (the tool_use_id for a tool row or
 dialog, the message id for a message or a command's output row, the agent id for a spinner), `e.props`
 the component's plain-data props, and `e.viewport`, when the surface has
-measured, the size it draws into in character cells: `columns` and `rows`.
+measured, the size it draws into in character cells: `columns` and `rows`. A transcript message's `e.props.onScreen` says which of its rows the viewport shows now (`{ first, last, of }`, from the site's first laid-out row; `null` while off screen; absent where the surface does not say, as on the terminal's main screen), and the hook re-runs for that message when it changes.
 A change of width re-runs every hooked site once the resize settles, so a
 tree sized to `columns` stays right; a change of height alone re-draws
-nothing. A `Pane` or `AbovePrompt` hook sizes its tree to `e.props.bodyColumns` instead: the box it draws into, which is narrower than the viewport while a pane is docked beside the transcript. `$.ui.invalidate` asks for a redraw
+nothing. A `Pane` or `AbovePrompt` hook sizes its tree to `e.props.bodyColumns` instead: the box it draws into, which is narrower than the viewport while a pane is docked beside the transcript. `e.viewport.isFullscreen` says whether the surface docks a pane at all (the terminal's fullscreen layout does, its main screen opens one inline; absent where a surface does not say, so do not assume), the fact `command.run`'s `presentation` carries, so a plugin opens a pane unasked only where it would be a sidebar. `$.ui.invalidate` asks for a redraw
 when the hook's own state changed.
 
 Build trees from the table `$.ui.resolve(e)` returns: the surface's element constructors,
 destructured into the hook's JSX tags (a module has no element globals). Tables differ per
 surface, see `Elements` (`mobile` has no `Input`, `Select` or `Client`, `vscode` no `Client`,
-`terminal` no `Svg` but alone `Raster`); narrowing `e.surface` narrows the table. A grid of colored cells
-(sparkline, heat map, rendered frame) is one `Raster`, its cells packed per `RasterProps`,
-never a `Box` per cell; `$.ui.blit` repaints a mounted one without a render pass. Return a
+`terminal` no `Svg` but alone `Raster` and `Image`); narrowing `e.surface` narrows the table. A grid of colored cells
+(sparkline, heat map, rendered frame) is one `Raster`, its cells packed per `RasterProps`, never a `Box` per cell; `$.ui.blit`
+repaints a mounted one without a render pass. A picture (PNG or RGBA bytes, or the name of a file or POSIX shared-memory object another local process wrote, per `ImageProps`) is one `Image` over a box of cells: the kitty graphics protocol where the terminal has it (kitty, Ghostty), its `alt` elsewhere or where the terminal cannot read this machine's files; a new source updates it in place, and a keyed one is swapped at the frame rate by `$.ui.blit({ requestId, key, source })`, the pixels never crossing `$`. Model-style text (headings, lists, tables, code fences, links; one outside `https:`/`http:`/`file:` draws as text) is one `Markdown`, drawn as an assistant reply is; given `key` and `onLinkPress`, a plain single click on a link it drew (any, or one `pressableLinks` names) raises `ui.press` carrying the link's `href` instead of the surface opening it, where the surface reports clicks (the fullscreen terminal; a ctrl- or alt-click still opens it). Return a
 tree, or `next({ ...e, props })` to change what the engine draws, or `next(e)` to leave it.
 A tree that does not validate (an element the surface lacks, a prop it does not take, a
 child where none goes) is not drawn: the engine draws its own instead and writes to the
@@ -105,7 +105,7 @@ debug log a line beginning `ui.render (<Component>): a hook returned a tree that
 validate`, followed by the reason. When a drawing silently falls back, that line and the
 element's props type are the two things to read. A Button is `[ label ]` on the terminal, or with `plain` no brackets: `1: label` beside its `hotkey` and the label alone without one, so a one-glyph label is a one-glyph control the focus still inverts. Buttons, text fields and selects keep their
 handlers in the plugin and raise `ui.press`, `ui.input` and `ui.select`; keys reach one only
-while it has focus, Esc returns to the prompt, except that a Button naming one of the engine's keybinding actions (`action: "app:cycleDiffBase"`) is also pressed by the person's chord for it from the prompt while it is mounted: chords, or a modified key Global or an active context binds, and not while an engine handler of that action is mounted. A pane opened with `focus`, `closeOnEscape` and `holdToasts` behaves as a dialog: it takes the keys, Tab and the arrows walk its buttons, Esc closes it, and toasts wait behind it; an element drawn `autoFocus` holds the ring from the start, every move of the ring is the `ui.focus` event first (its `element` the key now holding it, absent on the engine's close mark; `{ deny }` keeps it) and `$.ui.focus({ requestId, key })` moves it while the site holds the keys; `rows` opens it inline as tall as its content needs (up to what the layout spares, and the person's own size wins), so a short dialog shows whole and its arrows walk rather than scroll; the `command.run` input's `presentation` says whether the answer shows fullscreen and how wide the terminal is. A keyed `Box` scopes `hover` styles. A slash command's output row is the `CommandOutput` site: a plugin whose command answers `command.run` with `{ text }` (what the model reads) hooks it with `{ component: 'CommandOutput', props: { command: 'mine' } }` and draws that text as a tree inline in the transcript, where a built-in command's lines would sit.
+while it has focus, Esc returns to the prompt, except that a Button naming one of the engine's keybinding actions (`action: "app:cycleDiffBase"`) is also pressed by the person's chord for it from the prompt while it is mounted: chords, or a modified key Global or an active context binds, and not while an engine handler of that action is mounted. A pane opened with `focus`, `closeOnEscape` and `holdToasts` behaves as a dialog: it takes the keys, Tab and the arrows walk its buttons, Esc closes it, and toasts wait behind it; an element drawn `autoFocus` holds the ring from the start, every move of the ring is the `ui.focus` event first (its `element` the key now holding it, absent on the engine's close mark; `{ deny }` keeps it) and `$.ui.focus({ requestId, key })` moves it while the site holds the keys; `rows` opens it inline as tall as its content needs (up to what the layout spares, and the person's own size wins), so a short dialog shows whole and its arrows walk rather than scroll; the `command.run` input's `presentation` says whether the answer shows fullscreen and how wide the terminal is. A keyed `Box` scopes `hover` styles, a hover `scope` groups elements across sites, and a `Box` drawn `position: "absolute"` with cell offsets (`top: -2, left: 2`) paints over its surroundings without moving them, so `display: "none"` with `hover: { display: "flex" }` on it is a card that appears over the rows above a hovered glyph. Every user-role transcript row is the `UserMessage` site: the person's prompt, a background task's notification (`e.props.task`: its `id`, `status`, `durationMs`) and a message another agent, teammate, session or channel sent (`e.props.from.name`), told apart by `e.props.origin.kind`, which a matcher narrows on (`{ props: { origin: { kind: 'task-notification' } } }`); a hook that draws a compact row of its own returns `next(e)` while `e.props.isExpanded` (ctrl+o), so the full row still shows there, and a rewritten `text` changes the row alone, never what the model read. A slash command's output row is the `CommandOutput` site: a plugin whose command answers `command.run` with `{ text, context? }` (`text` the row the model also reads, `context` notes only the model reads, recorded after it) hooks it with `{ component: 'CommandOutput', props: { command: 'mine' } }` and draws that text as a tree inline in the transcript, where a built-in command's lines would sit.
 
 ## Work that outlives a dispatch
 
@@ -120,13 +120,13 @@ listed by turn one), and keep it going with `$.clock.every` and
 reloads. `$.prompt.submit` hands the session a prompt once it is idle, so
 background work can wake a quiet session. `$.ui.status`, `$.ui.toast` and
 `$.ui.log` show state without starting a turn, `$.store` keeps values
-across sessions, and `$.process.run` runs a host command by argv.
+across sessions, and `$.process.run` runs a host command by argv. `$.fs` reads (text, or `{ as: 'bytes' }` for `{ base64 }`), writes, lists and stats paths; `$.fs.stat(path, { resolve: true })` also answers `realPath`, every symbolic link and `..` resolved (what `realpath` gives: a hard link, a `/.vol/` file-id spelling or a case alias keeps its own spelling), so a guard's robust form is an allow-list on `realPath` under a root it resolved the same way, and a deny-list on spellings is best effort.
 
-## Tools the model can call
+## Tools and agent types the model can call
 
 `$.tool.register` declares a tool: its name, the description the model
 reads and its input schema; the tool is listed as `mcp__<plugin>__<name>`.
 The plugin serves it by hooking `tool.call` with the matcher
 `{ tool: 'mcp__<plugin>__<name>' }` and returning the result, and a call
 no hook answers fails saying so. Registering the same name again replaces
-the tool, and a plugin may register several, each listed as it lands.
+the tool, and a plugin may register several, each listed as it lands. `$.agent.register` declares an agent type the same way, `<plugin>:<name>`, from an agent definition as settings JSON spells one (prompt, tools, model, and the rest, all in force); a plugin folder's `agents/*.md` files declare them too. `$.agent.spawn({ subagentType })` runs one and its answer is its `turn.complete`; an `agent.offer` hook returning `{ isOffered: false }` keeps it from the model while the plugin's own spawn still runs it.

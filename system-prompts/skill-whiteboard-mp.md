@@ -4,7 +4,7 @@ description: >-
   Bundled whiteboard-mp skill — create a live multiplayer whiteboard artifact
   for sketching diagrams where viewers see live strokes and cursors, with room
   presence and real-time drawing.
-ccVersion: 2.1.273
+ccVersion: 2.1.277
 -->
 ---
 name: whiteboard
@@ -62,7 +62,8 @@ tag you are fixing, or helper steps.
    None of steps 1 and 2's mechanics belong in anything you say to the
    user.
 3. Publish `whiteboard.html` with the `Artifact` tool and remember the
-   path and favicon. Load the `artifact-capabilities` skill first and,
+   path; pass `icon: "shapes"` on this first publish. Load the
+   `artifact-capabilities` skill first and,
    on this FIRST publish, declare `capabilities: {artifact: {}, room:
    {topics: {el: "interact", sync: "interact"}}, db: {}, comments:
    {composer_only: true, customAnchors: true}, downloads: {}}` -- `artifact` (the
@@ -328,7 +329,7 @@ write-back only; `{on: false}` (or a state without `hold`) lifts it.
    cannot; never the fetched head copied verbatim, and never
    assembling HTML in a shell string or retyping the user's elements.
 3. Publish `whiteboard.html` with the Artifact tool from THIS session
-   (or its resume) - same path, same favicon, `capabilities` OMITTED
+   (or its resume) - same path, no `icon`, `capabilities` OMITTED
    (omission keeps the stored declaration; `{}` would clear it),
    never `force`. The one exception: if the user tells you directly in
    chat that asking from the board is unavailable - a request from the

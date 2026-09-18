@@ -3,10 +3,11 @@ name: Write file-created tool result
 description: >-
   The Write tool's success tool_result content shown to the model after creating
   a file; model-facing.
-ccVersion: 2.1.191
+ccVersion: 2.1.277
 variables:
-  - TOOL_RESULT_WRITE_FILE_CREATED_VAR_0
-  - TOOL_RESULT_WRITE_FILE_CREATED_VAR_1
-  - TOOL_RESULT_WRITE_FILE_CREATED_VAR_2
+  - FILE_PATH
+  - SUFFIX_1
+  - SUFFIX_2
+  - SUFFIX_3
 -->
-File created successfully at: ${TOOL_RESULT_WRITE_FILE_CREATED_VAR_0}${TOOL_RESULT_WRITE_FILE_CREATED_VAR_1}${TOOL_RESULT_WRITE_FILE_CREATED_VAR_2}
+File created successfully at: ${FILE_PATH}${SUFFIX_1}${SUFFIX_2}${SUFFIX_3}

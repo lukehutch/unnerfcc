@@ -3,6 +3,6 @@ name: 'Tool Result: Session inbox message envelope attributes'
 description: >-
   Tag attributes marking a relayed session-inbox message as untrusted relay
   data.
-ccVersion: 2.1.273
+ccVersion: 2.1.277
 -->
-" trust="relay" untrusted-keys="body,sender_display,slack_permalink">
+" trust="relay" untrusted-keys="body,sender_display,slack_permalink,attachments">

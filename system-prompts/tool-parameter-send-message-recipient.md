@@ -4,6 +4,6 @@ description: >-
   Description of the 'to' input parameter in the SendMessage tool's inputSchema
   (recipient teammate name); model-facing as part of the tool definition
   serialized to the model.
-ccVersion: 2.1.191
+ccVersion: 2.1.277
 -->
-Recipient: teammate name
+Recipient: a background agent's name or agentId, a teammate name, or "main"
