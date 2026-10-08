@@ -3,7 +3,7 @@ name: 'Data: Tool use concepts'
 description: >-
   Conceptual foundations of tool use with the Claude API including tool
   definitions, tool choice, and best practices
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 # Tool Use Concepts
 
@@ -438,9 +438,9 @@ Optional fields on the tool definition:
 
 | Executor (request `model`) | Valid advisor (tool `model`) |
 |---|---|
-| `claude-haiku-4-5` / `claude-sonnet-4-6` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, or `claude-sonnet-4-6` |
-| `{{PREV_SONNET_ID}}` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `{{SONNET_ID}}`, or `{{PREV_SONNET_ID}}` |
-| `claude-opus-4-6` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `{{SONNET_ID}}`, or `{{PREV_SONNET_ID}}` |
+| `claude-haiku-4-5` / `claude-sonnet-4-6` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, `{{HAIKU_ID}}`, or `claude-sonnet-4-6` |
+| `{{PREV_SONNET_ID}}` / `{{HAIKU_ID}}` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, or `{{HAIKU_ID}}` |
+| `claude-opus-4-6` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `{{SONNET_ID}}`, `{{PREV_SONNET_ID}}`, or `{{HAIKU_ID}}` |
 | `claude-opus-4-7` / `claude-opus-4-8` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, `{{PREV_OPUS_ID}}`, `claude-opus-4-8`, `claude-opus-4-7`, or `{{SONNET_ID}}` |
 | `{{OPUS_ID}}` / `{{PREV_OPUS_ID}}` / `{{PREV_FABLE_ID}}` / `{{PREV_MYTHOS_ID}}` | `{{MYTHOS_ID}}`, `{{FABLE_ID}}`, `{{PREV_MYTHOS_ID}}`, `{{PREV_FABLE_ID}}`, `{{OPUS_ID}}`, or `{{PREV_OPUS_ID}}` |
 | `{{FABLE_ID}}` / `{{MYTHOS_ID}}` | `{{MYTHOS_ID}}` or `{{FABLE_ID}}` - and these executors (like `{{OPUS_ID}}`) reject forced `tool_choice`, so nudge the advisor call from the prompt |
@@ -451,7 +451,7 @@ Optional fields on the tool definition:
 > | `content` type | Fields | When |
 > |---|---|---|
 > | `advisor_result` | `text`, `stop_reason` | Advisor returns plaintext (e.g. Opus 4.8) |
-> | `advisor_redacted_result` | `encrypted_content`, `stop_reason` | Advisor returns encrypted output - {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{SONNET_NAME}} |
+> | `advisor_redacted_result` | `encrypted_content`, `stop_reason` | Advisor returns encrypted output - {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{SONNET_NAME}}, {{HAIKU_NAME}} |
 > | `advisor_tool_result_error` | `error_code` | Consultation failed - `max_uses_exceeded`, `prompt_too_long`, `too_many_requests`, `overloaded`, `unavailable`, `execution_time_exceeded`, or `model_not_found` |
 >
 > So switch on `advisor_tool_result.content` type, not on the block type. Code that reads `.text` unconditionally gets nothing back from an {{OPUS_NAME}} or {{PREV_OPUS_NAME}} advisor, because the payload is under `encrypted_content` instead - and you cannot read it, only replay it.
@@ -537,7 +537,7 @@ Two features are available:
 - **JSON outputs** (`output_config.format`): Control Claude's response format
 - **Strict tool use** (`strict: true`): Guarantee valid tool parameter schemas
 
-**Supported models:** {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, Claude Opus 4.8, {{SONNET_NAME}}, {{PREV_SONNET_NAME}}, and {{HAIKU_NAME}}. Legacy models (Claude Opus 4.5, Claude Opus 4.1) also support structured outputs.
+**Supported models:** {{PREV_FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, Claude Opus 4.8, {{SONNET_NAME}}, {{PREV_SONNET_NAME}}, {{HAIKU_NAME}}, and Claude Haiku 4.5. Legacy models (Claude Opus 4.5, Claude Opus 4.1) also support structured outputs.
 
 > **Recommended:** Use `client.messages.parse()` which automatically validates responses against your schema. When using `messages.create()` directly, use `output_config: {format: {...}}`. The `output_format` convenience parameter is also accepted by some SDK methods (e.g., `.parse()`), but `output_config.format` is the canonical API-level parameter.
 

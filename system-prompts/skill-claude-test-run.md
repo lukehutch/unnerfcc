@@ -4,7 +4,7 @@ description: >-
   Bundled Claude Test run skill that checks web applications via background
   browser testing, proposes starter specs, and coordinates execution with the
   user.
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 ---
 description: Run tests on this machine (local)
@@ -48,11 +48,7 @@ start through the Skill tool) drives the browser; you never do. A separate backg
    list and a question of its own (§4). So the outline has to say what each spec DOES that matters to a person — above all
    that it adds or changes data. The words of any draft or spec are one word away ("show 3", "show specs", §5); what you show
    then comes from the FILE (Read it), never from memory or a helper's account of it. Nobody edits an existing spec without asking.
-3. **The conversation carries decisions and headlines; detail is one word away.** The person should feel in control without
-   reading a wall or being nagged: every message is as short as it can be while still letting them steer. Before you send
-   one, cut any line that only narrates what you did, repeats something already on the screen, or explains a choice they did
-   not ask about. Full spec texts, file paths, per-spec reasons and caveats are shown when they ask ("show 3", "why did 2
-   fail?"), not by default. Say a thing once per conversation, not once per step.
+3. **The conversation carries decisions, context, and clear explanations.** Provide complete, actionable explanations that let the person steer with full context. Explain choices and findings clearly, and include relevant file paths, spec details, reasons, and caveats upfront rather than withholding them. Say a thing once per conversation, not once per step.
    **What the person must read — a question, a proposal, the outline, the briefing — is the LAST thing in your turn,
    after every tool call of that turn.** Claude Code may fold text written before a tool call into a one-line summary, so a
    proposal posted mid-turn is a proposal they never saw. Before tools, write at most a few words ("Checking what
@@ -117,8 +113,8 @@ It prints JSON. Read `ready`, `needsInput`, `environment`, `devServer`, `specs`,
   about <addresses> next, one at a time: tick the box (Space) and Accept allows one, Decline stops here." (write "(not localhost)" after an address whose
   `localhost` is false, and "(pages may load from it)" after a `loadOnlyHosts` entry). Then, as your very next call, call the tool
   `mcp__plugin_claude-test_browser__claude_test_allow` with `needsConsent.tool.arguments` exactly as given: the first address
-  waiting, and the `project`. The call itself is pre-approved, so the dialog is the one thing they see; no model and no permission
-  rule can answer it for them. If that tool is not among your tools, look it up by that exact name with ToolSearch when you have
+  waiting, and the `project`. The call itself is pre-approved, so the dialog is the one thing they see; you cannot
+  answer it for them. If that tool is not among your tools, look it up by that exact name with ToolSearch when you have
   ToolSearch; only when it cannot be found is the browser helper not running in this session: say `needsConsent.line` and stop.
   The tool answers `ok` → `status` again; while `needsConsent` is still there, this same step asks about the next address, also
   when a `note` asked for a restart of Claude Code (one restart then covers every yes). When `needsConsent` is gone: if a `note`
@@ -389,7 +385,9 @@ the person has not said yes to: a missing `.claude-testrc` line is proposed, wit
   and stopping a dev server you started: the person has not seen the results yet, and none of this skill's pre-approvals are
   active in that turn (they end with the person's first message after the typed command), so anything you started — a run
   folder, a draft, the runner — would put approval dialogs in front of them before the results. Relay its
-  header line verbatim (it carries the counts), keeping the literal words PASS / FAIL / BLOCKED. Then, sized to the outcome —
+  header line verbatim (it carries the counts), keeping the literal words PASS / FAIL / BLOCKED. Where its report says
+  `<private folder>` or `<the private folder's parent>`, put the real path in its place (the folder of `signIn.secrets.putItAt` in
+  your own `status`, and the one above it). Then, sized to the outcome —
   the full table stays in `<run folder>/log.md` and is one question away ("show the table"):
   - *Everything passed:* no table. One line naming the specs ("✅ all 7: menu-lists-the-five-dishes, two-dishes-add-up, …"),
     one line with how long it took and where the screenshots are (the run folder, once — not a path per spec), then Next.

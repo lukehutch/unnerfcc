@@ -1,0 +1,41 @@
+{
+  "ccVersion": "2.1.293",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "system-prompt-subagent-id-usage-footer.md",
+      "verdict": "keep",
+      "reasoning": "The placeholder '<5-10 word recap>' appears in a tool-call footer illustrating how to call SendMessage to continue an agent. It is a structured parameter placeholder rather than a brevity cap on substantive reasoning or user-facing work."
+    },
+    {
+      "file": "system-prompt-async-agent-continue-summary-recap.md",
+      "verdict": "keep",
+      "reasoning": "This is a tool continuation hint specifying the format for the summary parameter of SendMessage. It provides a structured argument format rather than artificially limiting Claude's substantive output or problem-solving capability."
+    },
+    {
+      "file": "agent-prompt-claude-test-explorer.md",
+      "verdict": "lift",
+      "reasoning": "The explorer subagent prompt imposes an arbitrary 60-line cap on its codebase mapping report without any resource or context-window justification. This restricts substantive analysis needed by the drafting flow on complex repositories, so it lifts under Group 1/3.",
+      "rule": {
+        "stock": "return ONE compact report,\nexactly in the shape the task asks for (at most 60 lines, facts and file:line references, visible strings quoted exactly).",
+        "unnerf": "return a comprehensive report,\nexactly in the shape the task asks for (facts and file:line references, visible strings quoted exactly).",
+        "description": "claude-test explorer: drop 60-line cap on repo mapping report"
+      }
+    },
+    {
+      "file": "skill-claude-test-onboarding.md",
+      "verdict": "keep",
+      "reasoning": "The machine onboarding section explicitly requires reporting all blockers verbatim rather than holding information back, and the outline line-length guideline structures a high-level approval menu ahead of background drafting. Leaning keep per the decision procedure since these represent UI flow formatting rather than artificial capability restrictions."
+    },
+    {
+      "file": "skill-claude-test-run.md",
+      "verdict": "lift",
+      "reasoning": "Rule 3 commands that every message be as short as possible and explicitly directs Claude to withhold file paths, per-spec reasons, caveats, and explanations of choices unless asked. This is an artificial chat brevity constraint that suppresses essential context, lifting under Group 1/3.",
+      "rule": {
+        "stock": "3. **The conversation carries decisions and headlines; detail is one word away.** The person should feel in control without\n   reading a wall or being nagged: every message is as short as it can be while still letting them steer. Before you send\n   one, cut any line that only narrates what you did, repeats something already on the screen, or explains a choice they did\n   not ask about. Full spec texts, file paths, per-spec reasons and caveats are shown when they ask (\"show 3\", \"why did 2\n   fail?\"), not by default. Say a thing once per conversation, not once per step.",
+        "unnerf": "3. **The conversation carries decisions, context, and clear explanations.** Provide complete, actionable explanations that let the person steer with full context. Explain choices and findings clearly, and include relevant file paths, spec details, reasons, and caveats upfront rather than withholding them. Say a thing once per conversation, not once per step.",
+        "description": "claude-test run: explain choices and include file paths and caveats upfront"
+      }
+    }
+  ]
+}

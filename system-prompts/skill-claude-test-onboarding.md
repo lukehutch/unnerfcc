@@ -3,7 +3,7 @@ name: 'Skill: Claude Test onboarding'
 description: >-
   Instructions for guiding the user through machine verification and starter
   test suite creation in Claude Test.
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 # Onboarding — the machine first, then the starter suite, with the person
 
@@ -33,7 +33,8 @@ From the `status` you already have, write ONE short report, most blocking first,
   network fence need no real value).
 - `config.warnings` that start with BLOCKED or NOTE.
 - Any other `ready.reasons` line (a test browser Claude Test cannot use, a specs or runs folder it cannot use): quote it as written;
-  it says what to change. Installing the browser tooling does not fix a browser or a folder reason.
+  it says what to change. Installing the browser tooling does not fix a browser or a folder reason. Where that line says how to install
+  Google Chrome, the person does that: do not download or install a browser yourself, and do not run a command with sudo.
 End, ONLY when something is left that is theirs to fix (a secret, a dependency, a command they chose to run themselves, a folder Claude Test cannot use), with: "The rest is yours to fix (your machine, your secrets); then type `/claude-test:run` again and I'll re-check" (for you: the typed command renews the check with no Claude Test approvals; a bare "again" would cost them one). When the install was the only thing missing and it has finished, there is no such sentence: you are already going on. On that
 next run either repeat the shorter report or go on. While the RUNNER cannot start (tooling missing, which app unknown, the specs
 folder unusable) do not propose specs, read code or start anything. Findings that do not stop the runner (unset variables, a

@@ -1655,6 +1655,26 @@ RULES: dict[str, list[Rule]] = {
             description="code-review xhigh-inline Phase 1: drop 8-candidate cap per finder angle",
         ),
     ],
+    # -------------------------------------------------------------------------
+    # v2.1.293 sync (bucket-analyze.mjs, 2026-10-08): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.293.json
+    # -------------------------------------------------------------------------
+    "agent-prompt-claude-test-explorer.md": [
+        Rule(
+            stock="return ONE compact report,\nexactly in the shape the task asks for (at most 60 lines, facts and file:line references, visible strings quoted exactly).",
+            unnerf="return a comprehensive report,\nexactly in the shape the task asks for (facts and file:line references, visible strings quoted exactly).",
+            description="claude-test explorer: drop 60-line cap on repo mapping report",
+        ),
+    ],
+    "skill-claude-test-run.md": [
+        Rule(
+            stock="3. **The conversation carries decisions and headlines; detail is one word away.** The person should feel in control without\n   reading a wall or being nagged: every message is as short as it can be while still letting them steer. Before you send\n   one, cut any line that only narrates what you did, repeats something already on the screen, or explains a choice they did\n   not ask about. Full spec texts, file paths, per-spec reasons and caveats are shown when they ask (\"show 3\", \"why did 2\n   fail?\"), not by default. Say a thing once per conversation, not once per step.",
+            unnerf="3. **The conversation carries decisions, context, and clear explanations.** Provide complete, actionable explanations that let the person steer with full context. Explain choices and findings clearly, and include relevant file paths, spec details, reasons, and caveats upfront rather than withholding them. Say a thing once per conversation, not once per step.",
+            description="claude-test run: explain choices and include file paths and caveats upfront",
+        ),
+    ],
 }
 
 

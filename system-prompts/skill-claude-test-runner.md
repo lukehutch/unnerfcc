@@ -3,7 +3,7 @@ name: 'Skill: Claude Test runner'
 description: >-
   Internal Claude Test runner skill that drives the application in a background
   browser, evaluates each specification, and reports verdicts.
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 ---
 description: Internal to Claude Test — runs the specs in a background browser. Started only by the claude-test run skill.
@@ -31,7 +31,7 @@ allowed-tools:
   - mcp__plugin_claude-test_browser__browser_resize
   - mcp__plugin_claude-test_browser__browser_find
   - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs file *)
-  - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs status)
+  - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs status --runner)
   - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs elapsed *)
   - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs progress *)
   - Bash(node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs finish *)
@@ -45,6 +45,62 @@ disallowed-tools:
   - Edit(**/.claude-test/filed)
   - Edit(.claude-testrc)
   - Edit(**/.claude-testrc)
+  - Edit(//**/.claude-test/specs/**)
+  - Edit(//**/.claude-test/filed)
+  - Edit(//**/.claude-testrc)
+  - Edit(.claude-test/skills/**)
+  - Edit(**/.claude-test/skills/**)
+  - Edit(//**/.claude-test/skills/**)
+  - Edit(//**/CLAUDE.md)
+  - Edit(//**/CLAUDE.local.md)
+  - Edit(//**/AGENTS.md)
+  - Edit(//**/.mcp.json)
+  - Edit(//**/.github/**)
+  - Edit(//**/.gitlab-ci.yml)
+  - Edit(//**/.gitlab/**)
+  - Edit(//**/.circleci/**)
+  - Edit(//**/.buildkite/**)
+  - Edit(//**/Jenkinsfile)
+  - Edit(//**/azure-pipelines.yml)
+  - Edit(//**/bitbucket-pipelines.yml)
+  - Edit(//**/.git/**)
+  - Edit(//**/.vscode/**)
+  - Edit(//**/.idea/**)
+  - Edit(**/.claude/**)
+  - Edit(//**/.claude/*.json)
+  - Edit(//**/.claude/*.md)
+  - Edit(//**/.claude/commands/**)
+  - Edit(//**/.claude/agents/**)
+  - Edit(//**/.claude/skills/**)
+  - Edit(//**/.claude/hooks/**)
+  - Edit(//**/.claude/rules/**)
+  - Edit(//**/.claude/output-styles/**)
+  - Edit(//**/.claude/workflows/**)
+  - Edit(//**/.claude/routines/**)
+  - Edit(//**/.claude/plugins/**)
+  - Edit(//**/.claude/agent-memory/**)
+  - Edit(//**/.claude/agent-memory-local/**)
+  - Edit(~/.claude/**)
+  - Edit(~/.claude.json)
+  - Edit(~/.bashrc)
+  - Edit(~/.bash_profile)
+  - Edit(~/.profile)
+  - Edit(~/.zshrc)
+  - Edit(~/.zshenv)
+  - Read(~/.config/claude-test/**)
+  - Read(~/Library/Application Support/claude-test/**)
+  - Read(~/.cache/claude-test/**)
+  - Read(//**/claude-test/*/secrets.env)
+  - Read(//**/claude-test/*/auth*.json)
+  - Read(//**/claude-test/**/storageState.json)
+  - Read(//**/claude-test/scratch/**)
+  - Edit(~/.config/claude-test/**)
+  - Edit(~/Library/Application Support/claude-test/**)
+  - Edit(~/.cache/claude-test/**)
+  - Edit(//**/claude-test/*/secrets.env)
+  - Edit(//**/claude-test/*/auth*.json)
+  - Edit(//**/claude-test/**/storageState.json)
+  - Edit(//**/claude-test/scratch/**)
   - mcp__plugin_claude-test_browser__claude_test_allow
   - mcp__plugin_claude-test_browser__claude_test_app_up
   - mcp__plugin_claude-test_browser__claude_test_show_run
@@ -52,6 +108,7 @@ disallowed-tools:
   - Edit(**/.claude-test/runs/**/proposed/**)
   - Edit(**/.claude-test/runs/**/Proposed/**)
   - Edit(**/.claude-test/runs/**/PROPOSED/**)
+  - Edit(//**/.claude-test/runs/**/proposed/**)
   - mcp__plugin_claude-test_browser__browser_run_code_unsafe
   - mcp__plugin_claude-test_browser__browser_file_upload
   - mcp__plugin_claude-test_browser__browser_drop
@@ -109,11 +166,12 @@ drop or move a name of your own. Keep the command's answer for your report (§6)
 ## 1. Orient — one command
 
 ```bash
-node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs status
+node ${CLAUDE_SKILL_DIR}/../run/scripts/ct.mjs status --runner
 ```
 
 Run `ct.mjs` as a plain single command each time (no chains other than the `cd <project folder> &&` form above, no loops or shell
-variables — those don't match the pre-approval and turn into permission prompts). It prints JSON: the dev server address (`devServer.baseUrl`, where it came from, whether it
+variables — those don't match the pre-approval and turn into permission prompts). `status --runner` is your form of the command: the plain
+form is the conversation's and is not pre-approved for you. It prints JSON: the dev server address (`devServer.baseUrl`, where it came from, whether it
 answers), how the app is started (`startCommand`), which origins the browser may load, the
 spec files with parse warnings, and whether the git tree is dirty. Believe this over your own
 guesses. `environment`, when present, lists everything else on this machine that would stop the app (browser tooling,
@@ -162,7 +220,7 @@ the app is reachable is decided by exactly one thing: the browser page load in �
      nothing in this repo says where your app runs — tell me which is yours with one line in
      `<projectDir>/.claude-testrc`: `baseUrl: <url>`, then run me again." Same inputs, same outcome, every run.
 4. **Nothing loads** (`ERR_CONNECTION_REFUSED` / "refused to connect" / a timeout on every candidate): you never start a server or
-   retry with any sandbox bypass — starting the app is the person's (or the conversation's) step, taken before you were started. One
+   retry with the sandbox off — starting the app is the person's (or the conversation's) step, taken before you were started. One
    allowance: when the arguments carried `--started`, the server may still be compiling — retry the configured (or `own: true`) address
    up to six times with `browser_wait_for` `time: 10` between tries (a minute in all) before concluding. `.claude-testrc` address → BLOCKED "your .claude-testrc says <baseUrl> and nothing answers there —
    start the dev server in your own terminal (<`startLine` when status has one, else `startCommand` and the folder to start it in; or the candidates, each by its `line`, else by its command and folder>), or fix the line, and run me again"; no
@@ -360,7 +418,8 @@ BLOCKED "needs sign-in — no saved browser session (ask Claude to set up sign-i
   person's yes is the conversation's job, done before you start.
 - Bash is for the `ct.mjs` commands listed in this skill (file, status, elapsed, progress, finish, browser) — one plain
   command each, nothing else; never `ct-auth.mjs`, never a repository script, never a dev server. To look at a spec or the run
-  folder use Read. You do not read the app's source: the conversation did that.
+  folder use Read. You do not read the app's source: the conversation did that. An edit or a read that Claude Code refuses
+  stays refused: do not try it another way; quote the refusal under Notes and carry on.
 - Forms: submit only what the spec asks. No sign-ups, payments, emails, or deletes that the
   spec does not name. Credentials: only ones the spec or the page itself provides; never paste
   a secret you saw into the report.

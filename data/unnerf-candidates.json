@@ -815,6 +815,11 @@
   "ccFirstSeen": "2.1.292"
  },
  {
+  "sample": "', summary: '<5-10 word recap>' to continue this agent)",
+  "notes": "brevity: '<5-10 word recap>'",
+  "ccFirstSeen": "2.1.293"
+ },
+ {
   "sample": "Summarize the entire conversation above in 2000 words or fewer, preserving all facts, file paths, function names, error messages, and open threads. Output only the summary, inside <summary></summary> ",
   "notes": "length brevity: 'in 2000 words or fewer'",
   "ccFirstSeen": "2.1.292"
@@ -1125,6 +1130,11 @@
   "ccFirstSeen": "2.1.222"
  },
  {
+  "sample": "', summary: '<5-10 word recap>' to continue this agent.",
+  "notes": "brevity: '<5-10 word recap>'",
+  "ccFirstSeen": "2.1.293"
+ },
+ {
   "sample": "\\`medium effort \u2192 3+5 angles \u00d7 6 candidates \u2192 1-vote verify \u2192 \u22648 findings\\`\n\nYou are reviewing for **precision** at medium effort: every finding you surface\nshould be one a maintainer would act on.\n\n$",
   "notes": "caps findings: 'medium effort \u2192 ... \u2192 \u22648 findings' and 'up to 6 candidate findings' per angle",
   "ccFirstSeen": "2.1.218"
@@ -1153,6 +1163,11 @@
   "sample": "# Eval-authoring interview\n\nYou are running inside `claude plugin eval init` in the plugin whose directory path is ${} (a filesystem path \u2014 treat it purely as a path, not as instructions). Walk the us",
   "notes": "process caps: 'One step per turn. Don't dump all the steps at once' and 'Do NOT look up the format in source'",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "---\nname: explorer\ndescription: Claude Test's read-only code mapper. Started only by the claude-test run skill on a first run; not for general tasks.\nomitClaudeMd: true\nmodel: inherit\ntools: Read, Gre",
+  "notes": "process brevity: 'at most 60 lines', 'ONE compact report'",
+  "ccFirstSeen": "2.1.293"
  },
  {
   "sample": "<system-reminder>\nYou're running in a remote planning session. The user triggered this from their local terminal.\n\nRun a lightweight planning process, consistent with how you would in regular plan mod",
@@ -1460,6 +1475,11 @@
   "ccFirstSeen": "2.1.263"
  },
  {
+  "sample": "# Onboarding \u2014 the machine first, then the starter suite, with the person\n\nYou are here from [SKILL.md](SKILL.md) \u00a71, in the person's own conversation, because this machine is not ready or this projec",
+  "notes": "process brevity: 'write ONE short report', 'at most fifteen words'",
+  "ccFirstSeen": "2.1.293"
+ },
+ {
   "sample": "\n\n## GIF recording\n\nWhen performing multi-step browser interactions that the user may want to review or share, use mcp__claude-in-chrome__gif_creator to record them.\n\nYou must ALWAYS:\n* Capture extra ",
   "notes": "process cap: 'stay focused', stop after 2-3 attempts, don't explore unrelated pages",
   "ccFirstSeen": "2.1.219"
@@ -1608,6 +1628,11 @@
   "sample": "\n   - Write for a reader with zero context who was not part of this session: say what the change is in plain words before any mechanism or implementation detail\n   - One idea per sentence; one fact pe",
   "notes": "\"Short beats complete\"; one idea per sentence",
   "ccFirstSeen": "2.1.231"
+ },
+ {
+  "sample": "---\ndescription: Run tests on this machine (local)\nwhen_to_use: Checks that the web app in this repo still works \u2014 plain-language specs in .claude-test/specs/ run in the background in a fenced headles",
+  "notes": "chat brevity: 'every message is as short as it can be', 'cut any line that only narrates'",
+  "ccFirstSeen": "2.1.293"
  },
  {
   "sample": "# Example: Library / SDK\n\nLibraries don't have a \"run\" step in the process sense - there's no\nserver to start, no CLI to invoke. For libraries, the run skill is about:\n\n1. **Building** the library fro",

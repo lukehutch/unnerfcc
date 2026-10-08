@@ -3,7 +3,7 @@ name: 'Data: Claude model catalog'
 description: >-
   Catalog of current and legacy Claude models with exact model IDs, aliases,
   context windows, and pricing
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 # Claude Model Catalog
 
@@ -76,6 +76,7 @@ curl https://api.anthropic.com/v1/models/claude-opus-4-8 \
 | {{SONNET_NAME}} | `{{SONNET_ID}}` | -                     | 1M             | 128K       | Active |
 | {{PREV_SONNET_NAME}} | `{{PREV_SONNET_ID}}` | -                         | 1M             | 128K       | Active |
 | Claude Sonnet 4.6 | `claude-sonnet-4-6` | -                             | 1M             | 128K       | Active |
+| {{HAIKU_NAME}} | `{{HAIKU_ID}}` | -                             | 1M             | 128K       | Active |
 | Claude Haiku 4.5  | `claude-haiku-4-5`  | `claude-haiku-4-5-20251001`   | 200K           | 64K        | Active |
 
 ### Model Descriptions
@@ -90,7 +91,8 @@ curl https://api.anthropic.com/v1/models/claude-opus-4-8 \
 - **{{PREV_SONNET_NAME}}** - The previous Sonnet; near-Opus quality on coding and agentic work. Adaptive thinking on by default (omitting `thinking` runs adaptive); manual `budget_tokens` removed; non-default sampling parameters rejected. `effort` supports `low`/`medium`/`high`/`xhigh`/`max`. New tokenizer (~30% more tokens for the same text vs Sonnet 4.6). High-resolution vision (2576px). 1M context window, 128K max output. See `shared/model-migration.md` -> Migrating to {{PREV_SONNET_NAME}}.
 - **{{SONNET_NAME}}** - Successor to {{PREV_SONNET_NAME}} in the Sonnet line, at the same prices ($2 / $10 per MTok; cache reads $0.20). Same tokenizer as {{PREV_SONNET_NAME}}; 1M context, 128K max output. Adaptive thinking on by default; effort default `high`, with recalibrated levels. Five breaking changes: `thinking: {type: "disabled"}` returns a 400 (send `{type: "between_tools"}` at effort `high` or below to turn thinking off), forced `tool_choice` 400s, thinking blocks are tied to the model and the conversation, computer use on the Claude API and Google Cloud needs the `computer_toolset_20260801` toolset, and the advisor tool rejects Claude Opus 4.8, Claude Opus 4.7, and {{PREV_SONNET_NAME}} advisors. See `shared/model-migration.md` -> Migrating to {{SONNET_NAME}}.
 - **Claude Sonnet 4.6** - Previous-generation Sonnet. Supports adaptive thinking (recommended). 1M context window. 128K max output tokens.
-- **Claude Haiku 4.5** - Fastest and most cost-effective model for simple tasks.
+- **{{HAIKU_NAME}}** - The current Haiku and the default when the user asks for Haiku: the fast, low-cost model for high-volume, latency-sensitive work such as classification, routing, extraction, and sub-agent tasks. Successor to Claude Haiku 4.5 with a 1M context window and 128K max output, at $0.10 / $0.50 per MTok when the prompt is 100K tokens or fewer and $0.50 / $2.50 above that. Adaptive thinking only, on by default (`{type: "disabled"}` is accepted at effort `high` or below); `effort` from `low` through `max`, default `medium`. Breaking for code written for Claude Haiku 4.5: `budget_tokens`, non-default sampling parameters, and assistant prefill return a 400, on the Claude API and Google Cloud computer use needs the `computer_toolset_20260801` toolset, and editing earlier turns invalidates replayed thinking blocks (preserved thinking). Thinking text is omitted by default (`display: "summarized"` to see summaries). A newer tokenizer counts the same text as about 30% more tokens. Safety classifiers can return `stop_reason: "refusal"`, and there is no server-side fallback for this model. See `shared/model-migration.md` -> Migrating to {{HAIKU_NAME}}.
+- **Claude Haiku 4.5** - Previous-generation Haiku, still served. 200K context window, 64K max output, manual extended thinking with `budget_tokens`, no `effort` parameter.
 
 ## Legacy Models (still active)
 
@@ -150,7 +152,9 @@ When a user asks for a model by name, use this table to find the correct model I
 | "sonnet 4", "sonnet 4.0"                  | `claude-sonnet-4-0` (deprecated - suggest `{{SONNET_ID}}`) |
 | "sonnet 3.7"                              | Retired - suggest `{{SONNET_ID}}` |
 | "sonnet 3.5"                              | Retired - suggest `{{SONNET_ID}}` |
-| "haiku", "fast", "cheap"                  | `claude-haiku-4-5`             |
+| "haiku", "fast", "cheap"                  | `{{HAIKU_ID}}`             |
+| "haiku 5.5"                               | `{{HAIKU_ID}}` |
+| "newest haiku", "latest haiku" (any attribute phrasing) | `{{HAIKU_ID}}` |
 | "haiku 4.5"                               | `claude-haiku-4-5`             |
-| "haiku 3.5"                               | Retired - suggest `claude-haiku-4-5` |
-| "haiku 3"                                 | Deprecated - suggest `claude-haiku-4-5` |
+| "haiku 3.5"                               | Retired - suggest `{{HAIKU_ID}}` |
+| "haiku 3"                                 | Deprecated - suggest `{{HAIKU_ID}}` |

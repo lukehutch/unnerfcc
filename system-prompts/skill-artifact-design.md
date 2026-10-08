@@ -3,7 +3,7 @@ name: 'Skill: artifact-design'
 description: >-
   Bundled artifact-design skill — Design guidance and fundamentals for
   Artifacts.
-ccVersion: 2.1.292
+ccVersion: 2.1.293
 -->
 ---
 name: artifact-design
@@ -33,7 +33,7 @@ Fundamentals below apply to everything. Follow the editorial process after them 
 
 **Pair typefaces.** Typography determines how the page reads even when the page isn't about typography. Google Fonts is the only font host the Artifact CSP allows; link it directly (`<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=...&display=swap">`). A face from anywhere else must be inlined as a @font-face data URI, or the browser silently uses a fallback. In both cases, declare a real fallback stack. Keep running text near 65 characters wide. Set a type scale and keep to it. Give headings `text-wrap: balance`, give body text comfortable spacing, and give uppercase labels a little letter-spacing.
 
-**Load libraries instead of inlining them.** When the page really needs a library (React, a charting or highlighting package), load its UMD build from cdnjs with one pinned `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">` placed before the inline script that uses its global; don't inline the library's source or hand-write a substitute. Only the script loads this way; a library's stylesheet still has to be inlined, and the Artifact tool's description lists the few other script hosts the CSP admits. The page's own CSS and JS, its images, and its data ship with the page. Most pages don't need any library; use one only when it does substantial work for the page.
+**Load libraries instead of inlining them.** When the page really needs a library (React, a charting or highlighting package), load its UMD build from cdnjs with one `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">`, pinned to an exact version at least two weeks old and placed before the inline script that uses its global; don't inline the library's source or hand-write a substitute. Only the script loads this way; a library's stylesheet still has to be inlined, and the Artifact tool's description lists the few other script hosts the CSP admits. The page's own CSS and JS, its images, and its data ship with the page. Most pages don't need any library; use one only when it does substantial work for the page.
 
 **Choose neutrals deliberately.** A pure mid-grey looks unconsidered; a grey with a slight hue bias toward the page's accent looks intentional. Pure white and near-black are fine backgrounds when they suit the subject, as long as you chose the neutral deliberately instead of inheriting a default.
 

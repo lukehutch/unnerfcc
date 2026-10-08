@@ -1,0 +1,10 @@
+<!--
+name: 'Tool Result: Start task files expired'
+description: >-
+  Informs the model that uploaded task files have expired and need to be
+  uploaded afresh.
+ccVersion: 2.1.293
+variables:
+  - ADDITIONAL_GUIDANCE
+-->
+The files for this task were uploaded about an hour before this approval and have expired or are about to. Call start_task again to upload them afresh. ${ADDITIONAL_GUIDANCE}

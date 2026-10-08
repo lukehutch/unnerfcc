@@ -5,7 +5,7 @@ description: >-
   `claude plugin eval`, `claude plugin eval init`, and `/skill-doctor`, covering
   enablement, the case file format, every grader and flag, exit codes, the v1
   results JSON, the HTML report, the sandbox, CI usage, and troubleshooting.
-ccVersion: 2.1.270
+ccVersion: 2.1.293
 -->
 # Plugin eval (`claude plugin eval`) and `/skill-doctor`
 
@@ -505,6 +505,7 @@ The child is `claude -p --output-format stream-json --max-turns <n> --permission
 | A subagent's words are not in the trace | Subagent tool activity is recorded, its narrative text is not -> grade what the main agent or an artifact captured. |
 | `eval init` in CI or from an agent shell | No TTY -> in CI (or under `claude -p` / the Agent SDK) pass a name to write a template. Run from an attended Claude Code session's Bash tool, `claude plugin eval init [name]` instead prints the authoring interview for that session to conduct (exit 0, nothing written) - `--bare <name>` still writes the template there; the standalone interview needs a real terminal in a trusted directory. |
 | `... is not a trusted plugin directory, and this run cannot stop to ask you about it` | First run against a plugin directory Claude Code does not trust, with no terminal (CI, `--json`, piped). Run `claude plugin eval <dir>` once in a terminal and answer the prompt, or pass `--trust-plugin` if you trust the plugin's code and suite. |
+| `the ... credential store on this machine holds a symbolic link inside it ...` | A Bash-granting run hides your credential stores (`~/.aws`, `~/.docker`, `~/.kube`, `~/.ssh`, `~/.gnupg`, gcloud, Azure CLI, among others) from the shell. A store with a link inside it cannot be hidden reliably, so the run is refused before any model call (cost 0). Links under the tools' own credential-free entries are fine (for Docker: `cli-plugins`, `buildx`, `desktop`, `run`, ... and `bin` / `completions` directly under the store - what Docker Desktop installs); the message says which part of the store held the link when it is one of the tools' own names. Keep that store's contents in one plain directory (its root may be a link), or run the case without the Bash grant. Pointing `DOCKER_CONFIG` elsewhere does not help: the default store is still checked. (The stores stay hidden either way: a `docker` CLI that lives under `~/.docker/bin` is not runnable from the granted shell.) |
 | Costs more than expected | cases x runs x arms + judge votes; naming an installed plugin turns the baseline arm on -> `--runs 1` pilots, `--ablation none`, free graders, `--max-cost-usd`. |
 | Scores drift over weeks with no plugin change | Unpinned model, partial or paid-graders-skipped runs mixed in, or edited graders -> pin `--model`, filter partial results, note grader changes. |
 
