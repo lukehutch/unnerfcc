@@ -72,6 +72,32 @@ log()  { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m  ✓\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m  !\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mupgrade.sh: %s\033[0m\n' "$*" >&2; exit 1; }
+
+# The per-chunk AI outputs (relabel's labels-NNN.json, bucket-analysis's
+# verdicts-NNN.json) are kept in a per-version cache outside $WORK, so a run
+# that dies at a later step does not pay for — or re-roll — them again.
+# They are reused only when the freshly prepared worklist is byte-identical to
+# the one they were produced for; any change in inputs discards them.
+AI_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/unnerfcc"
+reuse_ai_cache() {  # <cache dir> <work dir> <file prefix>
+  local cache="$1" work="$2" prefix="$3" f n=0
+  [ -f "$cache/worklist.json" ] || return 0
+  if ! cmp -s "$cache/worklist.json" "$work/worklist.json"; then
+    rm -rf "${cache:?}"; return 0
+  fi
+  for f in "$cache/$prefix"-[0-9]*.json; do
+    [ -f "$f" ] && cp "$f" "$work/" && n=$((n+1))
+  done
+  [ "$n" -gt 0 ] && ok "reusing $n cached $prefix chunk(s) from an earlier run ($cache)"
+  return 0
+}
+save_ai_cache() {   # <cache dir> <work dir> <file prefix>
+  local cache="$1" work="$2" prefix="$3" f
+  mkdir -p "$cache"
+  cp "$work/worklist.json" "$cache/"
+  for f in "$work/$prefix"-[0-9]*.json; do [ -f "$f" ] && cp "$f" "$cache/"; done
+  return 0
+}
 bun_incompatible() {
   printf '\033[1;31m\n╔══════════════════════════════════════════════════════════════╗\n'
   printf   '║  BUN FORMAT INCOMPATIBLE — engine/bun-binary.mjs could not parse ║\n'
@@ -402,6 +428,8 @@ if [ -n "${PREV_CATALOG:-}" ]; then
   log "Preparing relabel worklist"
   RL_WORK="$WORK/relabel"
   N=$(node "$REPO/scripts/relabel.mjs" prepare "$PREV_CATALOG" "$NEW_CATALOG" "$RL_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
+  RL_CACHE="$AI_CACHE/relabel-$CC_VERSION"
+  reuse_ai_cache "$RL_CACHE" "$RL_WORK" labels
 
   if [ "${N:-0}" -gt 0 ]; then
     # ONE job per chunk. A single job asked to emit ~1000 objects truncates and
@@ -425,6 +453,7 @@ if [ -n "${PREV_CATALOG:-}" ]; then
               "Read LABELING-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your labels to labels-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; the previous catalog is $PREV_CATALOG . Also read removed.json (ids that vanished this release — a reworded prompt appears as a removed id plus a new worklist item, and you MUST re-use its id verbatim or its un-nerf rule is orphaned). Do not ask questions; complete the task and write the file." ) || true
         fi
       done
+      save_ai_cache "$RL_CACHE" "$RL_WORK" labels
       if node "$REPO/scripts/relabel.mjs" collect "$RL_WORK" "$NEW_CATALOG"; then break; fi
       [ "$attempt" = 3 ] && die "relabel incomplete after 3 attempts (see $RL_WORK)"
       log "  re-running short chunks"
@@ -445,7 +474,8 @@ if [ -n "${PREV_CATALOG:-}" ]; then
     done
     [ -f "$RL_WORK/labels.json" ] || die "relabel did not produce labels.json"
     log "Merging labels into the catalog"
-    node "$REPO/scripts/relabel.mjs" merge "$NEW_CATALOG" "$RL_WORK/labels.json" "$NEW_CATALOG"
+    node "$REPO/scripts/relabel.mjs" merge "$NEW_CATALOG" "$RL_WORK/labels.json" "$NEW_CATALOG" \
+      || { rm -rf "${RL_CACHE:?}"; die "relabel merge failed — cached labels discarded so the next run relabels from scratch"; }
     ok "relabeled + merged $N fragment(s)"
   else
     ok "no fragments need relabeling (extractor identified everything)"
@@ -465,6 +495,25 @@ fi
 # upstream deletion (see validate-catalog gate 6), re-run with ACK_REMOVED set to
 # the exact removed count to let the pipeline proceed. Any other count still fails.
 log "Validating catalog (structural gates)"
+# Under --yes, acknowledge the removed-id count without a human — but only when
+# no removed id still keys an un-nerf rule. A rule on a removed id is the real
+# harm that gate guards against (the un-nerf would silently stop applying);
+# ids without rules carry only names and descriptions.
+if [ -z "${ACK_REMOVED:-}" ] && [ "$ASSUME_YES" -eq 1 ] && [ -n "${PREV_CATALOG:-}" ]; then
+  RULES_JSON="$WORK/rules.json"
+  python3 "$REPO/scripts/apply-unnerfs.py" --dump-rules "$RULES_JSON" >/dev/null
+  read -r REMOVED_N ORPHANED <<<"$(node -e '
+    const fs=require("fs");const [a,b,r]=process.argv.slice(1);
+    const ids=f=>new Set((JSON.parse(fs.readFileSync(f,"utf8")).prompts??[]).map(p=>p.id).filter(Boolean));
+    const prev=ids(a),next=ids(b);const removed=[...prev].filter(i=>!next.has(i));
+    const ruled=new Set(JSON.parse(fs.readFileSync(r,"utf8")).map(x=>x.id));
+    const orphaned=removed.filter(i=>ruled.has(i));
+    console.log(removed.length, orphaned.join(",") || "-");
+  ' "$PREV_CATALOG" "$NEW_CATALOG" "$RULES_JSON")"
+  [ "$ORPHANED" = "-" ] || die "removed ids still have un-nerf rules in scripts/apply-unnerfs.py (re-key or retire them): $ORPHANED"
+  ACK_REMOVED="$REMOVED_N"
+  ok "--yes: $REMOVED_N removed id(s), none with an un-nerf rule — acknowledging"
+fi
 if [ -n "${ACK_REMOVED:-}" ]; then
   node "$REPO/scripts/validate-catalog.mjs" "$NEW_CATALOG" "${PREV_CATALOG:-}" --strict --ack-removed "$ACK_REMOVED"
 else
@@ -491,6 +540,8 @@ if [ -f "$BUCKET_ANALYZE" ]; then
   log "Preparing un-nerf bucket-analysis worklist"
   BA_WORK="$WORK/bucket-analysis"
   M=$(node "$BUCKET_ANALYZE" prepare "$CC_VERSION" "$BA_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
+  BA_CACHE="$AI_CACHE/bucket-analysis-$CC_VERSION"
+  reuse_ai_cache "$BA_CACHE" "$BA_WORK" verdicts
 
   if [ "${M:-0}" -gt 0 ]; then
     log "Bucket-analyzing $M new un-nerf candidate(s) via $LLM_PROVIDER in $(ls "$BA_WORK"/chunk-*.json | wc -l) chunk(s)"
@@ -507,6 +558,7 @@ if [ -f "$BUCKET_ANALYZE" ]; then
               "Read BUCKET-ANALYSIS-TASK.md in this directory and follow it EXACTLY. Your assigned chunk file is chunk-$cn.json and you MUST write your verdicts to verdicts-$cn.json in this directory (a JSON array with exactly one object per item in chunk-$cn.json, echoing each ref verbatim — refs are global indices, they do not start at 0). The un-nerf guide is $REPO/UNNERF-GUIDE.md ; read its Part 1 in full before deciding anything. Do not ask questions; complete the task and write the file." ) || true
         fi
       done
+      save_ai_cache "$BA_CACHE" "$BA_WORK" verdicts
       if node "$BUCKET_ANALYZE" collect "$BA_WORK"; then break; fi
       [ "$attempt" = 3 ] && die "bucket-analysis incomplete after 3 attempts (see $BA_WORK)"
       log "  re-running short chunks"
@@ -528,7 +580,7 @@ if [ -f "$BUCKET_ANALYZE" ]; then
     [ -f "$BA_WORK/verdicts.json" ] || die "bucket-analysis did not produce verdicts.json"
     log "Merging accepted un-nerf rules into apply-unnerfs.py"
     node "$BUCKET_ANALYZE" merge "$BA_WORK" "$REPO/scripts/apply-unnerfs.py" "$CC_VERSION" \
-      || die "bucket-analysis merge failed — see output above"
+      || { rm -rf "${BA_CACHE:?}"; die "bucket-analysis merge failed — see output above (cached verdicts discarded)"; }
     ok "bucket-analysis complete — full keep/lift review: data/bucket-analysis-$CC_VERSION.json"
   else
     ok "no new un-nerf candidates to bucket-analyze"

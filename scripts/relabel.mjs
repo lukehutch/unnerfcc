@@ -48,7 +48,7 @@
  * carried entry was never named.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { diffCatalogs, reconstruct } from "./prompt-index.mjs";
@@ -95,6 +95,10 @@ function prepare(prevPath, nextPath, workDir, chunkSize, chunkChars) {
     slots: slotCount(w.entry), // how many ${...} slots need semantic names
     // The current (possibly-empty) identifierMap so Claude sees slot indices.
     identifierMapKeys: Object.keys(w.entry.identifierMap ?? {}),
+    // Which slot index each `${}` in body fills, left to right. One variable can
+    // fill several positions ([0,1,1,2]); without this the labeler names
+    // positions instead of indices and the merge fails on duplicate names.
+    slotOrder: w.entry.identifiers ?? [],
     // The reconstructed body (with current placeholder names) — what Claude reads.
     body: reconstruct(w.entry),
   }));
@@ -181,10 +185,32 @@ function collect(workDir, catalogPath) {
   const bodyByRef = new Map(items.map((it) => [it.ref, it.body]));
   const pinnedRefs = new Set(items.filter((it) => it.preserveId).map((it) => it.ref));
 
+  // Apply merge()'s slot gate per chunk here: a chunk holding a label that
+  // leaves a slot unnamed or names two slots the same is deleted, so the
+  // caller's retry loop relabels that one chunk instead of merge() failing
+  // the whole run after every chunk is done.
+  const itemByRef = new Map(items.map((it) => [it.ref, it]));
+  const slotProblem = (l) => {
+    const it = itemByRef.get(l.ref);
+    if (!it || !(it.slots > 0)) return null;
+    const map = l.identifierMap || {};
+    const unnamed = it.identifierMapKeys.filter((k) => !map[k]);
+    if (unnamed.length) return `slot(s) ${unnamed.join(",")} unnamed`;
+    const names = Object.values(map);
+    if (new Set(names).size !== names.length) return "duplicate slot names";
+    return null;
+  };
   const labels = [];
   const seenRefs = new Set();
   for (const f of readdirSync(workDir).filter((f) => /^labels-\d+\.json$/.test(f)).sort()) {
-    for (const l of loadJson(join(workDir, f))) {
+    const chunkLabels = loadJson(join(workDir, f));
+    const bad = chunkLabels.map((l) => [l.ref, slotProblem(l)]).filter(([, p]) => p);
+    if (bad.length) {
+      console.error(`  ${f}: ${bad.map(([r, p]) => `ref ${r} ${p}`).join("; ")} — dropping the chunk for relabel`);
+      unlinkSync(join(workDir, f));
+      continue;
+    }
+    for (const l of chunkLabels) {
       if (seenRefs.has(l.ref)) continue; // a re-run of a chunk supersedes nothing; first wins
       seenRefs.add(l.ref);
       labels.push(l);
@@ -265,6 +291,10 @@ must write. Label only your chunk — another job is labeling each of the others
   - \`prevName\` / \`prevDescription\` — the prior label to carry/refresh when present.
   - \`slots\` / \`identifierMapKeys\` — the \`\${...}\` interpolation slots. If
     \`slots > 0\`, give each slot index a SEMANTIC UPPER_SNAKE name.
+  - \`slotOrder\` — the slot index each \`\${}\` in \`body\` fills, left to right.
+    An index can repeat (\`[0,1,1,2]\`: the 2nd and 3rd \`\${}\` are the SAME value),
+    so there can be more \`\${}\` in the body than slots. Name each INDEX once,
+    from the text around the positions where it occurs — never name positions.
   - \`body\` — the reconstructed fragment text (this is what the model actually sees).
 - \`removed.json\` (this directory) — **${removedCount} id(s) that disappeared from
   the catalog in this release.** Matching is by exact hash, so a prompt that
