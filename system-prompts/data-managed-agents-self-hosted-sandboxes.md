@@ -4,7 +4,7 @@ description: >-
   Managed Agents reference for self-hosted sandboxes (config.type: self_hosted)
   — running an EnvironmentWorker that keeps tool execution on infrastructure you
   control
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Self-Hosted Sandboxes
 
@@ -178,7 +178,7 @@ Skip items where `work.data.type != "session"` when you dispatch containers your
 
 ## Memory stores
 
-Sessions on a self-hosted environment attach memory stores exactly like cloud sessions - `resources=[{"type": "memory_store", "memory_store_id": ..., "access": ...}]` at session create, up to 8 per session (see `shared/managed-agents-memory.md`). The difference is *who materializes them*: on cloud, Anthropic mounts a live FUSE filesystem; on self-hosted, the **SDK worker** (`EnvironmentWorker`, or its `handle_item()` / `handleItem()` / `HandleItem()`) downloads a working copy and syncs it. Requires the Python, TypeScript, or Go SDK; the `ant` CLI worker and the C#/Java/PHP/Ruby SDKs don't mount stores. Not available on Claude Platform on AWS.
+Sessions on a self-hosted environment attach memory stores exactly like cloud sessions - `resources=[{"type": "memory_store", "memory_store_id": ..., "access": ...}]` at session create, up to 8 per session (see `shared/managed-agents-memory.md`). The difference is *who materializes them*: on cloud, Anthropic mounts a live FUSE filesystem; on self-hosted, the **SDK worker** (`EnvironmentWorker`, or its `handle_item()` / `handleItem()` / `HandleItem()`) downloads a working copy and syncs it. Requires the Python, TypeScript, or Go SDK; the `ant` CLI worker and the C#/Java/PHP/Ruby SDKs don't mount stores. Not available on Claude Platform on AWS or Claude Models on Google Cloud (Anthropic managed).
 
 **What the worker does** when it claims a work item whose session has stores attached:
 
@@ -257,6 +257,8 @@ For example, sync every 10 s and only *log* would-be deletes: Python `Environmen
 
 ## Monitoring & control
 
+**Tracing tool calls (OpenTelemetry, beta).** The API emits no tool spans for tools your sandbox runs; the SDK environment worker (Python, TypeScript, Go) emits them in its own process under one `anthropic.environment.work` span per work item, once a tracer provider is registered there and the sandbox can reach your backend. Setup and span attributes: `shared/opentelemetry.md` -> Tracing a Managed Agents self-hosted sandbox.
+
 These are **control-plane** calls - authenticate with `x-api-key` (not the environment key); `managed-agents-2026-04-01` beta header. **Call them from outside the worker host** - setting `ANTHROPIC_API_KEY` on the worker host exposes an organization-scoped credential to agent tool calls.
 
 | SDK (`client.beta.environments.work.*`) | REST | CLI | Returns |
@@ -275,7 +277,8 @@ These are **control-plane** calls - authenticate with `x-api-key` (not the envir
 | Built-in tools | Via `agent_toolset_20260401` | Supplied by your worker (`EnvironmentWorker` default / `beta_agent_toolset(env)` / `ant` CLI fixed set) |
 | Skills download | Automatic | `EnvironmentWorker` / `AgentToolContext` fetch into `{workdir}/skills/` (needs `client` + `session_id`) |
 | Claude Platform on AWS | Supported | Supported - the worker authenticates with AWS IAM (SigV4) or an AWS-Console-generated API key (Console-generated environment keys don't work against the AWS endpoint); attach the `AnthropicSelfHostedEnvironmentAccess` managed policy to the worker's principal. **Memory stores cannot be attached** to sessions on self-hosted environments there (rejected at session create); cloud environments attach them as usual. |
-| SDK worker helpers | All SDKs | **Python, TypeScript, Go only** (`EnvironmentWorker` / poller not in Java, Ruby, PHP, or C#) - use one of those three or the `ant` CLI |
+| Claude Models on Google Cloud (Anthropic managed) | Supported | Supported, with a worker you write yourself: the pre-built workers (`ant beta:worker` and the Python, TypeScript and Go SDK helpers) don't support this platform, so call the Environments Work endpoints (`https://platform.claude.com/docs/en/api/beta/environments/work.md`) directly. The worker authenticates with Google Cloud credentials and needs `roles/claude.user` on the project (`roles/claude.admin` also works but adds organization-level access). The role covers every workspace in the project, so give each team that needs separate access its own project, which also means its own Anthropic organization. Console-generated environment keys don't work. **Memory stores aren't supported** on sessions on self-hosted environments there; cloud environments attach them as usual. |
+| SDK worker helpers | All SDKs | **Python, TypeScript, Go only** (`EnvironmentWorker` / poller not in Java, Ruby, PHP, or C#) - use one of those three or the `ant` CLI, except on Claude Models on Google Cloud (Anthropic managed) (row above) |
 
 ## Credentials
 

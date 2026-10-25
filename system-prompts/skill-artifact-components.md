@@ -6,7 +6,7 @@ description: >-
   verifier's script-pinning and one-island limits, the own-island escape hatch
   and what it costs in read-back, and the per-file markup, script, and style
   contract for the decision component.
-ccVersion: 2.1.272
+ccVersion: 2.1.310
 -->
 ---
 name: artifact-components
@@ -64,7 +64,7 @@ Files in this skill's `decision/` directory:
   publish allowlist admits inline scripts by sha256 of the script element's
   text content; the shipped blocks hash to
   `cc92acd07b10a4a892834a8661cb4a69a299224a830e01b1e68f2b29c1c0c15b` (theme) and
-  `95551230037f06f00788656dbbabb459c668a4adf874cf76800f42c0059a113e` (decisions).
+  `f7c95e767b9ce126811b038fdf34f1597c14c1a0cdf7d5255d205559683b43f3` (decisions).
   Never edit, reindent, or reformat them - any byte difference refuses as
   `script-not-blessed`. The publish verifier's blessed set is the source of
   truth for these hashes; the literals here are documentation, held to the

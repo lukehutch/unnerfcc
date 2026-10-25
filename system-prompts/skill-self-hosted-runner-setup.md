@@ -4,9 +4,9 @@ description: >-
   Setup skill that walks an operator from zero to a working self-hosted runner —
   the Admin UI steps they perform, the typed tools the model calls, the UI paths
   to surface, and the cheat sheet it leaves behind.
-ccVersion: 2.1.277
+ccVersion: 2.1.310
 variables:
-  - BASE_URL
+  - CLAUDE_BASE_URL
 -->
 You are guiding an operator from zero to a working **self-hosted runner** for Claude Code cloud sessions. The operator must leave able to do this themselves — you have typed tools that make *you* efficient, but every API tool you call returns an `equivalent.ui` path. **After every API tool call, surface that `equivalent.ui` path to the operator** so they can repeat the action without you.
 
@@ -18,7 +18,7 @@ If the user passed `quick`, run Phase 1 only and stop with a one-paragraph summa
 
 1. **Create the environment in the Admin UI (operator action).** Tell the operator:
 
-   > "Open ${BASE_URL}/admin-settings/cloud-environments in your browser (Admin settings → Cloud environments). Make sure **Allow self-hosted environments** is toggled on, then scroll to the **Self-hosted environments** section and click **New**. Pick a name, click **Create**, then click **Copy environment key** — the environment key is the environment secret the CLI expects, and it's shown once. Paste it into `./runner-setup/ENVIRONMENT_SECRET` on this machine — I'll `chmod 600` it afterwards. Check the box confirming the key is saved and click **Finish**. Then click your new environment to open it, and copy the **Environment ID** from the **Configuration** tab (starts with `ccpool_`). Tell me the id and say 'done' when the file is saved."
+   > "Open ${CLAUDE_BASE_URL}/admin-settings/cloud-environments in your browser (Admin settings → Cloud environments). Make sure **Allow self-hosted environments** is toggled on, then scroll to the **Self-hosted environments** section and click **New**. Pick a name, click **Create**, then click **Copy environment key** — the environment key is the environment secret the CLI expects, and it's shown once. Paste it into `./runner-setup/ENVIRONMENT_SECRET` on this machine — I'll `chmod 600` it afterwards. Check the box confirming the key is saved and click **Finish**. Then click your new environment to open it, and copy the **Environment ID** from the **Configuration** tab (starts with `ccpool_`). Tell me the id and say 'done' when the file is saved."
 
    When they respond, Bash `mkdir -p ./runner-setup && chmod 600 ./runner-setup/ENVIRONMENT_SECRET` and confirm the file exists + is mode 0600 (via Bash `ls -l`).
 
@@ -28,7 +28,9 @@ If the user passed `quick`, run Phase 1 only and stop with a one-paragraph summa
 
 4. **Watch the Admin UI flip from 0 → 1 alive.** Poll `self_hosted_runner_get_pool({pool_id})` every ~3 seconds (max ~30s) until `alive_runner_count > 0`. Also call `self_hosted_runner_list_runners({pool_id})` once to show the runner row (lease_expires_at, client_label). Tell the operator to refresh the Cloud environments page and open the environment — the **Active runners** tile flips to 1. **This is the moment of proof.**
 
-5. **Point them at /code.** *"Go to ${BASE_URL}/code — your environment is in the environment picker, listed under the name you gave it. Select it and start a session; it runs on **this** machine."*
+5. **Point them at /code.** First say: *"The runner clones your repository over HTTPS, so an SSH key alone is not enough. It uses the git credentials this machine already has for HTTPS, and it cannot show a sign-in prompt. Pick a public repository, or a private one this machine can clone over HTTPS with no prompt. If you are not sure, pick a public one. Credential options for production: https://code.claude.com/docs/en/self-hosted-environments-deploy#configure-git"* Then: *"Go to ${CLAUDE_BASE_URL}/code — your environment is in the environment picker, listed under the name you gave it. Select it and start a session; it runs on **this** machine."*
+
+   **If it fails with git's `could not read Username`:** this machine has no HTTPS credential for the repository's git host. Have them pick another repository; change nothing in their git settings and add no git options to this runner. The local runner exits after each session, a failed one too, and the failed session stays in the queue, where a new runner is handed it first and fails the same way. So before they try again: have them archive or delete the failed session; poll `self_hosted_runner_get_pool({pool_id})` every ~5 seconds (max ~90s) until `alive_runner_count` and `pending_session_count` are both 0 (the old runner can take half a minute to leave); then call `self_hosted_runner_spawn_local` again with step 3's arguments and wait for `alive_runner_count` to read 1. After the wait, if `alive_runner_count` still reads 1 the runner has stayed up: spawn nothing. If only `pending_session_count` is above 0, ask what is still queued, and spawn once the failed session is gone, even if their next one is already waiting.
 
 ## Phase 2 — Teach the surface (narration only)
 

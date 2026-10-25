@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Parameter: Easel chart data input guidance'
+description: >-
+  Explains how data can be omitted to reuse the prior tool result or provided as
+  table data.
+ccVersion: 2.1.310
+-->
+Leave it out to chart the tool result just before this call, as it is: do not type a result again. Where it holds several tables, x and y pick the one with those columns. Or the id of an earlier result, as a refusal lists them. Or the table itself, as records or as text, only for numbers no tool returned.

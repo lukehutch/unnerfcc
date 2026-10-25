@@ -1,26 +1,236 @@
 {
- "from": "2.1.292",
- "to": "2.1.293",
+ "from": "2.1.293",
+ "to": "2.1.310",
  "changes": [
-  {
-   "id": "system-prompt-subagent-id-usage-footer",
-   "name": "System Prompt: Subagent id usage footer",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "9ca6d0eeabbd",
-   "newHash": "3a17f84901fa",
-   "sample": "', summary: '<5-10 word recap>' to continue this agent)"
-  },
   {
    "id": "agent-prompt-claude-test-author-2",
    "name": "Agent Prompt: Claude Test spec author",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "936a9ed7e037",
+   "newHash": "751bdb5c8965",
+   "sample": "---\ndescription: Internal to Claude Test — drafts spec files in the background for a first run. Started only by the claude-test run skill.\nuser-invocable: false\ncontext: fork\nagent: claude-test:author"
+  },
+  {
+   "id": "agent-prompt-managed-agents-onboarding-flow",
+   "name": "Agent Prompt: Managed Agents onboarding flow",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "1198eeb5e2b5",
+   "newHash": "5b94f354dd4f",
+   "sample": "# Managed Agents - Onboarding Flow\n\n> **Invoked via `/claude-api managed-agents-onboard`?** You're in the right place. Run the interview below - don't summarize it back to the user, ask the questions."
+  },
+  {
+   "id": "agent-prompt-managed-agents-onboarding-from-quickstart",
+   "name": "Agent Prompt: Managed Agents onboarding from bundled quickstart",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "42cfad60e571",
+   "newHash": "d67352de1e87",
+   "sample": "# Managed Agents - Onboarding From a Bundled Quickstart\n\n> **Invoked via `/claude-api managed-agents-onboard <quickstart-name>`?** You're in the right place. The name is one of the templates on the Co"
+  },
+  {
+   "id": "agent-prompt-pr-slash-command-analyze-and-draft",
+   "name": "Agent Prompt: PR slash command (analyze and draft)",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "f24a59d16fa4",
+   "newHash": "677a6cfc6155",
+   "sample": "\n## Your task\n\nBased on the changes above, open a single pull request:\n\n1. Analyze ALL changes that will be included in the PR (every commit since ${BASE_BRANCH}, not just the latest), then draft a ti"
+  },
+  {
+   "id": "agent-prompt-web-search-assistant",
+   "name": "Agent Prompt: Web search assistant",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "756ad293b04e",
+   "newHash": "d279c685809a",
+   "sample": "You run a web search for another Claude model, which is waiting on the result and can search again. Search once, then reply with a brief summary of the results."
+  },
+  {
+   "id": "data-tool-use-reference-csharp",
+   "name": "Data: Tool use reference — C#",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "353196647c60",
+   "newHash": "092aa01d23d6",
+   "sample": "# Tool Use - C#\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build a"
+  },
+  {
+   "id": "data-tool-use-reference-java",
+   "name": "Data: Tool use reference — Java",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "ccbb5ee37bcf",
+   "newHash": "c7cf4ed716db",
+   "sample": "# Tool Use - Java\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build"
+  },
+  {
+   "id": "data-tool-use-reference-php",
+   "name": "Data: Tool use reference — PHP",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "1a285718373a",
+   "newHash": "a5ef7e57ffbf",
+   "sample": "# Tool Use - PHP\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build "
+  },
+  {
+   "id": "data-tool-use-reference-python",
+   "name": "Data: Tool use reference — Python",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "d23ce7bf23fc",
+   "newHash": "2259557f33fc",
+   "sample": "# Tool Use - Python\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you bui"
+  },
+  {
+   "id": "data-tool-use-reference-ruby",
+   "name": "Data: Tool use reference — Ruby",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "643cfa9fb9ef",
+   "newHash": "85be9a1bb74d",
+   "sample": "#\u0000 \u0000T\u0000o\u0000o\u0000l\u0000 \u0000U\u0000s\u0000e\u0000 \u0000-\u0000 \u0000R\u0000u\u0000b\u0000y\u0000\n\u0000\n\u0000F\u0000o\u0000r\u0000 \u0000c\u0000o\u0000n\u0000c\u0000e\u0000p\u0000t\u0000u\u0000a\u0000l\u0000 \u0000o\u0000v\u0000e\u0000r\u0000v\u0000i\u0000e\u0000w\u0000 \u0000(\u0000t\u0000o\u0000o\u0000l\u0000 \u0000d\u0000e\u0000f\u0000i\u0000n\u0000i\u0000t\u0000i\u0000o\u0000n\u0000s\u0000,\u0000 \u0000t\u0000o\u0000o\u0000l\u0000 \u0000c\u0000h\u0000o\u0000i\u0000c\u0000e\u0000,\u0000 \u0000t\u0000i\u0000p\u0000s\u0000)\u0000,\u0000 \u0000s\u0000e\u0000e\u0000 \u0000[\u0000s\u0000h\u0000a\u0000r\u0000e\u0000d\u0000/\u0000t\u0000o\u0000o\u0000l\u0000-\u0000u\u0000"
+  },
+  {
+   "id": "data-tool-use-reference-typescript",
+   "name": "Data: Tool use reference — TypeScript",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "160d8c1cc9fb",
+   "newHash": "6bdfcef63b17",
+   "sample": "# Tool Use - TypeScript\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you"
+  },
+  {
+   "id": "skill-artifact-design",
+   "name": "Skill: artifact-design",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "dc8b8f4adc29",
+   "newHash": "8e4917f5394a",
+   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh"
+  },
+  {
+   "id": "skill-claude-test-spec-format",
+   "name": "Skill: Claude Test spec file format",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "3097502bea29",
+   "newHash": "faa1fe4d933c",
+   "sample": "#\u0000 \u0000S\u0000p\u0000e\u0000c\u0000 \u0000f\u0000i\u0000l\u0000e\u0000 \u0000f\u0000o\u0000r\u0000m\u0000a\u0000t\u0000\n\u0000\n\u0000O\u0000n\u0000e\u0000 \u0000M\u0000a\u0000r\u0000k\u0000d\u0000o\u0000w\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000 \u0000p\u0000e\u0000r\u0000 \u0000s\u0000p\u0000e\u0000c\u0000 \u0000i\u0000n\u0000 \u0000`\u0000.\u0000c\u0000l\u0000a\u0000u\u0000d\u0000e\u0000-\u0000t\u0000e\u0000s\u0000t\u0000/\u0000s\u0000p\u0000e\u0000c\u0000s\u0000/\u0000`\u0000.\u0000 \u0000F\u0000i\u0000l\u0000e\u0000 \u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000l\u0000o\u0000w\u0000e\u0000r\u0000-\u0000c\u0000a\u0000s\u0000e\u0000 \u0000w\u0000o\u0000r\u0000d\u0000s\u0000"
+  },
+  {
+   "id": "skill-prompt-audit-guide",
+   "name": "Skill: Prompt audit guide",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "b72ff5a79bcb",
+   "newHash": "b5cce4bcb50f",
+   "sample": "# Prompt Audit - Finding and Removing Dated Prompting Patterns\n\n> **If you arrived via `/claude-api prompt-audit`:** this is the right file. Execute the steps below in order - do not summarize them ba"
+  },
+  {
+   "id": "tool-description-artifact-types-and-quickstart",
+   "name": "Tool Description: Artifact types and quickstart workflow",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "0dd86363539e",
+   "newHash": "09aa849c338a",
+   "sample": "**Artifact types**: published Artifact types (ready-made pages, such as slide decks, documents or designs, that take Claude's content as data) and the design systems that decks and designs are built w"
+  },
+  {
+   "id": "tool-description-claude-test-install-tooling-suffix",
+   "name": "Tool Description: claude_test_install tooling suffix",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "8a3e30b7c3a9",
+   "newHash": "b5d9c30ef1ff",
+   "sample": " using your npm configuration; prints the registry it used. Takes up to a minute. On success this server loads the tooling at once: end the current run and run Claude Test again (no /mcp step). A mach"
+  },
+  {
+   "id": "tool-result-chrome-tools-connection-status-guidance",
+   "name": "Tool Result: Chrome tools connection status guidance",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "fe5d9bc31d49",
+   "newHash": "4b5b54e46804",
+   "sample": "Claude in Chrome needs no enabling: its tools are the ones whose names contain claude-in-chrome or Claude_in_Chrome. ${LOADING_INSTRUCTION}. ${STATUS_NOTE} If you have no browser tool of any kind, tel"
+  },
+  {
+   "id": "tool-result-read-file-too-large-use-offset-limit",
+   "name": "Tool Result: File too large — use offset and limit",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "f5f341c31fee",
+   "newHash": "f741283df714",
+   "sample": "File content (${TOKEN_COUNT} tokens) exceeds maximum allowed tokens (${MAX_TOKENS}). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of re"
+  },
+  {
+   "id": "agent-prompt-quick-pr-creation-2",
+   "name": "Agent Prompt: Quick PR creation",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "0a5074027e8d",
-   "newHash": "936a9ed7e037",
-   "sample": "---\ndescription: Internal to Claude Test — drafts spec files in the background for a first run. Started only by the claude-test run skill.\nuser-invocable: false\ncontext: fork\nagent: claude-test:author"
+   "oldHash": "0b947869a32f",
+   "newHash": "f46cdee68827",
+   "sample": "\n3. Push the branch to the repo's remote (usually `origin`; use the remote this repo is actually configured with)\n4. If a PR already exists for this branch (check the gh pr view output above), update "
+  },
+  {
+   "id": "system-prompt-claude-in-chrome-loading-deferred-tools",
+   "name": "System Prompt: Claude in Chrome loading deferred tools",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "c63cc36511fa",
+   "newHash": "85b2a436b24d",
+   "sample": "## Loading deferred tools\n\nIf the mcp__claude-in-chrome__* tools are deferred (must be loaded via ToolSearch before use), load every tool you expect to need in ONE ToolSearch call — the select query a"
+  },
+  {
+   "id": "system-prompt-coordinator-mode",
+   "name": "System Prompt: Coordinator mode",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "8a0356dcf1e2",
+   "newHash": "d8670599db9f",
+   "sample": "\n${SKILLS_INSTRUCTIONS}\nWhen calling ${AGENT_TOOL_NAME}:\n- Do not use one worker to check on another. Workers will notify you when they are done.\n- Do not use workers to trivially report file contents"
+  },
+  {
+   "id": "tool-description-artifact-types-guidance",
+   "name": "Tool Description: Artifact types guidance",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "be4f99f0924d",
+   "newHash": "c178a8c83cac",
+   "sample": "**Artifact types**: published Artifact types may be available to this person. They are ready-made pages, such as slide decks, documents or designs, that take Claude's content as data (people may call "
+  },
+  {
+   "id": "tool-description-bash-creating-pull-requests",
+   "name": "Tool Description: Bash — creating pull requests",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "da090e52e665",
+   "newHash": "f7aba2849f88",
+   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
   }
  ],
  "unverifiable": []

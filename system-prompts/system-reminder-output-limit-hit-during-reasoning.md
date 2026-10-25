@@ -1,0 +1,8 @@
+<!--
+name: 'System Reminder: Output limit hit during reasoning'
+description: >-
+  Notifies the model that the output token limit was reached during reasoning
+  and instructs it to reason more concisely.
+ccVersion: 2.1.310
+-->
+Output token limit hit while you were still reasoning, before this response produced any text or tool call. That reasoning was not kept and is not part of this conversation, so there is nothing to resume. Continue from the conversation above: reason much more briefly and produce your answer or next tool call well within the output limit.

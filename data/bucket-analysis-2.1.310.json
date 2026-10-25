@@ -1,0 +1,511 @@
+{
+  "ccVersion": "2.1.310",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-claude-api-managed-agents-secure-unsupported-session.md",
+      "verdict": "keep",
+      "reasoning": "The instruction specifies how to handle an unsupported environment where Claude Code's verification commands cannot run. Halting with a single clear sentence rather than attempting unauthorized manual inspection is proper error handling rather than an artificial capability nerf."
+    },
+    {
+      "file": "agent-prompt-claude-test-explorer.md",
+      "verdict": "keep",
+      "reasoning": "The compact report framing and 40-line ceiling flagged in the notes are already addressed by existing rules for this prompt. No further un-nerf rules are necessary."
+    },
+    {
+      "file": "tool-result-claude-test-confirm-run-declined.md",
+      "verdict": "keep",
+      "reasoning": "Asking in one short line when the user declines an outline is interactive turn-taking UX to elicit adjustment feedback. It does not artificially restrict substantive analysis or generation."
+    },
+    {
+      "file": "data-tool-use-reference-csharp.md",
+      "verdict": "keep",
+      "reasoning": "This section governs an unsolicited, unprompted offer of Managed Agents on large Messages API tasks. Per UNNERF-GUIDE calibration example 2, keeping unprompted offers brief is proper interruption etiquette rather than a capability constraint."
+    },
+    {
+      "file": "tool-description-artifact-types-and-quickstart.md",
+      "verdict": "keep",
+      "reasoning": "Informing the user in one line that a design system artifact can also be set up as files in the repository is an unprompted informational aside. It does not truncate substantive artifact content."
+    },
+    {
+      "file": "system-reminder-attached-machine-reachable-again.md",
+      "verdict": "keep",
+      "reasoning": "This handles an unprompted, asynchronous system reminder that an attached machine is reachable again. Halting with a single short line when no tasks were waiting avoids conversational clutter from background system events."
+    },
+    {
+      "file": "data-tool-use-reference-python.md",
+      "verdict": "keep",
+      "reasoning": "Directs a short unprompted offer of Managed Agents when building Messages API jobs. Per guide calibration 2, brevity caps on unsolicited sales pitches are appropriate UX to avoid annoying the user."
+    },
+    {
+      "file": "tool-result-read-file-read-anyway-override.md",
+      "verdict": "keep",
+      "reasoning": "This tool result informs the model of the override parameter to force-read oversized files up to context room. Per guide calibration 1, genuine context-budget limits that explicitly provide the override parameter when full content is required should be kept."
+    },
+    {
+      "file": "data-tool-use-reference-go.md",
+      "verdict": "keep",
+      "reasoning": "Governs unprompted pitches for Managed Agents on Messages API tasks. Per guide calibration 2, keeping unsolicited recommendations brief and unobtrusive is proper UX etiquette."
+    },
+    {
+      "file": "system-prompt-proactivity-high-autonomous-execution-guidelines.md",
+      "verdict": "keep",
+      "reasoning": "These guidelines instruct high autonomous proactivity: stating assumptions and proceeding rather than halting for unnecessary user confirmation. Brief narration ensures continuous forward execution rather than conversational blocking."
+    },
+    {
+      "file": "skill-managed-agents-secure.md",
+      "verdict": "keep",
+      "reasoning": "This skill defines an exact, read-only audit procedure comparing configurations against Anthropic's published security guide. The conciseness instructions govern pre-flight checks and avoid unverified safety claims."
+    },
+    {
+      "file": "system-prompt-proactivity-and-recommendations.md",
+      "verdict": "keep",
+      "reasoning": "This prompt encourages proactive decision-making and recommending a course of action rather than passive questioning or exhaustive surveys. It promotes taking initiative rather than holding back capability."
+    },
+    {
+      "file": "agent-prompt-workflow-script-plain-text-return-note.md",
+      "verdict": "keep",
+      "reasoning": "The agent output is returned verbatim as a string into a calling workflow script that parses it. Per guide calibration 3, conciseness and omitting conversational preamble are functional requirements for automated machine parsing."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-not-answering-stop.md",
+      "verdict": "keep",
+      "reasoning": "Instructs a one-line exit message when the target web application is confirmed not running after multiple attempts. Concise terminal exit messaging upon failed prerequisites is clean CLI UX."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-timed-out-stop.md",
+      "verdict": "keep",
+      "reasoning": "Provides a clean, single-line terminal exit message when a startup dialog is dismissed or timed out by the user. It is cancellation status feedback, not a restriction on substantive work."
+    },
+    {
+      "file": "system-prompt-memory-curation-guidelines.md",
+      "verdict": "keep",
+      "reasoning": "Memory curation guidelines prevent long-term context degradation across sessions by deduplicating entries and avoiding storing facts already documented in codebase files. This protects global context capacity rather than nerfing task execution."
+    },
+    {
+      "file": "agent-prompt-web-fetch-specialist.md",
+      "verdict": "keep",
+      "reasoning": "The report focus constraint has already been lifted by an existing rule on this file. The remaining crawl limits and retry guards prevent infinite fetch loops on permanent HTTP and proxy errors."
+    },
+    {
+      "file": "system-prompt-claude-in-chrome-automation-guidelines.md",
+      "verdict": "keep",
+      "reasoning": "Stopping after repeated browser automation failures or unresponsive extension calls prevents infinite loops in interactive browser sessions. Leaning keep per guide instructions on genuine failure guards."
+    },
+    {
+      "file": "tool-result-claude-test-browser-install-declined.md",
+      "verdict": "keep",
+      "reasoning": "When the user explicitly declines installing the prerequisite test browser, stopping with a concise explanation and displaying the terminal install command is appropriate CLI behavior."
+    },
+    {
+      "file": "system-prompt-no-need-to-reread-edited-files.md",
+      "verdict": "keep",
+      "reasoning": "Explaining that the model does not need to re-read files solely to verify edits reflects the mechanical reality that Edit/Write tools throw errors on failure. It eliminates redundant, wasteful tool calls without restricting verification when needed."
+    },
+    {
+      "file": "skill-doctor-reporting-and-confirmation-gates.md",
+      "verdict": "keep",
+      "reasoning": "The 2-3 sentence constraint applies specifically to the AskUserQuestion confirmation dialog to prevent overwhelming the interactive terminal prompt. Full findings and file-by-file undo steps remain comprehensively reported."
+    },
+    {
+      "file": "skill-claude-test-onboarding.md",
+      "verdict": "keep",
+      "reasoning": "The 40-line ceiling on the generated code map is already lifted by an existing rule on this prompt. The remaining instructions require reporting all environment problems and warnings verbatim."
+    },
+    {
+      "file": "tool-result-claude-in-chrome-switched-off-chat-unlinked.md",
+      "verdict": "keep",
+      "reasoning": "The sentence limit ensures a clear explanation of connector state without hallucinating nonexistent connection problems or unsupported troubleshooting steps. It does not restrict task capability."
+    },
+    {
+      "file": "skill-claude-code-doctor.md",
+      "verdict": "keep",
+      "reasoning": "Consolidating confirmation into at most two questions batches user consent while isolating sensitive permission changes from cleanup. This avoids prompting fatigue in terminal interactions."
+    },
+    {
+      "file": "tool-result-chrome-tools-connection-status-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Instructing the model to state in one plain sentence that Chrome tools are absent and continue with other available tools avoids speculative troubleshooting and keeps progress moving."
+    },
+    {
+      "file": "agent-prompt-usage-shorten-claudemd-dir-prefix.md",
+      "verdict": "keep",
+      "reasoning": "This is a user-facing CLI suggestion prefix suggesting the user shorten oversized CLAUDE.md files in a directory, not a system prompt restriction on model capability."
+    },
+    {
+      "file": "tool-result-claude-in-chrome-switched-off.md",
+      "verdict": "keep",
+      "reasoning": "Standard error/status handling for an unavailable connector; conciseness here ensures a clear error report without confusing the user with non-functional tool mechanics."
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-flow.md",
+      "verdict": "keep",
+      "reasoning": "Directing the onboarding interview to begin with an open prompt allowing the user to describe their agent before configuring is interactive flow control, not an artificial capability restriction."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-not-answering-stop.md",
+      "verdict": "keep",
+      "reasoning": "A terminal error state when an app health check fails twice; stopping with a concise notification directs the user how to resume once their app is running."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-decline-manual-start.md",
+      "verdict": "keep",
+      "reasoning": "Terminal hand-off instruction after the user explicitly declined automated startup, directing them to start the app manually and report back."
+    },
+    {
+      "file": "agent-prompt-usage-add-command-output-rule-suffix.md",
+      "verdict": "keep",
+      "reasoning": "Mechanical context-budget constraint to prevent terminal command output from exhausting the context window by redirecting output to a file and inspecting relevant lines."
+    },
+    {
+      "file": "agent-prompt-pr-slash-command-analyze-and-draft.md",
+      "verdict": "keep",
+      "reasoning": "Follows standard git and GitHub conventions where commit and PR titles are capped under 70 characters for UI display, while explicitly instructing that detail belong in the body."
+    },
+    {
+      "file": "system-prompt-claude-api-notify-deprecated-models-briefly.md",
+      "verdict": "keep",
+      "reasoning": "Interruption-appropriate UX for an unprompted deprecation advisory on first touch, preventing repetitive or intrusive warnings across turns."
+    },
+    {
+      "file": "system-reminder-artifact-resolve-thread-after-acting-lead.md",
+      "verdict": "keep",
+      "reasoning": "Applies to inline comment-thread replies where brief status updates match the genre of thread resolution and avoid cluttering the discussion thread."
+    },
+    {
+      "file": "data-tool-use-reference-typescript.md",
+      "verdict": "keep",
+      "reasoning": "Applies to an unsolicited cross-sell offer for Managed Agents at the end of a Messages API implementation, matching the calibration rule for interruption-appropriate UX on unprompted offers."
+    },
+    {
+      "file": "tool-result-claude-test-browser-install-failed.md",
+      "verdict": "keep",
+      "reasoning": "Error propagation directive when automated browser installation fails, halting execution to prevent unauthorized alternative installations or repetitive prompts."
+    },
+    {
+      "file": "agent-prompt-usage-add-tool-call-rule-suffix.md",
+      "verdict": "keep",
+      "reasoning": "Standard parameter-narrowing guidance for large data queries to prevent exceeding API context or payload limits."
+    },
+    {
+      "file": "skill-dataviz-marks-and-anatomy.md",
+      "verdict": "keep",
+      "reasoning": "Domain-specific data visualization design guidance regarding visual clutter and information hierarchy, not a constraint on model reasoning or task completion."
+    },
+    {
+      "file": "system-reminder-output-limit-no-visible-output.md",
+      "verdict": "keep",
+      "reasoning": "Recovery prompt following an output limit overflow with zero visible output; requesting an immediate user-visible response or tool call prevents entering a secondary silent generation loop."
+    },
+    {
+      "file": "agent-prompt-claude-test-author-2.md",
+      "verdict": "keep",
+      "reasoning": "Structural specification format required by the test framework parser (write-spec) and execution engine, where concise declarative steps are required for browser test replay."
+    },
+    {
+      "file": "agent-prompt-concise-conversation-summarization-prompt.md",
+      "verdict": "keep",
+      "reasoning": "A mechanical context-budget constraint essential for conversation compaction, ensuring the preserved conversation summary fits into the remaining context window while explicitly requiring all facts, paths, errors, and threads to be preserved."
+    },
+    {
+      "file": "agent-prompt-summarization-word-limit.md",
+      "verdict": "keep",
+      "reasoning": "A mechanical context-budget constraint used in conversation summarization to ensure the compacted transcript fits into the context window for ongoing session execution."
+    },
+    {
+      "file": "tool-description-suggest-plugins-text-fallback.md",
+      "verdict": "keep",
+      "reasoning": "Text fallback for an unprompted UI suggestion card, maintaining appropriate brevity so unsolicited plugin suggestions do not derail the user primary workflow."
+    },
+    {
+      "file": "tool-description-artifact-finding-types-list-types-preference.md",
+      "verdict": "keep",
+      "reasoning": "Brief unsolicited signpost mentioning alternative codebase file configuration when selecting design system artifact types, avoiding an unnecessary digression."
+    },
+    {
+      "file": "system-prompt-communicating-with-the-user-2.md",
+      "verdict": "keep",
+      "reasoning": "General communication and theory-of-mind guidance advising outcome-first updates and appropriate abstraction levels for the user. It explicitly permits longer messages and technical detail when the context calls for it, rather than imposing a rigid brevity ceiling."
+    },
+    {
+      "file": "agent-prompt-claude-test-author.md",
+      "verdict": "keep",
+      "reasoning": "Claude Test background spec author returns a fixed-schema report consumed by the parent test agent; altering this format breaks inter-agent parsing."
+    },
+    {
+      "file": "data-tool-use-reference-ruby.md",
+      "verdict": "keep",
+      "reasoning": "Applies to an unsolicited cross-sell offer for Managed Agents at the end of a Messages API implementation, matching the calibration rule for interruption-appropriate UX on unprompted offers."
+    },
+    {
+      "file": "skill-artifact-design.md",
+      "verdict": "keep",
+      "reasoning": "UI and copywriting design guidance advising clear copy and tasteful visual styling rather than over-designing utilitarian documents, not a hold-back restriction on model capability."
+    },
+    {
+      "file": "system-prompt-artifact-intake-elicitation-questionnaire.md",
+      "verdict": "lift",
+      "reasoning": "The prompt imposes an arbitrary cap of up to six questions during intake elicitation, cutting off clarification needed to properly establish audience, scope, and visual direction.",
+      "rule": {
+        "stock": "In the form: up to six questions; a pick-any list is multi-select and says so;",
+        "unnerf": "In the form: ask the questions needed to establish audience, scope, and look; a pick-any list is multi-select and says so;",
+        "description": "artifact intake: drop the six-question cap"
+      }
+    },
+    {
+      "file": "tool-result-claude-test-log-too-large.md",
+      "verdict": "keep",
+      "reasoning": "A mechanical payload constraint triggered when log.md exceeds the file size limit, instructing the spec runner to reduce log verbosity so the report can be stored."
+    },
+    {
+      "file": "tool-result-claude-test-confirm-run-timed-out-stop.md",
+      "verdict": "keep",
+      "reasoning": "Stopping execution with a single status line when run confirmation is dismissed or times out is clean cancellation UX, not a capability nerf."
+    },
+    {
+      "file": "tool-description-artifact-list-types-preference.md",
+      "verdict": "keep",
+      "reasoning": "Mentioning in one line that a design system can be set up as files in the codebase is an unprompted alternative suggestion, which appropriately uses low-interruption phrasing."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-chat-package.md",
+      "verdict": "keep",
+      "reasoning": "Offering once in one line to package the mod is an unsolicited suggestion following standard low-interruption UX calibration."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-github-repository.md",
+      "verdict": "keep",
+      "reasoning": "The single-line offer to share the mod via GitHub is an unprompted offer that follows appropriate low-interruption UX guidelines."
+    },
+    {
+      "file": "system-prompt-auto-mode-proactive-execution-rules.md",
+      "verdict": "keep",
+      "reasoning": "Restricting proactive bug fixes to the smallest change that closes the flaw and disallowing unrelated refactors are essential correctness and safety constraints for auto mode."
+    },
+    {
+      "file": "skill-claude-test-run.md",
+      "verdict": "keep",
+      "reasoning": "The candidate brevity rules in this file are already addressed by existing rules, and offering unasked test runs in one line is calibrated unprompted UX."
+    },
+    {
+      "file": "data-tool-use-reference-php.md",
+      "verdict": "keep",
+      "reasoning": "Capping an unprompted offer for Managed Agents at four to five sentences is an appropriate brevity constraint for an unsolicited pitch."
+    },
+    {
+      "file": "tool-result-read-text-limit-exceeded-search-instead.md",
+      "verdict": "keep",
+      "reasoning": "Advising a smaller limit or content search when a read exceeds capacity reflects a genuine mechanical constraint of the tool."
+    },
+    {
+      "file": "agent-prompt-workflow-subagent-plain-text-output.md",
+      "verdict": "keep",
+      "reasoning": "Conciseness guidance for a verbatim script return value ensures machine parsability rather than holding back substantive capability."
+    },
+    {
+      "file": "agent-prompt-workflow-subagent-structured-output.md",
+      "verdict": "keep",
+      "reasoning": "Ending the turn without conversational acknowledgment after a structured tool call ensures clean machine-to-machine workflow execution."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-declined-stop.md",
+      "verdict": "keep",
+      "reasoning": "Stopping with a single informative sentence when the user declines to start the app is standard clean cancellation handling."
+    },
+    {
+      "file": "skill-dataviz-palette.md",
+      "verdict": "keep",
+      "reasoning": "The series cap is a mathematical accessibility requirement based on Color Vision Deficiency Delta E contrast thresholds, not an artificial brevity cap."
+    },
+    {
+      "file": "skill-prompt-audit-guide.md",
+      "verdict": "keep",
+      "reasoning": "The prompt audit guide outlines prompt auditing principles and explicitly instructs against indiscriminate shortening, preserving necessary context."
+    },
+    {
+      "file": "tool-description-claude-test-install-tooling-suffix.md",
+      "verdict": "keep",
+      "reasoning": "Requiring explicit user requests before setting flags that bypass lockfiles or customize download hosts is a crucial security guardrail against supply-chain vulnerabilities."
+    },
+    {
+      "file": "tool-result-read-file-too-large-use-offset-limit-2.md",
+      "verdict": "keep",
+      "reasoning": "Suggesting offset/limit parameters or searching when a file exceeds size limits is a genuine mechanical tool and context-budget constraint."
+    },
+    {
+      "file": "tool-result-read-file-too-large-use-offset-limit.md",
+      "verdict": "keep",
+      "reasoning": "Guidance on using offset, limit, or search when token limits are exceeded is a direct consequence of physical context window limits."
+    },
+    {
+      "file": "system-reminder-claude-in-chrome-mobile-fallback.md",
+      "verdict": "keep",
+      "reasoning": "Briefly noting that Chrome cannot be connected on mobile allows Claude to proceed directly with alternative approaches rather than wasting turns on impossible setup steps."
+    },
+    {
+      "file": "tool-description-artifact-finding-types-2.md",
+      "verdict": "keep",
+      "reasoning": "Saying in one line that a design system can be set up as files in a codebase is an unprompted alternative suggestion, which appropriately uses non-intrusive phrasing."
+    },
+    {
+      "file": "skill-cowork-plugin-authoring.md",
+      "verdict": "keep",
+      "reasoning": "Recommending lean SKILL.md bodies with reference files specifies the progressive disclosure architecture of the plugin system rather than restricting capability."
+    },
+    {
+      "file": "agent-prompt-usage-shorten-claudemd-dir-suffix.md",
+      "verdict": "keep",
+      "reasoning": "Directing the agent to retain common rules and move specialized rules into referenced files defines how to modularize CLAUDE.md files for a specific refactoring task."
+    },
+    {
+      "file": "agent-prompt-usage-shorten-claudemd-file.md",
+      "verdict": "keep",
+      "reasoning": "This prompt specifies the task requirements for modularizing a specific CLAUDE.md file into pointed-to files rather than restricting normal output."
+    },
+    {
+      "file": "agent-prompt-transcript-summarization-prompt.md",
+      "verdict": "keep",
+      "reasoning": "The transcript summarization prompt explicitly mandates completeness even at the cost of length on all substantive details, preserving essential context across sessions."
+    },
+    {
+      "file": "skill-model-migration-guide.md",
+      "verdict": "lift",
+      "reasoning": "The stock instruction artificially limits context retention during conversation compaction by directing the model to 'keep everything else concise' and condense its own reasoning 'much further'. Compaction summaries are substantive working state needed across context boundaries; per Group 1/3 guidelines, artificial brevity caps on substantive workflows should be lifted to preserve essential context.",
+      "rule": {
+        "stock": "Be complete on these even at the cost of length; keep everything else concise. Weight the two voices differently: keep what the user said, asked for, shared, or established carefully and close to their own words; your own explanations and reasoning can be condensed much further, to what they concluded or produced - as long as nothing in the six items above is dropped.",
+        "unnerf": "Be complete on these and preserve all relevant context in full. Keep what the user said, asked for, shared, or established carefully and close to their own words; preserve your own explanations and reasoning with sufficient detail to understand why decisions were made and how conclusions were reached, ensuring nothing in the six items above is dropped.",
+        "description": "model migration guide: drop conciseness cap on compaction summary"
+      }
+    },
+    {
+      "file": "system-reminder-browser-extension-not-connected-prompt.md",
+      "verdict": "keep",
+      "reasoning": "This instruction coordinates with the client app's setup card UI when the browser extension is disconnected. Keeping it concise avoids redundant installation advice that would distract from the interactive setup card."
+    },
+    {
+      "file": "data-tool-use-reference-java.md",
+      "verdict": "keep",
+      "reasoning": "This is an unsolicited, unprompted offer to introduce Managed Agents after completing a large job. Per calibration example 2, constraining unprompted suggestions to a brief offer is appropriate interruption UX rather than a restriction on substantive work."
+    },
+    {
+      "file": "system-prompt-plan-mode-exit-instructions.md",
+      "verdict": "keep",
+      "reasoning": "The plan itself is presented without brevity restrictions; the single-sentence instruction applies only to the mechanical call-to-action reminding the user to switch permission modes in the UI to proceed."
+    },
+    {
+      "file": "system-reminder-output-limit-hit-during-reasoning.md",
+      "verdict": "keep",
+      "reasoning": "This is a direct recovery instruction after a hard failure where the output token budget was exhausted during reasoning before any response was emitted. Reining in reasoning length here is a mechanical necessity to allow the model to produce output."
+    },
+    {
+      "file": "agent-prompt-dream-memory-consolidation-phases.md",
+      "verdict": "keep",
+      "reasoning": "The restriction on exhaustively reading transcripts is already addressed by an existing lifted rule registered for this file."
+    },
+    {
+      "file": "agent-prompt-plan-mode-phase-4.md",
+      "verdict": "keep",
+      "reasoning": "The restriction against including alternatives is already handled by an existing rule, and the remaining scan/detail guidance is a balanced quality instruction ('detailed enough to execute effectively') rather than an artificial length cap."
+    },
+    {
+      "file": "tool-description-agent-cost-and-delegation-guidance.md",
+      "verdict": "keep",
+      "reasoning": "This provides architectural delegation guidance explaining the coordination costs and loss of context when spawning fresh subagents versus executing tool calls inline. It steers the agent away from unnecessary handoffs rather than capping work."
+    },
+    {
+      "file": "data-managed-agents-quickstart-watchlist-scanner.md",
+      "verdict": "keep",
+      "reasoning": "This file is a bundled quickstart template defining a sample financial watchlist scanner application. The executive summary format (top of report short, followed by full ticker detail) is domain-specific document design for the example application."
+    },
+    {
+      "file": "agent-prompt-web-search-assistant.md",
+      "verdict": "keep",
+      "reasoning": "The web search assistant is an internal IPC helper for a primary Claude model that controls the search loop and performs substantive synthesis. Summarizing the helper result keeps the caller's context window focused without restricting overall reasoning."
+    },
+    {
+      "file": "tool-result-chat-not-linked-to-computer.md",
+      "verdict": "keep",
+      "reasoning": "This is an error fallback instruction and template explaining desktop app linking options to the user when a computer is not linked. It does not cap substantive work, and explicitly instructs attempting the task through alternative available tools."
+    },
+    {
+      "file": "data-usage-advice-cheaper-skill-suffix.md",
+      "verdict": "keep",
+      "reasoning": "This is a static user-facing advice string recommending cost optimizations for user-authored skills. It is not a system prompt directive restricting Claude's behavior."
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-from-quickstart.md",
+      "verdict": "keep",
+      "reasoning": "Minimizing questions in this onboarding wizard matches the automated web console flow and avoids badgering the user with redundant configuration queries that can be discovered by tools."
+    },
+    {
+      "file": "agent-prompt-condition-verification-instructions.md",
+      "verdict": "keep",
+      "reasoning": "The flagged step-minimization instruction is already lifted by an existing rule registered for this file."
+    },
+    {
+      "file": "system-reminder-attached-machine-command-status-resolved.md",
+      "verdict": "keep",
+      "reasoning": "This handles an unprompted background event where an asynchronous command resolved. If nothing was waiting on it, acknowledging briefly avoids noisy interruptions in an unrelated conversation."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-chat-package.md",
+      "verdict": "keep",
+      "reasoning": "Offering once in one line to package the mod is an unsolicited suggestion made after completing the requested task. Per calibration example 2, this is appropriate UX for uninvited offers."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-github-repository.md",
+      "verdict": "keep",
+      "reasoning": "This is an unprompted offer to share the mod via a GitHub repository once user work is completed. Keeping unsolicited offers to a single concise prompt matches calibration example 2."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-org-library.md",
+      "verdict": "keep",
+      "reasoning": "Proactively offering once in one line to publish the mod to the organization library is an unprompted suggestion that falls squarely under calibration example 2."
+    },
+    {
+      "file": "skill-dataviz-color-formula.md",
+      "verdict": "keep",
+      "reasoning": "The series limits and palette allocations are scientific, perceptual accessibility requirements grounded in OkLab Delta E color difference calculations and CVD simulation. They are domain specifications rather than system prompt nerfs."
+    },
+    {
+      "file": "tool-result-claude-test-start-app-decline-instruction.md",
+      "verdict": "keep",
+      "reasoning": "When the user declines to let Claude start the app, keeping the prompt to one line asking where it runs or to start it manually is the expected conversational response before waiting for user action."
+    },
+    {
+      "file": "system-prompt-environment-mobile-app.md",
+      "verdict": "keep",
+      "reasoning": "Directing Claude to lead with outcomes and keep messages compact tailors the presentation format to the mobile viewport without curtailing tool execution or technical depth."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-chat-package.md",
+      "verdict": "keep",
+      "reasoning": "This is an unprompted offer to package the mod into a plugin file after the work is finished, which per calibration example 2 should be a brief, single-line suggestion easy to decline."
+    },
+    {
+      "file": "skill-plugin-authoring-sharing-github-repository.md",
+      "verdict": "keep",
+      "reasoning": "Unsolicited offer to share a mod to a GitHub repository once verified, matching calibration example 2 for low-friction unprompted suggestions."
+    },
+    {
+      "file": "tool-result-enable-call-cannot-add-claude-in-chrome.md",
+      "verdict": "keep",
+      "reasoning": "This is a tool result fallback instructing Claude to plainly state that Chrome tools are absent and immediately proceed with alternative tools to complete the user's task."
+    },
+    {
+      "file": "skill-claude-test-spec-format.md",
+      "verdict": "keep",
+      "reasoning": "Advising concise declarative intent over verbose imperative click sequences is standard best practice for resilient test specification design, not a brevity limit on model capabilities."
+    },
+    {
+      "file": "system-reminder-workflow-script-task-authority.md",
+      "verdict": "keep",
+      "reasoning": "This reminder ensures a subagent in an automated pipeline executes its assigned workflow step without overstepping its role or attempting to execute subsequent pipeline stages assigned to other agents."
+    },
+    {
+      "file": "tool-description-askuserquestion-2.md",
+      "verdict": "keep",
+      "reasoning": "This restriction is already addressed by an existing rule for tool-description-askuserquestion-2.md, so per the instructions no new overlapping rule should be proposed."
+    }
+  ]
+}

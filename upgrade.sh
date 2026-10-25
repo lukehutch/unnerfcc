@@ -74,28 +74,58 @@ warn() { printf '\033[1;33m  !\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mupgrade.sh: %s\033[0m\n' "$*" >&2; exit 1; }
 
 # The per-chunk AI outputs (relabel's labels-NNN.json, bucket-analysis's
-# verdicts-NNN.json) are kept in a per-version cache outside $WORK, so a run
-# that dies at a later step does not pay for — or re-roll — them again.
-# They are reused only when the freshly prepared worklist is byte-identical to
-# the one they were produced for; any change in inputs discards them.
+# verdicts-NNN.json) are the only parts of a sync that cost money, so they are
+# kept in a per-version cache outside $WORK. A sync routinely needs several
+# attempts at the SAME Claude Code version — the first run surfaces a broken
+# un-nerf anchor, a removed prompt or a format change in engine/, the
+# maintainer edits the repo, and the run starts over — and none of that editing
+# invalidates a label the model already produced.
+#
+# The cache is CONTENT-ADDRESSED on the chunk file: an entry is named for the
+# sha256 of the exact chunk input it answers. That is what makes a retry cheap
+# even when the inputs shifted underneath it:
+#
+#   - a chunk whose bytes are unchanged hits the cache, whatever else moved;
+#   - a chunk that genuinely changed misses, and ONLY that chunk is re-queried;
+#   - renumbering or re-chunking is harmless, since nothing is keyed to NNN.
+#
+# An earlier design guarded the whole cache with a single copy of worklist.json
+# and discarded ALL of it when the freshly prepared worklist differed by one
+# byte. That fired constantly: bucket-analyze embeds each file's existingRules
+# in its worklist, so merging a single accepted rule rewrote the worklist and
+# threw away all six chunks' verdicts. The re-query then rolled DIFFERENT
+# proposals (the model is not deterministic), merged those too, and changed the
+# worklist again — each retry of the same version appending another pair of
+# unreviewed rules to apply-unnerfs.py. Content-addressing ends that: 97 of 99
+# unchanged candidates stay cached and only the two that moved are re-asked.
 AI_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/unnerfcc"
+chunk_key() {       # <chunk file> -> sha256 of its contents
+  shasum -a 256 "$1" | cut -d' ' -f1
+}
 reuse_ai_cache() {  # <cache dir> <work dir> <file prefix>
-  local cache="$1" work="$2" prefix="$3" f n=0
-  [ -f "$cache/worklist.json" ] || return 0
-  if ! cmp -s "$cache/worklist.json" "$work/worklist.json"; then
-    rm -rf "${cache:?}"; return 0
-  fi
-  for f in "$cache/$prefix"-[0-9]*.json; do
-    [ -f "$f" ] && cp "$f" "$work/" && n=$((n+1))
+  local cache="$1" work="$2" prefix="$3" chunk cn key n=0
+  [ -d "$cache" ] || return 0
+  for chunk in "$work"/chunk-*.json; do
+    [ -f "$chunk" ] || continue
+    cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+    key=$(chunk_key "$chunk")
+    if [ -f "$cache/$prefix-$key.json" ]; then
+      cp "$cache/$prefix-$key.json" "$work/$prefix-$cn.json" && n=$((n+1))
+    fi
   done
-  [ "$n" -gt 0 ] && ok "reusing $n cached $prefix chunk(s) from an earlier run ($cache)"
+  [ "$n" -gt 0 ] && ok "reusing $n cached $prefix chunk(s) from an earlier run of this version ($cache)"
   return 0
 }
 save_ai_cache() {   # <cache dir> <work dir> <file prefix>
-  local cache="$1" work="$2" prefix="$3" f
+  local cache="$1" work="$2" prefix="$3" chunk cn key
   mkdir -p "$cache"
-  cp "$work/worklist.json" "$cache/"
-  for f in "$work/$prefix"-[0-9]*.json; do [ -f "$f" ] && cp "$f" "$cache/"; done
+  for chunk in "$work"/chunk-*.json; do
+    [ -f "$chunk" ] || continue
+    cn=$(basename "$chunk" .json); cn=${cn#chunk-}
+    [ -f "$work/$prefix-$cn.json" ] || continue
+    key=$(chunk_key "$chunk")
+    cp "$work/$prefix-$cn.json" "$cache/$prefix-$key.json"
+  done
   return 0
 }
 bun_incompatible() {
@@ -536,7 +566,18 @@ node "$REPO/scripts/sync-version.mjs" "$CC_VERSION"
 # what's on disk right now — a rule keyed to already-un-nerfed text would
 # immediately show up as "already covered" (or, if genuinely different, get
 # rejected by the overlap check) rather than silently duplicating.
-if [ -f "$BUCKET_ANALYZE" ]; then
+# Bucket-analysis is the one AI step whose output is not merely expensive but
+# NON-IDEMPOTENT: it proposes lifts, and a re-run of the same version proposes a
+# DIFFERENT set, which merge then appends alongside the first. Several retries
+# of one sync would quietly grow apply-unnerfs.py with pairs of rules nobody
+# reviewed. A version is analyzed once: the review record proves the analysis
+# ran, and the dated block in apply-unnerfs.py proves its accepted rules landed.
+# Needing both means a run that died between the two still re-analyzes.
+BA_RECORD="$REPO/data/bucket-analysis-$CC_VERSION.json"
+if [ -f "$BUCKET_ANALYZE" ] && [ "$FORCE" -eq 0 ] && [ -f "$BA_RECORD" ] \
+   && grep -q "v$CC_VERSION sync (bucket-analyze.mjs" "$REPO/scripts/apply-unnerfs.py"; then
+  ok "bucket-analysis already done for v$CC_VERSION (data/bucket-analysis-$CC_VERSION.json) — not re-rolling it; --force to redo"
+elif [ -f "$BUCKET_ANALYZE" ]; then
   log "Preparing un-nerf bucket-analysis worklist"
   BA_WORK="$WORK/bucket-analysis"
   M=$(node "$BUCKET_ANALYZE" prepare "$CC_VERSION" "$BA_WORK" | grep -oE 'worklist: [0-9]+' | grep -oE '[0-9]+' || echo 0)
@@ -579,8 +620,11 @@ if [ -f "$BUCKET_ANALYZE" ]; then
     done
     [ -f "$BA_WORK/verdicts.json" ] || die "bucket-analysis did not produce verdicts.json"
     log "Merging accepted un-nerf rules into apply-unnerfs.py"
+    # The cached verdicts are KEPT on a merge failure: the model's answers are
+    # fine, it is the insertion (or an anchor the inserted rule targets) that
+    # broke, and re-rolling 99 candidates to fix a local edit is pure waste.
     node "$BUCKET_ANALYZE" merge "$BA_WORK" "$REPO/scripts/apply-unnerfs.py" "$CC_VERSION" \
-      || { rm -rf "${BA_CACHE:?}"; die "bucket-analysis merge failed — see output above (cached verdicts discarded)"; }
+      || die "bucket-analysis merge failed — see output above (cached verdicts kept for the retry)"
     ok "bucket-analysis complete — full keep/lift review: data/bucket-analysis-$CC_VERSION.json"
   else
     ok "no new un-nerf candidates to bucket-analyze"

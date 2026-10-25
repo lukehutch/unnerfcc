@@ -1,8 +1,10 @@
 <!--
 name: 'Tool Result: Own artifact files kept'
 description: Notes that unlisted artifact files were retained across publish.
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 variables:
-  - EXTRA_NOTE
+  - CAPABILITIES_NOTE
+  - WATCH_NOTE
+  - SYNC_NOTE
 -->
- (and any `files` listed); own files not sent this time were kept.${EXTRA_NOTE}
+; own files not sent this time were kept.${CAPABILITIES_NOTE}${WATCH_NOTE}${SYNC_NOTE}

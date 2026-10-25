@@ -3,7 +3,7 @@ name: 'Data: Prompt Caching — Design & Optimization'
 description: >-
   Document on how to design prompt-building code for effective caching,
   including placement patterns and anti-patterns.
-ccVersion: 2.1.293
+ccVersion: 2.1.310
 -->
 # Prompt Caching - Design & Optimization
 
@@ -240,7 +240,7 @@ Implication: you can change `tool_choice` per-request without losing the tools+s
 | System prompt content | A `{"role": "system", "content": "..."}` message - see § Mid-conversation system messages above | {{PREV_OPUS_NAME}}, {{OPUS_NAME}}, Claude Opus 4.8, {{PREV_FABLE_NAME}}, {{FABLE_NAME}}, {{PREV_MYTHOS_NAME}}, {{MYTHOS_NAME}} - **already available today** ({{SONNET_NAME}} at launch), no beta header |
 | Per-turn reminder (inject, then delete next request) | A turn-scoped `clear_at: "next_user_message"` system message, left in the transcript - see § Mid-conversation system messages above (without the beta: a text block after the `tool_result` blocks, earlier copies kept) | Same models as mid-conversation system messages, behind `mid-conversation-system-clear-at-2026-08-21` |
 | `effort` change | A `{"role": "system", "content": [], "output_config": {"effort": ...}}` message - see `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} from {{PREV_FABLE_NAME}} | {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, {{SONNET_NAME}} and {{HAIKU_NAME}} (thinking on only), behind `mid-conversation-output-config-2026-07-01` |
-| Dropped thinking blocks (a {{FABLE_NAME}} / {{MYTHOS_NAME}} / {{OPUS_NAME}} / {{SONNET_NAME}} block replayed to a model that can't read it - only {{FABLE_NAME}} / {{MYTHOS_NAME}} on the Claude API read {{OPUS_NAME}}'s, and no other model reads {{SONNET_NAME}}'s - or a history-editing-check `drop_block`) | None - the API drops the block on that request and the messages cache changes from its position onward; tools and system caches are intact. Blocks the receiving model can read, passed back unchanged, keep the cache intact | - |
+| Dropped thinking blocks (a {{FABLE_NAME}} / {{MYTHOS_NAME}} / {{OPUS_NAME}} / {{SONNET_NAME}} / {{HAIKU_NAME}} block replayed to a model that can't read it - only {{FABLE_NAME}} / {{MYTHOS_NAME}} on the Claude API read {{OPUS_NAME}}'s, only {{OPUS_NAME}} on the Claude API and Google Cloud reads {{SONNET_NAME}}'s, and only {{OPUS_NAME}} and {{SONNET_NAME}} on the Claude API and Google Cloud read {{HAIKU_NAME}}'s - or a history-editing-check `drop_block`) | None - the API drops the block on that request and the messages cache changes from its position onward; tools and system caches are intact. Blocks the receiving model can read, passed back unchanged, keep the cache intact | - |
 
 Model switch has no escape hatch: caches are model-scoped. Keep the main loop on one model and spawn a subagent for cheaper sub-tasks (see `agent-design.md` § Caching for Agents).
 

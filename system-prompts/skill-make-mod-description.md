@@ -3,6 +3,6 @@ name: 'Skill: Make a mod description'
 description: >-
   Description for the mod authoring skill to create live UI components or hooks
   as plugins in Claude Code.
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
-Make a mod: a live pane, band, status line, toast or hook inside Claude Code (terminal or desktop Code tab), written as a plugin of function hooks that hot-reloads in this session. Load before writing or debugging a hooks module.
+Make a mod: a change to Claude's own interface or behaviour, such as a panel or pane that stays beside the chat and updates, a band, status line, toast, slash command, or hook on tool calls. Use to make, change or debug a mod or its hooks module.

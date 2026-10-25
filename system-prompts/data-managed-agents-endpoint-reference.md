@@ -3,11 +3,11 @@ name: 'Data: Managed Agents endpoint reference'
 description: >-
   Comprehensive reference for Managed Agents API endpoints, SDK methods,
   request/response schemas, error handling, and rate limits
-ccVersion: 2.1.293
+ccVersion: 2.1.310
 -->
 # Managed Agents - Endpoint Reference
 
-All endpoints require `x-api-key` and `anthropic-version: 2023-06-01` headers. Managed Agents endpoints additionally require the `anthropic-beta` header.
+All endpoints require an `x-api-key` header and an `anthropic-version` header (for example `2026-10-21`). Managed Agents endpoints additionally require the `anthropic-beta` header.
 
 > Most users should define agents and environments as version-controlled files synced with `ant apply` - see `shared/anthropic-cli.md`. The endpoints below are the underlying API that the CLI and SDKs drive.
 
@@ -35,8 +35,8 @@ All resources are under the `beta` namespace. Python and TypeScript share identi
 | Session Events | `sessions.events.list` / `send` / `stream` | `Sessions.Events.List` / `Send` / `StreamEvents` |
 | Session Threads | `sessions.threads.list` / `retrieve` / `archive`; `sessions.threads.events.list` / `stream` | `Sessions.Threads.List` / `Get` / `Archive`; `Sessions.Threads.Events.List` / `StreamEvents` |
 | Session Resources | `sessions.resources.add` / `retrieve` / `update` / `list` / `delete` | `Sessions.Resources.Add` / `Get` / `Update` / `List` / `Delete` |
-| Deployments | `deployments.create` / `update` / `pause` / `unpause` / `archive` / `run` | Not yet documented - WebFetch the SDK repo (`shared/live-sources.md`) |
-| Deployment Runs | `deployment_runs.list` / `retrieve` (TS: `deploymentRuns.*`) | Not yet documented - WebFetch the SDK repo (`shared/live-sources.md`) |
+| Deployments | `deployments.create` / `update` / `pause` / `unpause` / `archive` / `run` | Not yet documented - fetch the SDK repo (`shared/live-sources.md`) |
+| Deployment Runs | `deployment_runs.list` / `retrieve` (TS: `deploymentRuns.*`) | Not yet documented - fetch the SDK repo (`shared/live-sources.md`) |
 | Vaults | `vaults.create` / `retrieve` / `update` / `list` / `delete` / `archive` | `Vaults.New` / `Get` / `Update` / `List` / `Delete` / `Archive` |
 | Credentials | `vaults.credentials.create` / `retrieve` / `update` / `list` / `delete` / `archive` / `mcp_oauth_validate` | `Vaults.Credentials.New` / `Get` / `Update` / `List` / `Delete` / `Archive` / `McpOauthValidate` |
 | Memory Stores | `memory_stores.create` / `retrieve` / `update` / `list` / `delete` / `archive` | `MemoryStores.New` / `Get` / `Update` / `List` / `Delete` / `Archive` |
@@ -44,7 +44,7 @@ All resources are under the `beta` namespace. Python and TypeScript share identi
 | Memory Versions | `memory_stores.memory_versions.list` / `retrieve` / `redact` | `MemoryStores.MemoryVersions.List` / `Get` / `Redact` |
 
 **Naming quirks to watch for:**
-- Agents and Session Threads have **no delete** - only `archive`. Archive is **permanent**: the agent becomes read-only, new sessions cannot reference it, and there is no unarchive. Confirm with the user before archiving a production agent. Environments, Sessions, Vaults, Credentials, and Memory Stores have both `delete` and `archive`; Session Resources, Files, Skills, and Memories are `delete`-only; Memory Versions have neither - only `redact`.
+- Agents and Session Threads have **no delete** - only `archive`. Archive is **permanent**: the agent becomes read-only, new sessions cannot reference it, and there is no unarchive. Environments, Sessions, Vaults, Credentials, and Memory Stores have both `delete` and `archive`; Session Resources, Files, Skills, and Memories are `delete`-only; Memory Versions have neither - only `redact`.
 - Session resources use `add` (not `create`).
 - Go's event stream is `StreamEvents` (not `Stream`).
 - The self-hosted worker class is `EnvironmentWorker` from `anthropic.lib.environments` / `@anthropic-ai/sdk/helpers/beta/environments` / `anthropic-sdk-go/lib/environments`; `client.beta.environments.work.worker(...)` is a factory that returns the same class, alongside the `environments.work.poller/stats/stop` client methods.
@@ -57,7 +57,7 @@ All resources are under the `beta` namespace. Python and TypeScript share identi
 
 ## Agents
 
-**Step one of every flow.** Sessions require a pre-created agent - there is no inline agent config under `managed-agents-2026-04-01`.
+**Step one of every flow.** Sessions require a pre-created agent.
 
 | Method   | Path                                             | Operation        | Description                              |
 | -------- | ------------------------------------------------ | ---------------- | ---------------------------------------- |
@@ -122,7 +122,7 @@ Per-subagent event streams in multiagent sessions. See `shared/managed-agents-mu
 | `GET`    | `/v1/environments/{environment_id}/work/stats`         | WorkQueueStats       | Self-hosted work-queue depth/pending/workers. `x-api-key` auth. See `shared/managed-agents-self-hosted-sandboxes.md`. |
 | `POST`   | `/v1/environments/{environment_id}/work/{work_id}/stop` | StopWork            | Self-hosted: stop a claimed work item. `x-api-key` auth. |
 
-For `type: "self_hosted"`, `config` is the bare `{"type": "self_hosted"}` - `networking` and `packages` do not apply. (`networking` never governs `web_search` / `web_fetch` in either type - those are turned off (`enabled: false`) or restricted per-tool with `allowed_domains` / `blocked_domains` in the agent toolset; see `shared/managed-agents-tools.md`.)
+For `type: "self_hosted"`, `config` is the bare `{"type": "self_hosted"}` - `networking` and `packages` do not apply. (With `limited` networking, `allowed_hosts` also applies to `web_search` / `web_fetch`; `unrestricted` networking and self-hosted environments do not limit them. In both environment types they can be turned off (`enabled: false`) or restricted per-tool with `allowed_domains` / `blocked_domains` in the agent toolset; see `shared/managed-agents-tools.md`.)
 
 ## Deployments
 
@@ -237,7 +237,7 @@ Immutable per-mutation snapshots (`memver_...`) - the audit and rollback surface
 
 ### CreateAgent Request Body
 
-**Always start here.** `model`, `system`, `tools`, `mcp_servers`, `skills` are top-level fields on this object - they do NOT go on the session.
+**Always start here.** `model`, `system`, `tools`, `mcp_servers`, `skills` are top-level fields on this object.
 
 ```json
 {
@@ -267,12 +267,16 @@ Immutable per-mutation snapshots (`memver_...`) - the audit and rollback surface
     }
   ],
   "multiagent": {
-    "type": "coordinator",
-    "agents": [
-      "agent_abc123",
-      { "type": "agent", "id": "agent_def456", "version": 4 },
-      { "type": "self" }
-    ]
+    "type": "multiagent_20261001",
+    "subagents": {
+      "type": "enabled",
+      "predefined_agents": [
+        "agent_abc123",
+        { "type": "agent", "id": "agent_def456", "version": 4 },
+        { "type": "self" }
+      ]
+    },
+    "workflows": { "type": "enabled" }
   },
   "metadata": {
     "key": "value (max 16 pairs, keys <=64 chars, values <=512 chars)"
@@ -280,7 +284,7 @@ Immutable per-mutation snapshots (`memver_...`) - the audit and rollback surface
 }
 ```
 
-> Limits: `tools` max 128, `skills` max 20, `mcp_servers` max 20 (unique names). `multiagent.agents` 1-20 entries (string ID | `{type:"agent",id,version?}` | `{type:"self"}` | `{type:"advisor",model}`, at most one advisor) - see `shared/managed-agents-multiagent.md`.
+> Limits: `tools` max 256, `skills` max 500, `mcp_servers` max 20 (unique names). `multiagent` is `{type:"multiagent_20261001", workflows?, subagents?, advisor?}` - see `shared/managed-agents-multiagent.md` (an existing agent can have the older `coordinator` type: § Declare the roster on the coordinator -> Moving off the `coordinator` type). Each member is `{type:"enabled"}` or `{type:"disabled"}`; enabled `workflows` and `subagents` each take optional `predefined_agents` (up to 20 entries: string ID | `{type:"agent",id,version?}` | `{type:"self"}`) and `inline_agents` (`{type:"enabled"}` or `{type:"disabled"}`, default enabled; disabled with an empty list is a 400), enabled `advisor` requires `model`; `workflows` and `subagents` default to enabled, `advisor` to disabled (§ Dynamic workflows).
 
 ### CreateSession Request Body
 

@@ -3,9 +3,7 @@ name: 'Tool Description: CronCreate'
 description: >-
   Describes the CronCreate tool for enqueuing one-shot or recurring cron-based
   jobs with jitter and off-minute scheduling guidance
-ccVersion: 2.1.219
-variables:
-  - CRON_DURABILITY_SECTION
+ccVersion: 2.1.310
 -->
 Schedule a prompt to be enqueued at a future time. Use for both recurring schedules and one-shot reminders.
 
@@ -32,4 +30,3 @@ Every user who asks for "9am" gets `0 9`, and every user who asks for "hourly" g
 
 Only use minute 0 or 30 when the user names that exact time and clearly means it ("at 9:00 sharp", "at half past", coordinating with a meeting). When in doubt, nudge a few minutes early or late — the user will not notice, and the fleet will.
 
-${CRON_DURABILITY_SECTION}

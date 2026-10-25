@@ -1264,31 +1264,13 @@ RULES: dict[str, list[Rule]] = {
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.222.json
     # -------------------------------------------------------------------------
-    "skill-whiteboard.md": [
-        Rule(
-            # v2.1.251 substantially rewrote this skill (security-event handling,
-            # seq-floor/replay tracking, page-authenticity checks all added) —
-            # verified the OLD example text is gone entirely, but the SAME
-            # brevity cap survives, now stricter ("one line at most" vs the old
-            # "a line or two ... at most a sentence of reasoning"), with a new
-            # example ("answered on the board - added a queue between the API
-            # and the workers"). Judgment call on the unnerf wording, since
-            # there's no old phrasing left to mirror mechanically — kept the
-            # same drop-the-length-cap philosophy as the original rule.
-            stock="In chat, one line at most (\"answered on the board - added a queue\n  between the API and the workers\"). If the user asked to keep it all\n  on the board, say nothing in chat unless something failed.",
-            unnerf="In chat, say what you drew and why (\"answered on the board - added a queue\n  between the API and the workers\"). If the user asked to keep it all\n  on the board, say nothing in chat unless something failed.",
-            description="whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
-        ),
-        Rule(
-            # v2.1.277 bucket-analysis (bucket-analyze.mjs, 2026-09-18): AI-proposed,
-            # mechanically validated (stock occurs exactly once, no new ${VAR}
-            # introduced, no overlap with an existing rule, --dry-run confirmed).
-            # Full keep/lift review: data/bucket-analysis-2.1.277.json
-            stock="Chat carries at most a line of why; the board carries the work.",
-            unnerf="Chat carries the why; the board carries the work.",
-            description="whiteboard overview: drop 'at most a line of' chat explanation cap",
-        ),
-    ],
+    # "skill-whiteboard.md": RETIRED in the v2.1.310 sync. Anthropic removed the whole
+    # whiteboard skill upstream -- its body, description and when_to_use
+    # prompts all vanish from the catalog together (skill-whiteboard, skill-whiteboard-description, skill-whiteboard-when-to-use-offer-unprompted).
+    # Searched the 2.1.310 catalog for the stock passages by decoded text
+    # ("answered on the board"): zero hits anywhere, so there is
+    # nothing to retarget. Retired both rules (chat-reply length cap,
+    # "at most a line of why" overview cap).
     # -------------------------------------------------------------------------
     # v2.1.231 sync (bucket-analyze.mjs, 2026-08-13): AI-proposed, mechanically
     # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
@@ -1309,31 +1291,14 @@ RULES: dict[str, list[Rule]] = {
             description="PR slash command: allow reading beyond the supplied git context",
         ),
     ],
-    "skill-artifact-pr-review-2.md": [
-        Rule(
-            # v2.1.251: upstream flattened the em-dash to a plain hyphen.
-            stock="digest the PR into a concise, meaningful review - so a field earns its\nlength by selection, never by completeness.",
-            unnerf="digest the PR into a meaningful review - so a field carries every detail\nthe reviewer needs to decide.",
-            description="PR review artifact: fields carry what the reviewer needs, not a selection cap",
-        ),
-        # v2.1.251 bucket-analysis (data/bucket-analysis-2.1.251.json, ref 77).
-        # Added by hand: bucket-analyze.mjs's merge reported "inserted" but its
-        # duplicate-key guard actually suppressed the write, since this file
-        # already had a rule block. Sibling of the pre-existing 0-3 concerns cap
-        # rule on skill-artifact-pr-review.md — same nerf, the other payload doc.
-        Rule(
-            stock="- concerns: 0-3 genuine judgment questions a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
-            unnerf="- concerns: every genuine judgment question a human reviewer should weigh.\n  Zero is the common case; emit [] freely.",
-            description="PR review payload: drop the 0-3 ceiling on reviewer concerns",
-        ),
-    ],
-    "skill-artifact-pr-review.md": [
-        Rule(
-            stock="- concerns: 0-3, ONLY genuine judgment questions a human reviewer should\n  weigh",
-            unnerf="- concerns: every genuine judgment question a human reviewer should\n  weigh",
-            description="PR review artifact: drop the 0-3 ceiling on reviewer concerns",
-        ),
-    ],
+    # "skill-artifact-pr-review-2.md": RETIRED in the v2.1.310 sync. Anthropic removed the whole
+    # artifact PR-review skill upstream -- its body, description and when_to_use
+    # prompts all vanish from the catalog together (skill-artifact-pr-review, -2, -description, -description-republish-loop).
+    # Searched the 2.1.310 catalog for the stock passages by decoded text
+    # ("digest the PR into"): zero hits anywhere, so there is
+    # nothing to retarget. Retired both rules (selection cap, 0-3 concerns ceiling).
+    # "skill-artifact-pr-review.md": RETIRED in the v2.1.310 sync alongside
+    # skill-artifact-pr-review-2.md above -- same skill, the other payload doc.
     "agent-prompt-commit-message-zero-context-reader.md": [
         Rule(
             stock="Short beats complete: after one pass the reader should know what the change does and what to check",
@@ -1453,13 +1418,12 @@ RULES: dict[str, list[Rule]] = {
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.251.json
     # -------------------------------------------------------------------------
-    "skill-whiteboard-mp.md": [
-        Rule(
-            stock="Reply in chat with a line or two - what you drew and where, with\n   at most a sentence of the reasoning behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right - send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the brief why - no plan dumped in either.",
-            unnerf="Reply in chat with what you drew and where, and the reasoning\n   behind it (\"drew a cache in\n   front of the gateway so reads stay cheap, and an alternative fan-out\n   on the right - send it back when you've had a look\"), plus \"if\n   you kept drawing after sending, send again and I'll fold it in\"\n   when they may still be sketching. The drawing carries the design\n   and chat carries the why.",
-            description="multiplayer whiteboard chat reply: drop the 'line or two' and one-sentence-of-reasoning caps",
-        ),
-    ],
+    # "skill-whiteboard-mp.md": RETIRED in the v2.1.310 sync. Anthropic removed the whole
+    # multiplayer whiteboard skill upstream -- its body, description and when_to_use
+    # prompts all vanish from the catalog together (skill-whiteboard-mp, skill-multiplayer-whiteboard-description).
+    # Searched the 2.1.310 catalog for the stock passages by decoded text
+    # ("drew a cache in"): zero hits anywhere, so there is
+    # nothing to retarget. Retired the one chat-reply rule.
     # -------------------------------------------------------------------------
     # v2.1.251 sync (bucket-analyze.mjs, 2026-08-29): AI-proposed, mechanically
     # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
@@ -1661,20 +1625,103 @@ RULES: dict[str, list[Rule]] = {
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.293.json
     # -------------------------------------------------------------------------
+    # v2.1.310: upstream tightened the explorer's cap from 60 lines to 40 and
+    # the rule, which quoted the whole sentence, stopped matching. Re-anchored
+    # onto the two short cap-bearing phrases so a reword of the surrounding
+    # sentence cannot break it again (same lesson as skill-artifact-design).
     "agent-prompt-claude-test-explorer.md": [
         Rule(
-            stock="return ONE compact report,\nexactly in the shape the task asks for (at most 60 lines, facts and file:line references, visible strings quoted exactly).",
-            unnerf="return a comprehensive report,\nexactly in the shape the task asks for (facts and file:line references, visible strings quoted exactly).",
-            description="claude-test explorer: drop 60-line cap on repo mapping report",
+            stock="return ONE compact report,",
+            unnerf="return a comprehensive report,",
+            description="claude-test explorer: drop the 'compact' framing on the repo mapping report",
+        ),
+        Rule(
+            stock="(at most 40 lines, facts and file:line references",
+            unnerf="(facts and file:line references",
+            description="claude-test explorer: drop the line cap on the repo mapping report",
         ),
     ],
+    # v2.1.310: this rule quoted all of numbered item 3, so upstream inserting a
+    # sentence into it (the "§2, step 4, F3 are never said in the chat" rule) and
+    # an example into the cut-list broke the match. Re-anchored onto the four
+    # short brevity/withholding phrases, which leaves upstream's new mechanics in
+    # place and lifts only the caps.
     "skill-claude-test-run.md": [
         Rule(
-            stock="3. **The conversation carries decisions and headlines; detail is one word away.** The person should feel in control without\n   reading a wall or being nagged: every message is as short as it can be while still letting them steer. Before you send\n   one, cut any line that only narrates what you did, repeats something already on the screen, or explains a choice they did\n   not ask about. Full spec texts, file paths, per-spec reasons and caveats are shown when they ask (\"show 3\", \"why did 2\n   fail?\"), not by default. Say a thing once per conversation, not once per step.",
-            unnerf="3. **The conversation carries decisions, context, and clear explanations.** Provide complete, actionable explanations that let the person steer with full context. Explain choices and findings clearly, and include relevant file paths, spec details, reasons, and caveats upfront rather than withholding them. Say a thing once per conversation, not once per step.",
-            description="claude-test run: explain choices and include file paths and caveats upfront",
+            stock="**The conversation carries decisions and headlines; detail is one word away.**",
+            unnerf="**The conversation carries decisions, context, and the reasoning behind them.**",
+            description="claude-test run: drop the 'headlines only' framing on the conversation",
+        ),
+        Rule(
+            stock="every message is as short as it can be while still letting them steer.",
+            unnerf="every message carries the context they need to steer.",
+            description="claude-test run: drop the as-short-as-possible cap on every message",
+        ),
+        Rule(
+            stock="repeats something already on the screen, or explains a choice they did\n   not ask about (\"A change I didn't make; reading it.\" is such a line).",
+            unnerf="repeats something already on the screen. Keep the lines that explain a choice,\n   including ones they did not ask about.",
+            description="claude-test run: keep the lines that explain a choice the person did not ask about",
+        ),
+        Rule(
+            stock="Full spec texts, file paths, per-spec reasons and caveats are shown when they ask (\"show 3\", \"why did 2\n   fail?\"), not by default.",
+            unnerf="Full spec texts, file paths, per-spec reasons and caveats are given upfront, and they\n   can ask for more (\"show 3\", \"why did 2 fail?\").",
+            description="claude-test run: give spec texts, paths, reasons and caveats upfront",
         ),
     ],
+    # -------------------------------------------------------------------------
+    # v2.1.310 sync (bucket-analyze.mjs, 2026-10-25): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.310.json
+    # -------------------------------------------------------------------------
+    # REVIEWED BY HAND (v2.1.310): a numeric output limit on a sub-agent's
+    # report — Part 1 "No numeric output limits", and the same lift the sibling
+    # agent-prompt-claude-test-explorer.md rules make. ACCEPTED.
+    "skill-claude-test-onboarding.md": [
+        Rule(
+            stock="Return a compact map,\n   > at most 40 lines, facts and file:line references only, visible strings quoted exactly.",
+            unnerf="Return a comprehensive map,\n   > facts and file:line references only, visible strings quoted exactly.",
+            description="claude-test onboarding: drop 40-line cap on code map",
+        ),
+    ],
+    # REVIEWED BY HAND (v2.1.310): "only when you are blocked" gates a tool on
+    # legitimate work, so the decision procedure falls through to item 4 (not
+    # mechanics, not reference content, not user-from-hijacked-agent). Lifting
+    # it means CC resolves an ambiguity with the user instead of guessing,
+    # which is the direction Part 1 mandates. ACCEPTED. Note the sibling cap in
+    # the main system prompt ("Reserve this for decisions where the user's
+    # answer changes what you do next") is a separate id and still stock.
+    "tool-description-askuserquestion-2.md": [
+        Rule(
+            stock="Use this tool only when you are blocked on a decision that is genuinely the user's to make: one you cannot resolve from the request, the code, or sensible defaults.",
+            unnerf="Use this tool for decisions that are genuinely the user's to make, or when resolving ambiguities, architectural choices, and trade-offs that benefit from user direction.",
+            description="AskUserQuestion: drop blocked-only restriction",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.310 sync (bucket-analyze.mjs, 2026-10-25): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.310.json
+    # -------------------------------------------------------------------------
+    # REVIEWED BY HAND (v2.1.310): "up to six questions" is a numeric ceiling on
+    # substantive output — Part 1 "No numeric output limits". ACCEPTED.
+    "system-prompt-artifact-intake-elicitation-questionnaire.md": [
+        Rule(
+            stock="In the form: up to six questions; a pick-any list is multi-select and says so;",
+            unnerf="In the form: ask the questions needed to establish audience, scope, and look; a pick-any list is multi-select and says so;",
+            description="artifact intake: drop the six-question cap",
+        ),
+    ],
+    # REJECTED BY HAND (v2.1.310): bucket-analyze proposed lifting the
+    # "keep everything else concise" clause of skill-model-migration-guide.md's
+    # compaction-summary passage. Part 1 item 2 settles it — the passage is a
+    # blockquoted SAMPLE PROMPT the migration guide hands to API developers to
+    # use for their own client-side compaction, not a directive to Claude, so
+    # editing it changes advice given to users rather than lifting a leash on
+    # CC. On its merits it is also already calibrated rather than capped: it
+    # says "Be complete on these even at the cost of length" for the six items
+    # that matter and asks for concision only outside them.
 }
 
 

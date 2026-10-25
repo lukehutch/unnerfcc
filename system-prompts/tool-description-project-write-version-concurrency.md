@@ -1,0 +1,6 @@
+<!--
+name: 'Tool Description: Project write concurrency and versions'
+description: Explains how project_write handles concurrency via the if_version parameter.
+ccVersion: 2.1.310
+-->
+ Other people and other sessions write to the same docs. Every `project_read` and `project_write` of a text doc returns its `version`: when you replace a doc, pass the `version` that came with the copy you worked from as `if_version`. If the doc has changed since, the write is refused and changes nothing; read the doc again, make your change in that text, and write with the new `version`. Copy the value exactly and never invent one. Omit `if_version` only for a new doc, or when a refusal tells you to.

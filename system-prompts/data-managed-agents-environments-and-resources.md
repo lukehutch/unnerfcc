@@ -3,7 +3,7 @@ name: 'Data: Managed Agents environments and resources'
 description: >-
   Reference documentation covering Managed Agents environments, file resources,
   GitHub repository mounting, and the Files API with SDK examples
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Environments & Resources
 
@@ -11,13 +11,11 @@ ccVersion: 2.1.292
 
 Creating a session requires an `environment_id`. Environments are **reusable configuration templates** for spinning up containers in Anthropic's infrastructure - you might create different environments for different use cases (e.g. data visualization vs web development, with different package sets). Anthropic handles scaling, container lifecycle, and work orchestration.
 
-**Environment names must be unique.** Creating an environment with an existing name returns 409.
-
 ### Networking
 
 | Network Policy   | Description                                                   |
 | ---------------- | ------------------------------------------------------------- |
-| `unrestricted`   | Full egress (except legal blocklist)                          |
+| `unrestricted`   | Full egress (except for a general safety blocklist)           |
 | `limited`        | Deny-by-default; opt in via `allowed_hosts` / `allow_package_managers` / `allow_mcp_servers` |
 
 ```json
@@ -31,13 +29,13 @@ Creating a session requires an `environment_id`. Environments are **reusable con
 }
 ```
 
-All three `limited` fields are optional. `allow_package_managers` (default `false`) permits PyPI/npm/etc.; `allow_mcp_servers` (default `false`) permits the agent's configured MCP server endpoints without listing them in `allowed_hosts`.
+All three `limited` fields are optional. `allow_package_managers` (default `false`) permits PyPI/npm/etc.; `allow_mcp_servers` (default `false`) permits the agent's configured MCP server endpoints without listing them in `allowed_hosts`. In `allowed_hosts`, a bare hostname matches that exact host: `example.com` does not match `www.example.com`. `*.example.com` matches every subdomain of `example.com`, but not `example.com` itself.
 
 **MCP caveat:** Under `limited` networking, either set `allow_mcp_servers: true` or add each MCP server domain to `allowed_hosts`. Otherwise creating a session for an agent that declares those servers fails with a 400 naming the blocked hosts.
 
 **Packages caveat:** Under `limited` networking, `packages` requires `allow_package_managers: true`; otherwise the request fails with a 400. Listing the registry in `allowed_hosts` is not enough.
 
-**`networking` does not govern `web_search` / `web_fetch`.** Those tools run on Anthropic's servers (in cloud *and* self-hosted environments), so `limited` egress and `allowed_hosts` don't restrict them. Turn them off (`enabled: false`) unless the job needs the web; when it does, limit the sites they can reach with `allowed_domains` / `blocked_domains`. Both go on the tool's `configs` entry in the agent toolset - see `shared/managed-agents-tools.md` § Agent Toolset and § Web search & web fetch settings.
+**With `limited` networking, `allowed_hosts` also applies to `web_search` / `web_fetch`**, which run on Anthropic's servers. A `web_fetch` call for a URL on a host that `allowed_hosts` does not match returns an error result to the agent, and `web_search` omits results from hosts that it does not match; `allow_package_managers` and `allow_mcp_servers` add no hosts for these tools. When `allowed_hosts` lists no hosts, no `web_fetch` or `web_search` call returns a page or a search result. A host that you add to `allowed_hosts` for these tools is also open to the sandbox. `unrestricted` networking and self-hosted environments do not limit these tools. Turn them off (`enabled: false`) unless the job needs the web; when it does, list the sites in `allowed_hosts` and also in the tool's `allowed_domains` (or set `blocked_domains` to shut some out). `enabled` and the two domain lists go on the tool's `configs` entry in the agent toolset - see `shared/managed-agents-tools.md` § Agent Toolset and § Web search & web fetch settings.
 
 ### Creating an environment
 

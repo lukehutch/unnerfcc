@@ -4,7 +4,7 @@ description: >-
   Provides the agent with a comprehensive overview of the Managed Agents API
   architecture, mandatory agent-then-session flow, beta headers, documentation
   reading guide, and common pitfalls
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Overview
 
@@ -21,7 +21,7 @@ Every session references a pre-created `/v1/agents` object. Create the agent onc
 | 1 | `POST /v1/agents` - `model`, `system`, `tools`, `mcp_servers`, `skills` live here | **ONCE.** Store `agent.id` **and** `agent.version`. |
 | 2 | `POST /v1/sessions` - `agent: "agent_abc123"` or `{type: "agent", id, version}` | **Every run.** String shorthand uses latest version. |
 
-If you're about to write `sessions.create()` with `model`, `system`, or `tools` on the session body - **stop**. Those fields live on `agents.create()`. The session takes a *pointer* only.
+If you're about to pass `model`, `system`, or `tools` to `sessions.create()` as top-level fields - **stop**. They are fields of `agents.create()`. To change them for one session, see `shared/managed-agents-core.md` § Override agent configuration for a session.
 
 **When generating code, separate setup from runtime.** `agents.create()` belongs in a setup script (or a guarded `if agent_id is None:` block), not at the top of the hot path. If the user's code calls `agents.create()` on every invocation, they're accumulating orphaned agents and paying the create latency for nothing. The correct shape is: define the agent as a version-controlled file and sync it with `ant apply`, which records the ID in `claude-lock.json` (see `shared/anthropic-cli.md`) - or use a guarded setup script that persists the returned ID (config file, env var, secrets manager) - and have every run load the ID and call `sessions.create()`.
 
@@ -52,12 +52,12 @@ Managed Agents is in beta. The SDK sets required beta headers automatically:
 | Update/version an agent                | `shared/managed-agents-core.md` (Agents -> Versioning) - update, don't re-create |
 | Create a session                       | `shared/managed-agents-core.md` + `{lang}/managed-agents/README.md` (cURL/C#: `curl/managed-agents.md`) |
 | Configure tools and permissions        | `shared/managed-agents-tools.md`                        |
-| Turn `web_search` / `web_fetch` on or off; restrict which sites they can reach; localize search; cap fetched content | `shared/managed-agents-tools.md` (§ Agent Toolset, § Web search & web fetch settings) - `enabled` / `allowed_domains` / `blocked_domains` / `user_location` / `max_content_tokens` on the toolset `configs` entry; **not** the environment's `networking` |
+| Turn `web_search` / `web_fetch` on or off; restrict which sites they can reach; localize search; cap fetched content | `shared/managed-agents-tools.md` (§ Agent Toolset, § Web search & web fetch settings) - `enabled` / `allowed_domains` / `blocked_domains` / `user_location` / `max_content_tokens` on the toolset `configs` entry; with `limited` networking the environment's `allowed_hosts` also applies to them (`shared/managed-agents-environments.md`) |
 | Set up MCP servers                     | `shared/managed-agents-tools.md` (MCP Servers section)  |
 | Stream events / handle tool_use        | `shared/managed-agents-events.md` + language file       |
 | Get notified of session state changes via webhook (no polling) | `shared/managed-agents-webhooks.md` - Console-registered endpoint, HMAC verify, thin payload + fetch |
 | Define an outcome / rubric-graded iterate loop | `shared/managed-agents-outcomes.md` - `user.define_outcome` event, grader, `span.outcome_evaluation_*` events |
-| Coordinate multiple agents / subagents / threads | `shared/managed-agents-multiagent.md` - `multiagent: {type: "coordinator", agents: [...]}` on the agent, session threads, cross-posted tool confirmations |
+| Coordinate multiple agents / subagents / threads | `shared/managed-agents-multiagent.md` - `multiagent: {type: "multiagent_20261001", subagents: {...}, workflows: {type: "enabled"}}` on the agent with the system-prompt line for runs, session threads, cross-posted tool confirmations |
 | Set up environments                    | `shared/managed-agents-environments.md` + language file |
 | Run tool execution in your own infra / VPC (self-hosted sandbox) | `shared/managed-agents-self-hosted-sandboxes.md` - `config:{type:"self_hosted"}`, `ANTHROPIC_ENVIRONMENT_KEY`, `EnvironmentWorker.run()` / `ant beta:worker poll` |
 | Upload files / attach repos            | `shared/managed-agents-environments.md` (Resources)     |
@@ -70,11 +70,13 @@ Managed Agents is in beta. The SDK sets required beta headers automatically:
 | Cap a session's spend with a hard dollar budget | `shared/managed-agents-core.md` (§ Session budgets) - `budget` at session create, `budget_reached` pause, change/remove to resume. Deployments: `shared/managed-agents-scheduled-deployments.md` § Deployment budgets |
 | Pin where model inference runs (data residency) | `shared/managed-agents-core.md` (§ Pinning inference geography) - `model.inference_geo` on the agent, per-session override, roster uniformity |
 | Load skills from the codebase instead of uploading | `shared/managed-agents-tools.md` (§ Skills from a GitHub repository) - root `.claude/skills` discovery at session start |
-| Give the session an advisor to consult mid-turn | `shared/managed-agents-multiagent.md` (§ Advisor) - `{type: "advisor", model}` roster entry, consultation threads, plaintext vs redacted delivery |
+| Let the agent run many agents in phases (hundreds of documents, many sources) as a background workflow run - on for every team | `shared/managed-agents-multiagent.md` (§ Dynamic workflows) - `multiagent: {type: "multiagent_20261001", workflows: {type: "enabled"}}` (can combine with a roster), the system-prompt line that says when to start a run, `workflow_run.*` events, knowing when the work is done, interrupting with runs open |
+| Make a workflow run cheaper, faster or better | `shared/managed-agents-multiagent.md` (§ Dynamic workflows -> Reading the plan the agent wrote) - read the plan the agent wrote before you propose a change |
+| Give the session an advisor to consult mid-turn | `shared/managed-agents-multiagent.md` (§ Advisor) - `advisor: {type: "enabled", model}` in `multiagent`, consultation threads, plaintext vs redacted delivery |
 
 ## Common Pitfalls
 
-- **Agent FIRST, then session - NO EXCEPTIONS** - the session's `agent` field accepts **only** a string ID or `{type: "agent", id, version}`. `model`, `system`, `tools`, `mcp_servers`, `skills` are **top-level fields on `POST /v1/agents`**, never on `sessions.create()`. If the user hasn't created an agent, that is step zero of every example.
+- **Agent FIRST, then session - NO EXCEPTIONS** - a session requires the ID of an agent that already exists. `model`, `system`, `tools`, `mcp_servers`, `skills` are **top-level fields on `POST /v1/agents`**. If the user hasn't created an agent, that is step zero of every example.
 - **Agent ONCE, not every run** - `agents.create()` is a setup step. Store the returned `agent_id` and reuse it; don't call `agents.create()` at the top of your hot path. If the agent's config needs to change, `POST /v1/agents/{id}` - each update creates a new version, and sessions can pin to a specific version for reproducibility.
 - **MCP auth goes through vaults** - the agent's `mcp_servers` array declares `{type, name, url}` only (no auth). Credentials live in vaults (`client.beta.vaults.credentials.create`) and attach to sessions via `vault_ids`. Anthropic auto-refreshes OAuth tokens using the stored refresh token. Vaults also hold `environment_variable` credentials for non-MCP services (CLIs, SDKs, direct API calls) - substituted at egress, never visible in the sandbox.
 - **Reconcile resources before the first run** - a session with a clear ask but a missing tool, credential, data mount, or context will discover the gap mid-run, then flail and give up. Before creating the session, check that every action in the task maps to a configured tool/MCP server, every MCP server has a vault credential, and every referenced file/host is mounted/reachable. When helping a user set one up, run the reconciliation in `shared/managed-agents-onboarding.md` -> §4 silent viability gate.
@@ -83,4 +85,4 @@ Managed Agents is in beta. The SDK sets required beta headers automatically:
 - **Don't trust HTTP-library timeouts as wall-clock caps** - `requests` `timeout=(c, r)` and `httpx.Timeout(n)` are *per-chunk* read timeouts; they reset every byte, so a trickling connection can block indefinitely. For a hard deadline on raw-HTTP polling, track `time.monotonic()` at the loop level and bail explicitly. Prefer the SDK's `sessions.events.stream()` / `sessions.events.list()` over hand-rolled HTTP. See `shared/managed-agents-events.md` -> Receiving Events.
 - **Messages queue** - you can send events while the session is `running` or `idle`; they're processed in order. No need to wait for a response before sending the next message. Two exceptions accept only settle events: a session waiting on you (`stop_reason: requires_action`), where a `user.message` is a 400, and one paused at its budget (`budget_reached`) - change or remove the budget to resume (`shared/managed-agents-core.md` § Session budgets).
 - **Environment `config.type` is `"cloud"` or `"self_hosted"`** - `cloud` runs the container on Anthropic's infrastructure; `self_hosted` moves tool execution to your own (see `shared/managed-agents-self-hosted-sandboxes.md`).
-- **Archive is permanent on every resource** - archiving an agent, environment, session, vault, credential, or memory store makes it read-only with no unarchive. For agents, environments, and memory stores specifically, archived resources cannot be referenced by new sessions (existing sessions continue). Do not call `.archive()` on a production agent, environment, or memory store as cleanup - **always confirm with the user before archiving**.
+- **Archive is permanent on every resource** - archiving an agent, environment, session, vault, credential, or memory store makes it read-only with no unarchive. For agents, environments, and memory stores specifically, archived resources cannot be referenced by new sessions (existing sessions continue). Do not call `.archive()` on a session or on a production agent, environment, vault, or memory store as cleanup - **archive or delete only when the user explicitly asks**.

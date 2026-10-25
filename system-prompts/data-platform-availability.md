@@ -1,13 +1,15 @@
 <!--
 name: 'Data: Platform Availability'
 description: Provider-platform feature-availability table the model consults.
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Platform Availability
 
 Which features work on which provider platform. **This table is the single source of truth in this skill** - per-feature sections elsewhere point here instead of restating availability. When writing code for a third-party platform (Bedrock, Vertex, Foundry) or Claude Platform on AWS, check this table first; a feature not supported there means use the first-party Claude API surface or a different approach.
 
 Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (Anthropic-operated, same-day parity), **Bedrock** = Amazon Bedrock, **Vertex** = Google Cloud Vertex AI, **Foundry** = Microsoft Foundry. Yes = GA, beta = beta, No = not supported, unconfirmed = not verified either way when this was written.
+
+**Claude Models on Google Cloud (Anthropic managed)** has no column: see the section after the table. The docs call Claude on Vertex AI "Claude Models on Google Cloud (Google managed)".
 
 | Feature | 1P | P-AWS | Bedrock | Vertex | Foundry | Notes |
 |---|---|---|---|---|---|---|
@@ -41,6 +43,8 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | &nbsp;&nbsp;MCP connector | beta | beta | No | No | beta | |
 | &nbsp;&nbsp;Managed Agents | beta | beta | No | No | No | Foundry: No (inferred; not in Foundry docs either way) |
 | &nbsp;&nbsp;Self-hosted sandboxes | beta | beta | No | No | No | P-AWS: worker authenticates with IAM/SigV4 or an AWS-Console API key + `AnthropicSelfHostedEnvironmentAccess` (Console environment keys don't work there); sessions on self-hosted environments cannot attach memory stores; `GET /v1/environments/{id}/work` list endpoint not supported, other work endpoints OK |
+| OpenTelemetry tracing - SDK spans | beta | beta | beta | beta | beta | Emitted in the application by the SDKs (`shared/opentelemetry.md`) |
+| OpenTelemetry tracing - API spans (destinations) | beta | beta | No | No | No | Destinations are added through the Admin API or the Console (on P-AWS, through Amazon's gateway with SigV4 and IAM, or the Console); Messages API and Managed Agents (`shared/opentelemetry.md`) |
 | **API endpoints** | | | | | | |
 | &nbsp;&nbsp;Message Batches | Yes | Yes | No | No | No | |
 | &nbsp;&nbsp;Files API | Yes | Yes | No | No | beta | Foundry: Hosted on Anthropic deployments only - Hosted on Azure returns a 400 |
@@ -56,6 +60,29 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | &nbsp;&nbsp;Fast mode | beta | No | No | No | No | Research preview, beta `fast-mode-2026-02-01`, first-party API only ({{PREV_OPUS_NAME}} / Opus 4.8 at $10 / $50; {{OPUS_NAME}} at $8 / $40) |
 | &nbsp;&nbsp;Cache diagnostics | beta | No | No | No | No | First-party API only |
 | &nbsp;&nbsp;Task budgets | beta | beta | No | No | No | Beta header `task-budgets-2026-03-13`; 3P availability not documented - assume unsupported |
+
+## Claude Models on Google Cloud (Anthropic managed)
+
+Anthropic operates this platform. The **Vertex** column and every "Google Cloud" in the Notes mean Google's Vertex AI, not this platform. Read availability from the **1P** column, except for the features below. Client setup: `shared/google-cloud-anthropic-managed.md`.
+
+Before relying on a feature marked unconfirmed, check its page in `shared/live-sources.md`. If it has no page there, or the page doesn't name this platform, tell the user it's unconfirmed and test it before relying on it.
+
+| Feature | Status here |
+|---|---|
+| OpenTelemetry tracing - API spans (destinations) | No |
+| Fast mode | Yes on Claude Opus 5.5: set `speed: "fast"` on a plain Messages request, without the `fast-mode-2026-02-01` beta flag. Other models are unconfirmed; Claude Opus 4.6 with `speed: "fast"` returns a 400 here |
+| Cache diagnostics | unconfirmed |
+| Turn-scoped (`clear_at`) system messages | unconfirmed |
+| Thinking block-binding controls | unconfirmed |
+| Per-message `effort` (system message `output_config`) | unconfirmed |
+| Managed Agents webhooks | unconfirmed |
+| MCP tunnels | No |
+| Computer use | beta; which tool versions it accepts is unconfirmed |
+| Self-hosted sandboxes | beta; write your own worker against the Environments Work endpoints, because `ant beta:worker` and the SDK worker helpers aren't supported. It authenticates with Google Cloud credentials, not an environment key, and its sessions can't use memory stores |
+| Server-side `fallbacks` | beta, including the `"default"` form on Claude Sonnet 5.5. If the API rejects the field, drop it and use the SDK's `BetaRefusalFallbackMiddleware` (`shared/model-migration.md`) |
+| Fine-grained tool streaming | Yes - if `eager_input_streaming` returns a 400, leave it off |
+| `inference_geo` (data residency) | Yes - `"global"` by default; for US-only inference, set `"us"` on each request (1.1x price). The workspace's geo settings are read-only |
+| User profiles | unconfirmed. SDK clients released through 2026-10-21 send these calls to a workspace route that returns 404 for most organizations; Ruby raises `NotImplementedError`, and Go's Google Cloud client has no top-level `UserProfiles`, only `client.Beta.UserProfiles`. Upgrade to the latest SDK and test before relying on it |
 
 <!--
 GROUNDING (reviewer-only; stripped at runtime by processSkillMarkdown).
@@ -80,6 +107,40 @@ older vendored snapshot):
   beta by parity: build-with-claude/claude-platform-on-aws, "Feature support"
   ("full feature parity with the first-party Claude API (except where noted in
   the feature limitations)"), whose limitations do not list tool changes.
+
+Claude Models on Google Cloud (Anthropic managed) section (every path here is a live page): checked on 2026-10-22 against
+the live pages build-with-claude/claude-models-on-google-cloud/anthropic-managed and those
+named below, and on 2026-10-18 against internal nightly tests and live probes. The
+page's "Feature support" section says it doesn't list every feature, so for rows it doesn't
+name, "read the 1P column" rests on those tests and on this platform sharing the Claude
+API's request handling.
+- Named by that page: tools, skills, files, caching, thinking, structured outputs,
+  token counting, batches, models, Managed Agents, self-hosted sandboxes, fallbacks.
+  "Features not supported": API keys, MCP tunnels, memory stores on self-hosted
+  environments, and the pre-built self-hosted workers.
+- API spans: No. manage-claude/opentelemetry lists only the Claude API and Claude Platform
+  on AWS for them, the Messages API's customer-span code turns them on for Claude Platform
+  on AWS only, and the Console's OpenTelemetry pages were behind a separate launch flag for this
+  platform's organizations on 2026-10-22.
+- Fast mode: build-with-claude/fast-mode and the "Feature support" list on the
+  anthropic-managed page name this platform for Claude Opus 5.5, and the launch team said
+  on 2026-10-19 that it's live. The docs don't name this platform for other models, apart from
+  Claude Opus 4.6's 400.
+- Cache diagnostics, clear_at, block-binding, per-message effort, webhooks and computer use
+  tool versions: the docs don't name this platform for them, and tests are missing or
+  don't settle it.
+- Self-hosted sandboxes: managed-agents/self-hosted-sandboxes and
+  managed-agents/self-hosted-sandboxes-memory.
+- fallbacks: build-with-claude/refusals-and-fallback says beta here, and
+  models/sonnet-5-5/whats-new-sonnet-5-5 names the "default" form here. The nightly tests
+  treat it as off by convention, so they don't exercise it.
+- Fine-grained tool streaming: the last test found is from 2026-09-08, and the docs list
+  doesn't name this platform.
+- inference_geo: manage-claude/data-residency and about-claude/pricing name this platform.
+- User profiles: the docs guide doesn't name this platform. Clients released through 2026-10-21
+  send these calls to the workspace route, which the launch channel says returns 404 for
+  organizations not on its allowlist. Ruby raises NotImplementedError instead. Go's Google Cloud
+  Client has no UserProfiles field, only Beta.UserProfiles.
 
 Primary source: build-with-claude/overview.mdx <PlatformAvailability> props
 (claudeApi->1P, claudePlatformAws->P-AWS, bedrock->Bedrock, vertexAi->Vertex,

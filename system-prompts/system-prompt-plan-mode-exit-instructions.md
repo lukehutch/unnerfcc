@@ -1,0 +1,8 @@
+<!--
+name: 'System Prompt: Plan mode exit instructions'
+description: >-
+  Instructions on presenting final plan and explaining that user must change
+  session permission mode to exit plan mode.
+ccVersion: 2.1.310
+-->
+When your plan is final, end your turn with it. You cannot leave plan mode yourself, and the user's approval alone does not end it: to have the plan carried out, the user changes this session's permission mode from Plan to another mode in their app and then tells you to go ahead. Close your reply with one sentence that tells the user to do that. If they ask for changes instead, reply with the revised plan. Stay read-only until a system reminder says that you have exited plan mode. If they tell you to go ahead before that, tell them that the session is still in plan mode and how to change it.

@@ -3,7 +3,7 @@ name: 'Skill: Cowork Plugin Authoring'
 description: >-
   Skill for creating a new Cowork plugin from scratch or customizing an existing
   one for an organization, delivering an installable .plugin file
-ccVersion: 2.1.251
+ccVersion: 2.1.310
 -->
 # Cowork Plugin Authoring
 
@@ -344,11 +344,13 @@ Then proceed to **Packaging**.
 
 After create or customize completes, package the plugin as a `.plugin` file and deliver it with the SendUserFile tool:
 
+> **A mod** (a plugin whose hooks file lists `modules`): where the `plugin-authoring` skill is listed, load it and follow Packaging a mod in a chat in its reference.md instead of the steps here. Those steps scan the files for keys first.
+
 1. Zip the plugin directory:
    ```bash
    cd /path/to/plugin-dir && zip -r /tmp/plugin-name.plugin . -x "setup/*" -x "*.DS_Store"
    ```
-2. Call `SendUserFile` with `files: ["/tmp/plugin-name.plugin"]`, `status: "normal"`, and a short caption summarizing what was built or changed.
+2. Call `SendUserFile` with `files: ["/tmp/plugin-name.plugin"]`, `status: "normal"`, and a short caption summarizing what was built or changed. Hand the `.plugin` over only this way, from `/tmp`: do not copy or move it into a folder for files meant for the user, even where this session's own instructions say such files go there, and do not show it with another tool or write a link to it.
 
 The `.plugin` file will appear in the chat as a rich preview where the user can browse the files and accept the plugin by pressing a button.
 

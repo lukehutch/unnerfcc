@@ -4,13 +4,16 @@ description: >-
   Model-facing pull-request workflow: run the branch-state git commands in
   parallel, analyze every commit in the range, then push and open the PR with gh
   pr create using a heredoc body.
-ccVersion: 2.1.270
+ccVersion: 2.1.310
 variables:
+  - GITHUB_INSTRUCTION
   - BASH_TOOL_NAME
-  - PR_HEREDOC_NOTE
+  - BODY_FORMATTING_NOTE
 -->
 # Creating pull requests
 Use the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command to get the information needed.
+
+${GITHUB_INSTRUCTION}.
 
 IMPORTANT: When the user asks you to create a pull request, follow these steps carefully:
 
@@ -25,7 +28,7 @@ IMPORTANT: When the user asks you to create a pull request, follow these steps c
 3. Run the following commands in parallel:
    - Create new branch if needed
    - Push to remote with -u flag if needed
-   - Create PR using gh pr create with the format below. Use a HEREDOC to pass the body to ensure correct formatting.${PR_HEREDOC_NOTE}
+   - Create PR using gh pr create with the format below. Use a HEREDOC to pass the body to ensure correct formatting.${BODY_FORMATTING_NOTE}
 <example>
 gh pr create --title "the pr title" --body "$(cat <<'EOF'
 ## Summary

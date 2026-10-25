@@ -3,6 +3,9 @@ name: 'Tool Parameter: Project write parameters overview'
 description: >-
   Explains parameters for project_write, requiring path and either content or
   local_path.
-ccVersion: 2.1.293
+ccVersion: 2.1.310
+variables:
+  - ALLOWED_PATH_1
+  - ALLOWED_PATH_2
 -->
-Pass `path` plus exactly one of `content` (inline text) or `local_path` (in the main conversation only: the absolute path of a file that you have read or written in full in this session and that has not changed since; the tool uploads it directly, so you need not write its text out again; for any other file, Read it first or pass `content`).
+Pass `path` plus exactly one of `content` (inline text) or `local_path` (in the main conversation only: the absolute path of a text file of at most 1 MiB that you have read or written in full in this session and that has not changed since, under ${ALLOWED_PATH_1}, under ${ALLOWED_PATH_2}, or under the working directory (not if the working directory is your home directory); the tool uploads it directly, so you need not write its text out again; for any other file, pass `content`).

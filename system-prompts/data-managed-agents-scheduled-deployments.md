@@ -3,7 +3,7 @@ name: 'Data: Managed Agents scheduled deployments'
 description: >-
   Managed Agents reference doc for scheduled deployments — cron-scheduled
   autonomous agent sessions
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Scheduled Deployments
 
@@ -16,13 +16,13 @@ Requires the `managed-agents-2026-04-01` beta header (the SDK sets it automatica
 A deployment bundles everything a session needs (agent, environment, optional files / GitHub / memory stores / vaults) plus a `schedule` and the `initial_events` that kick off each run:
 
 - `agent` and `environment_id` are required - same shapes as `sessions.create` (see `shared/managed-agents-core.md`). A deployment targeting a **self-hosted** environment can attach `memory_store` resources (SDK worker required - `shared/managed-agents-self-hosted-sandboxes.md` § Memory stores); `file` and `github_repository` resources need a cloud environment. The Console deployment form doesn't offer memory stores for self-hosted environments - attach them via the API/SDK.
-- `initial_events` must contain at least one starting event - a `user.message` **or** a `user.define_outcome`. Same default as sessions: a scheduled run that produces a deliverable (the weekly report, the compliance scan's findings file, a dataset) starts with `user.define_outcome` plus a drafted starter rubric (`shared/managed-agents-outcomes.md`); use `user.message` only when the run is genuinely conversational or has no checkable output. (A deployment's `initial_events` also accepts `system.message`, which a session's does not.)
+- `initial_events` must contain at least one starting event - a `user.message` **or** a `user.define_outcome`. Same default as sessions: a scheduled run whose job is one deliverable (the weekly report, the compliance scan's findings file, a dataset) starts with `user.define_outcome` plus a drafted starter rubric (`shared/managed-agents-outcomes.md`); use `user.message` when the run is conversational or has no checkable output. A run whose work is changing records in outside systems (filing, escalating or closing tickets) also starts with `user.message`, since there is no artifact for the grader to score; a run that produces a report, a dataset or a PR keeps its outcome, even if it then emails or posts it. (A deployment's `initial_events` also accepts `system.message`, which a session's does not.)
 - `schedule` takes a cron `expression` and an IANA `timezone`. Minute-level granularity is the maximum.
 
 ```bash
 curl -fsSL https://api.anthropic.com/v1/deployments \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
-  -H "anthropic-version: 2023-06-01" \
+  -H "anthropic-version: 2026-10-21" \
   -H "anthropic-beta: managed-agents-2026-04-01" \
   -H "content-type: application/json" \
   -d @- <<EOF

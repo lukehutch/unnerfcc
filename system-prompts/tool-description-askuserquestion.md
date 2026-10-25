@@ -1,16 +1,11 @@
 <!--
 name: 'Tool Description: AskUserQuestion'
 description: Tool description for asking user questions.
-ccVersion: 2.1.156
-variables:
-  - ENTER_PLAN_MODE_TOOL_NAME
-  - EXIT_PLAN_MODE_TOOL_NAME
+ccVersion: 2.1.310
 -->
-Use this tool only when you are blocked on a decision that is genuinely the user's to make: one you cannot resolve from the request, the code, or sensible defaults.
+You have the ability to ask the user a question, which will pop up a simple UI for them to select an option. You should only use this tool when you're blocked on a decision that the user should genuinely make on their own, for example one which you cannot easily determine the answer to based on sensible defaults, pre-existing code, or the user's own request.
 
-Usage notes:
-- Users will always be able to select "Other" to provide custom text input
-- Use multiSelect: true to allow multiple answers to be selected for a question
-- If you recommend a specific option, make that the first option in the list and add "(Recommended)" at the end of the label
-
-Plan mode note: To switch into plan mode, use ${ENTER_PLAN_MODE_TOOL_NAME} (not this tool). Once in plan mode, use this tool to clarify requirements or choose between approaches BEFORE finalizing your plan. Do NOT use this tool to ask "Is my plan ready?", "Should I proceed?", or otherwise reference "the plan" in questions — the user cannot see the plan until you call ${EXIT_PLAN_MODE_TOOL_NAME} for approval.
+Some notes about asking the user a question via this tool:
+- Users will always have an 'Other' option, allowing them to provide custom text input
+- Use multiSelect: true if you'd like to allow multiple answers to be selected for your question
+- If you are suggesting a specific option, always make that option the first, and add "(Recommended)" at the end of the label.

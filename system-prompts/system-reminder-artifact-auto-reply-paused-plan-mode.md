@@ -3,8 +3,9 @@ name: 'System Reminder: Auto-reply paused in plan mode'
 description: >-
   Tells the model that artifact auto-reply is paused while plan mode is active,
   so it should read the waiting comments and reply with the Artifact tool.
-ccVersion: 2.1.257
+ccVersion: 2.1.310
 variables:
   - PENDING_COMMENTS_NOTICE
+  - REPLY_TOOL_NAME
 -->
-${PENDING_COMMENTS_NOTICE} — auto-reply is paused while in plan mode; use 
+${PENDING_COMMENTS_NOTICE} — auto-reply is paused while in plan mode; use ${REPLY_TOOL_NAME} to read and reply.

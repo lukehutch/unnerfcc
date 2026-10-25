@@ -3,9 +3,13 @@ name: 'Tool Description: DesignSync methods and workflow'
 description: >-
   Details the read, setup, plan boundary, and write methods for the DesignSync
   tool, including security constraints on fetched files.
-ccVersion: 2.1.272
+ccVersion: 2.1.310
+variables:
+  - PREAMBLE_NOTE
 -->
 
+
+${PREAMBLE_NOTE} If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop.
 
 The tool dispatches on `method`:
 

@@ -4,11 +4,11 @@ description: >-
   Reference guide for using the Anthropic Python SDK to create and manage
   agents, sessions, environments, streaming, custom tools, files, and MCP
   servers
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Python
 
-> **Bindings not shown here:** This README covers the most common managed-agents flows for Python. If you need a class, method, namespace, field, or behavior that isn't shown, WebFetch the Python SDK repo **or the relevant docs page** from `shared/live-sources.md` rather than guess. Do not extrapolate from cURL shapes or another language's SDK.
+> **Bindings not shown here:** This README covers the most common managed-agents flows for Python. If you need a class, method, namespace, field, or behavior that isn't shown, fetch the Python SDK repo **or the relevant docs page** from `shared/live-sources.md` rather than guess. Do not extrapolate from cURL shapes or another language's SDK.
 
 > **Agents are persistent - create once, reference by ID.** Store the agent ID returned by `agents.create` and pass it to every subsequent `sessions.create`; do not call `agents.create` in the request path. **Recommended:** define agents and environments as version-controlled files synced with `ant apply` - see `shared/anthropic-cli.md` (its live-docs URL is in `shared/live-sources.md`). The CLI owns the control plane (create/update); your code owns the data plane (sessions with the stored ID). The examples below show in-code creation for when you must provision programmatically; in production the create call belongs in setup, not in the request path.
 
@@ -51,7 +51,7 @@ print(environment.id)  # env_...
 
 ## Create an Agent (required first step)
 
-> Warning: **There is no inline agent config.** `model`/`system`/`tools` live on the agent object, not the session. Always start with `agents.create()` - the session only takes `agent={"type": "agent", "id": agent.id}`.
+> Warning: **A session needs an agent that already exists.** `model`/`system`/`tools` are set on the agent object; a session can override them for that session only, with the `agent_with_overrides` form of `agent` (`shared/managed-agents-core.md` § Override agent configuration for a session). Always start with `agents.create()` - the session takes `agent=agent.id` or `agent={"type": "agent", "id": agent.id, "version": agent.version}`.
 
 ### Minimal
 
@@ -152,9 +152,9 @@ client.beta.sessions.events.send(
 
 ---
 
-## Define an Outcome (default kickoff for deliverables)
+## Define an Outcome (default kickoff for one deliverable)
 
-When the session's job is to produce something checkable - an artifact, a report, a PR - kick off with `user.define_outcome` instead of `user.message`: the harness grades each iteration against your rubric and the agent revises until it passes. Send one or the other, never both. See [Outcomes](../../shared/managed-agents-outcomes.md) for the event reference and rubric-writing guidance. The job below reads live prices, so its agent needs `web_search` and `web_fetch` set to `enabled: true`.
+When the session's job is one checkable deliverable - an artifact, a report, a PR - kick off with `user.define_outcome` instead of `user.message`: the harness grades each iteration against your rubric and the agent revises until it passes. Send one or the other, never both. See [Outcomes](../../shared/managed-agents-outcomes.md) for the event reference and rubric-writing guidance. The job below reads live prices, so its agent needs `web_search` and `web_fetch` set to `enabled: true`. Under the `limited` networking created above, those tools reach only the hosts in `allowed_hosts`, and with none listed they return no page or search result: list the sites the job reads there (a listed host is also open to the sandbox). When the sites can't be listed in advance, the other mode is `unrestricted`, which gives the whole sandbox full egress, not only the web tools: offer it to the user with that warning, do not choose it for them, and if they take it, keep secrets and sensitive files out of the sandbox (see [Environments](../../shared/managed-agents-environments.md)).
 
 ```python
 STARTER_RUBRIC = """# Report rubric - starter, tune the criteria

@@ -93,7 +93,6 @@ const SIZEOF_SP = 8;
 const MODULE_NEW = 6 * SIZEOF_SP + 4; // 52
 const MODULE_OLD = 4 * SIZEOF_SP + 4; // 36
 const BLOB_HEADER_ALIGNMENT = 16384;
-const BYTECODE_PREFIX = "// @bun @bytecode";
 const MH_MAGIC_64 = 0xfeedfacf;
 const LC_SEGMENT_64 = 0x19;
 const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
@@ -397,75 +396,130 @@ export function unpackToDir(binaryPath, outDir) {
 // re-compressed by the caller for any module that was originally zstd (see
 // repackFromDir) — every module absent from the map keeps its original bytes
 // untouched, which is the common case (a typical un-nerf pass touches ~100 of
-// ~1800 modules).
+// ~2800 modules).
+//
+// The rebuild is a SPLICE, not a repack: the new blob is the original blob with
+// one byte range swapped out per replaced module, and every other byte copied
+// through verbatim. That matters because this blob is NOT "every module's
+// fields packed tightly" — confirmed empirically on a real v2.1.251 binary, a
+// ~10MB span sits between two specific modules' fields addressed by NO module's
+// StringPointer at all (alignment padding, or a Bun-internal structure this
+// format isn't reverse-engineered enough to name). An early version of this
+// function emitted only the known fields, silently dropped that span, and
+// produced a blob that segfaulted Bun's runtime at load.
+//
+// An intermediate version walked every (module, field) StringPointer in blob
+// order and copied the gaps between them. That assumed the tracked extents were
+// disjoint, which v2.1.310 broke: Bun now writes every module's `bytecode`
+// length as the distance from that module's entry to the END of the shared
+// bytecode arena (all 2565 of them end at the same offset, where the contents
+// arena begins) rather than as the entry's own size. The extents therefore
+// overlap wholesale, the gap walk re-emitted the arena once per module, and the
+// rebuilt blob's offsets overflowed u32 at ~234GB. Splicing sidesteps the
+// question entirely: it never needs to know how the untouched bytes are
+// carved up, only where the replaced ones start and end.
 function rebuildBlobMulti(meta, replacements) {
   const { blob, offsets, structSize, modules } = meta;
   const nSP = structSize === MODULE_NEW ? 6 : 4;
   const CONTENTS_FIELD = 1, BYTECODE_FIELD = 3; // index within [name, contents, sourcemap, bytecode, moduleInfo, bytecodeOriginPath]
 
-  // Every (module, field) StringPointer, walked in ORIGINAL BLOB ORDER (not
-  // module/field order) so whatever sits BETWEEN tracked strings is preserved
-  // verbatim. This blob is NOT simply "every module's fields packed tightly" —
-  // confirmed empirically on a real v2.1.251 binary: a ~10MB span sits between
-  // two specific modules' fields, addressed by NO module's StringPointer at
-  // all (alignment padding, or a Bun-internal structure this format isn't
-  // fully reverse-engineered enough to name). An earlier version of this
-  // function repacked only the known fields, silently dropped that data, and
-  // produced a blob that segfaulted Bun's runtime at load. Preserving every
-  // original byte outside the fields being intentionally replaced is the only
-  // safe approach for a format this deep into "still not fully understood."
-  const entries = [];
-  for (let i = 0; i < modules.length; i++) {
-    const m = modules[i];
-    const ptrs = [m.ptrs.name, m.ptrs.contents, m.ptrs.sourcemap, m.ptrs.bytecode];
-    if (nSP === 6) ptrs.push(m.ptrs.moduleInfo, m.ptrs.bytecodeOriginPath);
-    ptrs.forEach((ptr, field) => entries.push({ module: i, field, ptr }));
+  // One splice per replaced module, over that module's `contents` extent.
+  const splices = [];
+  for (const [i, buf] of replacements) {
+    const sp = modules[i].ptrs.contents;
+    splices.push({ module: i, start: sp.offset, end: sp.offset + sp.length, buf });
   }
-  entries.sort((a, b) => a.ptr.offset - b.ptr.offset);
+  splices.sort((a, b) => a.start - b.start);
+  for (let k = 1; k < splices.length; k++) {
+    if (splices[k].start < splices[k - 1].end) {
+      throw fmtErr(`modules #${splices[k - 1].module} (${modules[splices[k - 1].module].name}) and ` +
+        `#${splices[k].module} (${modules[splices[k].module].name}) share overlapping contents bytes — ` +
+        `they cannot be replaced independently`);
+    }
+  }
+  if (splices.length && splices[splices.length - 1].end > offsets.modulesPtr.offset) {
+    throw fmtErr("a replaced module's contents run past the modules struct table — refusing to splice");
+  }
+  // A splice landing inside the bytecode arena would leave every bytecode
+  // pointer that spans it stale (see the length semantics above). Contents and
+  // bytecode live in separate arenas on every build seen so far; fail loudly
+  // rather than emit a blob that loads and then misbehaves.
+  for (const m of modules) {
+    const b = m.ptrs.bytecode;
+    if (!b.length) continue;
+    for (const s of splices) {
+      if (s.start < b.offset + b.length && s.end > b.offset) {
+        throw fmtErr(`replaced contents of module #${s.module} (${modules[s.module].name}) overlap the ` +
+          `bytecode extent of ${m.name} — the blob layout changed, see rebuildBlobMulti`);
+      }
+    }
+  }
 
-  const newPtr = new Map(); // "module:field" -> {offset, length} in the rebuilt blob
   const chunks = [];
-  let newOff = 0, origCursor = 0;
+  let newOff = 0;
   const push = (buf) => { chunks.push(buf); newOff += buf.length; };
 
-  for (const e of entries) {
-    // Gap since the previous tracked string ended, in ORIGINAL coordinates —
-    // copied through byte-for-byte regardless of content. This also supplies
-    // the NUL terminator every string needs: since origCursor advances by the
-    // ORIGINAL length (not the replacement's), the next gap always starts
-    // with whatever byte Bun itself put right after this field — a NUL on
-    // every real bundle checked so far.
-    if (e.ptr.offset > origCursor) push(blob.subarray(origCursor, e.ptr.offset));
-    const replacement = e.field === CONTENTS_FIELD ? replacements.get(e.module) : undefined;
-    const content = replacement ?? spContent(blob, e.ptr);
-    newPtr.set(`${e.module}:${e.field}`, { offset: newOff, length: content.length });
-    push(content);
-    origCursor = e.ptr.offset + e.ptr.length;
+  let cursor = 0;
+  for (const s of splices) {
+    if (s.start > cursor) push(blob.subarray(cursor, s.start));
+    push(s.buf);
+    cursor = s.end;
   }
-  // Final gap before the modules struct table begins.
-  if (offsets.modulesPtr.offset > origCursor) push(blob.subarray(origCursor, offsets.modulesPtr.offset));
+  // Everything from the last splice up to the modules struct table, verbatim.
+  if (offsets.modulesPtr.offset > cursor) push(blob.subarray(cursor, offsets.modulesPtr.offset));
+
+  // shift(o): where an ORIGINAL blob offset lands in the spliced blob. Only the
+  // splices that start strictly before o move it, and `cum[k]` is their running
+  // length delta, so this is a binary search rather than a scan per pointer.
+  const cum = new Array(splices.length);
+  let run = 0;
+  for (let k = 0; k < splices.length; k++) { run += splices[k].buf.length - (splices[k].end - splices[k].start); cum[k] = run; }
+  const shift = (o) => {
+    let lo = 0, hi = splices.length - 1, last = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (splices[mid].start < o) { last = mid; lo = mid + 1; } else hi = mid - 1;
+    }
+    return last < 0 ? o : o + cum[last];
+  };
 
   const modulesListOffset = newOff;
   const modulesList = Buffer.alloc(modules.length * structSize);
   for (let i = 0; i < modules.length; i++) {
     const m = modules[i];
+    const ptrs = [m.ptrs.name, m.ptrs.contents, m.ptrs.sourcemap, m.ptrs.bytecode];
+    if (nSP === 6) ptrs.push(m.ptrs.moduleInfo, m.ptrs.bytecodeOriginPath);
+    const replacement = replacements.get(i);
     for (let field = 0; field < nSP; field++) {
-      const ptr = newPtr.get(`${i}:${field}`);
+      const sp = ptrs[field];
       const base = i * structSize + field * SIZEOF_SP;
-      modulesList.writeUInt32LE(ptr.offset, base);
-      modulesList.writeUInt32LE(ptr.length, base + 4);
+      // A zero-width pointer (sourcemap and moduleInfo are zero on every build
+      // seen) carries no offset to relocate.
+      const off = sp.length === 0 && sp.offset === 0 ? 0 : shift(sp.offset);
+      const len = field === CONTENTS_FIELD && replacement ? replacement.length : sp.length;
+      modulesList.writeUInt32LE(off, base);
+      modulesList.writeUInt32LE(len, base + 4);
     }
     const eb = i * structSize + nSP * SIZEOF_SP;
     modulesList[eb] = m.encoding; modulesList[eb + 1] = m.loader;
     modulesList[eb + 2] = m.moduleFormat; modulesList[eb + 3] = m.side;
     // A replaced module's compiled-bytecode cache no longer matches its new
-    // source. The bytecode bytes themselves were preserved verbatim above
-    // like every other untouched field (harmless — nothing reads past a
-    // pointer's declared length), so zeroing just this struct entry's length
-    // here has the same effect as clearing the content, without needing a
-    // second pass or breaking the single gap-preserving walk above.
-    const replacement = replacements.get(i);
-    if (replacement && !replacement.subarray(0, BYTECODE_PREFIX.length).toString("latin1").startsWith(BYTECODE_PREFIX)) {
+    // source, and Bun loads the bytecode in preference to parsing the source —
+    // so a patched module keeping its stale cache would run the STOCK code and
+    // the un-nerf would be silently dead. Zeroing the length is enough to send
+    // the module back to its (patched) source; the bytecode bytes themselves
+    // are copied through verbatim like every other untouched byte, since
+    // nothing reads past a pointer's declared length.
+    //
+    // This used to be skipped for any replacement whose text began with
+    // BYTECODE_PREFIX, on the theory that such content was already bytecode.
+    // It isn't: Bun writes that marker as an ordinary comment at the head of
+    // the SOURCE of every bytecode-cached module (2568 of 2819 modules in
+    // v2.1.310, 2276 of 2517 in v2.1.292), so the guard matched nearly every
+    // patched module and left the stale cache in place. What saved the patches
+    // in practice is that JSC rekeys a cache on the source's length and hash
+    // and rejects a mismatch — a fallback, not a guarantee. Zero it outright.
+    if (replacement) {
       modulesList.writeUInt32LE(0, i * structSize + BYTECODE_FIELD * SIZEOF_SP + 4);
     }
   }

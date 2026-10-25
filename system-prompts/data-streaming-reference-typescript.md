@@ -3,7 +3,7 @@ name: 'Data: Streaming reference — TypeScript'
 description: >-
   TypeScript streaming reference including basic streaming and handling
   different content types
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Streaming - TypeScript
 
@@ -70,7 +70,7 @@ for await (const event of stream) {
 
 ## Streaming with Tool Use (Tool Runner)
 
-Use the tool runner with `stream: true`. The outer loop iterates over tool runner iterations (messages), the inner loop processes stream events. `betaZodTool()` has no option for `eager_input_streaming`, so spread it onto the returned tool - without it the API buffers each tool-input parameter and `input_json_delta` arrives in one burst at the end (default rule: `shared/tool-use-concepts.md` -> Eager input streaming):
+Use the tool runner with `stream: true`. The outer loop iterates over tool runner iterations (messages), the inner loop processes stream events. Set `eager_input_streaming: true` on the tool - without it the API buffers each tool-input parameter and `input_json_delta` arrives in one burst at the end (default rule: `shared/tool-use-concepts.md` -> Eager input streaming). Before `@anthropic-ai/sdk` 0.136.0, spread it onto the returned tool: `{ ...betaZodTool({...}), eager_input_streaming: true }`. On 0.136.0 and later, pass it as an option:
 
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
@@ -79,17 +79,15 @@ import { z } from "zod";
 
 const client = new Anthropic();
 
-const getWeather = {
-  ...betaZodTool({
-    name: "get_weather",
-    description: "Get current weather for a location",
-    inputSchema: z.object({
-      location: z.string().describe("City and state, e.g., San Francisco, CA"),
-    }),
-    run: async ({ location }) => `72°F and sunny in ${location}`,
+const getWeather = betaZodTool({
+  name: "get_weather",
+  description: "Get current weather for a location",
+  inputSchema: z.object({
+    location: z.string().describe("City and state, e.g., San Francisco, CA"),
   }),
+  run: async ({ location }) => `72°F and sunny in ${location}`,
   eager_input_streaming: true, // stream tool input as it is generated
-};
+});
 
 let runner = client.beta.messages.toolRunner({
   model: "{{OPUS_ID}}",

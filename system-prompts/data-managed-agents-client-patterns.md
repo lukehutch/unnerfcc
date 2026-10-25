@@ -4,7 +4,7 @@ description: >-
   Reference guide of common client-side patterns for driving Managed Agent
   sessions, including stream reconnection, idle-break gating, tool
   confirmations, interrupts, and custom tools
-ccVersion: 2.1.292
+ccVersion: 2.1.310
 -->
 # Managed Agents - Common Client Patterns
 
@@ -144,7 +144,7 @@ for await (const event of stream) {
 
 The SSE stream emits `session.status_idle` slightly before the session's queryable status reflects it. Clients that break on idle and immediately call `sessions.delete()` or `sessions.archive()` will intermittently 400 with "cannot delete/archive while running."
 
-Poll before cleanup:
+If the user asked you to delete or archive the session, poll first:
 
 ```ts
 let s
@@ -157,6 +157,8 @@ if (s?.status !== 'running') {
   await client.beta.sessions.archive(session.id)
 } // else: still running after 2s - don't archive, let it settle or escalate
 ```
+
+While a workflow run is open, the status is not enough: an archive or a delete might return a 400 even when the session is `idle`, and an archive that succeeds ends the run. Before either, ask the agent to stop its runs, or wait until each run has ended (`shared/managed-agents-multiagent.md` § While a run is open).
 
 ---
 
@@ -190,7 +192,7 @@ const session = await client.beta.sessions.create({
 // session.resources[0].file_id !== uploaded.id  <- different IDs
 ```
 
-Delete the original via `files.delete(uploaded.id)`; the session-scoped copy is garbage-collected with the session. `mount_path` must be absolute - see `shared/managed-agents-environments.md`.
+The original stays until you delete it (`files.delete(uploaded.id)`); the session-scoped copy is garbage-collected with the session. `mount_path` must be absolute - see `shared/managed-agents-environments.md`.
 
 ---
 

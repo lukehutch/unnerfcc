@@ -3,12 +3,12 @@ name: 'Data: Claude Code agent proxy troubleshooting guide'
 description: >-
   Troubleshooting guide for Claude Code's policy-enforcing HTTPS agent proxy,
   covering TLS trust setup, status checks, git, docker, and unsupported traffic
-ccVersion: 2.1.277
+ccVersion: 2.1.310
 variables:
   - AGENT_PROXY_URL
   - AGENT_PROXY_CA_BUNDLE_PATH
+  - AGENT_PROXY_TRUSTSTORE_DIR
   - AGENT_PROXY_PORT
-  - AGENT_PROXY_CERT_PATH
 -->
 # Claude Code agent proxy
 
@@ -28,7 +28,7 @@ browser NSS store, and gsutil's boto config are already set up.
 2. Find the failure class below and apply the matching fix; gitConfigConflicts
    codes map to the git section, toolTrustFailureCodes to the JVM section.
 3. Never disable TLS verification, never unset HTTPS_PROXY, and do not retry
-   organization policy denials (403/407) — report them instead.
+   policy denials (403/407) — report them instead.
 
 ## Failure classes and fixes
 
@@ -48,12 +48,12 @@ The failing tool is not reading the pre-set CA configuration. In order:
 - JVM tools (Maven, Gradle, plain Java): when a JDK is present,
   JAVA_TOOL_OPTIONS points JVMs at a truststore that holds the proxy CA: the
   JDK's own store if the system trust install already added the CA there,
-  otherwise ${AGENT_PROXY_PORT}/java-truststore.p12 (password "changeit"). Confirm
+  otherwise ${AGENT_PROXY_TRUSTSTORE_DIR}/java-truststore.p12 (password "changeit"). Confirm
   javaTrustStorePath is set in the status output before pointing a build at it
   (toolTrustFailureCodes explains why it is missing). If the image or the
   build sets its own trustStore, that one wins — import the proxy CA into it
   with
-  keytool -importcert -noprompt -alias ccr-agent-proxy -file ${AGENT_PROXY_PORT}/agent-proxy-ca.crt -keystore <their store>
+  keytool -importcert -noprompt -alias ccr-agent-proxy -file ${AGENT_PROXY_TRUSTSTORE_DIR}/agent-proxy-ca.crt -keystore <their store>
   or point the build at the ready-made one. Bazel reads the managed block in
   /etc/bazel.bazelrc rather than JAVA_TOOL_OPTIONS.
 
@@ -65,8 +65,8 @@ that tool — only HTTPS_PROXY is supported).
 
 ### 403 / 407 from the proxy
 
-The destination host is not allowed by your organization's egress policy for
-this session. Do not retry or route around it — report the blocked host.
+Most often the destination host is not allowed for this session. Do not retry
+or route around it — report the blocked host.
 Note: curl hides response bodies on failed CONNECTs; the status endpoint
 records the reason.
 
@@ -97,7 +97,7 @@ adjust those keys for this session if git times out.
 
 ### docker build / docker run
 
-Processes inside containers cannot reach 127.0.0.1:${AGENT_PROXY_CERT_PATH} and do not trust
+Processes inside containers cannot reach 127.0.0.1:${AGENT_PROXY_PORT} and do not trust
 the CA. Workarounds: run builds with --network host, copy ${AGENT_PROXY_CA_BUNDLE_PATH}
 into the build context and install it in an early layer, and pass proxy/CA
 settings explicitly to the build.
@@ -107,5 +107,5 @@ settings explicitly to the build.
 gRPC / HTTP/2-only APIs, WebSocket upgrades, client-mTLS, certificate-pinned
 clients (e.g. Snowflake, ngrok), non-443 HTTPS ports, raw-TCP databases.
 
-If a tool still cannot work through the proxy, report it to your
-administrator or Anthropic support so the policy or tooling can be fixed.
+If a tool still cannot work through the proxy, report it so the policy or
+tooling can be fixed.

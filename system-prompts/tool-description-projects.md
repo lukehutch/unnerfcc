@@ -3,7 +3,9 @@ name: 'Tool Description: Projects'
 description: >-
   Tool description for Projects — reads and writes docs and memory in the
   claude.ai Project bound to the session.
-ccVersion: 2.1.292
+ccVersion: 2.1.310
+variables:
+  - READ_TOOL_NAME
 -->
 Read and write the claude.ai Project attached to this session. A Project is a shared knowledge container on claude.ai — its docs persist across sessions and surfaces (chat, Cowork, Claude Code), so anything you write here is visible to the user and their team in claude.ai.
 
@@ -12,6 +14,4 @@ The session is bound to exactly one project (set by the harness when the session
 Methods (dispatch on `method`):
 
 - `project_info` — project name, description, custom instructions, doc list, file-upload list (PDFs, images), and knowledge-base stats. Call this first.
-- `project_read` — read one doc or file upload by `path`. For a text doc or a document-kind file upload (PDF, docx), small text returns inline and large text is written to a local file whose path is returned (read it with the Read tool). Image and other non-document uploads (spreadsheets, binaries) are downloaded whole: the original bytes are written to a local file whose path is returned — open it with file-appropriate tooling.
-- `project_search` — query the project's knowledge base. Returns RAG hits with snippets and source paths. Prefer this over reading every doc when answering a question about the project.
-- `project_write` — create or replace a doc. 
+- `project_read` — read one doc or file upload by `path`. For a text doc or a document-kind file upload (PDF, docx), small text returns inline and large text is written to a local file whose path is returned (read it with the ${READ_TOOL_NAME} tool). Image and other non-document uploads (spreadsheets, binaries) are downloaded whole: the original bytes are written to a local file whose path is returned — open it with file-appropriate tooling.

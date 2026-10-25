@@ -1,15 +1,14 @@
 <!--
 name: 'Tool Description: Monitor (script quality and coverage)'
 description: >-
-  Continuation of the Monitor tool description covering per-line flushing in
-  every pipe stage, poll intervals, filters that must match failure states and
-  not only the happy path, output-volume limits, and persistent watches.
-ccVersion: 2.1.292
+  Continuation of the Monitor tool description covering per-line flushing,
+  polling intervals, error handling, and avoiding unbounded commands for single
+  notifications.
+ccVersion: 2.1.310
 variables:
-  - SINGLE_NOTIFICATION_GUIDANCE
+  - SINGLE_NOTIFICATION_ALTERNATIVE
 -->
-** ("tell me every time an ERROR line appears") → Monitor with an unbounded command (`tail -f`, `inotifywait -m`, `while true`).
-- **One per occurrence, until a known end** ("emit each CI step result, stop when the run completes") → Monitor with a command that emits lines and then exits.
+
 
 Your script's stdout is the event stream. Each line becomes a notification. Exit ends the watch.
 
@@ -41,7 +40,7 @@ Your script's stdout is the event stream. Each line becomes a notification. Exit
     sleep 30
   done
 
-**Don't use an unbounded command for a single notification.** `tail -f`, `inotifywait -m`, and `while true` never exit on their own, so the monitor stays armed until timeout even after the event has fired. For "tell me when X is ready," ${SINGLE_NOTIFICATION_GUIDANCE}. Note that `tail -f log | grep -m 1 ...` does *not* fix this: if the log goes quiet after the match, `tail` never receives SIGPIPE and the pipeline hangs anyway.
+**Don't use an unbounded command for a single notification.** `tail -f`, `inotifywait -m`, and `while true` never exit on their own, so the monitor stays armed until timeout even after the event has fired. For "tell me when X is ready," ${SINGLE_NOTIFICATION_ALTERNATIVE}. Note that `tail -f log | grep -m 1 ...` does *not* fix this: if the log goes quiet after the match, `tail` never receives SIGPIPE and the pipeline hangs anyway.
 
 **Script quality:**
 - Every pipe stage must flush per line or matches sit in its buffer unseen: `grep` needs `--line-buffered`, `awk` needs `fflush()`. `head` cannot flush at all — `| head -N` delivers nothing until N matches accumulate, then ends the stream.

@@ -3,11 +3,11 @@ name: 'Data: Claude model catalog'
 description: >-
   Catalog of current and legacy Claude models with exact model IDs, aliases,
   context windows, and pricing
-ccVersion: 2.1.293
+ccVersion: 2.1.310
 -->
 # Claude Model Catalog
 
-**Only use exact model IDs listed in this file.** Never guess or construct model IDs - incorrect IDs will cause API errors. Use aliases wherever available. For the latest information, WebFetch the Models Overview URL in `shared/live-sources.md`, or query the Models API directly (see Programmatic Model Discovery below).
+**Only use exact model IDs listed in this file.** Never guess or construct model IDs - incorrect IDs will cause API errors. Use aliases wherever available. For the latest information, fetch the Models Overview URL in `shared/live-sources.md`, or query the Models API directly (see Programmatic Model Discovery below).
 
 ## Programmatic Model Discovery
 
@@ -41,7 +41,7 @@ Top-level fields (`id`, `display_name`, `max_input_tokens`, `max_tokens`) are ty
 ```bash
 curl https://api.anthropic.com/v1/models/claude-opus-4-8 \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
-  -H "anthropic-version: 2023-06-01"
+  -H "anthropic-version: 2026-10-21"
 ```
 
 ```json
@@ -96,24 +96,27 @@ curl https://api.anthropic.com/v1/models/claude-opus-4-8 \
 
 ## Legacy Models (still active)
 
+Statuses and dates in this table and the ones below are for the Claude API, Claude Platform on AWS and Microsoft Foundry; Amazon Bedrock and Google Cloud set their own schedules.
+
 | Friendly Name     | Alias (use this)    | Full ID                       | Status |
 |-------------------|---------------------|-------------------------------|--------|
 | Claude Opus 4.5   | `claude-opus-4-5`   | `claude-opus-4-5-20251101`    | Active |
-| Claude Opus 4.1   | `claude-opus-4-1`   | `claude-opus-4-1-20250805`    | Deprecated (retires 2026-08-05 - migrate to `{{OPUS_ID}}`) |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5` | `claude-sonnet-4-5-20250929`  | Active |
 
 ## Deprecated Models (retiring soon)
 
 | Friendly Name     | Alias (use this)    | Full ID                       | Status     | Retires      |
 |-------------------|---------------------|-------------------------------|------------|--------------|
-| Claude Sonnet 4   | `claude-sonnet-4-0` | `claude-sonnet-4-20250514`    | Deprecated | TBD          |
-| Claude Opus 4     | `claude-opus-4-0`   | `claude-opus-4-20250514`      | Deprecated | TBD          |
-| Claude Haiku 3    | -                   | `claude-3-haiku-20240307`     | Deprecated | Apr 19, 2026 |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5` | `claude-sonnet-4-5-20250929`  | Deprecated | Nov 30, 2026 |
+| Claude Mythos Preview | -               | `claude-mythos-preview`       | Deprecated | TBA          |
 
 ## Retired Models (no longer available)
 
 | Friendly Name     | Full ID                       | Retired     |
 |-------------------|-------------------------------|-------------|
+| Claude Opus 4.1   | `claude-opus-4-1-20250805`    | Aug 5, 2026 |
+| Claude Sonnet 4   | `claude-sonnet-4-20250514`    | Jun 15, 2026 |
+| Claude Opus 4     | `claude-opus-4-20250514`      | Jun 15, 2026 |
+| Claude Haiku 3    | `claude-3-haiku-20240307`     | Apr 20, 2026 |
 | Claude Sonnet 3.7 | `claude-3-7-sonnet-20250219`  | Feb 19, 2026 |
 | Claude Haiku 3.5  | `claude-3-5-haiku-20241022`   | Feb 19, 2026 |
 | Claude Opus 3     | `claude-3-opus-20240229`      | Jan 5, 2026 |
@@ -141,15 +144,15 @@ When a user asks for a model by name, use this table to find the correct model I
 | "opus 4.7"                                | `claude-opus-4-7`              |
 | "opus 4.6"                                | `claude-opus-4-6`              |
 | "opus 4.5"                                | `claude-opus-4-5`              |
-| "opus 4.1"                                | `claude-opus-4-1` (deprecated, retires 2026-08-05 - suggest `{{OPUS_ID}}`) |
-| "opus 4", "opus 4.0"                      | `claude-opus-4-0` (deprecated - suggest `{{OPUS_ID}}`) |
+| "opus 4.1"                                | Retired - suggest `{{OPUS_ID}}` |
+| "opus 4", "opus 4.0"                      | Retired - suggest `{{OPUS_ID}}` |
 | "sonnet", "balanced"                      | `{{SONNET_ID}}`           |
 | "sonnet 5"                                | `{{PREV_SONNET_ID}}`           |
 | "sonnet 5.5"                              | `{{SONNET_ID}}` |
 | "cheapest sonnet", "newest sonnet", "latest sonnet" (any attribute phrasing) | `{{SONNET_ID}}` |
 | "sonnet 4.6"                              | `claude-sonnet-4-6`            |
-| "sonnet 4.5"                              | `claude-sonnet-4-5`            |
-| "sonnet 4", "sonnet 4.0"                  | `claude-sonnet-4-0` (deprecated - suggest `{{SONNET_ID}}`) |
+| "sonnet 4.5"                              | `claude-sonnet-4-5` (deprecated, retires 2026-11-30 - suggest `{{SONNET_ID}}`) |
+| "sonnet 4", "sonnet 4.0"                  | Retired - suggest `{{SONNET_ID}}` |
 | "sonnet 3.7"                              | Retired - suggest `{{SONNET_ID}}` |
 | "sonnet 3.5"                              | Retired - suggest `{{SONNET_ID}}` |
 | "haiku", "fast", "cheap"                  | `{{HAIKU_ID}}`             |
@@ -157,4 +160,4 @@ When a user asks for a model by name, use this table to find the correct model I
 | "newest haiku", "latest haiku" (any attribute phrasing) | `{{HAIKU_ID}}` |
 | "haiku 4.5"                               | `claude-haiku-4-5`             |
 | "haiku 3.5"                               | Retired - suggest `{{HAIKU_ID}}` |
-| "haiku 3"                                 | Deprecated - suggest `{{HAIKU_ID}}` |
+| "haiku 3"                                 | Retired - suggest `{{HAIKU_ID}}` |
