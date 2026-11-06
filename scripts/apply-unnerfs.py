@@ -1203,61 +1203,18 @@ RULES: dict[str, list[Rule]] = {
     # The prototype skill's actual WORKING FLOW once the user says yes — not the
     # unprompted offer — did have real process/chat-brevity caps; rules below.
     # -------------------------------------------------------------------------
-    "skill-prototype.md": [
-        Rule(
-            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
-            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
-            description="prototype description: drop the 'short' intake cap",
-        ),
-        Rule(
-            # v2.1.231: upstream rewrote this whole paragraph (now starts "When
-            # asking:"); same numeric cap, new wording — stock/unnerf updated to
-            # match, description/intent unchanged.
-            stock="two to four questions, each a single pointed sentence, in\none short message",
-            unnerf="as many questions as the ambiguity genuinely requires, each a single pointed sentence",
-            description="prototype intake: drop the 2-4-question cap and the one-message limit",
-        ),
-        Rule(
-            stock="Before building, send one short message: what you take the idea to be,",
-            unnerf="Before building, send a message covering what you take the idea to be,",
-            description="prototype assumptions: drop the 'one short message' cap",
-        ),
-        Rule(
-            # v2.1.231: identical wording, just a shifted line-wrap point
-            # (reflowed elsewhere in the file) — stock/unnerf newline updated.
-            stock="Give the user the link plus one or two lines: what the prototype shows,\nwhat is faked, and the obvious next step.",
-            unnerf="Give the user the link plus a summary of what the prototype shows,\nwhat is faked, and the obvious next step.",
-            description="prototype publish: drop the 'one or two lines' cap",
-        ),
-        Rule(
-            stock="close with a\nshort list of what a real build would still need that the prototype\nskipped",
-            unnerf="close with a\ncomplete list of what a real build would still need that the prototype\nskipped",
-            description="prototype close: 'short list' -> 'complete list'",
-        ),
-        Rule(
-            # v2.1.280 bucket-analysis (bucket-analyze.mjs, 2026-09-22): AI-proposed,
-            # mechanically validated (stock occurs exactly once, no new ${VAR}
-            # introduced, no overlap with an existing rule, --dry-run confirmed).
-            # Full keep/lift review: data/bucket-analysis-2.1.280.json
-            stock="Before publishing, re-read the file once for the mistakes that would\nbreak the demo - an unclosed tag, a handler wired to nothing, a script\nerror - and fix what that read turns up. One read and its fixes are the\nwhole pre-publish check: do not spin up browsers, servers, or test\nharnesses to drive the page, and do not start a second polish pass.",
-            unnerf="Before publishing, verify the file for mistakes that would break the\ndemo - an unclosed tag, a handler wired to nothing, a script error -\nand fix what verification turns up. Test the page and iterate as needed\nto ensure the core interaction works reliably.",
-            description="prototype pre-publish: remove single-read cap and permit verification",
-        ),
-    ],
-    "skill-prototype-description.md": [
-        Rule(
-            stock="Run a short intake, state your assumptions, build, then iterate on feedback in the same artifact.",
-            unnerf="Run the intake, state your assumptions, build, then iterate on feedback in the same artifact.",
-            description="prototype menu description: drop the 'short' intake cap (sibling of skill-prototype.md)",
-        ),
-    ],
-    "system-reminder-plan-mode-prototype-option.md": [
-        Rule(
-            stock="Write a short plan to the plan file naming the prototype-first approach",
-            unnerf="Write a plan to the plan file naming the prototype-first approach",
-            description="plan-mode prototype option: drop the 'short plan' cap",
-        ),
-    ],
+    # "skill-prototype.md" / "skill-prototype-description.md" /
+    # "system-reminder-plan-mode-prototype-option.md": RETIRED in the v2.1.318 sync.
+    # Anthropic removed the whole prototype skill upstream -- body, description,
+    # menu description, when_to_use, runtime-capability note and the plan-mode
+    # prototype-option reminder all leave the catalog together. Searched the
+    # 2.1.318 catalog for the stock passages by decoded text ("prototype-first
+    # approach", "what the prototype shows", "what a real build would still
+    # need"): zero hits anywhere, and no 2.1.318 id contains "prototype", so
+    # there is nothing to retarget. Retired 8 rules (the two intake caps, the
+    # one-short-message assumptions cap, the publish line cap, the close-list
+    # cap, the single-read pre-publish cap, the menu-description intake cap and
+    # the plan-mode short-plan cap).
     # -------------------------------------------------------------------------
     # v2.1.222 sync (bucket-analyze.mjs, 2026-08-05): AI-proposed, mechanically
     # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
@@ -1338,24 +1295,14 @@ RULES: dict[str, list[Rule]] = {
             description="commit slash command: drop the 1-2-sentence commit message cap",
         ),
     ],
-    "skill-workshop.md": [
-        Rule(
-            stock="Size the draft and the\n   background by selection, never completeness: a few short paragraphs\n   stating the plan",
-            unnerf="Size the draft and the\n   background by what the decisions need: as many paragraphs as it takes to\n   state the plan",
-            description="workshop draft: size by what the decisions need, not by selection over completeness",
-        ),
-        # v2.1.251 bucket-analysis (data/bucket-analysis-2.1.251.json, ref 29).
-        # Added by hand: bucket-analyze.mjs's merge reported "inserted" but its
-        # duplicate-key guard actually suppressed the write, since this file
-        # already had a rule block. Same nerf as the rule above, at the HTML
-        # lane's own copy of the draft-sizing instruction (the rule above
-        # targets the markdown lane's wording).
-        Rule(
-            stock="the working-draft prose (a few short paragraphs stating\nthe plan - sized by selection, never completeness), the\nMAIN diagram",
-            unnerf="the working-draft prose (as many paragraphs as it takes to state the plan - sized by what the decisions need), the\nMAIN diagram",
-            description="workshop HTML draft: size by what the decisions need, not by selection over completeness",
-        ),
-    ],
+    # "skill-workshop.md": RETIRED in the v2.1.318 sync. Anthropic removed the
+    # whole workshop skill upstream -- body, description, menu description and
+    # the entire supporting family (system-prompt-workshop-*,
+    # system-reminder-*-workshop-*, tool-result-workshop-*) leave the catalog
+    # together; no 2.1.318 id or decoded prompt text contains "workshop" at all.
+    # Searched for the stock passages by decoded text ("sized by selection,
+    # never completeness"): zero hits, so there is nothing to retarget. Retired
+    # both rules (the markdown and HTML lanes of the draft-sizing cap).
     "system-reminder-usage-limit-grace-window-checkpoint.md": [
         Rule(
             stock="list up to 3 short bullets of the most impactful remaining work",
@@ -1704,13 +1651,32 @@ RULES: dict[str, list[Rule]] = {
     # with an existing rule, confirmed to actually match via --dry-run). Full
     # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.310.json
     # -------------------------------------------------------------------------
-    # REVIEWED BY HAND (v2.1.310): "up to six questions" is a numeric ceiling on
+    # REVIEWED BY HAND (v2.1.310): the question ceiling is a numeric limit on
     # substantive output — Part 1 "No numeric output limits". ACCEPTED.
     "system-prompt-artifact-intake-elicitation-questionnaire.md": [
         Rule(
-            stock="In the form: up to six questions; a pick-any list is multi-select and says so;",
-            unnerf="In the form: ask the questions needed to establish audience, scope, and look; a pick-any list is multi-select and says so;",
-            description="artifact intake: drop the six-question cap",
+            # v2.1.318: upstream tightened the ceiling six -> four and bolted the
+            # form's mechanics onto the same clause ("counting the subject's text
+            # box and always including the look unless the look is already
+            # settled"). Re-anchored onto the short cap-bearing phrase alone so
+            # the new mechanics survive untouched and the next reflow of the
+            # surrounding sentence does not break the rule again.
+            stock="In the form: up to four questions,",
+            unnerf="In the form: as many questions as the request genuinely leaves open,",
+            description="artifact intake: drop the question-count cap on the elicitation form",
+        ),
+        Rule(
+            # v2.1.318 bucket-analysis (bucket-analyze.mjs, 2026-11-06): AI-proposed,
+            # mechanically validated (stock occurs exactly once, no new ${VAR}
+            # introduced, no overlap with an existing rule, --dry-run confirmed).
+            # Full keep/lift review: data/bucket-analysis-2.1.318.json
+            # REVIEWED BY HAND (v2.1.318): "in one line" caps the fallback the
+            # model takes when the question form itself fails, which is the one
+            # moment the user gets nothing but that line. Not mechanics (nothing
+            # parses it), not reference text, not user protection. ACCEPTED.
+            stock="state your assumptions in one line, use clearly marked placeholders for a missing subject, and go on as below.",
+            unnerf="state your assumptions as needed to establish audience, scope, and look, use clearly marked placeholders for a missing subject, and go on as below.",
+            description="artifact intake: drop the one-line assumptions cap",
         ),
     ],
     # REJECTED BY HAND (v2.1.310): bucket-analyze proposed lifting the
@@ -1722,6 +1688,32 @@ RULES: dict[str, list[Rule]] = {
     # CC. On its merits it is also already calibrated rather than capped: it
     # says "Be complete on these even at the cost of length" for the six items
     # that matter and asks for concision only outside them.
+    # -------------------------------------------------------------------------
+    # v2.1.318 sync (bucket-analyze.mjs, 2026-11-06): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.318.json
+    # -------------------------------------------------------------------------
+    # REVIEWED BY HAND (v2.1.318): both send-to-project summary caps govern text
+    # that is saved in project memory and read as context by every later thread,
+    # so the cap costs future sessions the detail they would otherwise start
+    # with. Neither field is parsed or length-checked here (the brief guidelines
+    # defer the real caps to the tool description, which these rules leave
+    # alone), so Part 1 item 1 does not apply. ACCEPTED, both.
+    "system-prompt-send-to-project-proposal-summary-rules.md": [
+        Rule(
+            stock="Write it in the user’s voice from the conversation above, in at most three plain sentences with no markdown: what the work is, where it stands, and what is left.",
+            unnerf="Write it in the user’s voice from the conversation above, in plain sentences with no markdown: state what the work is, where it stands, and what is left, as thoroughly as needed for project memory.",
+            description="send-to-project proposal: drop the three-sentence cap on summary",
+        ),
+    ],
+    "agent-prompt-send-to-project-brief-field-guidelines.md": [
+        Rule(
+            stock="- `summary`: two or three plain sentences. What the work is, where it stands now, and what is left to do.",
+            unnerf="- `summary`: plain sentences covering what the work is, where it stands now, and what is left to do, in as much detail as future threads need for context.",
+            description="send-to-project brief: drop the two-or-three-sentence cap on summary",
+        ),
+    ],
 }
 
 

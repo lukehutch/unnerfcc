@@ -2,12 +2,12 @@
 name: 'Data: Claude Code agent proxy troubleshooting guide'
 description: >-
   Troubleshooting guide for Claude Code's policy-enforcing HTTPS agent proxy,
-  covering TLS trust setup, status checks, git, docker, and unsupported traffic
-ccVersion: 2.1.310
+  covering TLS trust setup, status checks, git, docker, and unsupported traffic.
+ccVersion: 2.1.318
 variables:
   - AGENT_PROXY_URL
   - AGENT_PROXY_CA_BUNDLE_PATH
-  - AGENT_PROXY_TRUSTSTORE_DIR
+  - AGENT_PROXY_CONFIG_DIR
   - AGENT_PROXY_PORT
 -->
 # Claude Code agent proxy
@@ -48,12 +48,12 @@ The failing tool is not reading the pre-set CA configuration. In order:
 - JVM tools (Maven, Gradle, plain Java): when a JDK is present,
   JAVA_TOOL_OPTIONS points JVMs at a truststore that holds the proxy CA: the
   JDK's own store if the system trust install already added the CA there,
-  otherwise ${AGENT_PROXY_TRUSTSTORE_DIR}/java-truststore.p12 (password "changeit"). Confirm
+  otherwise ${AGENT_PROXY_CONFIG_DIR}/java-truststore.p12 (password "changeit"). Confirm
   javaTrustStorePath is set in the status output before pointing a build at it
   (toolTrustFailureCodes explains why it is missing). If the image or the
   build sets its own trustStore, that one wins — import the proxy CA into it
   with
-  keytool -importcert -noprompt -alias ccr-agent-proxy -file ${AGENT_PROXY_TRUSTSTORE_DIR}/agent-proxy-ca.crt -keystore <their store>
+  keytool -importcert -noprompt -alias ccr-agent-proxy -file ${AGENT_PROXY_CONFIG_DIR}/agent-proxy-ca.crt -keystore <their store>
   or point the build at the ready-made one. Bazel reads the managed block in
   /etc/bazel.bazelrc rather than JAVA_TOOL_OPTIONS.
 
@@ -69,6 +69,16 @@ Most often the destination host is not allowed for this session. Do not retry
 or route around it — report the blocked host.
 Note: curl hides response bodies on failed CONNECTs; the status endpoint
 records the reason.
+
+### 429 / 503 from the proxy
+
+Too many connections or requests went through the proxy, or the egress proxy
+was busy. The proxy can hold a connection for about a minute before it refuses
+it, so a tool with a short timeout of its own may report only a timeout. Run
+fewer downloads or requests at once, then retry. connectsWaitingForTunnel and
+openTunnels in the status output show the load. busyTunnels includes idle
+connections until one has to wait, so alone it does not show load, and it can
+pass maxBusyTunnels.
 
 ### "connection reset" / "unexpected disconnect" / "RPC failed" mid-transfer
 

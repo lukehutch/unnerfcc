@@ -3,7 +3,7 @@ name: 'Skill: Claude Test runner'
 description: >-
   Internal Claude Test runner skill that drives the application in a background
   browser, evaluates each specification, and reports verdicts.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 ---
 description: Internal to Claude Test — runs the specs in a background browser. Started only by the claude-test run skill.
@@ -53,6 +53,7 @@ disallowed-tools:
   - Edit(//**/CLAUDE.md)
   - Edit(//**/CLAUDE.local.md)
   - Edit(//**/AGENTS.md)
+  - Edit(//**/ARCHITECTURE.md)
   - Edit(//**/.mcp.json)
   - Edit(//**/.github/**)
   - Edit(//**/.gitlab-ci.yml)

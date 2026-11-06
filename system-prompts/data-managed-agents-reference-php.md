@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Managed Agents reference — PHP'
 description: Managed Agents API reference doc (PHP bindings).
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Managed Agents - PHP
 
@@ -14,6 +14,8 @@ ccVersion: 2.1.310
 ```bash
 composer require "anthropic-ai/sdk" "guzzlehttp/guzzle:^7"
 ```
+
+The examples on this page need PHP SDK 1.0.0+; earlier versions require a `type:` argument on most `::with()` calls.
 
 ## Client Initialization
 
@@ -43,11 +45,11 @@ echo "Environment ID: {$environment->id}\n"; // env_...
 
 ## Create an Agent (required first step)
 
-> Warning: **A session needs an agent that already exists.** `model`/`system`/`tools` are set on the agent object; a session can override them for that session only, with the `agent_with_overrides` form of `agent` (`shared/managed-agents-core.md` § Override agent configuration for a session). Always start with `$client->beta->agents->create()` - the session takes `agent: $agent->id` or the typed `BetaManagedAgentsAgentParams::with(type: 'agent', id: $agent->id, version: $agent->version)`.
+> Warning: **A session needs an agent that already exists.** `model`/`system`/`tools` are set on the agent object; a session can override them for that session only, with the `agent_with_overrides` form of `agent` (`shared/managed-agents-core.md` § Override agent configuration for a session). Always start with `$client->beta->agents->create()` - the session takes `agent: $agent->id` or the typed `BetaManagedAgentsAgentParams::with(id: $agent->id, version: $agent->version)`.
 
 ### Minimal
 
-The examples on this page turn both web tools off. Set `enabled` to true on `web_fetch` / `web_search` only when the job as described needs the web (a general-purpose or open-ended job stays off; tell the user how to switch it on) - see `shared/managed-agents-tools.md` § Agent Toolset. They also set the `auto` permission policy (PHP SDK 0.48.0+), under which a call can pause for your approval - the event loop under Stream Events answers it. When nobody is watching the run, answer `deny`; never answer `allow` to every paused call.
+The examples on this page turn both web tools off. Set `enabled` to true on `web_fetch` / `web_search` only when the job as described needs the web (a general-purpose or open-ended job stays off; tell the user how to switch it on) - see `shared/managed-agents-tools.md` § Agent Toolset. They also set the `auto` permission policy, under which a call can pause for your approval - the event loop under Stream Events answers it. When nobody is watching the run, answer `deny`; never answer `allow` to every paused call.
 
 ```php
 use Anthropic\Beta\Agents\BetaManagedAgentsAgentToolset20260401Params;
@@ -63,7 +65,6 @@ $agent = $client->beta->agents->create(
     system: 'You are a helpful coding assistant.',
     tools: [
         BetaManagedAgentsAgentToolset20260401Params::with(
-            type: 'agent_toolset_20260401',
             defaultConfig: BetaManagedAgentsAgentToolsetDefaultConfigParams::with(
                 permissionPolicy: BetaManagedAgentsAutoPolicy::with(),
             ),
@@ -87,7 +88,7 @@ echo "Trace: https://platform.claude.com/workspaces/default/sessions/{$session->
 
 ### Updating an Agent
 
-Updates create new versions; the agent object is immutable per version.
+An update that changes the agent creates a new version; the agent object is immutable per version.
 
 ```php
 $updatedAgent = $client->beta->agents->update(
@@ -170,7 +171,6 @@ foreach ($stream as $event) {
                     // you write approve(): ask a person or apply your own rule; deny when unattended
                     result: approve($event) ? 'allow' : 'deny',
                     toolUseID: $event->id,
-                    type: 'user.tool_confirmation',
                 ),
             ],
         );
@@ -270,7 +270,6 @@ $session = $client->beta->sessions->create(
     environmentID: $environment->id,
     resources: [
         BetaManagedAgentsFileResourceParams::with(
-            type: 'file',
             fileID: $file->id,
             mountPath: '/data.csv',
         ),
@@ -353,14 +352,12 @@ $agent = $client->beta->agents->create(
     model: '{{OPUS_ID}}',
     mcpServers: [
         BetaManagedAgentsURLMCPServerParams::with(
-            type: 'url',
             name: 'github',
             url: 'https://api.githubcopilot.com/mcp/',
         ),
     ],
     tools: [
         BetaManagedAgentsAgentToolset20260401Params::with(
-            type: 'agent_toolset_20260401',
             defaultConfig: BetaManagedAgentsAgentToolsetDefaultConfigParams::with(
                 permissionPolicy: BetaManagedAgentsAutoPolicy::with(),
             ),
@@ -370,7 +367,6 @@ $agent = $client->beta->agents->create(
             ],
         ),
         BetaManagedAgentsMCPToolsetParams::with(
-            type: 'mcp_toolset',
             mcpServerName: 'github',
         ),
     ],
@@ -379,7 +375,6 @@ $agent = $client->beta->agents->create(
 // Session attaches vault(s) containing credentials for those MCP server URLs
 $session = $client->beta->sessions->create(
     agent: BetaManagedAgentsAgentParams::with(
-        type: 'agent',
         id: $agent->id,
         version: $agent->version,
     ),

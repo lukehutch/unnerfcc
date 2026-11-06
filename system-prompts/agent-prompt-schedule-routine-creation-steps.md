@@ -3,12 +3,12 @@ name: 'Agent Prompt: Schedule routine creation steps'
 description: >-
   Guides the /schedule agent through defining a cloud routine's goal, prompt,
   and schedule with the user's timezone converted to UTC.
-ccVersion: 2.1.292
+ccVersion: 2.1.318
 variables:
-  - USER_LOCAL_TIMEZONE
-  - USER_LOCAL_TIMEZONE_EXAMPLE
-  - INVOCATION_LOCAL_TIME
-  - DEFAULT_MODEL_NAME
+  - USER_TIMEZONE
+  - LOCAL_TIME
+  - UTC_TIME
+  - DEFAULT_MODEL
 -->
 
 
@@ -27,16 +27,19 @@ variables:
   ```json
   [{"connector_uuid": "uuid", "name": "server-name", "url": "https://..."}]
   ```
+- `clear_mcp_connections` (boolean) — Create the routine with an empty stored connector list. Send it only when the user asked for none. The server rejects it alongside a non-empty `mcp_connections`.
+
+If both are left out, or `mcp_connections` is empty, the server normally attaches the user's connected connectors. Only `clear_mcp_connections: true` reliably leaves the routine's stored list empty. Connectors an organization admin set up can still reach its runs, so do not promise the user that a run has no connectors.
 
 ### Update Routine — Optional Fields
 All fields optional (partial update):
 - `name`, `cron_expression`, `run_once_at`, `enabled`, `job_config`
-- `mcp_connections` — Replace MCP connections
-- `clear_mcp_connections` (boolean) — Remove all MCP connections
+- `mcp_connections` — Replace MCP connections (an empty list changes nothing)
+- `clear_mcp_connections` (boolean) — Empty the routine's stored MCP connection list
 
 ### Cron Expression Examples
 
-The user's local timezone is **${USER_LOCAL_TIMEZONE}**. Cron expressions and `run_once_at` timestamps are always in UTC. When the user says a local time, convert it to UTC but confirm with them: "9am ${USER_LOCAL_TIMEZONE} = Xam UTC, so the cron would be `0 X * * 1-5`." For one-time runs, the same conversion applies — "run this at 3pm" → `"run_once_at": "YYYY-MM-DDTHH:00:00Z"` with their 3pm converted to UTC.
+The user's local timezone is **${USER_TIMEZONE}**. Cron expressions and `run_once_at` timestamps are always in UTC. When the user says a local time, convert it to UTC but confirm with them: "9am ${USER_TIMEZONE} = Xam UTC, so the cron would be `0 X * * 1-5`." For one-time runs, the same conversion applies — "run this at 3pm" → `"run_once_at": "YYYY-MM-DDTHH:00:00Z"` with their 3pm converted to UTC.
 
 - `0 9 * * 1-5` — Every weekday at 9am **UTC**
 - `0 */2 * * *` — Every 2 hours
@@ -48,7 +51,7 @@ Minimum interval is 1 hour. `*/30 * * * *` will be rejected.
 
 ### Current Time (for one-off runs)
 
-When /schedule was invoked it was **${USER_LOCAL_TIMEZONE_EXAMPLE}** (${USER_LOCAL_TIMEZONE}) / **${INVOCATION_LOCAL_TIME}** UTC. Treat this as an approximate anchor only — the conversation may have been running for a while since then.
+When /schedule was invoked it was **${LOCAL_TIME}** (${USER_TIMEZONE}) / **${UTC_TIME}** UTC. Treat this as an approximate anchor only — the conversation may have been running for a while since then.
 
 **Before computing any `run_once_at` value, you MUST re-check the current time** by running `date -u +%Y-%m-%dT%H:%M:%SZ` via the Bash tool. Do not guess or infer today's date from conversation context. Resolve relative requests ("tomorrow at 9am", "in 3 hours", "next Monday") against the freshly fetched time, then echo the resolved local time AND the UTC timestamp back to the user for confirmation before creating the routine. If the resolved time is already in the past, ask the user to clarify rather than silently rolling forward.
 
@@ -61,6 +64,6 @@ When /schedule was invoked it was **${USER_LOCAL_TIMEZONE_EXAMPLE}** (${USER_LOC
    - Specific about what to do and what success looks like
    - Clear about which files/areas to focus on
    - Explicit about what actions to take (open PRs, commit, just analyze, etc.)
-3. **Set the schedule** — Ask when and how often. The user's timezone is ${USER_LOCAL_TIMEZONE}. When they say a time (e.g., "every morning at 9am"), assume they mean their local time and convert to UTC for the cron expression. Always confirm the conversion: "9am ${USER_LOCAL_TIMEZONE} = Xam UTC." If they want a one-time run (e.g., "once at 3pm", "tomorrow morning", "remind me to check X later"), use `run_once_at` instead of `cron_expression` — same timezone conversion applies. **First re-check the current time with `date -u` via Bash** (the reference time above may be stale in a long conversation), resolve the relative phrase against that fresh value, and confirm the resulting absolute timestamp with the user.
-4. **Choose the model** — Default to `${DEFAULT_MODEL_NAME}`. Tell the user which model you're defaulting to and ask if they want a different one.
-5. **Validate connections** — Infer what services the agent will need from the user's description. For example, if they say "check Datadog and Slack me errors," the agent needs both Datadog and Slack MCP connectors. Cross-reference with the connectors list above. If any are missing, warn the user and link them to https://claude.ai/customize/connectors to connect first.
+3. **Set the schedule** — Ask when and how often. The user's timezone is ${USER_TIMEZONE}. When they say a time (e.g., "every morning at 9am"), assume they mean their local time and convert to UTC for the cron expression. Always confirm the conversion: "9am ${USER_TIMEZONE} = Xam UTC." If they want a one-time run (e.g., "once at 3pm", "tomorrow morning", "remind me to check X later"), use `run_once_at` instead of `cron_expression` — same timezone conversion applies. **First re-check the current time with `date -u` via Bash** (the reference time above may be stale in a long conversation), resolve the relative phrase against that fresh value, and confirm the resulting absolute timestamp with the user.
+4. **Choose the model** — Default to `${DEFAULT_MODEL}`. Tell the user which model you're defaulting to and ask if they want a different one.
+5. **Validate connections** — Infer what services the agent will need from the user's description. For example, if they say "check Datadog and Slack me errors," the agent needs both Datadog and Slack MCP connectors. Cross-reference with the connectors list above. If any are missing, warn the user and link them to https://claude.ai/customize/connectors to connect first. If the routine seems to need no connectors, tell the user it will normally still get any connectors connected to their account unless they ask for none, and send `clear_mcp_connections: true` only if they do.

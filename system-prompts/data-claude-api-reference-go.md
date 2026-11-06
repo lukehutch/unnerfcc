@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Claude API reference — Go'
 description: Go SDK reference
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Claude API - Go
 
@@ -10,15 +10,15 @@ ccVersion: 2.1.310
 ## Installation
 
 ```bash
-go get github.com/anthropics/anthropic-sdk-go
+go get github.com/anthropics/anthropic-sdk-go/v2
 ```
 
 ## Client Initialization
 
 ```go
 import (
-    "github.com/anthropics/anthropic-sdk-go"
-    "github.com/anthropics/anthropic-sdk-go/option"
+    "github.com/anthropics/anthropic-sdk-go/v2"
+    "github.com/anthropics/anthropic-sdk-go/v2/option"
 )
 
 // Default (uses ANTHROPIC_API_KEY env var)

@@ -3,7 +3,7 @@ name: 'Data: Claude API reference — Python'
 description: >-
   Python SDK reference including installation, client initialization,
   per-request options, timeouts, streaming, and retry/backoff patterns
-ccVersion: 2.1.293
+ccVersion: 2.1.318
 -->
 # Claude API - Python
 
@@ -338,7 +338,7 @@ message = raw.parse()  # the Message object messages.create() would have returne
 
 ## Multi-Turn Conversations
 
-The API is stateless - send the full conversation history each time.
+The API is stateless - send the full conversation history each time (unless you use a message thread: `shared/message-threads.md`).
 
 ```python
 class ConversationManager:

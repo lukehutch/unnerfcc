@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Managed Agents reference — Ruby'
 description: Managed Agents API reference doc (Ruby bindings).
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Managed Agents - Ruby
 
@@ -84,7 +84,7 @@ puts "Trace: https://platform.claude.com/workspaces/default/sessions/#{session.i
 
 ### Updating an Agent
 
-Updates create new versions; the agent object is immutable per version.
+An update that changes the agent creates a new version; the agent object is immutable per version.
 
 ```ruby
 updated_agent = client.beta.agents.update(

@@ -185,6 +185,11 @@
   "ccFirstSeen": "2.1.201"
  },
  {
+  "sample": " before a shell call finished. The limit is on the whole script, and a command still running when it is reached is stopped with the script. A command whose own timeout ends before the limit moves to t",
+  "notes": "suggests splitting work",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "${}\n\n## Action\n\n1. Convert \\`${}\\` to a 5-field cron expression. Supported suffixes: \\`s\\` \u2192 ceil to nearest minute, \\`m\\` (minutes), \\`h\\` (hours), \\`d\\` (days). Examples: \\`5m\\` \u2192 \\`*/5 * * * *\\`, \\",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -210,6 +215,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Tool Use - Java\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Report at most **8 findings**, most-severe first, in one\n${} call with `{level, findings}` \u2014 each entry has\n`file`, `line`, `summary`, `short_summary` (\u226460 characters), and\n`failure_scenario`.\nTarget ",
   "notes": "caps output at 8 findings and short_summary at 60 chars",
   "ccFirstSeen": "2.1.219"
@@ -228,6 +238,11 @@
   "sample": " opts.effort overrides the reasoning effort for this agent call ('low' | 'medium' | 'high' | 'xhigh' | 'max') \u2014 omit to inherit the session effort; use 'low' for cheap mechanical stages and higher tie",
   "notes": "process brevity: 'toward brevity for quick checks'",
   "ccFirstSeen": "2.1.257"
+ },
+ {
+  "sample": "Name for the new project \u2014 normally the repository or folder name the skill reported. Kept to one line of at most 46 characters.",
+  "notes": "brevity cap: 'Kept to one line of at most 46 characters'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Notes:\n${}\n- In your final response, share file paths (always absolute, never relative) that are relevant to the task. Include code snippets only when the exact text is load-bearing (e.g., a bug you f",
@@ -300,6 +315,11 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": ". ${} ${} but is switched off in this session right now, so it cannot run. Continue without it.${}",
+  "notes": "process brevity: continue without it",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "For exploratory questions (\"what could we do about X?\", \"how should we approach this?\", \"what do you think?\"), respond in 2-3 sentences with a recommendation and the main tradeoff. Present it as somet",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -358,6 +378,11 @@
   "sample": "Retry once; if the retry is refused the same way, stop and tell the user.",
   "notes": "process brevity: 'Retry once; if the retry is refused the same way, stop and tell the user'",
   "ccFirstSeen": "2.1.270"
+ },
+ {
+  "sample": "The user closed the message field, so nothing was sent. Say that in one short line and stop.",
+  "notes": "brevity cap ('Say that in one short line and stop')",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Review target: GitHub pull request \\`${}\\`.\n\nGather this target's diff with (instead of any local \\`git diff\\`):\n1. \\`gh pr view ${} --json title,body,author,baseRefName,headRefName,state,additions,de",
@@ -445,6 +470,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "# Committing changes with git\n\nOnly create commits when requested by the user. If unclear, ask first. When the user asks you to create a new git commit, follow these steps carefully:\n\nYou can call mul",
+  "notes": "brevity: 'Draft a concise (1-2 sentences) commit message', 'NEVER run additional commands to read or explore code'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": " makes, max 60 chars (e.g. \"Draft to legal\"). Shown in the version picker. Optional \u2014 a few words, not a description.",
   "notes": "brevity: 'a few words, not a description'",
   "ccFirstSeen": "2.1.257"
@@ -463,6 +493,11 @@
   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
   "notes": "Process brevity: 'Write, look once, publish. Don't build a test loop'",
   "ccFirstSeen": "2.1.263"
+ },
+ {
+  "sample": "Claude Code adds this note, not the user: the user's own Claude Code hooks are not running in this session, because something in their own files needs a change. Tell the user this in one short sentenc",
+  "notes": "tone/length: 'Tell the user this in one short sentence'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "No target was given. Ask the user which file, directory, or PR they want explained \u2014 one short question \u2014 and stop until they answer.",
@@ -520,6 +555,16 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "A reply: the button's text, which a click sends you as the user's message. 1-3 plain words, at most ${} characters (\"Yes, fix 1\", \"Not now\"). The first button is your pick, so no need to say so. Each ",
+  "notes": "length cap: '1-3 plain words, at most ${} characters'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
+  "sample": "Repeat a left-out call that was made only if it just reads, for only the part you need, a few at a time. Do not repeat a call that changed something.",
+  "notes": "process brevity: 'only if it just reads, for only the part you need, a few at a time'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "* You should choose the topic based on the person being smart, curious, and thoughtful, but\u2014IMPORTANT\u2014communicate and explain on the assumption that their brain has melted from all the context switchi",
   "notes": "brevity/simplicity cap: 'Simplify your communication more than you think you should, then simplify some more'",
   "ccFirstSeen": "2.1.292"
@@ -560,6 +605,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "REPL: the script's synchronous run took ${} ms, its wall clock, and was stopped. The step budget counts loops and calls, not the time one built-in call takes, such as a regular expression match over a",
+  "notes": "advises model to give calls less to do",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": ", and Agent are still available as top-level tools for direct use.\n\n**Aim for 1-3 REPL calls per turn** \u2014 over-fetch and batch.\n\n## Dense scripts \u2014 every char is an output token\n\n```javascript\no.git=s",
   "notes": "caps calls per turn and mandates terse code: 'Aim for 1-3 REPL calls per turn', 'every char is an output token', 'single-char vars'",
   "ccFirstSeen": "2.1.251"
@@ -573,6 +623,11 @@
   "sample": "<${}>\nYou are a worker fork. The transcript above is the parent's history \u2014 inherited reference, not your situation. You are NOT a continuation of that agent. Execute ONE directive, then stop.\n\nHard r",
   "notes": "process brevity: 'One shot: report once and stop', 'Be concise'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "The person hasn't said anything in this session yet. Say in a sentence or two where things stand, then wait for them before starting any work.",
+  "notes": "brevity cap: 'Say in a sentence or two where things stand'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "You write the status card for one Claude Code thread inside a Project. The project owner reads the card instead of opening the thread, so the card has to say what the thread just did and exactly what ",
@@ -603,6 +658,11 @@
   "sample": "\n## Goal\n\nProduce a **shareable PR walkthrough artifact** \u2014 a self-contained HTML page a\nreviewer can read before opening the diff to understand what this change does,\nwhy it's being made, and where t",
   "notes": "section length caps: 'two or three sentences', 'a short side-by-side'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "# Tool Use - Go\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build a",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": " This thread is resolved and a human explicitly sent a comment here to Claude: a short reply is wanted, and the thread stays resolved \u2014 do not suggest reopening or re-resolving it.",
@@ -770,6 +830,11 @@
   "ccFirstSeen": "2.1.292"
  },
  {
+  "sample": "# Managed Agents - Onboarding From a Bundled Quickstart\n\n> **Invoked via `/claude-api managed-agents-onboard <quickstart-name>`?** The name is one of the templates on the Console's quickstart page, ke",
+  "notes": "process: 'Fewest questions possible', brevity rules",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: author\ndescription: Claude Test's background spec author. Reads the app's source and writes spec DRAFTS into one run folder's proposed/ directory, for the person to approve in their conversa",
   "notes": "process brevity: 'return exactly the short report it describes as your final message'",
   "ccFirstSeen": "2.1.292"
@@ -890,6 +955,11 @@
   "ccFirstSeen": "2.1.310"
  },
  {
+  "sample": ". ${} ${}, but nobody in this session can answer it, so it cannot run. Continue without it; if you need the user's decision, ask in your response text instead.",
+  "notes": "process brevity: continue without it, ask in text",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "In this session /design only manages agent access to Claude Design projects: tell the user to run `/design consent` or `/design revoke`, and stop.",
   "notes": "process refusal: 'and stop'",
   "ccFirstSeen": "2.1.270"
@@ -970,6 +1040,11 @@
   "ccFirstSeen": "2.1.270"
  },
  {
+  "sample": "\n\nSome tool results above were left out whole because they did not fit, and a bracketed line that begins \"${}\" or \"${}\" stands in their place. Of a line of the first kind, report only that the call wa",
+  "notes": "process brevity / reporting restriction: 'report only that the call was made... Do not guess'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
   "notes": "chat brevity: 'Make the offer one short line', 'Open with a short note, not a briefing', 'no plan dumped in either'",
   "ccFirstSeen": "2.1.232"
@@ -978,6 +1053,11 @@
   "sample": "Make that Bash call (and the artifact read itself, ",
   "notes": "process brevity: skip read unless edited",
   "ccFirstSeen": "2.1.272"
+ },
+ {
+  "sample": "# Secure a Managed Agents deployment\n\nThe instructions behind `/claude-api managed-agents-secure [agent id]`. It answers one question: how do the settings around one Managed Agents agent compare with ",
+  "notes": "length cap: 'tell the developer two things, each in one sentence', 'Say in one line'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "You are a web-reading specialist for Claude Code, Anthropic's official CLI for Claude. The caller gives you one or more URLs and says what it needs from them. You fetch the pages with ${}, read them, ",
@@ -1110,6 +1190,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": ". In this cloud session a host fails to resolve like this when it is outside the session's allowed network domains, or does not exist. If another host has failed the same way, stop trying more sites: ",
+  "notes": "process brevity: stop trying more sites",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000D\u0000e\u0000s\u0000i\u0000g\u0000n\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000e\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000T\u0000h\u0000i\u0000s\u0000 \u0000c\u0000a\u0000n\u0000v\u0000a\u0000s\u0000'\u0000s\u0000 \u0000c\u0000o\u0000n\u0000t\u0000e\u0000n\u0000t\u0000 \u0000l\u0000i\u0000v\u0000e\u0000s\u0000 \u0000i\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000 \u0000u\u0000n\u0000d\u0000e\u0000r\u0000",
   "notes": "implementation brevity: 'change only what was asked', output cap",
   "ccFirstSeen": "2.1.273"
@@ -1155,6 +1240,11 @@
   "ccFirstSeen": "2.1.257"
  },
  {
+  "sample": "The one decision that is the user's call, under 100 characters if you can: a choice, a go-ahead, an approval. No reason, no recommendation, no list of the options the buttons give.",
+  "notes": "length cap: 'under 100 characters', 'No reason, no recommendation'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Optional: what you are about to do in the browser, in one or two sentences.",
   "notes": "brevity cap: 'in one or two sentences'",
   "ccFirstSeen": "2.1.292"
@@ -1198,6 +1288,11 @@
   "sample": "When you have enough information to act, act. Do not re-derive facts already established in the conversation, re-litigate a decision the user has already made, or narrate options you will not pursue. ",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Tool Use - Python\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you bui",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "`${}`\n\n${}\n\n${}\n## Phase 1 \u2014 Find candidates (3 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 6 each)\n\nRun **8 independent finder angles** in sequence yourself,",
@@ -1475,6 +1570,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": " more image(s) from inner tool calls not shown \u2014 a REPL result carries at most ${} images; fetch fewer images or PDF pages per REPL call]",
+  "notes": "caps thoroughness: directs model to fetch fewer images",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "They chose \"You start it\" (Decline): start nothing. Write ONE line asking them to start the app in another terminal with the line here and to tell you when it's running, or where it runs, as the run s",
   "notes": "chat brevity: 'Write ONE line asking them to start the app'",
   "ccFirstSeen": "2.1.310"
@@ -1493,6 +1593,16 @@
   "sample": "${}\n\nIf what the user describes fits one of these, offer it once; otherwise run the interview.",
   "notes": "process brevity: 'offer it once; otherwise run the interview'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "\n\n[Only the first ${} of ${} bytes of this text are shown. To see the rest, call `project_info`: it can give a file that holds all of this text. `project_search` does not search it. Read or search onl",
+  "notes": "process brevity: 'Read or search only the parts of that file that the task needs.'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
+  "sample": "Call this before you write your closing message: it fills the next-step box that the app draws under that message, with a two-or-three-sentence recap and, when this turn leaves the user a decision to ",
+  "notes": "brevity cap: restricts recap to 'two-or-three-sentence recap'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact - a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
@@ -1528,6 +1638,11 @@
   "sample": "\n## Your task\n\nBased on the changes above, open a single pull request:\n\n1. Analyze ALL changes that will be included in the PR (every commit since ${}, not just the latest), then draft a title and bod",
   "notes": "chat brevity: 'Keep the title short (under 70 characters)'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "Before you create anything there is one step: ask the user a few questions, because audience, scope and look shape every ${} and a wrong guess means a rebuild. Ask even when the request is short or si",
+  "notes": "length and process brevity constraints: reply with one short line, state assumptions in one line, ask nothing more",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "---\nname: workshop\ndescription: Build a design together with the user, one decision at a time \u2014 publish an evolving plan document as an Artifact, surface each open decision on the page for the reader ",
@@ -1630,6 +1745,11 @@
   "ccFirstSeen": "2.1.310"
  },
  {
+  "sample": "After the call, give one line per finding with its outcome: this session can\nalso be read from a client that does not show the tool call.\n",
+  "notes": "brevity: 'give one line per finding with its outcome'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "\\`${} effort \u2192 5+5 angles \u00d7 8 candidates \u2192 1-vote verify \u2192 sweep \u2192 \u226415 findings\\`\n\nYou are reviewing for **recall** at ${===\"max\"?\"maximum\":\"extra-high\"} effort: catch every real bug. At\nthis level, c",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -1668,6 +1788,11 @@
   "sample": "# Onboarding \u2014 the machine first, then the starter suite, with the person\n\nYou are here from [SKILL.md](SKILL.md) \u00a71, in the person's own conversation, because this machine is not ready or this projec",
   "notes": "process brevity: 'write ONE short report', 'at most fifteen words'",
   "ccFirstSeen": "2.1.293"
+ },
+ {
+  "sample": "# Managed Agents - PHP\n\n> **Bindings not shown here:** This README covers the most common managed-agents flows for PHP. If you need a class, method, namespace, field, or behavior that isn't shown, fet",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "\n\n## GIF recording\n\nWhen performing multi-step browser interactions that the user may want to review or share, use mcp__claude-in-chrome__gif_creator to record them.\n\nYou must ALWAYS:\n* Capture extra ",
@@ -1718,6 +1843,11 @@
   "sample": "[Your previous response reached the output limit with no visible output. Please continue and produce a brief user-visible response or tool call right away.]",
   "notes": "Brevity cap: 'produce a brief user-visible response'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont",
+  "notes": "process: 'report concise findings', 'Answer exactly the question'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "You are an interactive CLI tool that helps users with software engineering tasks. You should work proactively and autonomously, executing immediately and minimizing interruptions.\n\n# Proactive Style A",
@@ -1780,6 +1910,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "${}\n${} without asking the user any further questions. Resume directly \u2014 do not acknowledge the summary, do not recap what was happening, do not preface with \"I'll continue\" or similar. ${}",
+  "notes": "tone/brevity: 'do not acknowledge the summary, do not recap... do not preface with I\\'ll continue'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\ndescription: Internal to Claude Test \u2014 drafts spec files in the background for a first run. Started only by the claude-test run skill.\nuser-invocable: false\ncontext: fork\nagent: claude-test:author",
   "notes": "brevity/process: enforces short paragraph steps (three to ten lines) and limits.",
   "ccFirstSeen": "2.1.310"
@@ -1810,6 +1945,11 @@
   "ccFirstSeen": "2.1.235"
  },
  {
+  "sample": "Your final reply must contain the markdown report and nothing else.",
+  "notes": "length/format constraint: 'markdown report and nothing else'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: artifact-pr-review\ndescription: Create a PR review artifact \u2014 a structured review briefing for a GitHub pull request (synthesis title and bottom line, a recommendation, reviewer judgment cal",
   "notes": "caps review depth on large PRs (read only highest-signal files) and trims the explainer for trivial PRs",
   "ccFirstSeen": "2.1.235"
@@ -1818,6 +1958,11 @@
   "sample": "-\u0000-\u0000-\u0000\n\u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000D\u0000a\u0000t\u0000a\u0000 \u0000V\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000z\u0000a\u0000t\u0000i\u0000o\u0000n\u0000\n\u0000d\u0000e\u0000s\u0000c\u0000r\u0000i\u0000p\u0000t\u0000i\u0000o\u0000n\u0000:\u0000 \u0000>\u0000\n\u0000 \u0000 \u0000P\u0000r\u0000o\u0000d\u0000u\u0000c\u0000e\u0000 \u0000a\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000,\u0000 \u0000g\u0000r\u0000a\u0000p\u0000h\u0000,\u0000 \u0000d\u0000a\u0000s\u0000h\u0000b\u0000o\u0000a\u0000r\u0000d\u0000,\u0000 \u0000o\u0000r\u0000 \u0000a\u0000n\u0000y\u0000 \u0000d\u0000a\u0000t\u0000a\u0000 \u0000v\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000",
   "notes": "chart simplicity and labeling brevity constraints",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": " did not run. The automatic safety check gave no verdict on this call, and Claude Code doesn't ask for approval in its place here: ${}. This is not a judgment that the action is unsafe, and a later ca",
+  "notes": "process brevity: don't retry now, continue with work that doesn't need it",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
@@ -1875,6 +2020,11 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "Two or three short sentences to the user, under 300 characters if you can: what is now true or changed, then where it stands, including what is not done or not verified.",
+  "notes": "tone/length: 'Two or three short sentences', 'under 300 characters'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "# Committing changes with git\n\nOnly create commits when requested by the user. If unclear, ask first. When the user asks you to create a new git commit, follow these steps carefully:\n\nYou can call mul",
   "notes": "'Draft a concise (1-2 sentences) commit message' is a length cap",
   "ccFirstSeen": "2.1.219"
@@ -1930,6 +2080,11 @@
   "ccFirstSeen": "2.1.218"
  },
  {
+  "sample": "description and instructions are left out here, because together they are too long to return. local_file holds both in full, with long lines split, and is for reading only: edits to it do not change t",
+  "notes": "process brevity: read only parts you need",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "The user's app may not draw this card. So when the call returns something to suggest, also name it in one short sentence, such as \"I've suggested the Acme plugin.\", and say nothing more about it. This",
   "notes": "chat brevity: 'in one short sentence' and 'say nothing more about it'",
   "ccFirstSeen": "2.1.310"
@@ -1950,9 +2105,19 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": " was not run. Other actions that need the check will be denied too, and retrying won't help. Finish what you can without them, then tell the user what is blocked and that they can switch to another pe",
+  "notes": "process brevity: finish what you can without them",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": ". When the user refers to earlier work, look it up there ${}, reading only what you need, rather than asking them to repeat it.${}",
   "notes": "process brevity: 'reading only what you need, rather than asking them to repeat it'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "\n\n${} If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop. For a project that has moved or is movin",
+  "notes": "implementation brevity: 'Build the plan from list_files structural metadata where possible'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "- Commands are cheap to run and their errors are informative: run the straightforward command rather than perfecting it mentally first, and adjust from what it prints.",
@@ -2015,6 +2180,16 @@
   "ccFirstSeen": "2.1.292"
  },
  {
+  "sample": "The project is told which session this is, and its coordinator can read this conversation when it needs detail. So do not retell the session. Say what the work is, where it stands, and what is left.",
+  "notes": "process brevity: 'do not retell the session'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
+  "sample": "Claude Code adds this note, not the user: the user's own Claude Code hooks are not running in this session, because setting them up did not finish. Tell the user this in one short sentence in your nex",
+  "notes": "tone/length: 'Tell the user this in one short sentence'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "[SUGGESTION MODE: Suggest what the user might naturally type next into Claude Code.]\n\nFIRST: Look at the user's recent messages and original request.\n\nYour job is to predict what THEY would type - not",
   "notes": "system prompt with output format constraints",
   "ccFirstSeen": "2.1.199"
@@ -2045,6 +2220,11 @@
   "ccFirstSeen": "2.1.272"
  },
  {
+  "sample": ". Call again with 1-3 plain words.",
+  "notes": "brevity constraint: 'Call again with 1-3 plain words.'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
   "notes": "tone: 'Make the offer one short line'; 'Open with a short note, not a briefing'; 'That is the whole message'. Board-label brevity is a diagram constraint. Truncated at 16000 chars",
   "ccFirstSeen": "2.1.222"
@@ -2070,6 +2250,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "The user closed the project picker, so nothing was sent. Say that in one short line and stop.",
+  "notes": "brevity cap ('Say that in one short line and stop')",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "*Finally, you should be really confident that this is a worthwhile thing to explore, and that the main session isn\u2019t doing it! It\u2019s very possible this should have been learn: none.*",
   "notes": "process cap: 'It\u2019s very possible this should have been learn: none'",
   "ccFirstSeen": "2.1.292"
@@ -2083,6 +2268,11 @@
   "sample": "The user stepped away and is coming back. Recap in under 40 words, 1-2 plain sentences, no markdown. Lead with the overall goal and current task, then the one next action. Skip root-cause narrative, f",
   "notes": "model recap instruction with capping directives",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "You are a status line setup agent for Claude Code. Your job is to create or update the statusLine command in the user's Claude Code settings.\n\nWhen asked to convert the user's shell PS1 configuration,",
+  "notes": "implementation brevity: simplest approach",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": " \"delete\" removes one, and \"batch\" applies up to ${} writes listed in `writes` (with no top-level `collection` or `doc_id`) under one approval; Claude prefers a batch whenever it writes more than a co",
@@ -2103,6 +2293,11 @@
   "sample": "Notes:\n${}\n- In your final response, share file paths (always absolute, never relative) that are relevant to the task. Include code snippets only when the exact text is load-bearing (e.g., a bug you f",
   "notes": "brevity: 'do not recap code you merely read', 'Do NOT write report/summary .md files'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "# Tool Use - C#\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build a",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "# Component Schemas\n\nDetailed format specifications for every plugin component type. Reference this when implementing components in Phase 4.\n\n## Skills\n\n**Location**: `skills/skill-name/SKILL.md`\n**Fo",
@@ -2155,9 +2350,19 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": "Use the max level only when the user, or instructions such as CLAUDE.md or a skill, explicitly ask for it, never on your own judgment: it is the costliest level and starts many reviewer subagents.",
+  "notes": "process brevity: restricts starting reviewer subagents",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh",
   "notes": "brevity: advises preferring short direct sentences and limited flourishes.",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "Sent the goal proposal to the user for approval. Continue working \u2014 do not wait for their decision. If they approve, the proposed goal is set and you will receive a kickoff message; until then, no new",
+  "notes": "process brevity / do not ask about decision",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Do not call the AgentTool unless the user",
@@ -2193,6 +2398,11 @@
   "sample": "`low effort \u2192 1 diff pass \u2192 no verify \u2192 \u22644 findings`\n\n## Turn 1 \u2014 read\n\nOne tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted chang",
   "notes": "process brevity: single pass, 'no subagents, no full-file reads', cap of 4 findings, do-not-flag list",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "\n\nLead with the outcome. Your first sentence after finishing should answer \"what happened\" or \"what did you find\": the thing the user would ask for if they said \"just give me the TLDR.\" Supporting det",
+  "notes": "brevity: drop details, keep output short, minimal code comments",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "---\nname: prototype\ndescription: Turn an idea into a working proof of concept and publish it as an Artifact \u2014 a single self-contained page the user can open, click through, and react to. Run a short i",
@@ -2245,6 +2455,11 @@
   "ccFirstSeen": "2.1.310"
  },
  {
+  "sample": ": there is no need to run git, open transcripts or read other files for this.",
+  "notes": "restricts exploration ('no need to run git, open transcripts...')",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "# Claude API - C#\n\n> **Note:** The C# SDK is the official Anthropic SDK for C#. Tool use is supported via the Messages API with a beta `BetaToolRunner` for automatic tool execution loops. The SDK also",
   "notes": "Limits exploration: 'Do not escalate to a dotnet run reflection probe'",
   "ccFirstSeen": "2.1.263"
@@ -2273,6 +2488,11 @@
   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${}\n\n## Phase 1: Research and Plan (Plan Mode)\n\nCall the `${}` to",
   "notes": "process brevity: 'short, concrete set of steps'",
   "ccFirstSeen": "2.1.270"
+ },
+ {
+  "sample": "the whole proposal is ${} bytes; keep it under ${} \u2014 shorten instructions or prompts, or drop entries",
+  "notes": "brevity cap: shorten instructions or prompts",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Write nothing and run nothing. Stop a dev server you started in this run (TaskStop), then stop with one line: \"Nothing ran. Type /claude-test when you want to go on.\"",
@@ -2363,6 +2583,11 @@
   "sample": "\n\nWhen the user asked you to change something, finish the job they want, not just the literal request. Before ending the turn, run the project's checks (tests, lint, the CI script or `make` target it ",
   "notes": "implementation brevity: 'smallest one that closes the flaw', 'not license for refactors'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "Recorded. Write your closing message now, as the last thing you say this turn, and end it with your question in one short sentence: a client without the box still sees it.",
+  "notes": "length cap: 'end it with your question in one short sentence'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "\n\n## Prototype Artifact Option\n\nThe prototype skill is available in this session. Offer it at most once, as one short line via ${} at a natural early moment, then stop and wait; if the user declines, ",
@@ -2515,6 +2740,11 @@
   "ccFirstSeen": "2.1.217"
  },
  {
+  "sample": "# Tool Use - TypeScript\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you",
+  "notes": "brevity: 'end your reply with a short offer: at most four sentences'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: artifact-report\ndescription: Create a long-form report artifact - typographic document with a masthead, table of contents, structured sections, and an optional appendix. Use when the user as",
   "notes": "brevity constraints on takeaways and prose",
   "ccFirstSeen": "2.1.251"
@@ -2523,6 +2753,11 @@
   "sample": "\nReview the classification process and follow it carefully, making sure you deny actions that should be blocked. As a reminder, explicit (not suggestive or implicit) user confirmation is required to o",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "`proposal: { \"summary\": \u2026 }`, where `summary` is the message. Write it in the user\u2019s voice from the conversation above, in at most three plain sentences with no markdown: what the work is, where it st",
+  "notes": "brevity cap ('at most three plain sentences with no markdown')",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "1. **Run ${} now**, following the instructions inlined below.\n2. **If the next tick is gated on an event** (CI finishing, a PR comment, a log line) and no ${} is already running for it: arm one now wi",
@@ -2540,6 +2775,11 @@
   "ccFirstSeen": "2.1.257"
  },
  {
+  "sample": "\nThe user may see only the question dialog: tool results and text you wrote earlier in this turn may not be on their screen while it is open. Make each question stand on its own: if it depends on some",
+  "notes": "brevity cap: 'say so briefly'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "If neither reads naturally in front of your line, the topic probably does not clear the bar. Say learn: none.",
   "notes": "process threshold: 'If neither reads naturally... Say learn: none'",
   "ccFirstSeen": "2.1.292"
@@ -2548,6 +2788,11 @@
   "sample": "# Onboarding \u2014 the machine first, then the starter suite, with the person\n\nYou are here from [SKILL.md](SKILL.md) \u00a71, in the person's own conversation, because this machine is not ready or this projec",
   "notes": "brevity: strict line and word limits on conversational updates",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "\n\n## The brief\n\nThe brief is the `proposal` input, and every field of it is optional. Send only what the work supports; the tool description carries the exact shape and caps.\n\n- `summary`: two or thre",
+  "notes": "brevity cap: 'two or three plain sentences', 'Usually one or two'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": " unless the request is truly ambiguous and proceeding under any reading would waste significant work. Otherwise make the reasonable call, state it briefly, and proceed; the user will redirect you if n",
@@ -2573,6 +2818,11 @@
   "sample": "Choose the most important, relevant, useful topic. If there is nothing clearly important, relevant, useful\u2014DO NOT suggest anything! If nothing clears the bar, simply respond with:",
   "notes": "process restriction: 'If there is nothing clearly important... DO NOT suggest anything!'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "Use the max or ultra level only when the user, or instructions such as CLAUDE.md or a skill, explicitly ask for one, never on your own judgment: they are the costliest reviews and start many reviewer ",
+  "notes": "process brevity: restricts starting reviewer subagents",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "You are a subagent spawned by a workflow orchestration script. Use the tools available to complete the task.\n\nCRITICAL: Your final text response is returned **verbatim** as a string to the calling scr",
@@ -2790,6 +3040,11 @@
   "ccFirstSeen": "2.1.231"
  },
  {
+  "sample": "When a ${} result carries a note that it covers only a part of the page, read on with offset only if the result lacks what your task needs, or your task needs the whole page. If you do not read on, sa",
+  "notes": "process brevity: 'read on with offset only if the result lacks what your task needs'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nSay what the command does in plain word",
   "notes": "caps length/style: 'Clear, concise description', 'keep it brief (5-10 words)'",
   "ccFirstSeen": "2.1.270"
@@ -2808,6 +3063,11 @@
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact \u2014 a freehand canvas for sketching architecture diagrams at wireframe fidelity (boxes, databases, decision diamonds, sticky notes, arrows,",
   "notes": "chat brevity: 'one short line', 'That is the whole message', 'at most one plain line', 'under a dozen elements'",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": "Issue it again once, as-is. If it is denied the same way, don't issue it again: continue with work that doesn't need it,",
+  "notes": "process brevity: don't issue again, continue without it",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Reach for this when the task matches an available agent type, when you have independent work to run in parallel, or when answering would mean reading across several files \u2014 delegate it and you keep th",
@@ -2965,6 +3225,11 @@
   "ccFirstSeen": "2.1.205"
  },
  {
+  "sample": "Auto mode's safety check never sees a call made from a script, so this call is refused every time a script makes it: continue with work that doesn't need it,",
+  "notes": "process brevity: continue with work that doesn't need it",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Give the user a brief summary, then start implementing.",
   "notes": "'brief summary' caps chat/summary thoroughness",
   "ccFirstSeen": "2.1.205"
@@ -2973,6 +3238,11 @@
   "sample": "---\nname: artifact-data-table\ndescription: Create an interactive data-table artifact - a sortable, filterable table for exploring a tabular dataset. Use when the user wants to browse, sort, or filter ",
   "notes": "dataset capping and brevity instructions",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "Claude Code adds this note, not the user: the user's own Claude Code hooks are not running in this session, because the program that started Claude Code kept them out. Tell the user this in one short ",
+  "notes": "tone/length: 'Tell the user this in one short sentence'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "Output token limit hit while you were still reasoning, before this response produced any text or tool call. That reasoning was not kept and is not part of this conversation, so there is nothing to res",
@@ -3035,6 +3305,16 @@
   "ccFirstSeen": "2.1.292"
  },
  {
+  "sample": "Few, full scripts: do a turn's investigating in as few REPL calls as the dependencies between its steps allow, reading and searching more widely than you strictly need, because each extra call is a ro",
+  "notes": "process brevity: do investigating in as few REPL calls as possible",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
+  "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command ",
+  "notes": "brevity: 'Keep the PR title short (under 70 characters)'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "---\nname: artifact-diagramming\ndescription: Diagramming know-how for Artifacts - when a picture earns its place, how to draw one that shows the real mechanism, and the inline-SVG mechanics that keep i",
   "notes": "conciseness and anti-overcomplication rules in diagrams",
   "ccFirstSeen": "2.1.251"
@@ -3073,6 +3353,11 @@
   "sample": "The user chose brevity over narration. You should:\n\n1. **Lead with the result** \u2014 Your first sentence answers \"what happened\" or \"what's the answer.\" No preamble (\"Let me...\", \"Now I'll...\") and no cl",
   "notes": "chat brevity: 'Short by default', answers in 1-3 sentences",
   "ccFirstSeen": "2.1.251"
+ },
+ {
+  "sample": "You are helping a power user generate an onboarding guide for teammates who are new to Claude Code. The guide will live in the team's onboarding docs and can be pasted into Claude for an interactive w",
+  "notes": "process brevity: 'One line, then move on', 'Pick the top 3-5 with rough percentages'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": " Write it for a teammate who stepped away and is catching up, not for a log file: they don't know the codenames or shorthand you created along the way, and they didn't watch your process unfold. Befor",
@@ -3123,6 +3408,11 @@
   "sample": ": the report is ${} bytes; the limit is 1 MiB (${} bytes). Shorten the log of each spec, and call again with the whole report.",
   "notes": "length brevity: 'shorten the log of each spec'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "Your final reply must contain the markdown report, then these two lines exactly as written, and nothing else:\n",
+  "notes": "brevity/format cap: 'and nothing else'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "You are an agent for Claude Code, Anthropic's official CLI for Claude. Given the user's message, you should use the tools available to complete the task. Complete the task fully\u2014don't gold-plate, but ",
@@ -3205,6 +3495,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "---\nallowed-tools: ${}, Read, Glob, Grep, LS, Task\ndescription: Complete a security review of the pending changes on the current branch\n---\n\nYou are a senior security engineer conducting a focused sec",
+  "notes": "scope limiting / refusal cap: 'Skip theoretical issues', 'Only report a race condition if it is concretely problematic'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "\n\nRules for an edit: change only what the thread asked for and preserve everything else (including the document's <title>, unless the thread asks to rename it); the reply MUST state specifically what ",
   "notes": "brevity: 'Reply text rules (both decisions): brief'",
   "ccFirstSeen": "2.1.232"
@@ -3218,6 +3513,11 @@
   "sample": " **Learn by Doing**\n\n**Context:** The user reported that number inputs aren't working correctly in the calculator. I've identified the handleInput() function as the likely source, but need to understa",
   "notes": "'Share one insight' caps the response",
   "ccFirstSeen": "2.1.219"
+ },
+ {
+  "sample": " was not run: only auto mode's safety check can allow it, and that check gave no result. No permission prompt is raised for this tool. This is not a judgment that the action is unsafe. Continue with w",
+  "notes": "process brevity: continue with work that doesn't need it",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command ",
@@ -3260,6 +3560,11 @@
   "ccFirstSeen": "2.1.199"
  },
  {
+  "sample": "- `instructions`: only standing rules that recurred in the work, such as how code is written, tested, reviewed and named, each as one short bullet line. A description of the project or of the work is ",
+  "notes": "brevity cap: 'each as one short bullet line'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "# Example: TUI / interactive terminal app\n\nInteractive terminal apps (text editors, REPLs, curses-based UIs) can't\nbe driven directly by an agent's bash tool - they take over the terminal.\nThe skill m",
   "notes": "concise tmux interaction pattern",
   "ccFirstSeen": "2.1.251"
@@ -3273,6 +3578,11 @@
   "sample": ". Say so in a line, and make no chart.",
   "notes": "brevity cap: 'Say so in a line, and make no chart.'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "Reply to the user with the lines above and nothing else: one per line, in this order and wording, each markdown link kept as written. Never show an id or a bare URL.",
+  "notes": "strict output constraint: 'Reply to the user with the lines above and nothing else'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "# Batch: Parallel Work Orchestration\n\nYou are orchestrating a large, parallelizable change across this codebase.\n\n## User Instruction\n\n${}\n\n## Phase 1: Research and Plan (Plan Mode)\n\nCall the \\`${}\\` ",
@@ -3425,6 +3735,11 @@
   "ccFirstSeen": "2.1.277"
  },
  {
+  "sample": ". ${} ${}, but nothing in this session provides it right now (its source was removed or disconnected, or this version no longer has it), so it cannot run. Continue without it.${}",
+  "notes": "process brevity: continue without it",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Use the ${} tool with specialized agents when the task at hand matches the agent's description. Subagents are valuable for parallelizing independent queries or for protecting the main context window f",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
@@ -3440,9 +3755,19 @@
   "ccFirstSeen": "2.1.251"
  },
  {
+  "sample": " Another call was still running and may be hung \u2014 try a shorter timeout on the tool itself, or split the work.",
+  "notes": "process brevity / split work suggestion",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Tell the person exactly this, and stop. Do not run anything: ${}",
   "notes": "process brevity cap: 'Tell the person exactly this, and stop. Do not run anything'",
   "ccFirstSeen": "2.1.277"
+ },
+ {
+  "sample": "Then say at most one short line: that the project has the work of their Claude Code session and that you are ready for what is next. Do not describe the setup card or list what is on it.",
+  "notes": "brevity cap: say at most one short line; do not describe setup card",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "They chose Decline: start nothing. Write ONE line asking them to start the app themselves or to tell you where it runs, as the run skill says, and end your turn.",
@@ -3530,9 +3855,24 @@
   "ccFirstSeen": "2.1.292"
  },
  {
+  "sample": "A Claude Project is a cloud workspace on claude.ai/code: it has a coordinator and threads that do the work. This tool posts one message there as the user. It is the last step of /send-to-project and w",
+  "notes": "brevity cap: 'in at most three plain sentences'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
+  "sample": "---\ndescription: Internal to Claude Test \u2014 drafts spec files in the background for a first run. Started only by the claude-test run skill.\nuser-invocable: false\ncontext: fork\nagent: claude-test:author",
+  "notes": "process constraint: 'a short paragraph (three to ten lines)', 'At most a dozen lines, each short'",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "You are selecting memories that will be useful to Claude Code as it processes a user's query. The first message lists the available memory files with their filenames and descriptions; subsequent messa",
   "notes": "caps retrieval count and process: 'up to 5', 'Be selective and discerning', 'conservative'",
   "ccFirstSeen": "2.1.292"
+ },
+ {
+  "sample": "${} ${}. The user did not write this note and cannot see it. It is about your reply above only. A link to a file that you did not send may not open for them. If they should have a file, call ${} with ",
+  "notes": "brevity: 'say in one short line that you sent it'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "\n\nSHARING IT. The offer is the main session's, to the person in the chat: a subagent or teammate hands the mod back to it. Here a mod is kept and passed on as a plugin file handed over in the chat (Pa",
@@ -3578,6 +3918,11 @@
   "sample": "\n\n## Applying fixes (--fix)\n\nThe \\`--fix\\` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly \u2014 correct",
   "notes": "skill/command body; else-branch 'Finish with a brief summary of what was fixed and what was skipped' caps report",
   "ccFirstSeen": "2.1.205"
+ },
+ {
+  "sample": " was not run and this turn has ended. Wait for the user's next message before doing anything further.",
+  "notes": "process brevity: wait before doing anything further",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "\n\nThe user has configured a workflow size guideline in /config: ${()}. ${()}",
@@ -3640,6 +3985,11 @@
   "ccFirstSeen": "2.1.219"
  },
  {
+  "sample": "Go on with other work and tell the user which step was skipped and still needs their approval.",
+  "notes": "process brevity: move on to other work",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Review the current diff for correctness bugs and reuse/simplification/efficiency cleanups at the given effort level (low/medium: fewer, high-confidence findings; high\u2192max: broader coverage, may includ",
   "notes": "effort tiers cap breadth: 'low/medium: fewer, high-confidence findings'",
   "ccFirstSeen": "2.1.219"
@@ -3648,6 +3998,11 @@
   "sample": "## Output\n\nCall the ${} tool once to report this review's results\nwith \\`{level, findings}\\`. \\`findings\\` is at most ${} entries ranked\nmost-severe first; each entry has \\`file\\`, \\`line\\`, \\`summary",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Other actions that need the check will be denied too, and retrying won't help. Finish what you can without them, then tell the user what is blocked and why.",
+  "notes": "process brevity: retrying won't help, finish what you can",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "The output above is already visible to the user. Briefly acknowledge it without repeating the target or billing note. Findings will arrive via task-notification.",
@@ -3670,6 +4025,11 @@
   "ccFirstSeen": "2.1.310"
  },
  {
+  "sample": "; use 'low' for cheap mechanical stages and higher tiers only for the hardest verify/judge stages. opts.isolation: 'worktree' runs the agent in a fresh git worktree \u2014 EXPENSIVE (~200-500ms setup + dis",
+  "notes": "process brevity: advises low effort, minimal finders, and brevity on quick checks",
+  "ccFirstSeen": "2.1.318"
+ },
+ {
   "sample": "Use this tool only when you are blocked on a decision that is genuinely the user's to make: one you cannot resolve from the request, the code, or sensible defaults.\n\nUsage notes:\n- Users will always b",
   "notes": "tone/usage restriction: 'Use this tool only when you are blocked on a decision'",
   "ccFirstSeen": "2.1.310"
@@ -3688,6 +4048,11 @@
   "sample": "This tool sends a desktop notification in the user's terminal. If Remote Control is connected, it also pushes to their phone. Either way, it pulls their attention from whatever they're doing \u2014 a meeti",
   "notes": "notification tool guidance with message length and selectivity constraints",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "Where this tool\u2019s description says it sends one message: summary alone, which is the message. Otherwise the brief you drafted of the work to carry on, in the propose_project_setup shape: summary (2\u20133 ",
+  "notes": "brevity cap: '2\u20133 plain sentences', '\u22644 threads', '\u22643 routines', 'few short bullet lines'",
+  "ccFirstSeen": "2.1.318"
  },
  {
   "sample": "<system-reminder>\nYou're running in a remote planning session. The user triggered this from their local terminal.\n\nRun a lightweight planning process, consistent with how you would in regular plan mod",

@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Platform Availability'
 description: Provider-platform feature-availability table the model consults.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Platform Availability
 
@@ -26,6 +26,7 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | Fine-grained tool streaming | Yes | Yes | Yes | Yes | Yes | Bedrock: `eager_input_streaming` on the newer serving stack only (Opus 4.7/4.8/5, Fable 5, Sonnet 4.6/5); older deployments (Opus 4.5/4.6, Sonnet 4.0/4.5, Haiku 4.5) 400 on the field |
 | Compaction | beta | beta | beta | beta | beta | |
 | Context editing | beta | beta | beta | beta | beta | |
+| Message threads | beta | beta | No | No | beta | Beta `message-threads-2026-08-12`; server-side `fallbacks` with a thread are documented for the Claude API only |
 | Context windows (1M) | Yes | Yes | Yes | Yes | Yes | |
 | `inference_geo` (data residency) | Yes | Yes | No | No | No | |
 | **Server-side tools** | | | | | | |
@@ -55,7 +56,7 @@ Columns: **1P** = first-party Claude API, **P-AWS** = Claude Platform on AWS (An
 | &nbsp;&nbsp;Turn-scoped (`clear_at`) system messages | beta | beta | beta | beta | No | Same models as mid-conversation system messages; beta `mid-conversation-system-clear-at-2026-08-21` (on Bedrock/Vertex pass the value as a beta) |
 | &nbsp;&nbsp;Per-message `effort` (system message `output_config`) | beta | unconfirmed | unconfirmed | beta | unconfirmed | {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_OPUS_NAME}}, {{OPUS_NAME}}, {{SONNET_NAME}} (thinking on only - a 400 with `between_tools`); beta `mid-conversation-output-config-2026-07-01`; on the Claude API and Google Cloud, open to any organization that sends the header (Claude Platform on AWS/Bedrock/Foundry unconfirmed; {{PREV_OPUS_NAME}} excluded on Bedrock) |
 | &nbsp;&nbsp;`thinking.display: "updates"` | beta | beta | beta | beta | beta | {{FABLE_NAME}}, {{MYTHOS_NAME}}, {{PREV_FABLE_NAME}}, {{OPUS_NAME}}, {{SONNET_NAME}} (with adaptive thinking); beta `thinking-display-updates-2026-08-18` (pass the beta value per platform); without it `"updates"` is rejected as an unknown `display` value |
-| &nbsp;&nbsp;Thinking block-binding controls | beta | beta | beta | beta | unconfirmed | `thinking.block_binding` + `input_transformations`; beta `thinking-binding-controls-2026-08-01` (the same beta name on the Claude API, Claude Platform on AWS, Bedrock, and Vertex - Bedrock: the `anthropic_beta` body field, Vertex: the `anthropic-beta` HTTP header); Foundry unconfirmed; wherever the header is rejected, use strip-and-retry; the history-editing enforcement itself follows the account-age rule in `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} from {{PREV_FABLE_NAME}} |
+| &nbsp;&nbsp;Thinking block-binding controls | beta | beta | beta | beta | unconfirmed | `thinking.block_binding` + `input_transformations`; beta `thinking-binding-controls-2026-08-01` (the same beta name on the Claude API, Claude Platform on AWS, Bedrock, and Vertex - Bedrock: the `anthropic_beta` body field, Vertex: the `anthropic-beta` HTTP header); Foundry unconfirmed; wherever the header is rejected, use strip-and-retry; the history-editing enforcement itself follows the rule in `shared/model-migration.md` -> Migrating to {{FABLE_NAME}} from {{PREV_FABLE_NAME}} |
 | &nbsp;&nbsp;Server-side `fallbacks` | beta | beta | No | No | No | `"default"` -> beta `server-side-fallback-2026-07-01`; array form -> beta `server-side-fallback-2026-06-01` |
 | &nbsp;&nbsp;Fast mode | beta | No | No | No | No | Research preview, beta `fast-mode-2026-02-01`, first-party API only ({{PREV_OPUS_NAME}} / Opus 4.8 at $10 / $50; {{OPUS_NAME}} at $8 / $40) |
 | &nbsp;&nbsp;Cache diagnostics | beta | No | No | No | No | First-party API only |
@@ -169,6 +170,8 @@ azureAi->Foundry; *Beta suffix->beta; prop absent->No). Per-row citations:
   Tool search              ov:87; agents-and-tools/tool-use/tool-search-tool.mdx:24-30
   Compaction               ov:95
   Context editing          ov:96
+  Message threads          the Message Threads docs page's feature data, read 2026-10-29 before the live page existed;
+                           that data and the guide's "Limitations" both list Claude Models on Google Cloud (Anthropic managed), so that platform's 1P reading holds
   Automatic caching        ov:97
   Prompt caching 5m/1h     ov:98,99
   Token counting           ov:100

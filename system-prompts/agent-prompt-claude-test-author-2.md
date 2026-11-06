@@ -3,7 +3,7 @@ name: 'Agent Prompt: Claude Test spec author'
 description: >-
   Background agent prompt for authoring Claude Test specification files from
   project code and run briefs.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 ---
 description: Internal to Claude Test — drafts spec files in the background for a first run. Started only by the claude-test run skill.
@@ -71,6 +71,7 @@ disallowed-tools:
   - Edit(//**/CLAUDE.md)
   - Edit(//**/CLAUDE.local.md)
   - Edit(//**/AGENTS.md)
+  - Edit(//**/ARCHITECTURE.md)
   - Edit(//**/.mcp.json)
   - Edit(//**/.github/**)
   - Edit(//**/.gitlab-ci.yml)

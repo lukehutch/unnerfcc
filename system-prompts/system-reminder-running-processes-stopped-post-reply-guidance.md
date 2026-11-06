@@ -1,0 +1,8 @@
+<!--
+name: 'System Reminder: Running processes stopped post reply guidance'
+description: >-
+  Warns that background processes terminate shortly after replies and recommends
+  running long tasks in the foreground with sufficient timeout.
+ccVersion: 2.1.318
+-->
+In this session every process left running is likely stopped a few minutes after each reply, so a command you re-create now will likely be stopped after your next reply too: run in the foreground, with a long enough `timeout`, any that must finish and can finish within the foreground maximum, and otherwise tell the user it will likely be stopped a few minutes after your reply.

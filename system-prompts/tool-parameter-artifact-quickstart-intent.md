@@ -3,6 +3,6 @@ name: 'Tool Parameter: Artifact quickstart intent'
 description: >-
   Describes the required intent parameter for the quickstart action specifying
   what artifact type is being made.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
-quickstart only (required): what is being made — 'document' (text to read or edit together), 'slides' (a deck or one slide), 'design' (a visual design or prototype on a canvas), 'other' (a dashboard that shows data, anything else, or unsure).
+quickstart only (required): what is being made — 'document' (writing people will keep editing or pass around as text, such as a memo, plan, spec, proposal or notes), 'slides' (a deck or one slide), 'design' (a visual design or prototype on a canvas), 'other' (a page to look at or use: an explainer, a diagram, anything interactive, a dashboard that shows data, anything else, or unsure).

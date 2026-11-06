@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: Unreadable character in file path'
+description: >-
+  Explains that a path contains control or invisible characters and provides
+  handling instructions.
+ccVersion: 2.1.318
+-->
+it holds a character that the operator could not read as written, such as a control, invisible or direction-changing character, a line break, or a space other than the plain one. If it is a stray character, as from a paste, pass the value without it. If it is part of a real path, do not drop or replace it, which would name another file: where it lies in the path of the working directory itself, pass the path relative to that directory, as in ./runner-setup/runner.log; otherwise ask the operator to rename or move the file; if you cannot tell which, ask the operator

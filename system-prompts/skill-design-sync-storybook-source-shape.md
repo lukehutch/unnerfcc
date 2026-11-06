@@ -4,7 +4,7 @@ description: >-
   design-sync skill reference shown when .storybook/ is found: component
   bundling, preview generation from story sources, and matching against
   Storybook reference renders.
-ccVersion: 2.1.251
+ccVersion: 2.1.318
 -->
 # Storybook source shape
 
@@ -21,10 +21,10 @@ Requires React 18+. Playwright + chromium are **required** for this shape (the c
 2. **Build the reference storybook ONCE into `.design-sync/sb-reference/`** - NOT under `ds-bundle/` (the converter wipes `--out` on every rebuild, and storybook builds take minutes; the reference must survive the fix loop):
 
    ```bash
-   npx storybook build -c <storybookConfigDir> -o .design-sync/sb-reference
+   npx --no-install storybook build -c <storybookConfigDir> -o .design-sync/sb-reference
    ```
 
-   Run it from the directory whose `package.json` has the storybook devDependencies - usually the one containing `.storybook/`; monorepos often have several storybooks, so pick the one covering the package you're syncing. **Make `-o` the repo-root path** (e.g. `-o "$(git rev-parse --show-toplevel)/.design-sync/sb-reference"`): the converter and compare resolve `.design-sync/` from the repo root, so a cwd-relative `-o` in a subpackage puts the reference where nothing will find it. Use `npx storybook build` directly, **not** the repo's `npm run build-storybook` script (wrong output dir). Then check `.design-sync/sb-reference/iframe.html` exists and is >10KB - `index.json` alone can exist with a failed build.
+   Run it from the directory whose `package.json` has the storybook devDependencies - usually the one containing `.storybook/`; monorepos often have several storybooks, so pick the one covering the package you're syncing. **Make `-o` the repo-root path** (e.g. `-o "$(git rev-parse --show-toplevel)/.design-sync/sb-reference"`): the converter and compare resolve `.design-sync/` from the repo root, so a cwd-relative `-o` in a subpackage puts the reference where nothing will find it. Use `npx --no-install storybook build` directly, **not** the repo's `npm run build-storybook` script (wrong output dir); `--no-install` stops npx from installing anything: it runs a storybook that is already installed, normally the repo's own, or ends in an error. If it stops because storybook is missing ("npx canceled due to missing packages"), you are in the wrong directory or the repo's dependencies are not installed: install those with the repo's own package manager, and never add `--yes` or install storybook by itself. Then check `.design-sync/sb-reference/iframe.html` exists and is >10KB - `index.json` alone can exist with a failed build.
 
    Long builds: background them **through your shell tool's background mode only** and wait for the completion notification. Never a bare `&` (untracked - the notification never comes), and never a `pgrep -f '<script>'` poll loop (it matches its own command line and spins to timeout). Headless / `-p` sessions: run long commands synchronously instead - there is no task-notification re-invocation there, so a backgrounded run is never resumed.
 

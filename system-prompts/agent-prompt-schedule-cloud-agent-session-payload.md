@@ -3,7 +3,7 @@ name: 'Agent Prompt: Schedule cloud agent session payload'
 description: >-
   Shows the JSON job_config/events payload shape (allowed tools and seed user
   event) used when creating a cloud routine.
-ccVersion: 2.1.277
+ccVersion: 2.1.318
 variables:
   - MCP_CONNECTORS_LIST
   - ENVIRONMENTS_LIST
@@ -27,6 +27,8 @@ variables:
 ```
 
 For a one-time run, replace `"cron_expression": "CRON_EXPR"` with `"run_once_at": "YYYY-MM-DDTHH:MM:SSZ"` (RFC3339 UTC, must be in the future). Everything else is identical.
+
+If the user asked for no connectors, add `"clear_mcp_connections": true` at the top level of the body, beside `name` and not inside `job_config`.
 
 Generate a fresh lowercase UUID for `events[].data.uuid` yourself.
 

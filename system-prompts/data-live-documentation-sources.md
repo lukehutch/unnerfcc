@@ -3,7 +3,7 @@ name: 'Data: Live documentation sources'
 description: >-
   WebFetch URLs for fetching current Claude API and Agent SDK documentation from
   official sources
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Live Documentation Sources
 
@@ -54,7 +54,7 @@ Use a web fetch tool or `curl` (docs URLs ending in `.md` return Markdown). Try 
 | Usage and Cost Admin API | `https://platform.claude.com/docs/en/manage-claude/usage-cost-api.md` | "Extract the usage_report and cost_report endpoints, Admin API key requirements, filter and group_by dimensions, token fields, and granularity limits" |
 | API versions | `https://platform.claude.com/docs/en/api/versioning.md` | "Extract each version's migration guide URL" |
 | Errors | `https://platform.claude.com/docs/en/api/errors.md` | "Extract HTTP error codes, meanings, and retry guidance" |
-| Amazon Bedrock | `https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock.md` | "Extract the AnthropicBedrockMantle client per language, `anthropic.`-prefixed model IDs, auth paths, feature availability, and regions" |
+| Amazon Bedrock | `https://platform.claude.com/docs/en/build-with-claude/claude-in-amazon-bedrock.md` | "Extract the AnthropicBedrockMantle client per language, `anthropic.`-prefixed model IDs, auth paths, feature availability, and regions" |
 | Claude Platform on AWS | `https://platform.claude.com/docs/en/build-with-claude/claude-platform-on-aws.md` | "Extract the AnthropicAWS client per language, SigV4 auth, credential precedence, short-term API keys, workspace_id, and region requirements" |
 | Claude Platform on AWS - IAM actions | `https://platform.claude.com/docs/en/api/claude-platform-on-aws-iam-actions.md` | "Extract the IAM action names, resource ARNs, and policy examples required for each API capability" |
 | Claude Models on Google Cloud (Anthropic managed) | `https://platform.claude.com/docs/en/build-with-claude/claude-models-on-google-cloud/anthropic-managed.md` | "Extract the AnthropicGoogleCloud client per language, credentials, settings, and unsupported features" |
@@ -102,6 +102,7 @@ If a fetch fails, use `shared/opentelemetry.md`.
 | --- | --- | --- |
 | Structured Outputs | `https://platform.claude.com/docs/en/build-with-claude/structured-outputs.md` | "Extract output_config.format usage and schema enforcement" |
 | Compaction | `https://platform.claude.com/docs/en/build-with-claude/compaction.md` | "Extract compaction setup, trigger config, and streaming with compaction" |
+| Message Threads | `https://platform.claude.com/docs/en/build-with-claude/message-threads.md` | "Extract the thread field rules, replay and what ends a thread, how long a thread lasts, cache_control on a thread, effect on price and rate limits, the SDK helper for my language, unsupported features, availability, and data retention" |
 | Context Editing | `https://platform.claude.com/docs/en/build-with-claude/context-editing.md` | "Extract context editing thresholds, what gets cleared, and configuration" |
 | Citations | `https://platform.claude.com/docs/en/build-with-claude/citations.md` | "Extract citation format and implementation" |
 | Context Windows | `https://platform.claude.com/docs/en/build-with-claude/context-windows.md` | "Extract context window sizes and token management" |

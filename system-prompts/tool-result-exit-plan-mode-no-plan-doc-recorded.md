@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: ExitPlanMode no plan Doc recorded'
+description: >-
+  Reports that no valid plan Doc is recorded for the session and instructs how
+  to create or pass the plan.
+ccVersion: 2.1.318
+-->
+No plan Doc is recorded for this session: none was created, or it was created with arguments other than the ones that plan mode's reminder shows. If you created none, create it with exactly that call and then call this tool with no argument. If you already created one, pass the whole plan as non-empty text in `plan` as the only argument, so that the user is not left with two Docs.

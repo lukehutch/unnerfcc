@@ -3,7 +3,7 @@ name: 'Agent Prompt: /security-review slash command'
 description: >-
   Comprehensive security review prompt for analyzing code changes with focus on
   exploitable vulnerabilities
-ccVersion: 2.1.219
+ccVersion: 2.1.318
 variables:
   - ALLOWED_TOOLS
 -->
@@ -197,4 +197,3 @@ Begin your analysis now. Do this in 3 steps:
 2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
 3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
 
-Your final reply must contain the markdown report and nothing else.

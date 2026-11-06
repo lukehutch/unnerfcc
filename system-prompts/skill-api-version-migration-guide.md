@@ -4,7 +4,7 @@ description: >-
   Step-by-step instructions for migrating existing code to a newer Claude API
   version, covering scope, breaking changes, SDK and CLI upgrades, and
   verification.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Migrating to a newer Claude API version
 
@@ -27,6 +27,8 @@ Each version's section below is the list of changes to make, and links that vers
 **Target version.** If the user did not name one, use the newest version that has a section in this file and say so. Only the versions with a section below are covered; for any other, point the user at the versions page (`https://platform.claude.com/docs/en/api/versioning`) and do not improvise.
 
 **Current version.** Read which SDK release the code uses (the manifest, and the installed package if there is an environment), and any version the code sets explicitly: an `anthropic-version` header (`rg -n -i 'anthropic[-_]version'`), including one in default headers or an environment variable, or on Bedrock and Vertex the `anthropic_version` body field.
+
+**Python 0.x.** On an `upgrade` request, say before editing that the upgrade goes to the 2.x release under "Set the version", which moves the code to the target version, and offer to stop at the newest 1.x instead. If the user chooses 1.x, or the switch is held back (the older Bedrock models, or a **[DECIDE]** below), upgrade to the newest 1.x with `python/claude-api/sdk-upgrade.md` in place of Step 3 rather than leaving the code on 0.x (on an `api-version` request, offer this first), put any setting change 1 keeps into `extra_body` (`sdk-upgrade.md` Step 6), and report as Step 5 says. Otherwise Step 3's code-change steps are that file's Steps 1-10, less the sampling item Step 3 names: settle its Python 3.10 floor (its Step 2) with this file's **[DECIDE]** items before upgrading (on 3.9 neither release installs, so make changes 1-4 only), add its Step 11 checks to Step 4, and its Step 12 `httpx2` line to the report.
 
 Each version's section begins with a **From** line naming the versions it migrates from. Start at the section whose From line names the code's current version. If calls send different versions, start from the oldest one a From line names. If the code already sends the target version (for example, its SDK was upgraded already), still open the target's section and run its searches: the code may not have its changes yet. In that case skip only the switch (Step 3), and stop only if the searches come back clean. Calls on a version no From line names (and that isn't the target): don't edit them; tell the user this skill doesn't cover moving from that version, and point them at the versions page (`https://platform.claude.com/docs/en/api/versioning`).
 
@@ -156,7 +158,7 @@ Skip this part if the scope never calls these endpoints. On `2026-10-21` these r
 | RBAC groups (`/v1/organizations/rbac_groups`): create, list, retrieve, update | `roles` | `role_ids` |
 | RBAC group members (`/v1/organizations/rbac_groups/{rbac_group_id}/members`): list, add, and the response to removing a member | `group_id` | `rbac_group_id` |
 | RBAC roles (`/v1/organizations/rbac_roles`): list, retrieve | `name` | `display_name` |
-| Organization and workspace rate limits (`/v1/organizations/rate_limits`, `/v1/organizations/workspaces/{workspace_id}/rate_limits`): list | `group_type` on each entry | `group.type` |
+| Organization and workspace rate limits (`/v1/organizations/rate_limits`, `/v1/organizations/workspaces/{workspace_id}/rate_limits`): list, and the response to setting a workspace's rate limits | `group_type` on each entry | `group.type` |
 | API keys (`/v1/organizations/api_keys`): list, retrieve, update | `workspace_id` | `scope.workspace_id` (not a plain copy - below) |
 
 **[BREAKS]** Claude Enterprise Analytics API:

@@ -4,7 +4,7 @@ description: >-
   Reference guide for OpenTelemetry tracing in the Claude SDKs and Claude API
   covering SDK vs API tracing, span hierarchies, token counting, and exporter
   destinations.
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # OpenTelemetry Tracing for the Claude API
 
@@ -31,7 +31,7 @@ The Claude SDKs and the Claude API can emit [OpenTelemetry](https://opentelemetr
 Two independent sources. Each works alone; together the API's spans nest under the SDK's span of the same request, in one trace.
 
 - **SDK tracing** - the SDK emits spans **in the application's process**, and the application's own OpenTelemetry exporter sends them. Set up in code. Needs no special permission. Works with every cloud platform's client (Claude API, Claude Platform on AWS, Amazon Bedrock, Google Cloud, Microsoft Foundry).
-- **API tracing** - the API emits spans **server-side** and delivers them to a *destination* (an OTLP/HTTP endpoint) that an organization admin adds through the Admin API or the Claude Console. No code change. Covers any client, SDK or not. Claude API and Claude Platform on AWS only.
+- **API tracing** - the API emits spans **server-side** and delivers them to a *destination* (an OTLP/HTTP endpoint) that an organization admin adds through the Admin API or the Claude Console. No code change. Covers any client, SDK or not. Claude API and Claude Platform on AWS only: Claude Models on Google Cloud (Anthropic managed) has SDK tracing only.
 
 | What you get | SDK tracing | API tracing |
 |---|---|---|
@@ -47,7 +47,7 @@ Two independent sources. Each works alone; together the API's spans nest under t
 
 Both need a backend that receives OTLP: one the user already runs, a vendor they sign up for, or a local one such as Jaeger. For a Managed Agents user who has none, the Console session viewer (`shared/managed-agents-events.md`) shows each session's transcript, tool calls, tokens and cost with no setup; suggest it first, and OpenTelemetry once they want traces in their own backend.
 
-Recommend both, since together they give the full picture. A request that names neither half ("add OpenTelemetry", "trace the Claude API") means both, unless a case below applies: set up SDK tracing and, in the same reply, offer setting up Claude API tracing, saying what it adds and what you need from the user ("What it needs" under API tracing). Recommend SDK tracing alone when the user can't get an organization admin to add a destination, or when they run on Amazon Bedrock, Google Cloud or Foundry; API tracing alone when they cannot change the client (raw HTTP, another language's client, third-party tools). When you report back, say which of the two is set up and which isn't.
+Recommend both, since together they give the full picture. A request that names neither half ("add OpenTelemetry", "trace the Claude API") means both, unless a case below applies: set up SDK tracing and, in the same reply, offer setting up Claude API tracing, saying what it adds and what you need from the user ("What it needs" under API tracing). Recommend SDK tracing alone when the user can't get an organization admin to add a destination, or when they run on Amazon Bedrock, Vertex AI, Claude Models on Google Cloud (Anthropic managed) or Foundry; API tracing alone when they cannot change the client (raw HTTP, another language's client, third-party tools). When you report back, say which of the two is set up and which isn't.
 
 Before setting up each half, check what the user already has, read-only: for the SDK, "0. Check what the application already has"; for the API, whether an `ant` profile is signed in to the application's organization with the `org:admin` scope, and if one is, which destinations that organization already has (step 3's list, run with that profile and step 1's `env -u` prefix).
 
@@ -91,10 +91,12 @@ Tracing is in the released SDKs for Python, TypeScript, C#, Go, Java, PHP and Ru
 | Python | `pip install --upgrade anthropic` |
 | TypeScript | `npm install @anthropic-ai/sdk@latest` |
 | C# | `dotnet add package Anthropic` |
-| Go | `go get github.com/anthropics/anthropic-sdk-go@latest` |
+| Go | `go get github.com/anthropics/anthropic-sdk-go/v2@latest` |
 | Java | `com.anthropic:anthropic-java` at the latest version |
 | PHP | `composer require "anthropic-ai/sdk" "guzzlehttp/guzzle:^7"` |
 | Ruby | `bundle add anthropic` (or `bundle update anthropic` if the Gemfile already lists it) |
+
+If the project is on an older major version of its SDK, the latest release is a new major version that sends API version `2026-10-21` (in Go it also has a new `/v2` import path), so follow `shared/api-version-migration.md` for that upgrade.
 
 To export anything, the application also needs the OpenTelemetry **SDK** and an exporter, which the Claude SDK doesn't include:
 
@@ -212,7 +214,7 @@ The API sends the spans of a Messages API request or a Managed Agents session to
 | Arize Phoenix | the Phoenix URL, such as `https://app.phoenix.arize.com/s/<space>` | `authorization: Bearer <api key>`; optional `x-project-name` | leave out |
 | Braintrust | `https://api.braintrust.dev/otel`; EU `https://api-eu.braintrust.dev/otel` | `authorization: Bearer <api key>`, `x-bt-parent: project_id:<project id>` | leave out |
 | Databricks | `https://<workspace host>/ai-gateway/otel` | `authorization: Bearer <personal access token>` | leave out |
-| Datadog | `https://otlp.datadoghq.com` (US1); other sites `https://otlp.<us3, us5, ap1, ap2 or uk1>.datadoghq.com`, EU1 `https://otlp.datadoghq.eu` | `dd-api-key: <api key>` (not an application key), `dd-otlp-source: llmobs` | leave out |
+| Datadog | `https://otlp.datadoghq.com` (US1); other sites `https://otlp.<us3, us5, ap1, ap2 or uk1>.datadoghq.com`, EU1 `https://otlp.datadoghq.eu` | `dd-api-key: <api key>` (not an application key), `dd-otlp-source: llmobs`, `dd-llmobs-enabled: true` | leave out |
 | Grafana Cloud | the stack's OTLP endpoint, such as `https://otlp-gateway-prod-us-east-0.grafana.net/otlp` | `authorization: Basic <base64 of instance id:access policy token>` (token with `traces:write`), `X-Grafana-Agento11y-Record: true` | `750000` |
 | Honeycomb | `https://api.honeycomb.io`; EU `https://api.eu1.honeycomb.io` | `x-honeycomb-team: <ingest api key>`; `x-honeycomb-dataset` only for Honeycomb Classic | `50000` |
 | Langfuse | `https://us.cloud.langfuse.com/api/public/otel`; EU `https://cloud.langfuse.com/api/public/otel`; JP `https://jp.cloud.langfuse.com/api/public/otel`; HIPAA `https://hipaa.cloud.langfuse.com/api/public/otel` | `authorization: Basic <base64 of public key:secret key>`, `x-langfuse-ingestion-version: 4` | `4000000` |

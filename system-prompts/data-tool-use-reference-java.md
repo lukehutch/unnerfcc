@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Tool use reference — Java'
 description: Tool-use API reference doc (Java bindings).
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Tool Use - Java
 
@@ -126,7 +126,7 @@ For manual tool loops, handle `tool_use` blocks in the response, send `tool_resu
 
 ### Building `MessageParam` with Content Blocks (Tool Result Round-Trip)
 
-`MessageParam.Content` is an inner union class (string | list). Use the builder's `.contentOfBlockParams(List<ContentBlockParam>)` alias - there is NO separate `MessageParamContent` class with a static `ofBlockParams`:
+`MessageParam` is a union of `UserMessageParam`, `AssistantMessageParam` and `SystemMessageParam`, with no `MessageParam.builder()`. Build a user message from content blocks with `MessageParam.ofUserOfContentBlockParams(List<ContentBlockParam>)`:
 
 ```java
 import com.anthropic.models.messages.MessageParam;
@@ -140,10 +140,7 @@ List<ContentBlockParam> results = List.of(
         .build())
 );
 
-MessageParam toolResultMsg = MessageParam.builder()
-    .role(MessageParam.Role.USER)
-    .contentOfBlockParams(results)   // builder alias for Content.ofBlockParams(...)
-    .build();
+MessageParam toolResultMsg = MessageParam.ofUserOfContentBlockParams(results);
 ```
 
 ---

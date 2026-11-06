@@ -3,8 +3,8 @@ name: 'System Reminder: File contents not attached automatically'
 description: >-
   Notifies the model that referenced files are not attached automatically and
   must be read with file tools.
-ccVersion: 2.1.292
+ccVersion: 2.1.318
 variables:
   - FILE_REFERENCE
 -->
-${FILE_REFERENCE}. File contents are not attached automatically in this session: if these are files or directories in your working directory, read them with your file tools before responding.
+${FILE_REFERENCE}. File contents are not attached automatically in this session: 

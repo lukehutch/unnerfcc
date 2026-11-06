@@ -1,0 +1,391 @@
+{
+  "ccVersion": "2.1.318",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "tool-result-repl-timeout-before-shell-finished.md",
+      "verdict": "keep",
+      "reasoning": "Explains the mechanical REPL timeout behavior and suggests splitting work or setting shorter timeouts as practical engineering workarounds, which is honest technical documentation rather than an artificial nerf."
+    },
+    {
+      "file": "data-tool-use-reference-java.md",
+      "verdict": "keep",
+      "reasoning": "The sentence limit applies strictly to an unsolicited, unprompted offer to use Managed Agents, which matches calibration guidance for interruption-appropriate UX."
+    },
+    {
+      "file": "tool-parameter-send-to-project-project_name.md",
+      "verdict": "keep",
+      "reasoning": "The 46-character limit is a mechanical tool parameter constraint on the project name field rather than a brevity nerf on substantive work."
+    },
+    {
+      "file": "system-prompt-send-to-project-message-cancelled.md",
+      "verdict": "keep",
+      "reasoning": "Directing Claude to state in one short line that the user cancelled the message field is appropriate UI handling for an aborted interaction."
+    },
+    {
+      "file": "tool-description-bash-committing-changes-with-git.md",
+      "verdict": "keep",
+      "reasoning": "Drafting concise commit messages adheres to standard git conventions, and avoiding code exploration during a commit workflow keeps the git tool focused on the requested commit task."
+    },
+    {
+      "file": "system-reminder-hooks-excluded-by-launcher.md",
+      "verdict": "keep",
+      "reasoning": "The one-sentence instruction governs an informational system notification about excluded hooks, not substantive task performance."
+    },
+    {
+      "file": "system-reminder-hooks-require-user-file-change.md",
+      "verdict": "keep",
+      "reasoning": "Instructing a one-sentence notice about user configuration changes required for hooks is appropriate system notification UX."
+    },
+    {
+      "file": "system-reminder-hooks-setup-unfinished.md",
+      "verdict": "keep",
+      "reasoning": "A brief one-sentence notice regarding unfinished hooks setup is an informational system status message, not a restriction on task capability."
+    },
+    {
+      "file": "tool-parameter-offer-next-step-action-reply.md",
+      "verdict": "keep",
+      "reasoning": "The word and character constraints on action replies are physical UI layout constraints for rendering button labels."
+    },
+    {
+      "file": "agent-prompt-compaction-repeat-left-out-read-call-rule.md",
+      "verdict": "keep",
+      "reasoning": "Restricting repeated omitted calls to non-mutating read calls is a mechanical correctness safeguard during compaction recovery to prevent unintended duplicate side effects."
+    },
+    {
+      "file": "system-reminder-wait-for-user-before-starting-work.md",
+      "verdict": "keep",
+      "reasoning": "Briefly stating the current status when a session starts without user input is normal interactive initialization, not a hold-back on requested work."
+    },
+    {
+      "file": "data-tool-use-reference-go.md",
+      "verdict": "keep",
+      "reasoning": "The sentence limit governs an unsolicited proactive pitch for Managed Agents, which qualifies as interruption-appropriate UX per calibration example 2."
+    },
+    {
+      "file": "agent-prompt-managed-agents-onboarding-from-quickstart.md",
+      "verdict": "keep",
+      "reasoning": "Directing the quickstart onboarding wizard to ask minimal necessary questions and avoid irrelevant persona attributes fits interactive CLI tool execution rather than nerfing substantive work."
+    },
+    {
+      "file": "agent-prompt-compaction-omitted-tool-results-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Directing Claude not to guess at the content of omitted tool results is an essential anti-hallucination constraint for compacted contexts."
+    },
+    {
+      "file": "skill-managed-agents-secure.md",
+      "verdict": "keep",
+      "reasoning": "The one-sentence notices in the security check skill provide developer disclosures before CLI execution and scope clarification, not limits on the audit itself."
+    },
+    {
+      "file": "tool-result-cloud-network-domain-resolution-failure.md",
+      "verdict": "keep",
+      "reasoning": "Advising to stop contacting more sites after network domain resolution failures in a cloud session is practical handling of cloud network sandbox restrictions."
+    },
+    {
+      "file": "tool-parameter-offer-next-step-ask.md",
+      "verdict": "keep",
+      "reasoning": "The 100-character guidance on the 'ask' parameter is a UI layout constraint for interactive decision widgets."
+    },
+    {
+      "file": "data-tool-use-reference-python.md",
+      "verdict": "keep",
+      "reasoning": "The brevity guideline applies strictly to an unprompted pitch for Managed Agents at the end of Messages API tasks, which is acceptable UX under calibration guidance."
+    },
+    {
+      "file": "tool-result-repl-inner-images-cap-exceeded.md",
+      "verdict": "keep",
+      "reasoning": "The note explains an actual technical image cap in REPL results and honestly discloses why additional images were omitted."
+    },
+    {
+      "file": "tool-description-offer-next-step-usage-instructions.md",
+      "verdict": "keep",
+      "reasoning": "The two-to-three-sentence limit applies only to the summary in the interactive next-step UI widget, while explicitly instructing Claude to provide the full answer in the closing message."
+    },
+    {
+      "file": "system-prompt-artifact-intake-elicitation-questionnaire.md",
+      "verdict": "lift",
+      "reasoning": "Capping the statement of assumptions to a single line when the intake widget fails restricts substantive elicitation work that the user needs, directly matching calibration guidance on lifting assumptions summary caps.",
+      "rule": {
+        "stock": "state your assumptions in one line, use clearly marked placeholders for a missing subject, and go on as below.",
+        "unnerf": "state your assumptions as needed to establish audience, scope, and look, use clearly marked placeholders for a missing subject, and go on as below.",
+        "description": "artifact intake: drop the one-line assumptions cap"
+      }
+    },
+    {
+      "file": "skill-code-review-output-format-findings-summary.md",
+      "verdict": "keep",
+      "reasoning": "Summarizing findings in one line each is a structured fallback output format for clients lacking tool-call visualization."
+    },
+    {
+      "file": "data-managed-agents-reference-php.md",
+      "verdict": "keep",
+      "reasoning": "The file is reference documentation for PHP Managed Agents bindings and does not contain the brevity restriction flagged by the classifier."
+    },
+    {
+      "file": "data-managed-agents-multiagent-sessions.md",
+      "verdict": "keep",
+      "reasoning": "The flagged wording is part of an example agent definition in reference documentation, not a system instruction constraining the model's behavior."
+    },
+    {
+      "file": "agent-prompt-markdown-report-only-output.md",
+      "verdict": "keep",
+      "reasoning": "Directing that the final reply contain only the markdown report enforces structured output formatting without conversational preamble, which is kept per calibration rules."
+    },
+    {
+      "file": "tool-result-auto-mode-no-verdict-no-retry-prefix.md",
+      "verdict": "keep",
+      "reasoning": "Advising not to retry immediately when an automated safety check yields no verdict is harness control flow to avoid infinite failure loops in auto mode, not an artificial brevity nerf."
+    },
+    {
+      "file": "tool-parameter-offer-next-step-summary.md",
+      "verdict": "keep",
+      "reasoning": "The parameter specifies the compact summary for the unprompted next-step offer UI card, where brevity and character limits match the terminal widget layout and interruption-appropriate UX."
+    },
+    {
+      "file": "tool-result-project-info-saved-to-local-file.md",
+      "verdict": "keep",
+      "reasoning": "This is a genuine context-budget constraint with honest disclosure, offloading large content to a local file rather than returning it inline."
+    },
+    {
+      "file": "tool-result-auto-mode-unavailable-switch-mode-guidance.md",
+      "verdict": "keep",
+      "reasoning": "This is mechanical harness guidance for handling unavailable safety checks where repeated attempts will fail, instructing the agent to finish unblocked work and notify the user."
+    },
+    {
+      "file": "agent-prompt-send-to-project-brief-current-session-instructions.md",
+      "verdict": "keep",
+      "reasoning": "Advising against retelling the entire session transcript is sensible context division since the project coordinator can read the conversation transcript directly."
+    },
+    {
+      "file": "system-reminder-hooks-excluded-by-launcher.md",
+      "verdict": "keep",
+      "reasoning": "This is an incidental side-channel harness notification informing the user that hooks are disabled, where a single concise sentence is interruption-appropriate UX."
+    },
+    {
+      "file": "system-reminder-hooks-require-user-file-change.md",
+      "verdict": "keep",
+      "reasoning": "Incidental side-channel harness warning that informs the user about hook configuration changes without derailing the main task."
+    },
+    {
+      "file": "system-reminder-hooks-setup-unfinished.md",
+      "verdict": "keep",
+      "reasoning": "Incidental side-channel notification about unfinished hook setup that appropriately alerts the user without derailing the conversation."
+    },
+    {
+      "file": "tool-result-offer-next-step-plain-words-remediation.md",
+      "verdict": "keep",
+      "reasoning": "This is a mechanical tool validation and remediation error response specifying plain-words length constraints for CLI button and action rendering."
+    },
+    {
+      "file": "system-prompt-send-to-project-picker-cancelled.md",
+      "verdict": "keep",
+      "reasoning": "Acknowledging a cancelled interactive picker concisely and stopping is appropriate interaction control flow rather than a brevity nerf."
+    },
+    {
+      "file": "agent-prompt-status-line-setup.md",
+      "verdict": "keep",
+      "reasoning": "The flagged phrase is an explanatory comment within an example shell script snippet for status line setup, not an instruction restricting Claude's work."
+    },
+    {
+      "file": "data-tool-use-reference-csharp.md",
+      "verdict": "keep",
+      "reasoning": "Matches calibration example 2: this regulates an unprompted, unsolicited pitch for Managed Agents, where a short cap keeps the unrequested offer from overwhelming the requested solution."
+    },
+    {
+      "file": "skill-code-review-max-effort-restriction.md",
+      "verdict": "keep",
+      "reasoning": "Gating the costliest review tier (which spawns multiple reviewer subagents) behind explicit user or configuration request is a resource-budget and authorization boundary; per calibration guidance, lean keep when uncertain."
+    },
+    {
+      "file": "tool-result-goal-proposal-awaiting-approval.md",
+      "verdict": "keep",
+      "reasoning": "Directing the model to continue working rather than waiting or polling on an asynchronous user UI approval dialog prevents stalling on active tasks."
+    },
+    {
+      "file": "system-prompt-communicating-with-the-user-lead-with-outcome.md",
+      "verdict": "keep",
+      "reasoning": "The communication guidance emphasizes readable prose and outcome-first structuring, while the restrictive code comment guideline in this file is already handled by an existing unnerf rule."
+    },
+    {
+      "file": "system-prompt-send-to-project-no-external-reads-clause.md",
+      "verdict": "keep",
+      "reasoning": "Clarifies that conversation context is sufficient for drafting the brief, avoiding redundant git executions and transcript reads during handoff."
+    },
+    {
+      "file": "tool-result-offer-next-step-recorded-with-question.md",
+      "verdict": "keep",
+      "reasoning": "Specifies formatting for the fallback prompt so clients without the interactive UI box still display the closing question cleanly."
+    },
+    {
+      "file": "tool-result-offer-next-step-recorded.md",
+      "verdict": "keep",
+      "reasoning": "Contains no length caps or process restrictions; it simply directs the agent to output its closing message as the final output of the turn."
+    },
+    {
+      "file": "data-tool-use-reference-typescript.md",
+      "verdict": "keep",
+      "reasoning": "Matches calibration example 2: an unprompted pitch for Managed Agents where capping the unsolicited suggestion to a few sentences is interruption-appropriate UX."
+    },
+    {
+      "file": "system-prompt-send-to-project-proposal-summary-rules.md",
+      "verdict": "lift",
+      "reasoning": "The summary of work, status, and remaining tasks is substantive handoff documentation saved into project memory for future threads; capping it to at most three sentences is an artificial brevity nerf.",
+      "rule": {
+        "stock": "Write it in the user’s voice from the conversation above, in at most three plain sentences with no markdown: what the work is, where it stands, and what is left.",
+        "unnerf": "Write it in the user’s voice from the conversation above, in plain sentences with no markdown: state what the work is, where it stands, and what is left, as thoroughly as needed for project memory.",
+        "description": "send-to-project proposal: drop the three-sentence cap on summary"
+      }
+    },
+    {
+      "file": "tool-description-ask-user-question-standalone-dialog-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Guides the agent to make standalone dialog questions self-contained and clear, providing necessary context without overwhelming the prompt modal."
+    },
+    {
+      "file": "agent-prompt-send-to-project-brief-field-guidelines.md",
+      "verdict": "lift",
+      "reasoning": "The summary field is saved in project memory as context for all subsequent threads; restricting it to two or three sentences artificially degrades the quality of project memory.",
+      "rule": {
+        "stock": "- `summary`: two or three plain sentences. What the work is, where it stands now, and what is left to do.",
+        "unnerf": "- `summary`: plain sentences covering what the work is, where it stands now, and what is left to do, in as much detail as future threads need for context.",
+        "description": "send-to-project brief: drop the two-or-three-sentence cap on summary"
+      }
+    },
+    {
+      "file": "skill-code-review-max-or-ultra-effort-restriction.md",
+      "verdict": "keep",
+      "reasoning": "Restricting the max or ultra review tiers to explicit user or project instructions protects against unauthorized spawning of multiple costly reviewer subagents; per calibration guidance, lean keep when uncertain."
+    },
+    {
+      "file": "tool-result-auto-mode-retry-once-then-continue.md",
+      "verdict": "keep",
+      "reasoning": "Mechanical harness guidance for auto-mode execution to prevent infinite retry loops on denied actions."
+    },
+    {
+      "file": "tool-result-auto-mode-script-call-refused.md",
+      "verdict": "keep",
+      "reasoning": "Mechanical explanation that script calls are architecturally refused by auto mode, preventing futile retries."
+    },
+    {
+      "file": "system-reminder-hooks-excluded-by-launcher.md",
+      "verdict": "keep",
+      "reasoning": "This is an ambient system reminder informing the model of disabled hooks. Directing it to notify the user in one short sentence appropriately prevents derailing the substantive task requested by the user."
+    },
+    {
+      "file": "system-reminder-hooks-require-user-file-change.md",
+      "verdict": "keep",
+      "reasoning": "A concise system status notification ensures the user is informed of hook configuration needs without hijacking the conversation away from their actual query."
+    },
+    {
+      "file": "system-reminder-hooks-setup-unfinished.md",
+      "verdict": "keep",
+      "reasoning": "Instructs a brief notice to the user about unfinished hook setup, which appropriately handles system status communication without bloating the response."
+    },
+    {
+      "file": "system-prompt-repl-few-full-scripts.md",
+      "verdict": "keep",
+      "reasoning": "This guidance promotes thoroughness by explicitly instructing the model to read and search more widely than strictly needed while minimizing REPL round-trip overhead."
+    },
+    {
+      "file": "tool-description-bash-creating-pull-requests.md",
+      "verdict": "keep",
+      "reasoning": "Keeping the PR title under 70 characters follows standard git and GitHub conventions, and explicitly directs the model to put full details in the PR body."
+    },
+    {
+      "file": "agent-prompt-onboarding-guide-generator.md",
+      "verdict": "keep",
+      "reasoning": "The one-line initial output provides immediate streaming feedback before heavy processing, while picking the top 3-5 categories produces a clean, readable onboarding breakdown rather than suppressing substantive analysis."
+    },
+    {
+      "file": "agent-prompt-markdown-report-with-trailer-constraint.md",
+      "verdict": "keep",
+      "reasoning": "This trailer constraint is a strict formatting delimiter required for automated subagent parsing; altering it would break downstream machine consumption."
+    },
+    {
+      "file": "tool-result-auto-mode-no-safety-result-tool-not-prompted.md",
+      "verdict": "keep",
+      "reasoning": "Mechanical runtime tool failure notification directing the agent to proceed with unblocked work and honestly disclose what could not be run."
+    },
+    {
+      "file": "agent-prompt-send-to-project-instructions-and-appearance.md",
+      "verdict": "keep",
+      "reasoning": "Provides semantic guidance separating standing instructions from project descriptions in project settings; bulleted rule formatting is structural rather than an artificial capability cap."
+    },
+    {
+      "file": "agent-prompt-send-to-project-reply-format.md",
+      "verdict": "keep",
+      "reasoning": "Strict output formatting specification required for clean CLI/UI rendering of project links without raw URLs or conversational noise."
+    },
+    {
+      "file": "tool-result-repl-call-still-running-hung-warning.md",
+      "verdict": "keep",
+      "reasoning": "Standard diagnostic guidance for handling hung concurrent REPL processes by adjusting timeouts or splitting tasks."
+    },
+    {
+      "file": "agent-prompt-project-setup-brief-acknowledgement.md",
+      "verdict": "keep",
+      "reasoning": "Directs the model not to redundantly recite the setup card in conversational text immediately after the user has viewed and approved it on the confirmation pane."
+    },
+    {
+      "file": "tool-description-send-to-project-detailed.md",
+      "verdict": "keep",
+      "reasoning": "Operational workflow and protocol documentation for the SendToProject tool; the flagged phrasing does not appear in this file."
+    },
+    {
+      "file": "tool-description-send-to-project-message-detailed.md",
+      "verdict": "keep",
+      "reasoning": "The constraint on the fallback message matches the genre and character of a brief project coordinator kickoff message posted on behalf of the user."
+    },
+    {
+      "file": "agent-prompt-claude-test-author-2.md",
+      "verdict": "keep",
+      "reasoning": "Defines the DSL and structural requirements of a Claude Test spec file, ensuring test cases remain concise, focused, and parseable by write-spec and the runner."
+    },
+    {
+      "file": "tool-result-auto-mode-turn-ended-wait-for-user.md",
+      "verdict": "keep",
+      "reasoning": "Standard tool-result protocol when auto mode safety policy halts execution and yields back to the user."
+    },
+    {
+      "file": "tool-result-auto-mode-unavailable-consecutive-no-verdict.md",
+      "verdict": "keep",
+      "reasoning": "Runtime error notification indicating repeated failure of safety verdicts, safely ending the autonomous turn."
+    },
+    {
+      "file": "tool-result-code-mode-earlier-prompt-unanswered-suppression.md",
+      "verdict": "keep",
+      "reasoning": "Permission boundary enforcement instructing the model not to circumvent approval gates while continuing non-blocked work."
+    },
+    {
+      "file": "tool-result-code-mode-permission-prompts-unanswered-at-moment.md",
+      "verdict": "keep",
+      "reasoning": "Runtime permission prompt notification instructing the model to avoid workarounds for unapproved actions and report skipped steps honestly."
+    },
+    {
+      "file": "tool-result-permission-denied-tell-user-skipped-step.md",
+      "verdict": "keep",
+      "reasoning": "Standard tool result instruction when permission is denied, guiding the model to proceed with other tasks and disclose what was skipped."
+    },
+    {
+      "file": "tool-result-auto-mode-subsequent-actions-blocked-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Factual runtime feedback explaining that retrying blocked actions is futile under the current permission state and to report blockers clearly."
+    },
+    {
+      "file": "tool-result-auto-mode-unavailable-switch-mode-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Runtime notification about safety check unavailability that instructs the agent to finish feasible work and advise the user how to unblock it."
+    },
+    {
+      "file": "skill-workflow-hooks-and-patterns-reference.md",
+      "verdict": "keep",
+      "reasoning": "Reference documentation and design patterns for authoring workflow scripts; it actively teaches thoroughness patterns like loop-until-dry, completeness critics, and avoiding silent truncation."
+    },
+    {
+      "file": "tool-parameter-send-to-project-proposal.md",
+      "verdict": "keep",
+      "reasoning": "Defines the exact schema constraints, field limits, and UI card presentation format required for the SendToProject proposal payload."
+    }
+  ]
+}

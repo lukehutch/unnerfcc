@@ -1,6 +1,8 @@
 <!--
-name: 'Tool Result: Action list takes only limit and scope'
-description: Informs the model that action list only accepts limit and scope parameters.
-ccVersion: 2.1.257
+name: 'Tool Result: Action list takes only limit, scope, and page_token'
+description: >-
+  Informs the model that action list only accepts limit, scope, and page_token
+  parameters.
+ccVersion: 2.1.318
 -->
-action "list" takes only `limit` and `scope`
+action "list" takes only `limit`, `scope` and `page_token`

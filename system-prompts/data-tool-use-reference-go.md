@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Tool use reference — Go'
 description: Tool-use API reference doc (Go bindings).
-ccVersion: 2.1.310
+ccVersion: 2.1.318
 -->
 # Tool Use - Go
 
@@ -33,8 +33,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/anthropics/anthropic-sdk-go"
-    "github.com/anthropics/anthropic-sdk-go/toolrunner"
+    "github.com/anthropics/anthropic-sdk-go/v2"
+    "github.com/anthropics/anthropic-sdk-go/v2/toolrunner"
 )
 
 // Define tool input with jsonschema tags for automatic schema generation
@@ -113,7 +113,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/anthropics/anthropic-sdk-go"
+    "github.com/anthropics/anthropic-sdk-go/v2"
 )
 
 func main() {

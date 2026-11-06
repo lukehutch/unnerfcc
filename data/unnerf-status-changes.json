@@ -1,236 +1,196 @@
 {
- "from": "2.1.293",
- "to": "2.1.310",
+ "from": "2.1.310",
+ "to": "2.1.318",
  "changes": [
   {
-   "id": "agent-prompt-claude-test-author-2",
-   "name": "Agent Prompt: Claude Test spec author",
+   "id": "agent-prompt-onboarding-guide-generator",
+   "name": "Agent Prompt: Onboarding guide generator",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "936a9ed7e037",
-   "newHash": "751bdb5c8965",
-   "sample": "---\ndescription: Internal to Claude Test — drafts spec files in the background for a first run. Started only by the claude-test run skill.\nuser-invocable: false\ncontext: fork\nagent: claude-test:author"
+   "oldHash": "d14de6d8e1dd",
+   "newHash": "d13b784e9b32",
+   "sample": "You are helping a power user generate an onboarding guide for teammates who are new to Claude Code. The guide will live in the team's onboarding docs and can be pasted into Claude for an interactive w"
   },
   {
-   "id": "agent-prompt-managed-agents-onboarding-flow",
-   "name": "Agent Prompt: Managed Agents onboarding flow",
+   "id": "agent-prompt-status-line-setup",
+   "name": "Agent Prompt: Status line setup",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "1198eeb5e2b5",
-   "newHash": "5b94f354dd4f",
-   "sample": "# Managed Agents - Onboarding Flow\n\n> **Invoked via `/claude-api managed-agents-onboard`?** You're in the right place. Run the interview below - don't summarize it back to the user, ask the questions."
+   "oldHash": "876b2251c190",
+   "newHash": "88afc669c754",
+   "sample": "You are a status line setup agent for Claude Code. Your job is to create or update the statusLine command in the user's Claude Code settings.\n\nWhen asked to convert the user's shell PS1 configuration,"
   },
   {
-   "id": "agent-prompt-managed-agents-onboarding-from-quickstart",
-   "name": "Agent Prompt: Managed Agents onboarding from bundled quickstart",
+   "id": "data-managed-agents-multiagent-sessions",
+   "name": "Data: Managed Agents multiagent sessions",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "42cfad60e571",
-   "newHash": "d67352de1e87",
-   "sample": "# Managed Agents - Onboarding From a Bundled Quickstart\n\n> **Invoked via `/claude-api managed-agents-onboard <quickstart-name>`?** You're in the right place. The name is one of the templates on the Co"
+   "oldHash": "6132707707ec",
+   "newHash": "714b55a0f233",
+   "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont"
   },
   {
-   "id": "agent-prompt-pr-slash-command-analyze-and-draft",
-   "name": "Agent Prompt: PR slash command (analyze and draft)",
+   "id": "data-managed-agents-reference-php",
+   "name": "Data: Managed Agents reference — PHP",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "f24a59d16fa4",
-   "newHash": "677a6cfc6155",
-   "sample": "\n## Your task\n\nBased on the changes above, open a single pull request:\n\n1. Analyze ALL changes that will be included in the PR (every commit since ${BASE_BRANCH}, not just the latest), then draft a ti"
+   "oldHash": "74ca95183356",
+   "newHash": "6ec967833a82",
+   "sample": "# Managed Agents - PHP\n\n> **Bindings not shown here:** This README covers the most common managed-agents flows for PHP. If you need a class, method, namespace, field, or behavior that isn't shown, fet"
   },
   {
-   "id": "agent-prompt-web-search-assistant",
-   "name": "Agent Prompt: Web search assistant",
+   "id": "system-prompt-resume-after-summary-without-recap",
+   "name": "System Prompt: Resume after summary without recap",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "756ad293b04e",
-   "newHash": "d279c685809a",
-   "sample": "You run a web search for another Claude model, which is waiting on the result and can search again. Search once, then reply with a brief summary of the results."
+   "oldHash": "cfcfd68d6774",
+   "newHash": "7502c5c33429",
+   "sample": "${SUMMARY_PREFIX}\n${CONTINUATION_INSTRUCTION} without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with \"I'l"
   },
   {
-   "id": "data-tool-use-reference-csharp",
-   "name": "Data: Tool use reference — C#",
+   "id": "system-reminder-tool-disconnected-continue-without-it",
+   "name": "System Reminder: Tool disconnected continue without it",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "353196647c60",
-   "newHash": "092aa01d23d6",
-   "sample": "# Tool Use - C#\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build a"
-  },
-  {
-   "id": "data-tool-use-reference-java",
-   "name": "Data: Tool use reference — Java",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "ccbb5ee37bcf",
-   "newHash": "c7cf4ed716db",
-   "sample": "# Tool Use - Java\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build"
-  },
-  {
-   "id": "data-tool-use-reference-php",
-   "name": "Data: Tool use reference — PHP",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "1a285718373a",
-   "newHash": "a5ef7e57ffbf",
-   "sample": "# Tool Use - PHP\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you build "
-  },
-  {
-   "id": "data-tool-use-reference-python",
-   "name": "Data: Tool use reference — Python",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "d23ce7bf23fc",
-   "newHash": "2259557f33fc",
-   "sample": "# Tool Use - Python\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you bui"
-  },
-  {
-   "id": "data-tool-use-reference-ruby",
-   "name": "Data: Tool use reference — Ruby",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "643cfa9fb9ef",
-   "newHash": "85be9a1bb74d",
-   "sample": "#\u0000 \u0000T\u0000o\u0000o\u0000l\u0000 \u0000U\u0000s\u0000e\u0000 \u0000-\u0000 \u0000R\u0000u\u0000b\u0000y\u0000\n\u0000\n\u0000F\u0000o\u0000r\u0000 \u0000c\u0000o\u0000n\u0000c\u0000e\u0000p\u0000t\u0000u\u0000a\u0000l\u0000 \u0000o\u0000v\u0000e\u0000r\u0000v\u0000i\u0000e\u0000w\u0000 \u0000(\u0000t\u0000o\u0000o\u0000l\u0000 \u0000d\u0000e\u0000f\u0000i\u0000n\u0000i\u0000t\u0000i\u0000o\u0000n\u0000s\u0000,\u0000 \u0000t\u0000o\u0000o\u0000l\u0000 \u0000c\u0000h\u0000o\u0000i\u0000c\u0000e\u0000,\u0000 \u0000t\u0000i\u0000p\u0000s\u0000)\u0000,\u0000 \u0000s\u0000e\u0000e\u0000 \u0000[\u0000s\u0000h\u0000a\u0000r\u0000e\u0000d\u0000/\u0000t\u0000o\u0000o\u0000l\u0000-\u0000u\u0000"
-  },
-  {
-   "id": "data-tool-use-reference-typescript",
-   "name": "Data: Tool use reference — TypeScript",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "160d8c1cc9fb",
-   "newHash": "6bdfcef63b17",
-   "sample": "# Tool Use - TypeScript\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nWhen you"
-  },
-  {
-   "id": "skill-artifact-design",
-   "name": "Skill: artifact-design",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "dc8b8f4adc29",
-   "newHash": "8e4917f5394a",
-   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh"
-  },
-  {
-   "id": "skill-claude-test-spec-format",
-   "name": "Skill: Claude Test spec file format",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "3097502bea29",
-   "newHash": "faa1fe4d933c",
-   "sample": "#\u0000 \u0000S\u0000p\u0000e\u0000c\u0000 \u0000f\u0000i\u0000l\u0000e\u0000 \u0000f\u0000o\u0000r\u0000m\u0000a\u0000t\u0000\n\u0000\n\u0000O\u0000n\u0000e\u0000 \u0000M\u0000a\u0000r\u0000k\u0000d\u0000o\u0000w\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000 \u0000p\u0000e\u0000r\u0000 \u0000s\u0000p\u0000e\u0000c\u0000 \u0000i\u0000n\u0000 \u0000`\u0000.\u0000c\u0000l\u0000a\u0000u\u0000d\u0000e\u0000-\u0000t\u0000e\u0000s\u0000t\u0000/\u0000s\u0000p\u0000e\u0000c\u0000s\u0000/\u0000`\u0000.\u0000 \u0000F\u0000i\u0000l\u0000e\u0000 \u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000l\u0000o\u0000w\u0000e\u0000r\u0000-\u0000c\u0000a\u0000s\u0000e\u0000 \u0000w\u0000o\u0000r\u0000d\u0000s\u0000"
-  },
-  {
-   "id": "skill-prompt-audit-guide",
-   "name": "Skill: Prompt audit guide",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "b72ff5a79bcb",
-   "newHash": "b5cce4bcb50f",
-   "sample": "# Prompt Audit - Finding and Removing Dated Prompting Patterns\n\n> **If you arrived via `/claude-api prompt-audit`:** this is the right file. Execute the steps below in order - do not summarize them ba"
-  },
-  {
-   "id": "tool-description-artifact-types-and-quickstart",
-   "name": "Tool Description: Artifact types and quickstart workflow",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "0dd86363539e",
-   "newHash": "09aa849c338a",
-   "sample": "**Artifact types**: published Artifact types (ready-made pages, such as slide decks, documents or designs, that take Claude's content as data) and the design systems that decks and designs are built w"
-  },
-  {
-   "id": "tool-description-claude-test-install-tooling-suffix",
-   "name": "Tool Description: claude_test_install tooling suffix",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "8a3e30b7c3a9",
-   "newHash": "b5d9c30ef1ff",
-   "sample": " using your npm configuration; prints the registry it used. Takes up to a minute. On success this server loads the tooling at once: end the current run and run Claude Test again (no /mcp step). A mach"
-  },
-  {
-   "id": "tool-result-chrome-tools-connection-status-guidance",
-   "name": "Tool Result: Chrome tools connection status guidance",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "fe5d9bc31d49",
-   "newHash": "4b5b54e46804",
-   "sample": "Claude in Chrome needs no enabling: its tools are the ones whose names contain claude-in-chrome or Claude_in_Chrome. ${LOADING_INSTRUCTION}. ${STATUS_NOTE} If you have no browser tool of any kind, tel"
-  },
-  {
-   "id": "tool-result-read-file-too-large-use-offset-limit",
-   "name": "Tool Result: File too large — use offset and limit",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "f5f341c31fee",
-   "newHash": "f741283df714",
-   "sample": "File content (${TOKEN_COUNT} tokens) exceeds maximum allowed tokens (${MAX_TOKENS}). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of re"
-  },
-  {
-   "id": "agent-prompt-quick-pr-creation-2",
-   "name": "Agent Prompt: Quick PR creation",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "0b947869a32f",
-   "newHash": "f46cdee68827",
-   "sample": "\n3. Push the branch to the repo's remote (usually `origin`; use the remote this repo is actually configured with)\n4. If a PR already exists for this branch (check the gh pr view output above), update "
-  },
-  {
-   "id": "system-prompt-claude-in-chrome-loading-deferred-tools",
-   "name": "System Prompt: Claude in Chrome loading deferred tools",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "c63cc36511fa",
-   "newHash": "85b2a436b24d",
-   "sample": "## Loading deferred tools\n\nIf the mcp__claude-in-chrome__* tools are deferred (must be loaded via ToolSearch before use), load every tool you expect to need in ONE ToolSearch call — the select query a"
-  },
-  {
-   "id": "system-prompt-coordinator-mode",
-   "name": "System Prompt: Coordinator mode",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "8a0356dcf1e2",
-   "newHash": "d8670599db9f",
-   "sample": "\n${SKILLS_INSTRUCTIONS}\nWhen calling ${AGENT_TOOL_NAME}:\n- Do not use one worker to check on another. Workers will notify you when they are done.\n- Do not use workers to trivially report file contents"
-  },
-  {
-   "id": "tool-description-artifact-types-guidance",
-   "name": "Tool Description: Artifact types guidance",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "be4f99f0924d",
-   "newHash": "c178a8c83cac",
-   "sample": "**Artifact types**: published Artifact types may be available to this person. They are ready-made pages, such as slide decks, documents or designs, that take Claude's content as data (people may call "
+   "oldHash": "77a1878a64ab",
+   "newHash": "eb66a366648b",
+   "sample": ". ${TOOL_NAME} ${STATUS_CLAUSE}, but nothing in this session provides it right now (its source was removed or disconnected, or this version no longer has it), so it cannot run. Continue without it.${E"
   },
   {
    "id": "tool-description-bash-creating-pull-requests",
    "name": "Tool Description: Bash — creating pull requests",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "f7aba2849f88",
+   "newHash": "ce33773b30e4",
+   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
+  },
+  {
+   "id": "tool-description-designsync-methods",
+   "name": "Tool Description: DesignSync methods and workflow",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "1335454e27a9",
+   "newHash": "818472696a06",
+   "sample": "\n\n${PREAMBLE_NOTE} If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop. For a project that has move"
+  },
+  {
+   "id": "tool-result-goal-proposal-awaiting-approval",
+   "name": "Tool Result: Goal proposal awaiting approval",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "b109f88d07f9",
+   "newHash": "8e680cb104c5",
+   "sample": "Sent the goal proposal to the user for approval. Continue working — do not wait for their decision. If they approve, the proposed goal is set and you will receive a kickoff message; until then, no new"
+  },
+  {
+   "id": "tool-result-tool-disabled-in-current-session",
+   "name": "Tool Result: Tool disabled in current session",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "735b5d1431d9",
+   "newHash": "12870a28f3b0",
+   "sample": ". ${TOOL_NAME} ${STATUS_CLAUSE} but is switched off in this session right now, so it cannot run. Continue without it.${EXTRA_NOTE}"
+  },
+  {
+   "id": "tool-result-unattended-session-prompt-unanswerable",
+   "name": "Tool Result: Unattended session prompt unanswerable",
+   "was": false,
+   "now": true,
+   "direction": "ADDED nerf",
+   "oldHash": "a686619f0bb1",
+   "newHash": "377a41c73783",
+   "sample": ". ${PROMPT_OR_TOOL_NAME} ${STATUS_NOTE}, but nobody in this session can answer it, so it cannot run. Continue without it; if you need the user's decision, ask in your response text instead."
+  },
+  {
+   "id": "skill-data-visualization",
+   "name": "Skill: Data Visualization",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "da090e52e665",
-   "newHash": "f7aba2849f88",
-   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
+   "oldHash": "76f89a678d04",
+   "newHash": "0b9acb8e0139",
+   "sample": "-\u0000-\u0000-\u0000\n\u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000D\u0000a\u0000t\u0000a\u0000 \u0000V\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000z\u0000a\u0000t\u0000i\u0000o\u0000n\u0000\n\u0000d\u0000e\u0000s\u0000c\u0000r\u0000i\u0000p\u0000t\u0000i\u0000o\u0000n\u0000:\u0000 \u0000>\u0000\n\u0000 \u0000 \u0000P\u0000r\u0000o\u0000d\u0000u\u0000c\u0000e\u0000 \u0000a\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000,\u0000 \u0000g\u0000r\u0000a\u0000p\u0000h\u0000,\u0000 \u0000d\u0000a\u0000s\u0000h\u0000b\u0000o\u0000a\u0000r\u0000d\u0000,\u0000 \u0000o\u0000r\u0000 \u0000a\u0000n\u0000y\u0000 \u0000d\u0000a\u0000t\u0000a\u0000 \u0000v\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000"
+  },
+  {
+   "id": "skill-dataviz-anti-patterns",
+   "name": "Skill Reference: Data-viz Anti-patterns",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "874aab3c826d",
+   "newHash": "7e1d6215c927",
+   "sample": "#\u0000 \u0000A\u0000n\u0000t\u0000i\u0000-\u0000p\u0000a\u0000t\u0000t\u0000e\u0000r\u0000n\u0000s\u0000 \u0000-\u0000 \u0000w\u0000h\u0000a\u0000t\u0000 \u0000g\u0000o\u0000e\u0000s\u0000 \u0000w\u0000r\u0000o\u0000n\u0000g\u0000\n\u0000\n\u0000C\u0000h\u0000e\u0000c\u0000k\u0000 \u0000e\u0000v\u0000e\u0000r\u0000y\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000 \u0000a\u0000g\u0000a\u0000i\u0000n\u0000s\u0000t\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000l\u0000i\u0000s\u0000t\u0000.\u0000 \u0000I\u0000f\u0000 \u0000y\u0000o\u0000u\u0000r\u0000 \u0000o\u0000u\u0000t\u0000p\u0000u\u0000t\u0000 \u0000m\u0000a\u0000t\u0000c\u0000h\u0000e\u0000s\u0000 \u0000a\u0000n\u0000 \u0000e\u0000n\u0000"
+  },
+  {
+   "id": "skill-dataviz-choosing-a-form",
+   "name": "Skill Reference: Data-viz Choosing a Form",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "c02cf4b0a47d",
+   "newHash": "12a4b96d5781",
+   "sample": "#\u0000 \u0000C\u0000h\u0000o\u0000o\u0000s\u0000i\u0000n\u0000g\u0000 \u0000a\u0000 \u0000f\u0000o\u0000r\u0000m\u0000\n\u0000\n\u0000D\u0000e\u0000c\u0000i\u0000d\u0000e\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000*\u0000*\u0000b\u0000e\u0000f\u0000o\u0000r\u0000e\u0000*\u0000*\u0000 \u0000c\u0000o\u0000l\u0000o\u0000r\u0000.\u0000 \u0000T\u0000h\u0000e\u0000 \u0000d\u0000a\u0000t\u0000a\u0000'\u0000s\u0000 \u0000j\u0000o\u0000b\u0000 \u0000p\u0000i\u0000c\u0000k\u0000s\u0000 \u0000t\u0000h\u0000e\u0000 \u0000f\u0000o\u0000r\u0000m\u0000 \u0000-\u0000 \u0000a\u0000n\u0000d\u0000 \u0000s\u0000o\u0000m\u0000e\u0000t\u0000i\u0000m\u0000e\u0000s\u0000 \u0000t\u0000h\u0000e\u0000\n\u0000r\u0000"
+  },
+  {
+   "id": "skill-dataviz-marks-and-anatomy",
+   "name": "Skill Reference: Data-viz Marks & Anatomy",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "70499eb5d484",
+   "newHash": "b9c918e775fa",
+   "sample": "#\u0000 \u0000M\u0000a\u0000r\u0000k\u0000s\u0000 \u0000&\u0000 \u0000a\u0000n\u0000a\u0000t\u0000o\u0000m\u0000y\u0000\n\u0000\n\u0000T\u0000h\u0000e\u0000 \u0000q\u0000u\u0000i\u0000e\u0000t\u0000,\u0000 \u0000c\u0000o\u0000n\u0000s\u0000i\u0000d\u0000e\u0000r\u0000e\u0000d\u0000 \u0000l\u0000o\u0000o\u0000k\u0000 \u0000i\u0000s\u0000 \u0000a\u0000 \u0000f\u0000e\u0000w\u0000 \u0000f\u0000i\u0000x\u0000e\u0000d\u0000 \u0000s\u0000p\u0000e\u0000c\u0000s\u0000 \u0000p\u0000l\u0000u\u0000s\u0000 \u0000t\u0000w\u0000o\u0000 \u0000p\u0000i\u0000e\u0000c\u0000e\u0000s\u0000 \u0000o\u0000f\u0000 \u0000n\u0000e\u0000g\u0000a\u0000t\u0000i\u0000v\u0000e\u0000 \u0000s\u0000p\u0000a\u0000c\u0000e\u0000"
+  },
+  {
+   "id": "skill-design-sync",
+   "name": "Skill: design-sync",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "c6e0680ba50c",
+   "newHash": "141161421814",
+   "sample": "---\nname: design-sync\ndescription: Push a React design system to claude.ai/design. This runs a converter that bundles the real component code (from Storybook or a bare package) and uploads it. Use whe"
+  },
+  {
+   "id": "skill-design-sync-storybook-source-shape",
+   "name": "Skill: /design-sync Storybook source shape",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "29415279f118",
+   "newHash": "4a9fc2dbe4dd",
+   "sample": "# Storybook source shape\n\nStorybook is the **fidelity oracle, not the runtime**. The converter bundles the package's compiled `dist/` into `_ds_bundle.js` - the same bundle the claude.ai/design agent "
+  },
+  {
+   "id": "skill-prompt-audit-guide",
+   "name": "Skill: Prompt audit guide",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "b5cce4bcb50f",
+   "newHash": "3cd21ec211ec",
+   "sample": "# Prompt Audit - Finding and Removing Dated Prompting Patterns\n\n> **If you arrived via `/claude-api prompt-audit`:** this is the right file. Execute the steps below in order - do not summarize them ba"
+  },
+  {
+   "id": "tool-description-artifact-finding-types-list-types-preference",
+   "name": "Tool Description: Prefer listed artifact types over skills",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "829c1e72552d",
+   "newHash": "d686332c15a2",
+   "sample": ", however they phrase it — call `action: \"list_types\"` first, without `type_query`, before loading a skill or writing a file for it, and prefer a listed type that fits, even over a skill that would pr"
   }
  ],
  "unverifiable": []

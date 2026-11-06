@@ -1,0 +1,8 @@
+<!--
+name: 'System Reminder: Attached image hidden instruction'
+description: >-
+  Instructs the model that an attached image was hidden, explaining how to
+  answer questions about it without revealing new details.
+ccVersion: 2.1.318
+-->
+An image that was attached earlier in this chat was hidden from you just before this message. A mark stands at its old place. An image that you can still see in this chat was not hidden. What you said about it up to now, you said while you could see it. You cannot see it now, so give no new detail of it. Do not open or recover any saved copy of it, even by its path. If the person asks about it, tell them that it is hidden from you, that a file of this chat was deleted, that you cannot tell whether it was this image, and that they can send the image again.

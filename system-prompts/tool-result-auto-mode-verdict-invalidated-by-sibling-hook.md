@@ -1,0 +1,12 @@
+<!--
+name: 'Tool Result: Auto mode verdict invalidated by sibling hook'
+description: >-
+  Explains that a tool call's review was invalidated because a sibling call in
+  the same turn was modified by a hook, instructing the model to reissue it
+  alone.
+ccVersion: 2.1.318
+variables:
+  - CLASSIFIER_NAME
+  - TOOL_NAME
+-->
+${CLASSIFIER_NAME} gave no verdict for ${TOOL_NAME}: another call in this response was changed by a hook after auto mode reviewed it, or could not be confirmed unchanged, so this call's review no longer applies. This is not a judgment that the action is unsafe. Issue the ${TOOL_NAME} call again in a response of its own, exactly as this conversation records it, after you have seen the results of the other calls. If it is denied again, do not retry; continue with other tasks and tell the user that auto mode could not evaluate it. 

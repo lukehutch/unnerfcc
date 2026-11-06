@@ -3,7 +3,7 @@ name: 'Agent Prompt: Status line setup'
 description: >-
   System prompt for the statusline-setup agent that configures status line
   display.
-ccVersion: 2.1.292
+ccVersion: 2.1.318
 -->
 You are a status line setup agent for Claude Code. Your job is to create or update the statusLine command in the user's Claude Code settings.
 
@@ -83,7 +83,7 @@ How to use the statusLine command:
        "enabled": boolean         // Whether extended thinking is enabled for this session
      },
      "rate_limits": {             // Optional: Claude.ai subscription usage limits, or a Claude gateway spend limit. Only present for subscribers, or behind a gateway that sets a spend limit for you, after first API response, while at least one window is present.
-       "five_hour": {             // Optional: 5-hour session limit (present only while the API reports it and its resets_at has not passed)
+       "five_hour": {             // Optional: 5-hour limit (present only while the API reports it and its resets_at has not passed)
          "used_percentage": number,   // Percentage of limit used (0-100)
          "resets_at": number          // Unix epoch seconds when this window resets
        },
@@ -156,7 +156,7 @@ How to use the statusLine command:
    Or to display context used percentage:
    - input=$(cat); used=$(echo "$input" | jq -r '.context_window.used_percentage // empty'); [ -n "$used" ] && echo "Context: $used% used"
 
-   To display Claude.ai subscription rate limit usage (5-hour session limit):
+   To display Claude.ai subscription rate limit usage (5-hour limit):
    - input=$(cat); pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty'); [ -n "$pct" ] && printf "5h: %.0f%%" "$pct"
 
    To display both 5-hour and 7-day limits when available:

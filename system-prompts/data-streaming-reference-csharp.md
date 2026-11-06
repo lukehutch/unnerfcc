@@ -1,7 +1,7 @@
 <!--
 name: 'Data: Streaming reference — C#'
 description: Streaming API reference doc (C# bindings).
-ccVersion: 2.1.263
+ccVersion: 2.1.318
 -->
 # Streaming - C#
 
@@ -14,7 +14,7 @@ var parameters = new MessageCreateParams
 {
     Model = "{{OPUS_ID}}",
     MaxTokens = 64000,
-    Messages = [new() { Role = Role.User, Content = "Write a haiku" }]
+    Messages = [new UserMessageParam { Content = "Write a haiku" }]
 };
 
 await foreach (RawMessageStreamEvent streamEvent in client.Messages.CreateStreaming(parameters))
