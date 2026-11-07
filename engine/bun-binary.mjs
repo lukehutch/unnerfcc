@@ -647,7 +647,20 @@ async function repackELF(binaryPath, newSection, outPath) {
   if (!bunSection) throw fmtErr(".bun section not found by node-lief");
   const rwSegs = bin.segments().filter((s) => s.type === "LOAD" && (s.flags & 2) !== 0);
   if (!rwSegs.length) throw fmtErr("no writable PT_LOAD segment");
-  const rwSeg = rwSegs[0]; // segment we extend to place the new .bun
+  // Extend the writable segment that holds .bun, and only when it is the last
+  // PT_LOAD: extending any other segment moves every segment after it, and the
+  // code addresses .data/.bss there by absolute address. v2.1.318 split the
+  // writable data into two PT_LOADs (RELRO first, then .data/.bss/.bun);
+  // extending the first one moved .data and the binary segfaulted at start-up.
+  const bunVa = BigInt(bunSection.virtualAddress);
+  const rwSeg = rwSegs.find((s) => bunVa >= BigInt(s.virtualAddress) &&
+    bunVa < BigInt(s.virtualAddress) + BigInt(s.virtualSize));
+  if (!rwSeg) throw fmtErr(".bun is not inside a writable PT_LOAD segment");
+  const lastLoad = bin.segments().filter((s) => s.type === "LOAD")
+    .reduce((a, s) => (BigInt(s.virtualAddress) > BigInt(a.virtualAddress) ? s : a));
+  if (BigInt(lastLoad.virtualAddress) !== BigInt(rwSeg.virtualAddress)) {
+    throw fmtErr("the segment holding .bun is not the last PT_LOAD — extending it would move later segments");
+  }
 
   // Find the 8-byte pointer holding the OLD .bun vaddr. Bun stores it somewhere
   // in a writable segment and the runtime dereferences it to find the blob. It
