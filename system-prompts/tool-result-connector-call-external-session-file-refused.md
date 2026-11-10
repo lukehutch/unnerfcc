@@ -1,0 +1,10 @@
+<!--
+name: 'Tool Result: Connector call outside session file refused'
+description: >-
+  Refuses a connector call made outside the session where file path arguments
+  cannot be verified, to avoid sending local paths as plain text.
+ccVersion: 2.1.321
+variables:
+  - TOOL_NAME
+-->
+No file was sent and ${TOOL_NAME} was not called. The program that runs Claude Code made this call outside this session, so Claude Code could not reach the session's note of the connector arguments it asked you to fill with file paths. That note may be the only record of them, so rather than risk sending a file's path to a connector as plain text, Claude Code refuses every connector call made this way, whatever its arguments. The connector is not at fault, and neither is this call: changing it makes no difference. Calling again may or may not work; that depends on the program. Tell the user that the fault is in that program.

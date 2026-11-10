@@ -3,25 +3,25 @@ name: 'Data: Managed Agents quickstart — Explainer video maker'
 description: >-
   Managed Agents quickstart template for generating a short captioned explainer
   video with music using parallel scene agents.
-ccVersion: 2.1.310
+ccVersion: 2.1.321
 -->
 ---
-title: Explainer video maker
-description: Turns a topic and your source material into a short captioned video with music, with an agent per scene.
+title: Video explainer maker
+description: Turns a topic into a short captioned video with music.
 console_key: explainer-video
 order: 12
 ---
 
-# Explainer video maker
+# Video explainer maker
 
-Turns a topic and your source material into a short captioned video with music, with an agent per scene.
+Turns a topic into a short captioned video with music.
 
 ## agent.md
 
 ````markdown
 ---
-name: Explainer video maker
-description: Turns a topic and your source material into a short captioned video with music, with an agent per scene.
+name: Video explainer maker
+description: Turns a topic into a short captioned video with music.
 model:
   id: {{OPUS_ID}}
   effort: low

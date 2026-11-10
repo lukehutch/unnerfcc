@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: Artifact XLSX sharing restrictions'
+description: >-
+  Explains download and sharing restrictions for XLSX files attached to
+  artifacts.
+ccVersion: 2.1.321
+-->
+ An .xlsx is only ever served as a download, and never to a link visitor or to a guest who can only view. The content scan can't read it: while a copy is stored, the artifact can't be made public or shared with anyone new outside the organization, so delete it once nothing needs it. A try that failed or was sent twice may have left another copy, which 

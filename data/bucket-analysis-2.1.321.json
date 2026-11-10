@@ -1,0 +1,166 @@
+{
+  "ccVersion": "2.1.321",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "data-tool-use-reference-typescript.md",
+      "verdict": "keep",
+      "reasoning": "This is an unprompted, unsolicited suggestion to offer Managed Agents at the conclusion of building a large Messages API task. Per calibration example 2, keeping unprompted offers to a brief, interruption-appropriate length is appropriate UX rather than a capability nerf."
+    },
+    {
+      "file": "skill-building-llm-powered-applications-with-claude.md",
+      "verdict": "keep",
+      "reasoning": "This instruction performs a project and file marker check to ensure Anthropic SDK code is not destructively written into non-Anthropic codebases without confirming user intent. It asks the user whether to switch rather than refusing to work."
+    },
+    {
+      "file": "tool-result-call-again-with-reason-task-explanation.md",
+      "verdict": "keep",
+      "reasoning": "The 'reason' string parameter is displayed directly to the user in interactive CLI permission prompts. Keeping it to a single sentence matches calibration example 3 for structured output and UI microcopy."
+    },
+    {
+      "file": "system-reminder-skill-environment-prerequisite-handling.md",
+      "verdict": "keep",
+      "reasoning": "Addresses environments where required local machines, servers, or VPNs are mechanically unreachable from the session. Describing prerequisites plainly and offering whatever local work is possible prevents hallucinated network workarounds."
+    },
+    {
+      "file": "system-reminder-artifact-design-intake-options-and-palette-guidance.md",
+      "verdict": "lift",
+      "reasoning": "Imposes an artificial one-line constraint on stating assumptions before proceeding to build the artifact. Per calibration example 2, arbitrary brevity caps on substantive intake and assumptions summaries should be lifted.",
+      "rule": {
+        "stock": "decide what is open yourself, state your assumptions in one line and build, asking nothing more, not even where a type's own instructions ask; if they dismissed the card, wait as its result says, without repeating the questions. If the asking call is refused or fails, do not retry it or ask another way (an error about the call's own input you may correct once): state your assumptions in one line and build.",
+        "unnerf": "decide what is open yourself, state your assumptions clearly and build, asking nothing more, not even where a type's own instructions ask; if they dismissed the card, wait as its result says, without repeating the questions. If the asking call is refused or fails, do not retry it or ask another way (an error about the call's own input you may correct once): state your assumptions clearly and build.",
+        "description": "artifact design intake: state assumptions clearly rather than in one line"
+      }
+    },
+    {
+      "file": "system-reminder-claude-in-chrome-cloud-browser-fallback-instructions.md",
+      "verdict": "keep",
+      "reasoning": "Guides concise user communication before an interactive computer-linking card appears. Keeping the notice to one or two plain sentences ensures clear status communication without cluttering UI card interactions."
+    },
+    {
+      "file": "tool-result-background-task-tracking-lost-guidance-prefix.md",
+      "verdict": "keep",
+      "reasoning": "Provides error notification guidance when background task tracking fails. Keeping the notification to two or three sentences communicates the status clearly without excessive terminal noise."
+    },
+    {
+      "file": "agent-prompt-web-fetch-specialist.md",
+      "verdict": "keep",
+      "reasoning": "The reporting brevity cap is already handled in existingRules. The remaining limits on link crawling depth (up to 5 links on the same site) and avoiding repeated retries on permanent failures are genuine resource budget and crawler loop safety bounds."
+    },
+    {
+      "file": "system-reminder-claude-in-chrome-computer-link-card-instructions.md",
+      "verdict": "keep",
+      "reasoning": "Coordinates text output with an interactive computer selection card displayed immediately underneath. Keeping the text to a short sentence avoids distracting the user from interacting with the prompt card."
+    },
+    {
+      "file": "system-reminder-unanswered-approval-resumption-guidance.md",
+      "verdict": "keep",
+      "reasoning": "When an interrupted action is determined to no longer be needed, stating which action was skipped in one plain sentence is a concise status notification rather than a holdback on substantive work."
+    },
+    {
+      "file": "system-prompt-memory-notes-and-feedback-guidelines.md",
+      "verdict": "keep",
+      "reasoning": "Instructs the assistant to work directly from the context window rather than creating unrequested planning or analysis scratch files in the user's codebase, preventing git workspace clutter."
+    },
+    {
+      "file": "skill-loop-slash-command-dynamic-mode-2.md",
+      "verdict": "keep",
+      "reasoning": "The brevity constraint on loop confirmations in this file is already addressed by an existing unnerf rule registered in existingRules."
+    },
+    {
+      "file": "tool-result-auto-mode-postpone-retry-clause.md",
+      "verdict": "keep",
+      "reasoning": "Protocol instruction for auto-mode permission evaluation preventing an immediate retry loop when an evaluation verdict is postponed or pending."
+    },
+    {
+      "file": "tool-result-auto-mode-check-retry-once-lead-in.md",
+      "verdict": "keep",
+      "reasoning": "Control flow directive for permission checking that handles denied tool actions by proceeding with non-blocked tasks instead of entering a retry loop."
+    },
+    {
+      "file": "skill-hill-climbing-guide.md",
+      "verdict": "keep",
+      "reasoning": "Maintains a clean terminal conversation during autonomous eval iterations while all detailed metrics, scores, transcript diffs, and analysis are comprehensively recorded on disk in report.html and narrative.md."
+    },
+    {
+      "file": "tool-result-image-read-repeated-re-read-rejected.md",
+      "verdict": "keep",
+      "reasoning": "Mechanical context-budget constraint with honest disclosure explaining that repeated identical image reads consume excessive request payload capacity, matching calibration example 1."
+    },
+    {
+      "file": "skill-loop-cloud-session-timer-caveat.md",
+      "verdict": "lift",
+      "reasoning": "Imposes an artificial one-sentence constraint on explaining container lifecycle and idle teardown risks when scheduling loop tasks, paralleling confirmation unnerfs across other loop command files.",
+      "rule": {
+        "stock": "In your confirmation, tell the user this in one sentence.",
+        "unnerf": "In your confirmation, explain this clearly so the user understands how container idle release and replacement affect their timer.",
+        "description": "/loop cloud session: explain container timer caveat clearly rather than in one sentence"
+      }
+    },
+    {
+      "file": "data-managed-agents-multiagent-sessions.md",
+      "verdict": "keep",
+      "reasoning": "This is architectural reference documentation explaining platform cost and performance trade-offs for Managed Agents multiagent configurations, rather than an artificial holdback on Claude Code's own problem-solving capabilities."
+    },
+    {
+      "file": "system-reminder-image-re-reading-limit-warning.md",
+      "verdict": "keep",
+      "reasoning": "The instruction addresses a genuine context-budget and resource constraint where re-reading images evicts earlier context and triggers token re-transmission."
+    },
+    {
+      "file": "data-tool-use-reference-python.md",
+      "verdict": "keep",
+      "reasoning": "This limits the length of an unprompted, unsolicited suggestion to use Managed Agents, fitting calibration example 2 for interruption-appropriate UX rather than capping substantive work."
+    },
+    {
+      "file": "skill-latency-optimization-guide.md",
+      "verdict": "lift",
+      "reasoning": "The prompt imposes arbitrary brevity caps (at most ~300 words and one line per option) on the initial findings and options of a substantive latency optimization request.",
+      "rule": {
+        "stock": "At most about 300 words; a list of options is a line each.",
+        "unnerf": "Provide as much detail and explanation as the findings and options require for the user to make an informed decision.",
+        "description": "latency optimize: remove 300-word and one-line cap on first reply"
+      }
+    },
+    {
+      "file": "skill-generate-permission-allowlist-from-transcripts.md",
+      "verdict": "lift",
+      "reasoning": "Capping the allowlist at 20 entries to allow skimming arbitrarily truncates legitimate, frequently-used read-only commands and causes unnecessary future permission prompts.",
+      "rule": {
+        "stock": "Cap the list at the top ~20 so the user can skim it.",
+        "unnerf": "Include all qualifying patterns that meet the frequency threshold so the allowlist thoroughly eliminates repeated prompts, keeping them ordered by frequency.",
+        "description": "allowlist generation: include all qualifying patterns instead of capping at 20"
+      }
+    },
+    {
+      "file": "system-reminder-artifact-design-intake-questions-prompt-prefix.md",
+      "verdict": "lift",
+      "reasoning": "The passage imposes an arbitrary limit of three or four questions on intake questioning for design artifacts, capping thoroughness.",
+      "rule": {
+        "stock": "Ask three or four questions written for this request, those that would most change what you build, never a generic intake list or more than four, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+        "unnerf": "Ask the questions written for this request that would most change what you build, asking as many as necessary to clarify the design without an arbitrary count limit, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+        "description": "design artifact intake: remove 3-4 question cap"
+      }
+    },
+    {
+      "file": "system-reminder-media-removed-unseen-retry-guidance.md",
+      "verdict": "keep",
+      "reasoning": "This is a mechanical context/payload constraint where media exceeded request limits, paired with explicit transparency to continue without it if unavailable."
+    },
+    {
+      "file": "system-reminder-claude-in-chrome-mobile-fallback.md",
+      "verdict": "keep",
+      "reasoning": "This is a concise failure notification when the extension cannot run on mobile, ensuring the model immediately proceeds to substantive work using alternative tools."
+    },
+    {
+      "file": "tool-result-auto-mode-retry-no-verdict-clause.md",
+      "verdict": "keep",
+      "reasoning": "This statement describes a factual system constraint regarding safety verdict evaluation, preventing useless immediate retry loops."
+    },
+    {
+      "file": "skill-run-skill-generator.md",
+      "verdict": "keep",
+      "reasoning": "Directing SKILL.md to be concise and prescriptive around a single verified path is an engineering specification for agent drivers rather than a hold-back restriction."
+    }
+  ]
+}

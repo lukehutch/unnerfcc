@@ -1,196 +1,86 @@
 {
- "from": "2.1.310",
- "to": "2.1.318",
+ "from": "2.1.318",
+ "to": "2.1.321",
  "changes": [
   {
-   "id": "agent-prompt-onboarding-guide-generator",
-   "name": "Agent Prompt: Onboarding guide generator",
+   "id": "agent-prompt-eval-authoring-interview",
+   "name": "Agent Prompt: Eval-authoring Interview",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "d14de6d8e1dd",
-   "newHash": "d13b784e9b32",
-   "sample": "You are helping a power user generate an onboarding guide for teammates who are new to Claude Code. The guide will live in the team's onboarding docs and can be pasted into Claude for an interactive w"
+   "oldHash": "699531506241",
+   "newHash": "153ac5dd04f7",
+   "sample": " Walk the user through building an eval suite under `${EVAL_DIR}/`.${ADDITIONAL_SETUP_NOTE} Start by reading the plugin yourself and opening with what you found.${ADDITIONAL_CONTEXT_BLOCK}\n\n**Hard rul"
   },
   {
-   "id": "agent-prompt-status-line-setup",
-   "name": "Agent Prompt: Status line setup",
+   "id": "skill-building-llm-powered-applications-with-claude",
+   "name": "Skill: Building LLM-powered applications with Claude",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "876b2251c190",
-   "newHash": "88afc669c754",
-   "sample": "You are a status line setup agent for Claude Code. Your job is to create or update the statusLine command in the user's Claude Code settings.\n\nWhen asked to convert the user's shell PS1 configuration,"
+   "oldHash": "447c1e4e1f9d",
+   "newHash": "2f89f5ee79e9",
+   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
   },
   {
-   "id": "data-managed-agents-multiagent-sessions",
-   "name": "Data: Managed Agents multiagent sessions",
+   "id": "skill-generate-permission-allowlist-from-transcripts",
+   "name": "Skill: Generate permission allowlist from transcripts",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "6132707707ec",
-   "newHash": "714b55a0f233",
-   "sample": "# Managed Agents - Multiagent Sessions\n\nA coordinator agent can delegate to other agents within one session. All agents **share the container and filesystem**; each runs in its own **thread** - a cont"
+   "oldHash": "6566809139f7",
+   "newHash": "ba37aac1f13b",
+   "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss"
   },
   {
-   "id": "data-managed-agents-reference-php",
-   "name": "Data: Managed Agents reference — PHP",
+   "id": "system-reminder-file-summary-completeness-disclosure",
+   "name": "System Reminder: File summary completeness disclosure",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "74ca95183356",
-   "newHash": "6ec967833a82",
-   "sample": "# Managed Agents - PHP\n\n> **Bindings not shown here:** This README covers the most common managed-agents flows for PHP. If you need a class, method, namespace, field, or behavior that isn't shown, fet"
+   "oldHash": "68bdb2033364",
+   "newHash": "f4ebe9443d36",
+   "sample": "- You MUST read the content from the file at ${FILE_PATH} in sequential chunks until 100% of the content has been read.\n${CHUNK_READING_INSTRUCTIONS}- If you receive truncation warnings when reading t"
   },
   {
-   "id": "system-prompt-resume-after-summary-without-recap",
-   "name": "System Prompt: Resume after summary without recap",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "cfcfd68d6774",
-   "newHash": "7502c5c33429",
-   "sample": "${SUMMARY_PREFIX}\n${CONTINUATION_INSTRUCTION} without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with \"I'l"
-  },
-  {
-   "id": "system-reminder-tool-disconnected-continue-without-it",
-   "name": "System Reminder: Tool disconnected continue without it",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "77a1878a64ab",
-   "newHash": "eb66a366648b",
-   "sample": ". ${TOOL_NAME} ${STATUS_CLAUSE}, but nothing in this session provides it right now (its source was removed or disconnected, or this version no longer has it), so it cannot run. Continue without it.${E"
-  },
-  {
-   "id": "tool-description-bash-creating-pull-requests",
-   "name": "Tool Description: Bash — creating pull requests",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "f7aba2849f88",
-   "newHash": "ce33773b30e4",
-   "sample": "# Creating pull requests\nUse the gh command via the Bash tool for ALL GitHub-related tasks including working with issues, pull requests, checks, and releases. If given a Github URL use the gh command "
-  },
-  {
-   "id": "tool-description-designsync-methods",
-   "name": "Tool Description: DesignSync methods and workflow",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "1335454e27a9",
-   "newHash": "818472696a06",
-   "sample": "\n\n${PREAMBLE_NOTE} If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop. For a project that has move"
-  },
-  {
-   "id": "tool-result-goal-proposal-awaiting-approval",
-   "name": "Tool Result: Goal proposal awaiting approval",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "b109f88d07f9",
-   "newHash": "8e680cb104c5",
-   "sample": "Sent the goal proposal to the user for approval. Continue working — do not wait for their decision. If they approve, the proposed goal is set and you will receive a kickoff message; until then, no new"
-  },
-  {
-   "id": "tool-result-tool-disabled-in-current-session",
-   "name": "Tool Result: Tool disabled in current session",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "735b5d1431d9",
-   "newHash": "12870a28f3b0",
-   "sample": ". ${TOOL_NAME} ${STATUS_CLAUSE} but is switched off in this session right now, so it cannot run. Continue without it.${EXTRA_NOTE}"
-  },
-  {
-   "id": "tool-result-unattended-session-prompt-unanswerable",
-   "name": "Tool Result: Unattended session prompt unanswerable",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "a686619f0bb1",
-   "newHash": "377a41c73783",
-   "sample": ". ${PROMPT_OR_TOOL_NAME} ${STATUS_NOTE}, but nobody in this session can answer it, so it cannot run. Continue without it; if you need the user's decision, ask in your response text instead."
-  },
-  {
-   "id": "skill-data-visualization",
-   "name": "Skill: Data Visualization",
+   "id": "data-managed-agents-quickstart-watchlist-scanner",
+   "name": "Data: Managed Agents Quickstart — Watchlist Scanner",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "76f89a678d04",
-   "newHash": "0b9acb8e0139",
-   "sample": "-\u0000-\u0000-\u0000\n\u0000n\u0000a\u0000m\u0000e\u0000:\u0000 \u0000D\u0000a\u0000t\u0000a\u0000 \u0000V\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000z\u0000a\u0000t\u0000i\u0000o\u0000n\u0000\n\u0000d\u0000e\u0000s\u0000c\u0000r\u0000i\u0000p\u0000t\u0000i\u0000o\u0000n\u0000:\u0000 \u0000>\u0000\n\u0000 \u0000 \u0000P\u0000r\u0000o\u0000d\u0000u\u0000c\u0000e\u0000 \u0000a\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000,\u0000 \u0000g\u0000r\u0000a\u0000p\u0000h\u0000,\u0000 \u0000d\u0000a\u0000s\u0000h\u0000b\u0000o\u0000a\u0000r\u0000d\u0000,\u0000 \u0000o\u0000r\u0000 \u0000a\u0000n\u0000y\u0000 \u0000d\u0000a\u0000t\u0000a\u0000 \u0000v\u0000i\u0000s\u0000u\u0000a\u0000l\u0000i\u0000"
+   "oldHash": "d09230e53328",
+   "newHash": "ee8981e80f57",
+   "sample": "---\ntitle: Stock watchlist scanner\ndescription: Reports what changed for each stock since the last close.\nconsole_key: watchlist-scanner\norder: 11\n---\n\n# Stock watchlist scanner\n\nReports what changed "
   },
   {
-   "id": "skill-dataviz-anti-patterns",
-   "name": "Skill Reference: Data-viz Anti-patterns",
+   "id": "skill-artifact-design",
+   "name": "Skill: artifact-design",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "874aab3c826d",
-   "newHash": "7e1d6215c927",
-   "sample": "#\u0000 \u0000A\u0000n\u0000t\u0000i\u0000-\u0000p\u0000a\u0000t\u0000t\u0000e\u0000r\u0000n\u0000s\u0000 \u0000-\u0000 \u0000w\u0000h\u0000a\u0000t\u0000 \u0000g\u0000o\u0000e\u0000s\u0000 \u0000w\u0000r\u0000o\u0000n\u0000g\u0000\n\u0000\n\u0000C\u0000h\u0000e\u0000c\u0000k\u0000 \u0000e\u0000v\u0000e\u0000r\u0000y\u0000 \u0000c\u0000h\u0000a\u0000r\u0000t\u0000 \u0000a\u0000g\u0000a\u0000i\u0000n\u0000s\u0000t\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000l\u0000i\u0000s\u0000t\u0000.\u0000 \u0000I\u0000f\u0000 \u0000y\u0000o\u0000u\u0000r\u0000 \u0000o\u0000u\u0000t\u0000p\u0000u\u0000t\u0000 \u0000m\u0000a\u0000t\u0000c\u0000h\u0000e\u0000s\u0000 \u0000a\u0000n\u0000 \u0000e\u0000n\u0000"
+   "oldHash": "8e4917f5394a",
+   "newHash": "f2e1f082826e",
+   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh"
   },
   {
-   "id": "skill-dataviz-choosing-a-form",
-   "name": "Skill Reference: Data-viz Choosing a Form",
+   "id": "system-prompt-saving-skills-propose-instead",
+   "name": "System Prompt: Saving skills (propose instead)",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "c02cf4b0a47d",
-   "newHash": "12a4b96d5781",
-   "sample": "#\u0000 \u0000C\u0000h\u0000o\u0000o\u0000s\u0000i\u0000n\u0000g\u0000 \u0000a\u0000 \u0000f\u0000o\u0000r\u0000m\u0000\n\u0000\n\u0000D\u0000e\u0000c\u0000i\u0000d\u0000e\u0000 \u0000t\u0000h\u0000i\u0000s\u0000 \u0000*\u0000*\u0000b\u0000e\u0000f\u0000o\u0000r\u0000e\u0000*\u0000*\u0000 \u0000c\u0000o\u0000l\u0000o\u0000r\u0000.\u0000 \u0000T\u0000h\u0000e\u0000 \u0000d\u0000a\u0000t\u0000a\u0000'\u0000s\u0000 \u0000j\u0000o\u0000b\u0000 \u0000p\u0000i\u0000c\u0000k\u0000s\u0000 \u0000t\u0000h\u0000e\u0000 \u0000f\u0000o\u0000r\u0000m\u0000 \u0000-\u0000 \u0000a\u0000n\u0000d\u0000 \u0000s\u0000o\u0000m\u0000e\u0000t\u0000i\u0000m\u0000e\u0000s\u0000 \u0000t\u0000h\u0000e\u0000\n\u0000r\u0000"
+   "oldHash": "375bb6707213",
+   "newHash": "d77b083d3e64",
+   "sample": "# Saving skills\n\nTo create a skill for the user, or change one they ask to change, call the `${PROPOSE_SKILLS_TOOL_NAME}` tool: it shows them a review card where they can save it. When the user wants "
   },
   {
-   "id": "skill-dataviz-marks-and-anatomy",
-   "name": "Skill Reference: Data-viz Marks & Anatomy",
+   "id": "tool-result-auto-mode-no-verdict-no-retry-prefix",
+   "name": "Tool Result: Auto mode safety check gave no verdict prefix",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "70499eb5d484",
-   "newHash": "b9c918e775fa",
-   "sample": "#\u0000 \u0000M\u0000a\u0000r\u0000k\u0000s\u0000 \u0000&\u0000 \u0000a\u0000n\u0000a\u0000t\u0000o\u0000m\u0000y\u0000\n\u0000\n\u0000T\u0000h\u0000e\u0000 \u0000q\u0000u\u0000i\u0000e\u0000t\u0000,\u0000 \u0000c\u0000o\u0000n\u0000s\u0000i\u0000d\u0000e\u0000r\u0000e\u0000d\u0000 \u0000l\u0000o\u0000o\u0000k\u0000 \u0000i\u0000s\u0000 \u0000a\u0000 \u0000f\u0000e\u0000w\u0000 \u0000f\u0000i\u0000x\u0000e\u0000d\u0000 \u0000s\u0000p\u0000e\u0000c\u0000s\u0000 \u0000p\u0000l\u0000u\u0000s\u0000 \u0000t\u0000w\u0000o\u0000 \u0000p\u0000i\u0000e\u0000c\u0000e\u0000s\u0000 \u0000o\u0000f\u0000 \u0000n\u0000e\u0000g\u0000a\u0000t\u0000i\u0000v\u0000e\u0000 \u0000s\u0000p\u0000a\u0000c\u0000e\u0000"
-  },
-  {
-   "id": "skill-design-sync",
-   "name": "Skill: design-sync",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "c6e0680ba50c",
-   "newHash": "141161421814",
-   "sample": "---\nname: design-sync\ndescription: Push a React design system to claude.ai/design. This runs a converter that bundles the real component code (from Storybook or a bare package) and uploads it. Use whe"
-  },
-  {
-   "id": "skill-design-sync-storybook-source-shape",
-   "name": "Skill: /design-sync Storybook source shape",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "29415279f118",
-   "newHash": "4a9fc2dbe4dd",
-   "sample": "# Storybook source shape\n\nStorybook is the **fidelity oracle, not the runtime**. The converter bundles the package's compiled `dist/` into `_ds_bundle.js` - the same bundle the claude.ai/design agent "
-  },
-  {
-   "id": "skill-prompt-audit-guide",
-   "name": "Skill: Prompt audit guide",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "b5cce4bcb50f",
-   "newHash": "3cd21ec211ec",
-   "sample": "# Prompt Audit - Finding and Removing Dated Prompting Patterns\n\n> **If you arrived via `/claude-api prompt-audit`:** this is the right file. Execute the steps below in order - do not summarize them ba"
-  },
-  {
-   "id": "tool-description-artifact-finding-types-list-types-preference",
-   "name": "Tool Description: Prefer listed artifact types over skills",
-   "was": true,
-   "now": false,
-   "direction": "REMOVED nerf",
-   "oldHash": "829c1e72552d",
-   "newHash": "d686332c15a2",
-   "sample": ", however they phrase it — call `action: \"list_types\"` first, without `type_query`, before loading a skill or writing a file for it, and prefer a listed type that fits, even over a skill that would pr"
+   "oldHash": "77198399f45d",
+   "newHash": "55269a83699b",
+   "sample": " did not run. The automatic safety check gave no verdict on this call, and Claude Code doesn't ask for approval in its place here: ${REASON}. This is not a judgment that the action is unsafe, ${FOLLOW"
   }
  ],
  "unverifiable": []

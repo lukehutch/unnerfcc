@@ -3,25 +3,25 @@ name: 'Data: Managed Agents quickstart — Bug hunter'
 description: >-
   Managed Agents quickstart template for the Bug hunter workflow that reads a
   codebase in parallel and verifies candidate bugs.
-ccVersion: 2.1.310
+ccVersion: 2.1.321
 -->
 ---
 title: Bug hunter
-description: Reads a codebase in parallel, takes a second look at every part, and reports only bugs a separate agent proved.
+description: Scans a codebase and reports only the bugs it can prove.
 console_key: bug-hunter
 order: 10
 ---
 
 # Bug hunter
 
-Reads a codebase in parallel, takes a second look at every part, and reports only bugs a separate agent proved.
+Scans a codebase and reports only the bugs it can prove.
 
 ## agent.md
 
 ````markdown
 ---
 name: Bug hunter
-description: Reads a codebase in parallel, takes a second look at every part, and reports only bugs a separate agent proved.
+description: Scans a codebase and reports only the bugs it can prove.
 model:
   id: {{OPUS_ID}}
   effort: low

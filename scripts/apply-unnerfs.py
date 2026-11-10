@@ -326,8 +326,10 @@ RULES: dict[str, list[Rule]] = {
     "skill-schedule-recurring-cron-and-run-immediately.md": [
         Rule(
             # v2.1.219 renamed the slot CONFIRMATION_MESSAGE -> CONFIRMATION_TEXT.
-            stock="3. Briefly confirm: ${CONFIRMATION_TEXT}",
-            unnerf="3. Confirm thoroughly: ${CONFIRMATION_TEXT} Cover the cadence, any rounding applied, and what to expect so the user understands exactly what's scheduled.",
+            # v2.1.321: slot-name drift only, CONFIRMATION_TEXT ->
+            # CONFIRMATION_DETAILS. Same one slot in, same one slot out.
+            stock="3. Briefly confirm: ${CONFIRMATION_DETAILS}",
+            unnerf="3. Confirm thoroughly: ${CONFIRMATION_DETAILS} Cover the cadence, any rounding applied, and what to expect so the user understands exactly what's scheduled.",
             description="cron-run-immediately confirm: thorough, explain cadence",
         ),
     ],
@@ -830,6 +832,17 @@ RULES: dict[str, list[Rule]] = {
             unnerf='Scan enough recent sessions to capture a representative picture of how the user actually uses their tools — work from the most-recently-modified backward, and do not cut the scan short for speed: a broader sample yields a more complete and accurate allowlist.',
             description='allowlist scan: sample broadly for a complete picture, not capped for speed',
         ),
+        # REJECTED BY HAND (v2.1.321): bucket-analyze proposed lifting "Cap the
+        # list at the top ~20 so the user can skim it." That cap is not on
+        # substantive output, it is on how many permission rules step 8 writes
+        # into .claude/settings.json, and the table in step 7 is the only place
+        # the user reviews them before the write. Lifting it would admit every
+        # pattern seen 3+ times, which grants more permissions behind a list
+        # too long to read -- Part 1 item 3, a guard on the user's own agent.
+        # The scan-breadth cap above is a different thing and stays lifted: it
+        # trades sample depth for speed and changes nothing about what is
+        # granted. Upstream added this cap in v2.1.321 (it shows up as an
+        # ADDED nerf in data/unnerf-status-changes.json).
     ],
     # "skill-pre-meeting-checkin-event-brief.md": RETIRED — prompt removed by Anthropic in v2.1.181
     # renamed at the tweakcc-fixed switch (was skill-verify-skill)
@@ -1712,6 +1725,56 @@ RULES: dict[str, list[Rule]] = {
             stock="- `summary`: two or three plain sentences. What the work is, where it stands now, and what is left to do.",
             unnerf="- `summary`: plain sentences covering what the work is, where it stands now, and what is left to do, in as much detail as future threads need for context.",
             description="send-to-project brief: drop the two-or-three-sentence cap on summary",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.321 sync (bucket-analyze.mjs, 2026-11-10): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.321.json
+    # -------------------------------------------------------------------------
+    "system-reminder-artifact-design-intake-options-and-palette-guidance.md": [
+        Rule(
+            # REVIEWED BY HAND (v2.1.321): a one-line cap on the assumptions
+            # the model builds from when it asks nothing -- the user's only
+            # window into what was decided for them. Same family as the
+            # v2.1.318 intake-fallback lift. ACCEPTED.
+            stock="decide what is open yourself, state your assumptions in one line and build, asking nothing more, not even where a type's own instructions ask; if they dismissed the card, wait as its result says, without repeating the questions. If the asking call is refused or fails, do not retry it or ask another way (an error about the call's own input you may correct once): state your assumptions in one line and build.",
+            unnerf="decide what is open yourself, state your assumptions clearly and build, asking nothing more, not even where a type's own instructions ask; if they dismissed the card, wait as its result says, without repeating the questions. If the asking call is refused or fails, do not retry it or ask another way (an error about the call's own input you may correct once): state your assumptions clearly and build.",
+            description="artifact design intake: state assumptions clearly rather than in one line",
+        ),
+    ],
+    "skill-loop-cloud-session-timer-caveat.md": [
+        Rule(
+            # REVIEWED BY HAND (v2.1.321): one-sentence cap on explaining that
+            # a cloud container's idle release can move the user's timer --
+            # a surprising behaviour that costs them a tick if unexplained.
+            # ACCEPTED.
+            stock="In your confirmation, tell the user this in one sentence.",
+            unnerf="In your confirmation, explain this clearly so the user understands how container idle release and replacement affect their timer.",
+            description="/loop cloud session: explain container timer caveat clearly rather than in one sentence",
+        ),
+    ],
+    "skill-latency-optimization-guide.md": [
+        Rule(
+            # REVIEWED BY HAND (v2.1.321): a word count on the first reply of a
+            # latency investigation (findings, next step and its cost, then
+            # what only the user can decide). Part 1 "No numeric output
+            # limits", and the guide itself already says the form of the
+            # answer is the user's call. ACCEPTED.
+            stock="At most about 300 words; a list of options is a line each.",
+            unnerf="Provide as much detail and explanation as the findings and options require for the user to make an informed decision.",
+            description="latency optimize: remove 300-word and one-line cap on first reply",
+        ),
+    ],
+    "system-reminder-artifact-design-intake-questions-prompt-prefix.md": [
+        Rule(
+            # REVIEWED BY HAND (v2.1.321): a question-count ceiling on design
+            # intake, the same nerf already lifted on the elicitation form in
+            # v2.1.318. Nothing parses the count. ACCEPTED.
+            stock="Ask three or four questions written for this request, those that would most change what you build, never a generic intake list or more than four, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+            unnerf="Ask the questions written for this request that would most change what you build, asking as many as necessary to clarify the design without an arbitrary count limit, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+            description="design artifact intake: remove 3-4 question cap",
         ),
     ],
 }

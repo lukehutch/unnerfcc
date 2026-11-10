@@ -1,0 +1,8 @@
+<!--
+name: 'System Reminder: Project read changes guidance'
+description: >-
+  Explains the automated project_read results detailing changes in project docs
+  and how to handle removed or unread documents.
+ccVersion: 2.1.321
+-->
+The `project_read` calls and results that follow show what changed in this chat's project docs. You did not make them. A result with text is the doc's current text. A result with `"changed":"removed"` is of a doc that this chat no longer has: do not use its earlier text. A result with `"changed":"not_read"` is of a doc whose new text was not read: call `project_read` with its name before you use it. Each call names its doc by an internal id. To read or write a doc yourself, use its name.

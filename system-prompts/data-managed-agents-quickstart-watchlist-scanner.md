@@ -3,25 +3,25 @@ name: 'Data: Managed Agents Quickstart — Watchlist Scanner'
 description: >-
   Managed Agents quickstart template for a stock watchlist scanner with
   multiagent review and reporting workflows.
-ccVersion: 2.1.310
+ccVersion: 2.1.321
 -->
 ---
-title: Watchlist scanner
-description: Scans a stock watchlist for what changed since the last close. A second agent reviews every ticker before it reaches the report.
+title: Stock watchlist scanner
+description: Reports what changed for each stock since the last close.
 console_key: watchlist-scanner
-order: 13
+order: 11
 ---
 
-# Watchlist scanner
+# Stock watchlist scanner
 
-Scans a stock watchlist for what changed since the last close. A second agent reviews every ticker before it reaches the report.
+Reports what changed for each stock since the last close.
 
 ## agent.md
 
 ````markdown
 ---
-name: Watchlist scanner
-description: Scans a stock watchlist for what changed since the last close. A second agent reviews every ticker before it reaches the report.
+name: Stock watchlist scanner
+description: Reports what changed for each stock since the last close.
 model:
   id: {{OPUS_ID}}
   effort: medium

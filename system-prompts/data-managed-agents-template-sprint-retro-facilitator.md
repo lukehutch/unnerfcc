@@ -3,7 +3,7 @@ name: 'Data: Managed Agents template — Sprint retro facilitator'
 description: >-
   Managed Agents template and scheduled deployment configuration for pulling
   sprint data from Linear and Slack to compile retro documents.
-ccVersion: 2.1.292
+ccVersion: 2.1.321
 -->
 ---
 title: Sprint retro facilitator
@@ -34,6 +34,11 @@ mcp_servers:
     url: https://mcp.slack.com/mcp
 tools:
   - type: agent_toolset_20260401
+    configs:
+      - name: web_search
+        enabled: false
+      - name: web_fetch
+        enabled: false
   - type: mcp_toolset
     mcp_server_name: linear
   - type: mcp_toolset

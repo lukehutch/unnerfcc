@@ -4,7 +4,7 @@ description: >-
   Bundled /run-skill-generator skill (user-invocable only) — authors or improves
   a project's run-<unit> skill telling agents how to build, launch, and drive
   the app from a clean environment
-ccVersion: 2.1.251
+ccVersion: 2.1.321
 -->
 ---
 name: run-skill-generator
@@ -103,7 +103,9 @@ Claude Code **natively discovers** skills from nested `.claude/skills/`
 directories: an agent working anywhere inside `<unit>` will see
 `/run-<unit-name>` as an available skill, and it auto-loads when the
 request matches its description (e.g. "run the desktop app," "take a
-screenshot of billing").
+screenshot of billing"). With the Bash sandbox on, a session started above
+`<unit>` does not load it; one started in `<unit>`, or moved there with
+`/cd`, does.
 
 - **Single-project repo:** `.claude/skills/run-<repo-name>/` at repo root.
 - **Large repo with many apps:** one per app, colocated -

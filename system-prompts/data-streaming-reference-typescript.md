@@ -3,7 +3,7 @@ name: 'Data: Streaming reference — TypeScript'
 description: >-
   TypeScript streaming reference including basic streaming and handling
   different content types
-ccVersion: 2.1.318
+ccVersion: 2.1.321
 -->
 # Streaming - TypeScript
 
@@ -30,13 +30,13 @@ for await (const event of stream) {
 
 ## Handling Different Content Types
 
-> **Fable 5 / {{OPUS_NAME}} / {{PREV_OPUS_NAME}} / Opus 4.8 / Opus 4.7 / Opus 4.6:** Use `thinking: {type: "adaptive"}`. On {{OPUS_NAME}} and {{PREV_OPUS_NAME}} adaptive is also what you get by omitting `thinking` entirely ({{OPUS_NAME}} accepts no other setting - `disabled` and `budget_tokens` both 400). On older models, use `thinking: {type: "enabled", budget_tokens: N}` instead.
+> **Fable / Mythos 5/5.1/5.2 / {{OPUS_NAME}} / {{PREV_OPUS_NAME}} / Opus 4.8 / Opus 4.7 / Opus 4.6:** Use `thinking: {type: "adaptive"}`. On {{OPUS_NAME}} and {{PREV_OPUS_NAME}} adaptive is also what you get by omitting `thinking` entirely ({{OPUS_NAME}} accepts no other setting - `disabled` and `budget_tokens` both 400). On older models, use `thinking: {type: "enabled", budget_tokens: N}` instead.
 
 ```typescript
 const stream = client.messages.stream({
   model: "{{OPUS_ID}}",
   max_tokens: 64000,
-  thinking: { type: "adaptive", display: "summarized" }, // display opt-in: default is omitted (empty thinking text) on Fable 5/5.1, Mythos 5/5.1, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, Opus 4.8/4.7, {{SONNET_NAME}}, and {{PREV_SONNET_NAME}}
+  thinking: { type: "adaptive", display: "summarized" }, // display opt-in: default is omitted (empty thinking text) on Fable 5/5.1/5.2, Mythos 5/5.1/5.2, {{OPUS_NAME}}, {{PREV_OPUS_NAME}}, Opus 4.8/4.7, {{SONNET_NAME}}, and {{PREV_SONNET_NAME}}
   messages: [{ role: "user", content: "Analyze this problem" }],
 });
 

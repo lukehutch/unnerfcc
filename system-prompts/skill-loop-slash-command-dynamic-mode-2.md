@@ -3,14 +3,15 @@ name: 'Skill: /loop slash command (dynamic mode)'
 description: >-
   Parses user input into an interval and prompt for scheduling recurring or
   dynamically self-paced loop executions
-ccVersion: 2.1.219
+ccVersion: 2.1.321
 variables:
+  - CONTEXT_HEADER
   - CRON_CONVERSION_RULES
   - CRON_CREATE_TOOL_NAME
   - RECURRING_EXPIRY_DAYS
   - CRON_DELETE_TOOL_NAME
 -->
-
+${CONTEXT_HEADER}
 ## Fixed-interval mode (rules 1 and 2)
 
 Convert the interval to a cron expression:

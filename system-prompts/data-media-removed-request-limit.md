@@ -1,6 +1,6 @@
 <!--
 name: 'Data: Media removed (request limit)'
 description: Content block replacing media stripped due to the request media limit.
-ccVersion: 2.1.178
+ccVersion: 2.1.321
 -->
-[media removed: request limit]
+[media removed: request limit.

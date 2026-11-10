@@ -431,7 +431,19 @@ elif [ "$PENDING" -gt 2000 ] && [ "$ASSUME_YES" -eq 0 ]; then
   case "$a" in [yY]*) node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)";;
     *) warn "skipped — run 'node scripts/classify.mjs $CLI_JS $CC_VERSION --provider $LLM_PROVIDER --batch $CLASSIFY_BATCH' later";; esac
 else
-  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' || warn "classification incomplete (store is resumable)"
+  # An incomplete classification is FATAL, not a warning. A string the model
+  # never judged is not admitted to the catalog at all, so a prompt that is
+  # still in the bundle silently goes missing from it -- and every downstream
+  # step then reads that absence as upstream having DELETED the prompt. In
+  # v2.1.321 two chunks failed with a transient "fetch failed" (469 of 1969
+  # strings), which dropped skill-artifact-design's body from the catalog and
+  # made the removed-id gate demand that four live un-nerf rules be retired
+  # for a skill Anthropic had not touched. Re-running classify alone
+  # classified all 469 on the first retry. The store is resumable and keyed
+  # by SHA-256, so dying here costs one cheap retry; continuing costs a
+  # corrupted catalog that reads as a plausible upstream change.
+  node "$REPO/scripts/classify.mjs" "$CLI_JS" "$CC_VERSION" --provider "$LLM_PROVIDER" --batch "$CLASSIFY_BATCH" 2>&1 | sed 's/^/  /' \
+    || die "classification incomplete — the store is resumable and SHA-256-cached, so just run upgrade.sh again (strings already classified are not re-billed). Continuing would drop the unclassified strings from the catalog and report them as removed upstream."
   [ -f "$REPO/data/unnerf-candidates.json" ] && ok "un-nerf candidates for review: data/unnerf-candidates.json"
 fi
 

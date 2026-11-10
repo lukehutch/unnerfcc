@@ -114,7 +114,23 @@ export async function callGemini({ apiKey, model, effort, prompt, resultSchema, 
       signal: controller.signal,
     });
   } catch (e) {
-    return { ok: false, status: null, detail: `network error calling Gemini: ${e.message}` };
+    // undici reports every connection-level failure as the bare message
+    // "fetch failed" and hangs the real reason off e.cause, so without the
+    // cause a DNS failure, a TLS error, a socket reset and an over-large
+    // request body are indistinguishable in the log. Unwrap the chain.
+    const causes = [];
+    for (let c = e.cause; c && causes.length < 4; c = c.cause) {
+      causes.push(c.code ? `${c.code}: ${c.message}` : c.message);
+    }
+    const why = causes.length ? `${e.message} (${causes.join(" <- ")})` : e.message;
+    const aborted = e.name === "AbortError" || e.name === "TimeoutError";
+    return {
+      ok: false,
+      status: null,
+      detail: aborted
+        ? `Gemini call aborted after ${Math.round(timeoutMs / 1000)}s: ${why}`
+        : `network error calling Gemini: ${why}`,
+    };
   } finally {
     clearTimeout(timer);
   }

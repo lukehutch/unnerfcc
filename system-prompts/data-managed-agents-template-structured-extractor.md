@@ -3,7 +3,7 @@ name: 'Data: Managed Agents template — Structured extractor'
 description: >-
   Managed Agents template and agent definition for parsing unstructured text
   into a validated JSON schema.
-ccVersion: 2.1.292
+ccVersion: 2.1.321
 -->
 ---
 title: Structured extractor
@@ -27,6 +27,11 @@ model:
   effort: low
 tools:
   - type: agent_toolset_20260401
+    configs:
+      - name: web_search
+        enabled: false
+      - name: web_fetch
+        enabled: false
 metadata:
   template: structured-extractor
 ---

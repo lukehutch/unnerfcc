@@ -3,7 +3,7 @@ name: 'Data: Managed Agents template — Support agent'
 description: >-
   Managed Agents template and agent definition for answering customer questions
   from Notion docs and escalating to Slack.
-ccVersion: 2.1.292
+ccVersion: 2.1.321
 -->
 ---
 title: Support agent
@@ -34,6 +34,11 @@ mcp_servers:
     url: https://mcp.slack.com/mcp
 tools:
   - type: agent_toolset_20260401
+    configs:
+      - name: web_search
+        enabled: false
+      - name: web_fetch
+        enabled: false
   - type: mcp_toolset
     mcp_server_name: notion
   - type: mcp_toolset

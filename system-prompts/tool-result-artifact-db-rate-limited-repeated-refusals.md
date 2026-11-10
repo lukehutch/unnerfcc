@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: Artifact DB rate limited repeated refusals'
+description: >-
+  Explains that repeated refused writes caused the server to temporarily reject
+  duplicate operations on the same path.
+ccVersion: 2.1.321
+-->
+the server refused this operation on this path earlier (a missing document, a path you may not write, or an invalid argument), and after repeated refused writes to this artifact it is briefly turning away repeats of it, whatever data they carry; this write was not applied. Do not resend it unchanged now: use a different operation or path (for example set, to create a document that should exist); if it was refused for its data, fix the data and send it again in a few minutes; otherwise stop

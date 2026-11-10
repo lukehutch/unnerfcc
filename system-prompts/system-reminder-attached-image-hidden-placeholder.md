@@ -1,8 +1,6 @@
 <!--
 name: 'System Reminder: Attached image hidden placeholder'
-description: >-
-  Placeholder mark informing the model that an attached image was hidden from
-  view.
-ccVersion: 2.1.318
+description: Informs the model that an earlier attached image was hidden from view.
+ccVersion: 2.1.321
 -->
-[An image was attached here. It was hidden from you at a later time.]
+[This message had one more image. It was in this chat until it was hidden from you, which a later note reports. You saw it in each answer that you gave below before that note.]

@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Result: Artifact batch write database refusal'
+description: >-
+  Explains that an atomic batch failed because a write targeted a missing doc,
+  empty database, or unauthorized path.
+ccVersion: 2.1.321
+-->
+): the artifact's database refused one of the writes: most often it updates a document that does not exist (update needs an existing one), deletes from a database that has never been written to (nothing to delete), or the database's access rules or your access level do not let you write its path; the batch is atomic, so nothing was written. Read back any document you expected to exist before re-creating it; create documents that should exist with set, and drop the entries that have nothing to do or that you may not write
