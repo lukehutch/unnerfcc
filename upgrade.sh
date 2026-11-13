@@ -34,7 +34,7 @@
 #
 # LLM_PROVIDER=gemini|claude  which model runs classify/relabel/bucket-analyze
 #   (default gemini; needs GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
-#   ~/.env). GEMINI_MODEL overrides the model id (default gemini-3.7-flash).
+#   ~/.env). GEMINI_MODEL overrides the model id (default gemini-4-hydrogen).
 #
 # --benchmark[=N]: after a clean upgrade, run the SWE-bench harness on the STOCK
 #   and just-PATCHED binaries and update the accuracy bar chart in README.md

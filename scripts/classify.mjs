@@ -55,7 +55,7 @@
  *                        set N>0 only to chunk for testing / an oversized bootstrap)
  *     --max-rounds N     top-up rounds before giving up on skipped refs (default 8)
  *     --model M          classifier model (default claude-opus-5; bootstrap used haiku)
- *     --effort E         reasoning effort: low|medium|high|xhigh|max (default medium)
+ *     --effort E         reasoning effort: low|medium|high|xhigh|max (default high)
  *     --shard I --shards N --shard-out F   run disjoint slices in parallel,
  *                        each writing its own file; then `merge` into the store
  *     --content-file F   classify an explicit [{hash,content}] list, not a bundle
@@ -70,7 +70,7 @@
  *                        GOOGLE_GEMINI_API_KEY in the environment, ./.env, or
  *                        ~/.env (checked in that order) — a missing key is a
  *                        hard error, not a silent fallback to claude.
- *     --gemini-model M   Gemini model id (default gemini-3.7-flash, or
+ *     --gemini-model M   Gemini model id (default gemini-4-hydrogen, or
  *                        $GEMINI_MODEL) — MODEL/--model above is claude-only
  *   Test seam: env CLASSIFY_CLAUDE_CMD, if set, is run (sh -c) in the work dir
  *   instead of spawning claude (it must read batch.json → write result.json) —
@@ -146,10 +146,10 @@ const RATE_LIMIT_RE = /rate.?limit|usage limit|usage cap|quota|try again (later|
 // model id (not the "opus" alias, which floats to whatever the CLI maps it to),
 // and the intended use going forward is Opus on only the NEW strings per release.
 const MODEL = opt("--model", "claude-opus-5");
-// Reasoning effort for the classifier job. Medium is the deliberate default:
-// classification is a bounded judgment per string, and the volume per release is
-// a few hundred strings in ONE job. Valid: low|medium|high|xhigh|max.
-const EFFORT = opt("--effort", "medium");
+// Reasoning effort for the classifier job. High by default: a missed nerf is a
+// prompt that never gets an un-nerf rule, and the volume per release is a few
+// hundred strings, so the extra thinking is cheap. Valid: low|medium|high|xhigh|max.
+const EFFORT = opt("--effort", "high");
 const DRY = argv.includes("--dry-run");
 // Provider: which model actually does the classification judgment. "claude"
 // (default) is the existing, battle-tested agentic path (can read/write files,
