@@ -243,6 +243,55 @@ async function apply(inJsDir, catalogPath, promptsDir, outJsDir) {
   }
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 
+  const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
+  const entryManifestModule =
+    manifest.modules.find((e) => e.index === manifest.entryPointId) || manifest.modules[0];
+  const versionSource = entryManifestModule ? readFileSync(join(inJsDir, entryManifestModule.relPath), "utf8") : "";
+  const version = detectVersion(versionSource);
+  const buildTime = detectBuildTime(versionSource);
+
+  // The catalog can carry several entries for one id (the same prompt across CC
+  // versions). Group by id and use whichever entry's canonical text keys real sites.
+  const byId = new Map();
+  for (const prompt of catalog.prompts) {
+    if (!byId.has(prompt.id)) byId.set(prompt.id, []);
+    byId.get(prompt.id).push(prompt);
+  }
+
+  const stockText = (e) =>
+    reconstruct({ pieces: e.pieces, identifiers: e.identifiers || [], identifierMap: e.identifierMap || {} });
+
+  // Read every prompt's .md once, up front, so the keys of the prompts that
+  // actually change are known before any module is parsed. Only sites with
+  // one of those keys are ever looked up, so only they (and the ASTs they
+  // point into) need to be kept: holding the Babel AST of every module at
+  // once took over 4 GB of heap on v2.1.325 (3296 modules, 69 MB of JS),
+  // while the modules that get patched number a few dozen.
+  const mdById = new Map(); // id -> { content, isStock }
+  const wantedKeys = new Set();
+  for (const [id, entries] of byId) {
+    const mdPath = join(promptsDir, id + ".md");
+    if (!existsSync(mdPath)) continue; // only patch prompts we have an edit for
+    const { content } = parseMd(readFileSync(mdPath, "utf8"));
+    const isStock = entries.some((e) => stockText(e).trim() === content.trim());
+    mdById.set(id, { content, isStock });
+    if (!isStock) for (const e of entries) wantedKeys.add(canonicalize(e.pieces || [], e.identifiers || []));
+  }
+
+  // Pool the wanted string-producing nodes of EVERY module into one map, each
+  // site tagged with which module it came from. This is what makes the
+  // LOST-detection gate below correct across ~1800 separate files: an id whose
+  // canonical text matches a site in module #123 is FOUND, even though modules
+  // #0-122 and #124+ never saw it. Calling a single-file version of this
+  // function once per module (the naive approach) would have no way to express
+  // "not here, but found elsewhere" and would misclassify nearly every id as
+  // LOST in every module it doesn't happen to live in.
+  const sitesByKey = new Map();
+  const addSite = (site) => {
+    if (!sitesByKey.has(site.key)) sitesByKey.set(site.key, []);
+    sitesByKey.get(site.key).push(site);
+  };
+
   // Parse every module we can. Native binaries, HTML assets, and other non-JS,
   // non-markdown content throw here — expected for a meaningful fraction of
   // ~1800 modules — and are simply never patchable, never touched again.
@@ -252,45 +301,12 @@ async function apply(inJsDir, catalogPath, promptsDir, outJsDir) {
   // separate path below (they have no string-producing NODE to mutate — the
   // entire module IS the prompt).
   const modules = []; // { index, relPath, source, ast? , isMarkdown? }
+  const foundSentinels = new Set();
   for (const entry of manifest.modules) {
     const source = readFileSync(join(inJsDir, entry.relPath), "utf8");
+    for (const s of UNNERF_SENTINELS) if (source.includes(s)) foundSentinels.add(s);
     if (isMarkdownAssetPath(entry.relPath)) {
       modules.push({ index: entry.index, relPath: entry.relPath, source, isMarkdown: true });
-      continue;
-    }
-    let ast;
-    try { ({ ast } = parseNormalized(source)); } catch { continue; }
-    modules.push({ index: entry.index, relPath: entry.relPath, source, ast });
-  }
-
-  // Snapshot whether the INPUT was already un-nerfed BEFORE we patch anything,
-  // across ALL modules combined (a sentinel can legitimately live in any one
-  // of them) — checking after would see the un-nerfs we just applied and
-  // mislabel a fresh stock run as an already-patched re-run.
-  const foundSentinels = new Set();
-  for (const m of modules) for (const s of UNNERF_SENTINELS) if (m.source.includes(s)) foundSentinels.add(s);
-  const inputSentinelHits = foundSentinels.size;
-  const alreadyPatchedInput = inputSentinelHits >= 3; // ≥3 of 5 ⇒ already un-nerfed
-
-  const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
-  const entryModule = modules.find((m) => m.index === manifest.entryPointId);
-  const versionSource = entryModule ? entryModule.source : (modules[0]?.source || "");
-  const version = detectVersion(versionSource);
-  const buildTime = detectBuildTime(versionSource);
-
-  const counts = { patched: 0, runs: 0, unchanged: 0, couldNotFind: 0, skipped: 0, lost: 0, dupSites: 0, residual: 0 };
-
-  // Pool EVERY module's string-producing nodes into one map, each site tagged
-  // with which module it came from. This is what makes the LOST-detection gate
-  // below correct across ~1800 separate files: an id whose canonical text
-  // matches a site in module #123 is FOUND, even though modules #0-122 and
-  // #124+ never saw it. Calling a single-file version of this function once
-  // per module (the naive approach) would have no way to express "not here,
-  // but found elsewhere" and would misclassify nearly every id as LOST in
-  // every module it doesn't happen to live in.
-  const sitesByKey = new Map();
-  for (const m of modules) {
-    if (m.isMarkdown) {
       // A whole-file markdown prompt has exactly one "site": the entire
       // module. No node, no slots. `pieces` holds the RAW (version-
       // normalized, unescaped) content — same convention collectSites uses
@@ -304,19 +320,31 @@ async function apply(inJsDir, catalogPath, promptsDir, outJsDir) {
       // prompt never does — so it is ONLY for this key comparison, never
       // applied to the text that actually gets written back (see
       // renderPatchMarkdown).
-      const raw = normalizeVersion(m.source, version);
+      const raw = normalizeVersion(source, version);
       const key = canonicalize([raw], []);
-      const site = { module: m.index, isMarkdown: true, pieces: [raw], identifiers: [], key };
-      if (!sitesByKey.has(key)) sitesByKey.set(key, []);
-      sitesByKey.get(key).push(site);
+      addSite({ module: entry.index, isMarkdown: true, pieces: [raw], identifiers: [], key });
       continue;
     }
-    for (const site of collectSites(m.ast, version)) {
-      site.module = m.index;
-      if (!sitesByKey.has(site.key)) sitesByKey.set(site.key, []);
-      sitesByKey.get(site.key).push(site);
-    }
+    let ast;
+    try { ({ ast } = parseNormalized(source)); } catch { continue; }
+    // Keep a module (its source and AST) only when it holds a wanted site;
+    // otherwise nothing is ever written to it, so drop both here and let them
+    // be garbage-collected before the next module is parsed.
+    const sites = collectSites(ast, version).filter((s) => wantedKeys.has(s.key));
+    if (!sites.length) continue;
+    for (const site of sites) { site.module = entry.index; addSite(site); }
+    modules.push({ index: entry.index, relPath: entry.relPath, source, ast });
   }
+
+  // foundSentinels (filled while reading modules above) snapshots whether the
+  // INPUT was already un-nerfed BEFORE we patch anything, across ALL modules
+  // combined (a sentinel can legitimately live in any one of them) — checking
+  // after would see the un-nerfs we just applied and mislabel a fresh stock
+  // run as an already-patched re-run.
+  const inputSentinelHits = foundSentinels.size;
+  const alreadyPatchedInput = inputSentinelHits >= 3; // ≥3 of 5 ⇒ already un-nerfed
+
+  const counts = { patched: 0, runs: 0, unchanged: 0, couldNotFind: 0, skipped: 0, lost: 0, dupSites: 0, residual: 0 };
 
   // One entry per (id, matching site) whose .md differs from stock, holding the
   // new canonical text to write onto that site's node.
@@ -327,25 +355,14 @@ async function apply(inJsDir, catalogPath, promptsDir, outJsDir) {
   // loud, never buried among the benign skips.
   const skips = [];
 
-  // The catalog can carry several entries for one id (the same prompt across CC
-  // versions). Group by id and use whichever entry's canonical text keys real sites.
-  const byId = new Map();
-  for (const prompt of catalog.prompts) {
-    if (!byId.has(prompt.id)) byId.set(prompt.id, []);
-    byId.get(prompt.id).push(prompt);
-  }
-
-  const stockText = (e) =>
-    reconstruct({ pieces: e.pieces, identifiers: e.identifiers || [], identifierMap: e.identifierMap || {} });
-
   for (const [id, entries] of byId) {
-    const mdPath = join(promptsDir, id + ".md");
-    if (!existsSync(mdPath)) continue; // only patch prompts we have an edit for
-    const { content } = parseMd(readFileSync(mdPath, "utf8"));
+    const md = mdById.get(id);
+    if (!md) continue; // only patch prompts we have an edit for
+    const { content } = md;
 
     // A stock .md (== reconstruction) is a no-op — skip it so the ~1300 prompts
     // we don't un-nerf are provably untouched (identical to leaving them alone).
-    if (entries.some((e) => stockText(e).trim() === content.trim())) { counts.unchanged++; continue; }
+    if (md.isStock) { counts.unchanged++; continue; }
 
     // Locate: the catalog entry whose canonical text keys an actual site set.
     let hit = null;
@@ -509,6 +526,10 @@ async function apply(inJsDir, catalogPath, promptsDir, outJsDir) {
       // effort un-nerfs on quoted string-literal contracts. See normalize-ast.mjs.
       denormalizeProgram(m.ast);
       out = await generateSource(m.ast, m.source);
+      // Free this AST before verifyOutput re-parses the output: holding both
+      // ASTs of the largest chunk (5.8 MB of JS on v2.1.325) at once roughly
+      // doubles the peak heap.
+      m.ast = undefined;
       // Safety gate: re-read THIS module's emitted output and prove it (a) parses,
       // (b) is still pure ASCII, and (c) actually contains every text we wrote to
       // it. (a) catches a bad escape that would brick the binary at boot; (b)

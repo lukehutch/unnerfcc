@@ -1,8 +1,8 @@
 <!--
 name: 'System Reminder: Attached file deleted placeholder'
 description: >-
-  Placeholder mark informing the model that an attached file was deleted from
-  the chat.
-ccVersion: 2.1.318
+  Placeholder mark informing the model that an additional attached file was
+  deleted from the chat.
+ccVersion: 2.1.325
 -->
-[A file was attached here. It was deleted at a later time. It is not in this chat now.]
+[This message had one more file. It was in this chat until the deletion that a later note reports. You could read it in each answer that you gave below before that note.]

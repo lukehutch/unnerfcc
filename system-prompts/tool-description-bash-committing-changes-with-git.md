@@ -3,13 +3,13 @@ name: 'Tool Description: Bash — committing changes with git'
 description: >-
   Bash-tool commit workflow: git safety protocol, commit-only-when-asked rule,
   and parallel-command status/diff/log then stage-and-commit sequence.
-ccVersion: 2.1.318
+ccVersion: 2.1.325
 variables:
   - BASH_TOOL_NAME
-  - HEREDOC_NOTE
+  - COMMIT_MESSAGE_SUFFIX
   - DISALLOWED_TOOL_1
   - DISALLOWED_TOOL_2
-  - HEREDOC_EXAMPLE
+  - COMMIT_HEREDOC_EXAMPLE
 -->
 # Committing changes with git
 
@@ -32,12 +32,12 @@ Git Safety Protocol:
   - Run a git log command to see recent commit messages, so that you can follow this repository's commit message style.
 2. Analyze all staged changes (both previously staged and newly added) and draft a commit message:
   - Summarize the nature of the changes (eg. new feature, enhancement to an existing feature, bug fix, refactoring, test, docs, etc.). Ensure the message accurately reflects the changes and their purpose (i.e. "add" means a wholly new feature, "update" means an enhancement to an existing feature, "fix" means a bug fix, etc.).
-  - Do not commit files that likely contain secrets (.env, credentials.json, etc). Warn the user if they specifically request to commit those files
-  - Draft a concise (1-2 sentences) commit message that focuses on the "why" rather than the "what"
+  - Do not commit files that likely contain secrets (.env, credentials.json, .claude/settings.local.json, etc). Warn the user if they specifically request to commit those files
+  - Draft a commit message that focuses on the "why" rather than the "what", at the length the change warrants
   - Ensure it accurately reflects the changes and their purpose
 3. Run the following commands in parallel:
    - Add relevant untracked files to the staging area.
-   - Create the commit with a message${HEREDOC_NOTE}
+   - Create the commit with a message${COMMIT_MESSAGE_SUFFIX}
    - Run git status after the commit completes to verify success.
    Note: git status depends on the commit completing, so run it sequentially after the commit.
 4. If the commit fails due to pre-commit hook: fix the issue and create a NEW commit
@@ -51,6 +51,6 @@ Important notes:
 - If there are no changes to commit (i.e., no untracked files and no modifications), do not create an empty commit
 - In order to ensure good formatting, ALWAYS pass the commit message via a HEREDOC, a la this example:
 <example>
-${HEREDOC_EXAMPLE}
+${COMMIT_HEREDOC_EXAMPLE}
 </example>
 

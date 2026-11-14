@@ -3,7 +3,7 @@ name: 'Tool Result: Artifact update instructions footer'
 description: >-
   Artifact tool result footer instructing how to publish subsequent updates to
   the same URL or file path.
-ccVersion: 2.1.310
+ccVersion: 2.1.325
 variables:
   - TYPE_FILES_SECTION
   - OWN_FILES_SECTION
@@ -14,10 +14,9 @@ variables:
   - EXTRA_NOTE_1
   - EXTRA_NOTE_2
   - EXTRA_NOTE_3
-  - EXTRA_NOTE_4
   - INSTRUCTIONS_SECTION
-  - EXTRA_NOTE_5
+  - EXTRA_NOTE_4
 -->
-) and can't be changed here.${TYPE_FILES_SECTION}${OWN_FILES_SECTION}${COPIED_FILES_SECTION}${CAPABILITIES_SECTION}${WATCH_SECTION}${SYNC_SECTION}${EXTRA_NOTE_1}${EXTRA_NOTE_2}${EXTRA_NOTE_3}${EXTRA_NOTE_4}
+) and can't be changed here.${TYPE_FILES_SECTION}${OWN_FILES_SECTION}${COPIED_FILES_SECTION}${CAPABILITIES_SECTION}${WATCH_SECTION}${SYNC_SECTION}${EXTRA_NOTE_1}${EXTRA_NOTE_2}${EXTRA_NOTE_3}
 
-To update it again, publish to the same `url` (or the same `file_path` in this conversation)${INSTRUCTIONS_SECTION}. ${EXTRA_NOTE_5}
+To update it again, publish to the same `url` (or the same `file_path` in this conversation)${INSTRUCTIONS_SECTION}. ${EXTRA_NOTE_4}

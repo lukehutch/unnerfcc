@@ -3,7 +3,7 @@ name: 'Tool Result: Asset durability and access note'
 description: >-
   Notes that anyone who can open the artifact can load stored files and each is
   durable until deleted.
-ccVersion: 2.1.277
+ccVersion: 2.1.325
 -->
 
-Everyone who can open the artifact can load the stored files; each is durable until deleted with action "delete_asset".
+Everyone who can open the artifact can load the stored files; each is durable until deleted with 

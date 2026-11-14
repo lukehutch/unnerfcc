@@ -1,10 +1,10 @@
 <!--
-name: 'Tool Result: Git safety spell path in full and run'
+name: 'Tool Result: Git safety spell path in full'
 description: >-
-  Instructs spelling the path out in full without variables, globs, or relative
-  segments and running it from the given location.
-ccVersion: 2.1.321
+  Instructs spelling out a path under the allowed or scratch directory in full
+  without variables, globs, or relative segments.
+ccVersion: 2.1.325
 variables:
-  - TOOL_OR_LOCATION
+  - ALLOWED_DIRECTORY
 -->
-Spell the path out in full, with no variable, command output, glob, `~`, device or `..`, and run it from ${TOOL_OR_LOCATION}.
+Spell out a path under ${ALLOWED_DIRECTORY} or a scratch directory in full, with no variable, command output, glob, `~`, device or `..`.

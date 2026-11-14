@@ -3,7 +3,7 @@ name: 'Skill: Doctor reporting format and confirmation gates'
 description: >-
   Specifies report layout and confirmation questions for applying Doctor
   proposals.
-ccVersion: 2.1.310
+ccVersion: 2.1.325
 variables:
   - CLEANUP_CHECK_NUMBERS
 -->
@@ -21,7 +21,7 @@ If the user picks "Let me pick", ask ONE follow-up multiSelect question — an o
 
 Then, only if check 8 or 9 proposed anything, the permission question — explicit because these widen what runs without asking:
 
-> Separately from the cleanup: I recommend two permission changes. (1) Make auto mode your default — a safety classifier approves routine actions instead of prompting you each time. (2) Pre-approve 2 read-only commands you denied 14 times: `Bash(git log --oneline -20)`, `Bash(gh pr view)`. Apply both?
+> Separately from the cleanup: I recommend two permission changes. (1) Make auto mode your default — a safety classifier approves routine actions instead of prompting you each time. (2) Pre-approve 2 read-only commands you denied 14 times: `Bash(gh pr list)`, `Bash(gh pr view)`. Apply both?
 >
 > 1. Apply both (recommended)
 > 2. Let me pick

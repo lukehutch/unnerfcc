@@ -16,7 +16,7 @@ ONLY call this tool when the user has explicitly opted into multi-agent orchestr
 - The user invoked a skill or slash command whose instructions tell you to call Workflow.
 - The user asked you to run a specific named or saved workflow.
 
-For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it. Mention they can ask for one with "use a workflow" in a future message to skip the ask.
+For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it. Mention they can ask for one with "use a workflow" in a future message to skip the ask.
 
 Every script must begin with `export const meta = {...}`: a PURE LITERAL (no variables, calls or interpolation) giving the workflow's `name`, a one-line `description` (shown in the permission dialog) and optionally `phases` — one `{ title, detail? }` per phase() call, titles matched exactly. Pass the script inline via `script` — do not Write it to a file first, and do not also set the tool's `name` input (that selects a saved workflow); it is plain JavaScript, not TypeScript.
 

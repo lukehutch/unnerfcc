@@ -1,0 +1,10 @@
+<!--
+name: 'Data: Thread status rule for asks in another project thread'
+description: >-
+  Classification rule distinguishing waits on another linked project thread from
+  blocked gates or asks answerable in the current thread.
+ccVersion: 2.1.325
+-->
+ANOTHER THREAD OF THE SAME PROJECT
+
+In a project with several threads: a question or go-ahead that another thread of this project has put to the person, and that the tail says they are to answer there and not here, belongs to that thread, which shows it and receives the answer. Here it is only a wait on that thread, never "blocked", however firmly the agent says it cannot go on without it. This covers only the project's other threads, which the agent links as [title](#cmsg_…), though the same link form can also point at a single message, this thread's own included. An ask the person is to answer anywhere else, such as on a pull request, in Slack, by email or in the project's main chat, is still a gate. So is one whose place to answer the tail leaves unsaid, even with another thread linked beside it; one that no other thread has asked, such as a new request the person is to carry to another thread; one the person can give in this thread, or is to report back here, even when another thread asks it too; and a go-ahead for the agent to post, send or do something in another thread: what counts is where the person answers, not where the work lands. Current state "blocked" stays "blocked" unless the tail says the ask behind it was answered, dropped or moved to another thread; naming another thread's wait beside it changes nothing. Nothing else changes: with no such answer-there ask, every rule above stands, including a review, merge or go-ahead named for the person.

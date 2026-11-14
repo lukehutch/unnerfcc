@@ -3,13 +3,14 @@ name: 'Tool Description: REPL comprehensive overview'
 description: >-
   Comprehensive guide to the persistent REPL environment, costs, return values,
   and declarations.
-ccVersion: 2.1.318
+ccVersion: 2.1.325
 variables:
   - TOOL_HEADER
-  - RETURN_DETAILS
-  - TIMEOUT_SECTION
-  - EXTRA_INSTRUCTIONS
-  - DECLARATIONS_SECTION
+  - OUTPUT_CAVEAT
+  - ADDITIONAL_OUTPUT_GUIDANCE
+  - DECLARATIONS_PREAMBLE_1
+  - DECLARATIONS_PREAMBLE_2
+  - DECLARATIONS_PREAMBLE_3
 -->
 
 ${TOOL_HEADER}
@@ -18,9 +19,9 @@ The REPL is one persistent JavaScript context: variables and functions you defin
 
 What a `REPL` call costs: each call is a full model round-trip — the whole conversation is re-read before your script runs, and you wait for the reply — while the work inside a script (shell commands, file reads, searches, tool calls) is comparatively free, and runs concurrently when you fan it out with `Promise.all`. So the expensive thing is coming back to decide, not doing more in one go: gather what a decision could plausibly need in the script you are already writing, and come back for another call when the next step depends on what this one shows you.
 
-A script's output is its last expression's value plus anything it `self.log(...)`s along the way. What it returns is added to your context and stays there; the value itself stays in the REPL whether you return it or not. So return what you want to read now, and keep the rest in variables to slice or search later.${RETURN_DETAILS} Promise values inside a returned object are awaited for you (`({status: $`git status`, branches: $`git branch`})` needs no awaits); a promise used inline — concatenated, interpolated, passed to another call — needs `await`. `console.*` goes to a bounded in-memory ring rather than into your context; `console.tail(n)` reads it back.
+A script's output is its last expression's value plus anything it `self.log(...)`s along the way. What it returns is added to your context and stays there; the value itself stays in the REPL whether you return it or not. So return what you want to read now, and keep the rest in variables to slice or search later.${OUTPUT_CAVEAT}${ADDITIONAL_OUTPUT_GUIDANCE} Promise values inside a returned object are awaited for you (`({status: $`git status`, branches: $`git branch`})` needs no awaits); a promise used inline — concatenated, interpolated, passed to another call — needs `await`. `console.*` goes to a bounded in-memory ring rather than into your context; `console.tail(n)` reads it back.
 
 To keep a long output out of your context, return `preview(out)` or `preview(out, 2000)` instead of the output itself: it gives the first characters, and when `out` is an awaited `$` result (not its `.text()` string) whose output the shell tool saved to a file, it starts with the output's size and the file's path.
-${TIMEOUT_SECTION}${EXTRA_INSTRUCTIONS}
-${DECLARATIONS_SECTION}
+${DECLARATIONS_PREAMBLE_1}${DECLARATIONS_PREAMBLE_2}
+${DECLARATIONS_PREAMBLE_3}
 ## Declarations

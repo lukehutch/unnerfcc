@@ -5,7 +5,7 @@ description: >-
   `claude plugin eval`, `claude plugin eval init`, and `/skill-doctor`, covering
   enablement, the case file format, every grader and flag, exit codes, the v1
   results JSON, the HTML report, the sandbox, CI usage, and troubleshooting.
-ccVersion: 2.1.321
+ccVersion: 2.1.325
 -->
 # Plugin eval (`claude plugin eval`) and `/skill-doctor`
 
@@ -19,7 +19,7 @@ Before answering, check the **Current Build** section of your prompt:
 
 Section map (jump straight to what the question needs): § What it is · § Availability and enablement · § Quick start · § Authoring cases (case file format) · § Graders · § Running: every option · § Exit codes · § Results and the JSON format · § HTML report and publishing · § How the sandbox works · § CI usage · § Troubleshooting · § `/skill-doctor` · § Answering style.
 
-Do not confuse this CLI subcommand with any in-session `/plugin eval` command a build might carry - that is a different, older skill-trigger checker with a different file format. Everything here is about `claude plugin eval` run from a shell.
+Everything here is about `claude plugin eval` run from a shell.
 
 ## What it is and who it's for
 

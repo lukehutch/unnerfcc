@@ -4,13 +4,11 @@ description: >-
   Continuation of the Monitor tool description covering per-line flushing,
   polling intervals, error handling, and avoiding unbounded commands for single
   notifications.
-ccVersion: 2.1.318
+ccVersion: 2.1.325
 variables:
-  - SINGLE_NOTIFICATION_GUIDANCE
+  - SINGLE_EVENT_GUIDANCE
 -->
 
-
-Your script's stdout is the event stream. Each line becomes a notification. Exit ends the watch.
 
   # Each matching log line is an event
   tail -f /var/log/app.log | grep --line-buffered "ERROR"
@@ -40,7 +38,7 @@ Your script's stdout is the event stream. Each line becomes a notification. Exit
     sleep 30
   done
 
-**Don't use an unbounded command for a single notification.** `tail -f`, `inotifywait -m`, and `while true` never exit on their own, so the monitor stays armed until timeout even after the event has fired. For "tell me when X is ready," ${SINGLE_NOTIFICATION_GUIDANCE}. Note that `tail -f log | grep -m 1 ...` does *not* fix this: if the log goes quiet after the match, `tail` never receives SIGPIPE and the pipeline hangs anyway.
+**Don't use an unbounded command for a single notification.** `tail -f`, `inotifywait -m`, and `while true` never exit on their own, so the monitor stays armed until timeout even after the event has fired. For "tell me when X is ready," ${SINGLE_EVENT_GUIDANCE}. Note that `tail -f log | grep -m 1 ...` does *not* fix this: if the log goes quiet after the match, `tail` never receives SIGPIPE and the pipeline hangs anyway.
 
 **Script quality:**
 - Every pipe stage must flush per line or matches sit in its buffer unseen: `grep` needs `--line-buffered`, `awk` needs `fflush()`. `head` cannot flush at all — `| head -N` delivers nothing until N matches accumulate, then ends the stream.

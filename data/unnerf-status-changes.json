@@ -1,86 +1,106 @@
 {
- "from": "2.1.318",
- "to": "2.1.321",
+ "from": "2.1.321",
+ "to": "2.1.325",
  "changes": [
   {
-   "id": "agent-prompt-eval-authoring-interview",
-   "name": "Agent Prompt: Eval-authoring Interview",
+   "id": "skill-doctor-check-8-and-9-instructions",
+   "name": "Skill: Doctor check 8 and 9 instructions",
    "was": false,
    "now": true,
    "direction": "ADDED nerf",
-   "oldHash": "699531506241",
-   "newHash": "153ac5dd04f7",
-   "sample": " Walk the user through building an eval suite under `${EVAL_DIR}/`.${ADDITIONAL_SETUP_NOTE} Start by reading the plugin yourself and opening with what you found.${ADDITIONAL_CONTEXT_BLOCK}\n\n**Hard rul"
+   "oldHash": "47322b710f41",
+   "newHash": "f222fe8bec7f",
+   "sample": "\n\n## Check 8 — auto mode as the default permission mode\n\nAuto mode (\"auto\") delegates per-action permission decisions to a safety classifier instead of prompting the user for each one. Check whether i"
+  },
+  {
+   "id": "agent-prompt-compaction-omitted-tool-results-guidance",
+   "name": "Agent Prompt: Compaction omitted tool results handling",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "3d950359e85e",
+   "newHash": "aad2ad8980a7",
+   "sample": "\n\nSome tool results above were left out whole because they did not fit, and a bracketed line that begins \"${OMITTED_CALL_MARKER}\" stands in their place. Of such a line, report only that the call was m"
+  },
+  {
+   "id": "agent-prompt-compaction-repeat-left-out-read-call-rule",
+   "name": "Agent Prompt: Compaction rule on repeating left-out read calls",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "221bbf2a097a",
+   "newHash": "e6db5af45310",
+   "sample": "Repeat a left-out call only if it just reads, for only the part you need, a few at a time. Do not repeat a call that changed something."
   },
   {
    "id": "skill-building-llm-powered-applications-with-claude",
    "name": "Skill: Building LLM-powered applications with Claude",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "447c1e4e1f9d",
-   "newHash": "2f89f5ee79e9",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "2f89f5ee79e9",
+   "newHash": "5a66e0b5ba9a",
    "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
   },
   {
-   "id": "skill-generate-permission-allowlist-from-transcripts",
-   "name": "Skill: Generate permission allowlist from transcripts",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "6566809139f7",
-   "newHash": "ba37aac1f13b",
-   "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss"
-  },
-  {
-   "id": "system-reminder-file-summary-completeness-disclosure",
-   "name": "System Reminder: File summary completeness disclosure",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "68bdb2033364",
-   "newHash": "f4ebe9443d36",
-   "sample": "- You MUST read the content from the file at ${FILE_PATH} in sequential chunks until 100% of the content has been read.\n${CHUNK_READING_INSTRUCTIONS}- If you receive truncation warnings when reading t"
-  },
-  {
-   "id": "data-managed-agents-quickstart-watchlist-scanner",
-   "name": "Data: Managed Agents Quickstart — Watchlist Scanner",
+   "id": "skill-dataviz-color-formula",
+   "name": "Skill Reference: Data-viz Color Formula",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "d09230e53328",
-   "newHash": "ee8981e80f57",
-   "sample": "---\ntitle: Stock watchlist scanner\ndescription: Reports what changed for each stock since the last close.\nconsole_key: watchlist-scanner\norder: 11\n---\n\n# Stock watchlist scanner\n\nReports what changed "
+   "oldHash": "e6feaab30228",
+   "newHash": "563266afc627",
+   "sample": "# Color formula\n\nColor is **not hand-picked**. Every chart color does exactly one of four jobs, and a\npalette is legal only if it passes six checks. The checks are the product - they are\nwhat makes a "
   },
   {
-   "id": "skill-artifact-design",
-   "name": "Skill: artifact-design",
+   "id": "skill-dataviz-palette",
+   "name": "Skill Reference: Data-viz Reference Palette",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "8e4917f5394a",
-   "newHash": "f2e1f082826e",
-   "sample": "---\nname: artifact-design\ndescription: Design guidance and fundamentals for Artifacts.\nwhen_to_use: Load before writing any artifact, including a skill-instructed Markdown one - Markdown is never a sh"
+   "oldHash": "b0eb3882e9cf",
+   "newHash": "f06dbbdf65ad",
+   "sample": "# Reference palette\n\nThis is the **reference instance** of the data-viz method: every parameter the\nmethod needs, filled in with a validated default palette. The rest of the skill\nis system-agnostic -"
   },
   {
-   "id": "system-prompt-saving-skills-propose-instead",
-   "name": "System Prompt: Saving skills (propose instead)",
+   "id": "skill-eval-health-checklist",
+   "name": "Skill: Eval Health Checklist",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "375bb6707213",
-   "newHash": "d77b083d3e64",
-   "sample": "# Saving skills\n\nTo create a skill for the user, or change one they ask to change, call the `${PROPOSE_SKILLS_TOOL_NAME}` tool: it shows them a review card where they can save it. When the user wants "
+   "oldHash": "a013f8eb0452",
+   "newHash": "d2c66766ceeb",
+   "sample": "# Eval health checklist\n\nThis file is loaded whenever an eval is being **built** (`build-eval.md`) or **climbed on** (`eval-hillclimb.md`). It has two jobs. When you are writing the eval, every item b"
   },
   {
-   "id": "tool-result-auto-mode-no-verdict-no-retry-prefix",
-   "name": "Tool Result: Auto mode safety check gave no verdict prefix",
+   "id": "tool-description-artifact-list-types-preference",
+   "name": "Tool Description: List Types Preference",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "77198399f45d",
-   "newHash": "55269a83699b",
-   "sample": " did not run. The automatic safety check gave no verdict on this call, and Claude Code doesn't ask for approval in its place here: ${REASON}. This is not a judgment that the action is unsafe, ${FOLLOW"
+   "oldHash": "98a74f8890e0",
+   "newHash": "e4b5efa61c58",
+   "sample": ", in whatever words, or asks what kinds of artifacts or templates Claude can make, Claude first calls `action: \"list\"` with `scope: \"types\"`, before loading a skill or writing a file. Claude prefers a"
+  },
+  {
+   "id": "tool-description-artifact-types-and-quickstart",
+   "name": "Tool Description: Artifact types and quickstart workflow",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "09aa849c338a",
+   "newHash": "d5b1d89c0597",
+   "sample": "**Artifact types**: published Artifact types (ready-made pages, such as slide decks, documents or designs, that take Claude's content as data) and the design systems that decks and designs are built w"
+  },
+  {
+   "id": "tool-result-project-read-text-truncated-call-info",
+   "name": "Tool Result: Project read text truncated call project_info",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "655d67d475a0",
+   "newHash": "bfec4007e363",
+   "sample": "\n\n[Only the first ${SHOWN_BYTES} of ${TOTAL_BYTES} bytes of this text are shown."
   }
  ],
  "unverifiable": []

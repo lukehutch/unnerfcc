@@ -843,6 +843,15 @@ RULES: dict[str, list[Rule]] = {
         # trades sample depth for speed and changes nothing about what is
         # granted. Upstream added this cap in v2.1.321 (it shows up as an
         # ADDED nerf in data/unnerf-status-changes.json).
+        Rule(
+            # v2.1.325 bucket-analysis (bucket-analyze.mjs, 2026-11-14): AI-proposed,
+            # mechanically validated (stock occurs exactly once, no new ${VAR}
+            # introduced, no overlap with an existing rule, --dry-run confirmed).
+            # Full keep/lift review: data/bucket-analysis-2.1.325.json
+            stock="Cap the list at the top ~20 so the user can skim it.",
+            unnerf="Include all qualifying patterns in the prioritized list, ordered by count descending so the user sees the most frequent ones first without dropping valid entries.",
+            description="allowlist prioritize: include all qualifying patterns instead of capping at top ~20",
+        ),
     ],
     # "skill-pre-meeting-checkin-event-brief.md": RETIRED — prompt removed by Anthropic in v2.1.181
     # renamed at the tweakcc-fixed switch (was skill-verify-skill)
@@ -1020,12 +1029,13 @@ RULES: dict[str, list[Rule]] = {
     # which lifts the same cap with the same replacement text.
     "tool-description-workflow.md": [
         Rule(
-            # v2.1.251 renamed the slot AGENT_TOOL_NAME -> SUBAGENT_TOOL_NAME
-            # (verified against the file's own frontmatter variables: list).
+            # v2.1.251 renamed the slot AGENT_TOOL_NAME -> SUBAGENT_TOOL_NAME;
+            # v2.1.325 renamed it back to AGENT_TOOL_NAME (verified against the
+            # file's own frontmatter variables: list).
             # Em-dashes here are unchanged, unlike several sibling files this
             # release that flattened theirs to hyphens — don't "fix" these too.
-            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${SUBAGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
-            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${SUBAGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
+            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
+            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
             description='workflow: keep opt-in gate, but surface beneficial parallelism proactively',
         ),
     ],
@@ -1775,6 +1785,33 @@ RULES: dict[str, list[Rule]] = {
             stock="Ask three or four questions written for this request, those that would most change what you build, never a generic intake list or more than four, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
             unnerf="Ask the questions written for this request that would most change what you build, asking as many as necessary to clarify the design without an arbitrary count limit, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
             description="design artifact intake: remove 3-4 question cap",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.325 sync (bucket-analyze.mjs, 2026-11-14): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.325.json
+    # -------------------------------------------------------------------------
+    "tool-description-bash-committing-changes-with-git.md": [
+        Rule(
+            stock="  - Draft a concise (1-2 sentences) commit message that focuses on the \"why\" rather than the \"what\"",
+            unnerf="  - Draft a commit message that focuses on the \"why\" rather than the \"what\", at the length the change warrants",
+            description="git commit: drop the 1-2-sentence commit message cap",
+        ),
+    ],
+    "skill-artifact-page-contract.md": [
+        Rule(
+            stock="Write, look at most once with ArtifactCheck or the preview action where offered (take the look for real charts or declared capabilities; one run of a pure function if logic is the point; one read-back of stored data after publishing), fix once, publish; no loops. Say at most one plain sentence about the design.",
+            unnerf="Write, check with ArtifactCheck or the preview action where offered (inspect real charts or declared capabilities, run pure-function logic, and read back stored data after publishing), and fix any issues you find before publishing. Describe the design choices when useful.",
+            description="artifact page contract: remove single-pass verification cap and one-sentence design cap",
+        ),
+    ],
+    "tool-description-workflow-orchestration.md": [
+        Rule(
+            stock="For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.",
+            unnerf="For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.",
+            description="workflow orchestration: keep opt-in gate, but surface beneficial parallelism proactively",
         ),
     ],
 }

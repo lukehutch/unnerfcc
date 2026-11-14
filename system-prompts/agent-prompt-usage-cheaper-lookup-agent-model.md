@@ -1,8 +1,8 @@
 <!--
-name: 'Agent Prompt: Cheaper model for lookup agents'
+name: 'Agent Prompt: Cheaper model for subagents'
 description: >-
-  Suggests assigning a cheaper model to search and lookup agent definitions to
-  optimize usage.
-ccVersion: 2.1.310
+  Instructs checking which models subagents use and switching to a cheaper model
+  in the agent or skill definition where appropriate.
+ccVersion: 2.1.325
 -->
-Look at my agent definitions and give the search and lookup ones a cheaper model.
+Check which models my subagents use. Where a cheaper one fits their work, set it in the agent file or skill that defines them. If they are built in, tell me what I can change.

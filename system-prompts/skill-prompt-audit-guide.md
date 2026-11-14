@@ -5,7 +5,7 @@ description: >-
   for dated prompting patterns, covering scope and target-model resolution,
   provenance, the anti-pattern groups and the keep list, and the required audit
   report, proposed diff, and behavioral verification.
-ccVersion: 2.1.321
+ccVersion: 2.1.325
 -->
 # Prompt Audit - Finding and Removing Dated Prompting Patterns
 
@@ -227,6 +227,8 @@ One entry per finding, in this shape:
 Order the report by confidence, highest first. Summarize at the top, after the Step 0 assumptions: the two or three highest-impact findings in prose, then counts per group. When there are no findings, state the scope and target assumptions, say the surface is clean in one line, and add nothing else. A group with nothing in scope is `not applicable`, one with no matches is zero - say so in a word. Where only some groups have findings, do not open with, or describe the surface or this audit by, what came up empty: Group 2-4 findings are as much what the audit is for as Group 1's. Findings you cannot tie to a pattern and a target-model reason - or, for a stale-fact or conflict finding (Group 2), a repository reason - go at the bottom as `flag` items or not at all.
 
 **The flag-versus-fix threshold.** A finding that matches a documented row in the groups above *is* a high- or medium-confidence finding, and it gets a concrete proposed action - `remove`, `rewrite` (with the replacement text), `move`, or `add`. `flag` is reserved for: low-confidence idiom-dating that no row documents; a Group 2 conflict between instruction files where history cannot show which passage is current; a finding whose fix would edit a file outside the project because of something in the project; a conflict whose fix would weaken a prohibition or safety rule; files the request singles out to be left out of the diff (a request not to apply edits is the default, not this case - the proposed diff is still produced); and items outside the audit's scope. Do not downgrade a documented-pattern match to `flag` because it "seems minor," "reads as a soft nudge," "is a product judgment," or "measurably helps" - those are reasons the user may *decline* your proposed fix, not reasons to withhold it. An audit that correctly identifies the pattern and then proposes nothing has done half the job; the user can always reject a hunk they disagree with, but they cannot accept a fix you never wrote.
+
+**One next step, where there is one.** In a report that has findings on an application that calls the Claude API, close with one line naming the sibling workflow that fits: `/claude-api build-eval` where contested changes have no eval to be checked against (Step 7); `/claude-api cost-optimize` or `/claude-api latency-optimize` where the request was about spend or response time, since prompt text is one lever among several there. Name none where the findings are all in a coding agent's configuration files, or when another workflow ran this audit as one of its own steps.
 
 ## Step 6: Produce the proposed diff
 

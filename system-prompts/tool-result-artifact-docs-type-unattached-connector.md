@@ -1,8 +1,11 @@
 <!--
 name: 'Tool Result: Artifact Docs type connector not attached'
 description: >-
-  Informs Claude that the Docs type requires the unattached Claude Docs
-  connector and directs making a page instead.
-ccVersion: 2.1.277
+  Informs the model that the Docs type requires the unattached Claude Docs
+  connector and directs creating a fallback format instead.
+ccVersion: 2.1.325
+variables:
+  - ARTIFACT_PURPOSE
+  - FALLBACK_FORMAT
 -->
-The Docs type is filled only through the first-party Claude Docs connector, which is not attached in this session: for a document, make a page instead of starting from that type.
+ type is filled only through the first-party Claude Docs connector, which is not attached in this session: for ${ARTIFACT_PURPOSE}, make ${FALLBACK_FORMAT} instead of starting from that type.

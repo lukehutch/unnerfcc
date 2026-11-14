@@ -1,0 +1,156 @@
+{
+  "ccVersion": "2.1.325",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "system-prompt-subagent-delegation-examples.md",
+      "verdict": "keep",
+      "reasoning": "The 200-word cap in system-prompt-subagent-delegation-examples.md is already covered by existingRules, and the file does not contain the other phrases noted by the classifier."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples-selfcontained.md",
+      "verdict": "keep",
+      "reasoning": "Both the 200-word cap and the commentary about capping response length are already covered by existingRules; the remaining thinking line explains context isolation (keeping raw git output out of the parent context) rather than an artificial nerf."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples.md",
+      "verdict": "keep",
+      "reasoning": "Both the 200-word cap and the commentary about capping response length are already covered by existingRules; the remaining thinking line explains context isolation (keeping raw command output out of the parent context)."
+    },
+    {
+      "file": "skill-eval-building-guide.md",
+      "verdict": "keep",
+      "reasoning": "Keeping chat updates outcome-focused with a one-line headline avoids narrating internal bookkeeping while directing the user to report.html for full per-case tables and transcripts, so no substantive eval work is held back."
+    },
+    {
+      "file": "tool-description-bash-committing-changes-with-git.md",
+      "verdict": "lift",
+      "reasoning": "Capping commit messages to 1-2 sentences is an artificial brevity restriction on substantive output, matching the existing rule on the commit slash-command prompt.",
+      "rule": {
+        "stock": "  - Draft a concise (1-2 sentences) commit message that focuses on the \"why\" rather than the \"what\"",
+        "unnerf": "  - Draft a commit message that focuses on the \"why\" rather than the \"what\", at the length the change warrants",
+        "description": "git commit: drop the 1-2-sentence commit message cap"
+      }
+    },
+    {
+      "file": "skill-generate-permission-allowlist-from-transcripts.md",
+      "verdict": "lift",
+      "reasoning": "The 50-session scan cap is already handled by existingRules, but Step 6 separately caps the prioritized allowlist at the top ~20 entries 'so the user can skim it', which drops valid frequent read-only commands.",
+      "rule": {
+        "stock": "Cap the list at the top ~20 so the user can skim it.",
+        "unnerf": "Include all qualifying patterns in the prioritized list, ordered by count descending so the user sees the most frequent ones first without dropping valid entries.",
+        "description": "allowlist prioritize: include all qualifying patterns instead of capping at top ~20"
+      }
+    },
+    {
+      "file": "tool-description-artifact-finding-types-2.md",
+      "verdict": "keep",
+      "reasoning": "Saying in one line that a design system can also be set up as files in a codebase is an unrequested secondary aside rather than substantive work the user asked for."
+    },
+    {
+      "file": "skill-artifact-page-contract.md",
+      "verdict": "lift",
+      "reasoning": "Capping verification to 'look at most once... fix once, publish; no loops' is a process shortcut that risks publishing broken artifacts if a fix introduces or misses an issue, and 'Say at most one plain sentence about the design' is an artificial brevity cap.",
+      "rule": {
+        "stock": "Write, look at most once with ArtifactCheck or the preview action where offered (take the look for real charts or declared capabilities; one run of a pure function if logic is the point; one read-back of stored data after publishing), fix once, publish; no loops. Say at most one plain sentence about the design.",
+        "unnerf": "Write, check with ArtifactCheck or the preview action where offered (inspect real charts or declared capabilities, run pure-function logic, and read back stored data after publishing), and fix any issues you find before publishing. Describe the design choices when useful.",
+        "description": "artifact page contract: remove single-pass verification cap and one-sentence design cap"
+      }
+    },
+    {
+      "file": "tool-result-computer-selection-card-expired.md",
+      "verdict": "keep",
+      "reasoning": "Saying briefly that a task needs the user's computer is a fallback status notice when a selection card expires, not a cap on substantive work."
+    },
+    {
+      "file": "system-reminder-skill-environment-prerequisite-handling.md",
+      "verdict": "keep",
+      "reasoning": "Briefly explaining a missing local-computer or private-network prerequisite is a blocker notice while still offering any part of the request that can be done in the container."
+    },
+    {
+      "file": "system-prompt-subagent-delegation-examples.md",
+      "verdict": "keep",
+      "reasoning": "The 200-word cap in system-prompt-subagent-delegation-examples.md is already handled by existingRules."
+    },
+    {
+      "file": "tool-result-mcp-task-waiting-for-user-input.md",
+      "verdict": "keep",
+      "reasoning": "Telling the user in one sentence how to open /tasks to answer a pending server question is a simple UI navigation notice, not substantive work being held back."
+    },
+    {
+      "file": "tool-description-workflow-short-guidance.md",
+      "verdict": "keep",
+      "reasoning": "The Workflow tool opt-in gate prevents unrequested high-token multi-agent runs, and this short guidance already permits using AGENT_TOOL_NAME or asking when a task would benefit."
+    },
+    {
+      "file": "tool-description-workflow-orchestration.md",
+      "verdict": "lift",
+      "reasoning": "This older variant of tool-description-workflow.md lacks the existing rule that keeps the opt-in gate while removing 'briefly' and instructing Claude to proactively describe what a multi-agent workflow could do.",
+      "rule": {
+        "stock": "For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.",
+        "unnerf": "For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.",
+        "description": "workflow orchestration: keep opt-in gate, but surface beneficial parallelism proactively"
+      }
+    },
+    {
+      "file": "tool-description-workflow.md",
+      "verdict": "keep",
+      "reasoning": "The workflow parallelism guidance in tool-description-workflow.md is already handled by existingRules."
+    },
+    {
+      "file": "agent-prompt-commit-slash-command-git-safety-and-task.md",
+      "verdict": "keep",
+      "reasoning": "The 1-2 sentence commit message cap in agent-prompt-commit-slash-command-git-safety-and-task.md is already handled by existingRules."
+    },
+    {
+      "file": "agent-prompt-pr-slash-command-git-safety.md",
+      "verdict": "keep",
+      "reasoning": "agent-prompt-pr-slash-command-git-safety.md only contains the Git Safety Protocol and does not contain any commit message length cap."
+    },
+    {
+      "file": "agent-prompt-quick-pr-creation.md",
+      "verdict": "keep",
+      "reasoning": "agent-prompt-quick-pr-creation.md asks to 'Create a single commit with an appropriate message' and does not contain any 1-2 sentence length cap."
+    },
+    {
+      "file": "system-prompt-attached-machine-request-attach-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Stating in one line why the user's machine is needed right before triggering the attach approval prompt is a UX notice for the permission dialog, not substantive work."
+    },
+    {
+      "file": "skill-hill-climbing-guide.md",
+      "verdict": "keep",
+      "reasoning": "Keeping chat updates concise per round directs detailed analysis to report.html and narrative.md rather than spamming chat, and answering progress checks with the runner's progress line gives exact status."
+    },
+    {
+      "file": "skill-doctor-reporting-and-confirmation-gates.md",
+      "verdict": "keep",
+      "reasoning": "The 2-3 sentence framing applies to AskUserQuestion confirmation prompts summarizing findings already detailed in the report, and 'Keep the report tight — no padding' discourages filler rather than findings."
+    },
+    {
+      "file": "skill-doctor-check-8-and-9-instructions.md",
+      "verdict": "keep",
+      "reasoning": "Keeping the plain-language lead summary to 2-3 sentences is paired with putting all details in the full detail table immediately below, so no information is withheld."
+    },
+    {
+      "file": "tool-description-artifact-file-format-and-connector-exception.md",
+      "verdict": "keep",
+      "reasoning": "Saying in one line that a design system can also be set up as files in a codebase is an unrequested secondary aside rather than substantive work."
+    },
+    {
+      "file": "system-prompt-subagent-delegation-examples.md",
+      "verdict": "keep",
+      "reasoning": "The 200-word cap in system-prompt-subagent-delegation-examples.md is already handled by existingRules."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples-selfcontained.md",
+      "verdict": "keep",
+      "reasoning": "Both the 200-word cap and the commentary about capping response length in system-prompt-subagent-prompt-writing-examples-selfcontained.md are already handled by existingRules."
+    },
+    {
+      "file": "system-prompt-subagent-prompt-writing-examples.md",
+      "verdict": "keep",
+      "reasoning": "The two actual length-cap nerfs in this example ('Under 200 words.' and 'caps the response length') are already covered by existingRules. The remaining phrase in the thinking block ('ask for a short report so the raw command output stays out of my context') states a genuine context-budget reason for delegating noisy command output to a subagent, so no new rule is needed."
+    }
+  ]
+}

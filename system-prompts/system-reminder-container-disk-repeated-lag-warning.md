@@ -1,8 +1,8 @@
 <!--
 name: 'System Reminder: Container disk repeated lag warning'
-description: >-
-  Warns the model that disk state has lagged before and changes made to disk may
-  be lost again.
-ccVersion: 2.1.310
+description: Warns the model that disk state has lagged before in this conversation.
+ccVersion: 2.1.325
+variables:
+  - LOSS_GUIDANCE
 -->
- The disk has been behind like this before in this conversation. Changes that you make on this disk may be lost again. Tell the user this.
+ The disk has been behind like this before in this conversation. ${LOSS_GUIDANCE}
