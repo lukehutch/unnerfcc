@@ -1100,6 +1100,11 @@
   "ccFirstSeen": "2.1.263"
  },
  {
+  "sample": "---\ndescription: \"Local, on this machine: tests your app here in a browser on this computer (not the claude.ai Claude Test connector)\"\nwhen_to_use: Checks that the web app in this repo still works \u2014 p",
+  "notes": "length/chat brevity: 'every message is as short as it can be', cuts narration, hides file paths and per-spec reasons by default",
+  "ccFirstSeen": "2.1.326"
+ },
+ {
   "sample": "---\nname: whiteboard\ndescription: Create a whiteboard artifact - a live sketch canvas for wireframe-fidelity diagrams (boxes, databases, decision diamonds, sticky notes, arrows, freehand, text, pasted",
   "notes": "chat brevity: 'Open with a short note, not a briefing', 'That is the whole message'",
   "ccFirstSeen": "2.1.277"
@@ -1258,6 +1263,11 @@
   "sample": "# Claude Code Doctor\n\nHealth-check my Claude Code setup and fix what's wrong: diagnose installation health (what the `claude doctor` terminal diagnostics cover), find extensions that cost context but ",
   "notes": "process brevity: 'confirm in at most TWO questions'",
   "ccFirstSeen": "2.1.310"
+ },
+ {
+  "sample": "Browser extension is not connected. Continue the task in the built-in browser now, with no Chrome setup steps, unless the user asked for Chrome in this conversation, by name or by description (a saved",
+  "notes": "tone: 'tell them briefly' caps user response length",
+  "ccFirstSeen": "2.1.326"
  },
  {
   "sample": "# Executing actions with care\n\nCarefully consider the reversibility and blast radius of actions. Generally you can freely take local, reversible actions like editing files or running tests. But for ac",
@@ -3203,6 +3213,11 @@
   "sample": "You MUST only use content from the last ~${} messages to update your persistent memories. Do not waste any turns attempting to investigate or verify that content further \u2014 no grepping source files, no",
   "notes": "known un-nerf target (transferred from apply-unnerfs.py rule)",
   "ccFirstSeen": "2.1.199"
+ },
+ {
+  "sample": "# Claude Code Doctor\n\nHealth-check my Claude Code setup and fix what's wrong: diagnose installation health (what the `claude doctor` terminal diagnostics cover), find extensions that cost context but ",
+  "notes": "process/length cap: 'Be quick', 'Use few tool calls', 'a line or two per problem'",
+  "ccFirstSeen": "2.1.326"
  },
  {
   "sample": "---\nname: artifact-report\ndescription: Create a long-form report artifact \u2014 typographic document with a masthead, table of contents, structured sections, and an optional appendix. Use when the user as",

@@ -1,106 +1,126 @@
 {
- "from": "2.1.321",
- "to": "2.1.325",
+ "from": "2.1.325",
+ "to": "2.1.326",
  "changes": [
   {
-   "id": "skill-doctor-check-8-and-9-instructions",
-   "name": "Skill: Doctor check 8 and 9 instructions",
-   "was": false,
-   "now": true,
-   "direction": "ADDED nerf",
-   "oldHash": "47322b710f41",
-   "newHash": "f222fe8bec7f",
-   "sample": "\n\n## Check 8 — auto mode as the default permission mode\n\nAuto mode (\"auto\") delegates per-action permission decisions to a safety classifier instead of prompting the user for each one. Check whether i"
-  },
-  {
-   "id": "agent-prompt-compaction-omitted-tool-results-guidance",
-   "name": "Agent Prompt: Compaction omitted tool results handling",
+   "id": "data-tool-use-reference-csharp",
+   "name": "Data: Tool use reference — C#",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "3d950359e85e",
-   "newHash": "aad2ad8980a7",
-   "sample": "\n\nSome tool results above were left out whole because they did not fit, and a bracketed line that begins \"${OMITTED_CALL_MARKER}\" stands in their place. Of such a line, report only that the call was m"
+   "oldHash": "8a389c8519ae",
+   "newHash": "7706e1ea3eaf",
+   "sample": "# Tool Use - C#\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis offer is fo"
   },
   {
-   "id": "agent-prompt-compaction-repeat-left-out-read-call-rule",
-   "name": "Agent Prompt: Compaction rule on repeating left-out read calls",
+   "id": "data-tool-use-reference-go",
+   "name": "Data: Tool use reference — Go",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "221bbf2a097a",
-   "newHash": "e6db5af45310",
-   "sample": "Repeat a left-out call only if it just reads, for only the part you need, a few at a time. Do not repeat a call that changed something."
+   "oldHash": "26a5d7651867",
+   "newHash": "2cb72fb55b78",
+   "sample": "# Tool Use - Go\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis offer is fo"
   },
   {
-   "id": "skill-building-llm-powered-applications-with-claude",
-   "name": "Skill: Building LLM-powered applications with Claude",
+   "id": "data-tool-use-reference-java",
+   "name": "Data: Tool use reference — Java",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "2f89f5ee79e9",
-   "newHash": "5a66e0b5ba9a",
-   "sample": "# Building LLM-Powered Applications with Claude\n\nThis skill helps you build LLM-powered applications with Claude. Choose the right surface based on your needs, detect the project language, then read t"
+   "oldHash": "0e0bbc5bc6b2",
+   "newHash": "2e16fb2c98ad",
+   "sample": "# Tool Use - Java\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis offer is "
   },
   {
-   "id": "skill-dataviz-color-formula",
-   "name": "Skill Reference: Data-viz Color Formula",
+   "id": "data-tool-use-reference-php",
+   "name": "Data: Tool use reference — PHP",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "e6feaab30228",
-   "newHash": "563266afc627",
-   "sample": "# Color formula\n\nColor is **not hand-picked**. Every chart color does exactly one of four jobs, and a\npalette is legal only if it passes six checks. The checks are the product - they are\nwhat makes a "
+   "oldHash": "a5ef7e57ffbf",
+   "newHash": "3af86a0bb073",
+   "sample": "# Tool Use - PHP\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis offer is f"
   },
   {
-   "id": "skill-dataviz-palette",
-   "name": "Skill Reference: Data-viz Reference Palette",
+   "id": "data-tool-use-reference-python",
+   "name": "Data: Tool use reference — Python",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "b0eb3882e9cf",
-   "newHash": "f06dbbdf65ad",
-   "sample": "# Reference palette\n\nThis is the **reference instance** of the data-viz method: every parameter the\nmethod needs, filled in with a validated default palette. The rest of the skill\nis system-agnostic -"
+   "oldHash": "9f33530f714e",
+   "newHash": "8d845f931d00",
+   "sample": "# Tool Use - Python\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis offer i"
   },
   {
-   "id": "skill-eval-health-checklist",
-   "name": "Skill: Eval Health Checklist",
+   "id": "data-tool-use-reference-ruby",
+   "name": "Data: Tool use reference — Ruby",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "a013f8eb0452",
-   "newHash": "d2c66766ceeb",
-   "sample": "# Eval health checklist\n\nThis file is loaded whenever an eval is being **built** (`build-eval.md`) or **climbed on** (`eval-hillclimb.md`). It has two jobs. When you are writing the eval, every item b"
+   "oldHash": "85be9a1bb74d",
+   "newHash": "eae80c2ba434",
+   "sample": "#\u0000 \u0000T\u0000o\u0000o\u0000l\u0000 \u0000U\u0000s\u0000e\u0000 \u0000-\u0000 \u0000R\u0000u\u0000b\u0000y\u0000\n\u0000\n\u0000F\u0000o\u0000r\u0000 \u0000c\u0000o\u0000n\u0000c\u0000e\u0000p\u0000t\u0000u\u0000a\u0000l\u0000 \u0000o\u0000v\u0000e\u0000r\u0000v\u0000i\u0000e\u0000w\u0000 \u0000(\u0000t\u0000o\u0000o\u0000l\u0000 \u0000d\u0000e\u0000f\u0000i\u0000n\u0000i\u0000t\u0000i\u0000o\u0000n\u0000s\u0000,\u0000 \u0000t\u0000o\u0000o\u0000l\u0000 \u0000c\u0000h\u0000o\u0000i\u0000c\u0000e\u0000,\u0000 \u0000t\u0000i\u0000p\u0000s\u0000)\u0000,\u0000 \u0000s\u0000e\u0000e\u0000 \u0000[\u0000s\u0000h\u0000a\u0000r\u0000e\u0000d\u0000/\u0000t\u0000o\u0000o\u0000l\u0000-\u0000u\u0000"
   },
   {
-   "id": "tool-description-artifact-list-types-preference",
-   "name": "Tool Description: List Types Preference",
+   "id": "data-tool-use-reference-typescript",
+   "name": "Data: Tool use reference — TypeScript",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "98a74f8890e0",
-   "newHash": "e4b5efa61c58",
-   "sample": ", in whatever words, or asks what kinds of artifacts or templates Claude can make, Claude first calls `action: \"list\"` with `scope: \"types\"`, before loading a skill or writing a file. Claude prefers a"
+   "oldHash": "1ca6371ba6d8",
+   "newHash": "78044edeb1da",
+   "sample": "# Tool Use - TypeScript\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis off"
   },
   {
-   "id": "tool-description-artifact-types-and-quickstart",
-   "name": "Tool Description: Artifact types and quickstart workflow",
+   "id": "skill-generate-permission-allowlist-from-transcripts",
+   "name": "Skill: Generate permission allowlist from transcripts",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "09aa849c338a",
-   "newHash": "d5b1d89c0597",
-   "sample": "**Artifact types**: published Artifact types (ready-made pages, such as slide decks, documents or designs, that take Claude's content as data) and the design systems that decks and designs are built w"
+   "oldHash": "4f75990d46f0",
+   "newHash": "2431837cab60",
+   "sample": "# Fewer Permission Prompts\n\nLook through my transcripts' MCP and bash tool calls, and based on those, make a prioritized list of patterns that I should add to my permission allowlist to reduce permiss"
   },
   {
-   "id": "tool-result-project-read-text-truncated-call-info",
-   "name": "Tool Result: Project read text truncated call project_info",
+   "id": "skill-insights-report-output",
+   "name": "Skill: /insights report output",
    "was": true,
    "now": false,
    "direction": "REMOVED nerf",
-   "oldHash": "655d67d475a0",
-   "newHash": "bfec4007e363",
-   "sample": "\n\n[Only the first ${SHOWN_BYTES} of ${TOTAL_BYTES} bytes of this text are shown."
+   "oldHash": "2b81201977fe",
+   "newHash": "c74cba3a4c27",
+   "sample": "The user just ran /insights to generate a usage report analyzing their Claude Code sessions.\n\nHere is the full insights data:\n${INSIGHTS_DATA}\n\nReport URL: ${REPORT_URL}\nHTML file: ${HTML_FILE_PATH}"
+  },
+  {
+   "id": "skill-slides-deck-iteration",
+   "name": "Skill: How to build and iterate on Slides decks efficiently",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "9cc18736f44a",
+   "newHash": "30e790352fc8",
+   "sample": "[\u0000H\u0000o\u0000w\u0000 \u0000t\u0000o\u0000 \u0000b\u0000u\u0000i\u0000l\u0000d\u0000 \u0000a\u0000n\u0000d\u0000 \u0000i\u0000t\u0000e\u0000r\u0000a\u0000t\u0000e\u0000 \u0000o\u0000n\u0000 \u0000S\u0000l\u0000i\u0000d\u0000e\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000s\u0000 \u0000e\u0000f\u0000f\u0000i\u0000c\u0000i\u0000e\u0000n\u0000t\u0000l\u0000y\u0000]\u0000 \u0000T\u0000h\u0000i\u0000s\u0000 \u0000d\u0000e\u0000c\u0000k\u0000'\u0000s\u0000 \u0000c\u0000o\u0000n\u0000t\u0000e\u0000n\u0000t\u0000 \u0000l\u0000i\u0000v\u0000e\u0000s\u0000 \u0000i\u0000n\u0000 \u0000f\u0000i\u0000l\u0000e\u0000s\u0000 \u0000u\u0000n\u0000d\u0000e\u0000r\u0000 \u0000`\u0000p\u0000r\u0000o\u0000"
+  },
+  {
+   "id": "skill-workflow-hooks-and-patterns-reference",
+   "name": "Skill: Workflow hooks and patterns reference",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "fb1536bb13fc",
+   "newHash": "ee4adb51ccf4",
+   "sample": "; use 'low' for cheap mechanical stages and higher tiers only for the hardest verify/judge stages. opts.isolation: 'worktree' runs the agent in a fresh git worktree — EXPENSIVE (~200-500ms setup + dis"
+  },
+  {
+   "id": "tool-result-goal-proposal-awaiting-approval",
+   "name": "Tool Result: Goal proposal awaiting approval",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "8e680cb104c5",
+   "newHash": "58120c3d4f55",
+   "sample": "Sent the goal proposal to the user for approval. If they approve, any previously set goal ends, the proposed goal is set, and you will receive a \"Goal set\" message; until they answer, any previously s"
   }
  ],
  "unverifiable": []
