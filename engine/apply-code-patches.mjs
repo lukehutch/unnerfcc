@@ -487,12 +487,42 @@ function p4_liftPrSummaryBulletCap(js) {
   }
 }
 
+// P5 — remove the 20-subagent concurrency cap.
+// Stock (v2.1.325): `var HFs=20;function Ion(){return i.CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS??HFs}`.
+// Ion() is the cap the Agent tool checks before every launch (refusing with
+// "Concurrent subagent limit reached. You can run 20 subagents at once."), the
+// number of agents resumed after a restart (`.slice(0,Ion())`), and each
+// plugin's `$.agent.spawn` cap. Replacing the fallback with Infinity lifts all
+// three, while an explicit CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS still sets a cap.
+// Anchored on the env var's name: the minified function and variable names change
+// every release, the env var's name does not.
+function p5_uncapConcurrentSubagents(js) {
+  try {
+    const re = /(\breturn ?[$\w]+\.CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS ?\?\? ?)([$\w]+)(?= ?[;}])/g;
+    const hits = [...js.matchAll(re)];
+    const stock = hits.filter((m) => m[2] !== "Infinity");
+    if (stock.length === 0) {
+      return hits.length
+        ? { js, status: "already", detail: `subagent concurrency cap already lifted` }
+        : { js, status: "failed", detail: `anchor MISSING: no "return <x>.CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS??<default>" found — the cap getter changed; 20-subagent cap NOT lifted` };
+    }
+    if (stock.length > 1) return { js, status: "failed", detail: `ambiguous: ${stock.length} concurrency-cap getters found (expected 1) — refusing to guess; cap NOT lifted` };
+    const dflt = stock[0][2];
+    const val = /^\d+$/.test(dflt) ? dflt : (js.match(new RegExp(`\\bvar ${dflt.replace(/\$/g, "\\$")}=(\\d+)[;,]`)) || [])[1] || dflt;
+    const out = js.replace(re, (all, head, d) => (d === "Infinity" ? all : head + "Infinity"));
+    return { js: out, status: "applied", detail: `lifted the concurrent-subagent cap (default ${val} -> Infinity; CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS still overrides)` };
+  } catch (e) {
+    return { js, status: "failed", detail: `P5 threw: ${e.message}` };
+  }
+}
+
 const PATCHES = [
   { name: "cascade-max-fallback", fn: p0_cascadeMaxFallback }, // must precede floor
   { name: "floor-default-effort", fn: p1_floorDefaultEffort },
   { name: "uncap-effort-enum", fn: p2_uncapEffortEnum },
   { name: "validator-accepts-max", fn: p3_validatorAcceptsMax },
   { name: "lift-pr-summary-bullet-cap", fn: p4_liftPrSummaryBulletCap },
+  { name: "uncap-concurrent-subagents", fn: p5_uncapConcurrentSubagents },
 ];
 
 // Apply all patches best-effort. Returns { js, results, ok }. `ok` is true iff

@@ -205,10 +205,16 @@ node engine/apply-code-patches.mjs posture <inJs>           # snapshot the effor
 node engine/apply-code-patches.mjs verify  <inJs>           # exit 0 iff all effort un-nerfs present
 ```
 
-Four patches run in order: **cascade-max-fallback** (P0, makes the raise
+Six patches run in order: **cascade-max-fallback** (P0, makes the raise
 regression-proof — must precede the floor), **floor-default-effort** (P1, raises
 `high` *and* `xhigh` defaults to `max`; the `xhigh` raise is skipped fail-safe if
-P0 didn't apply), **uncap-effort-enum** (P2), **validator-accepts-max** (P3).
+P0 didn't apply), **uncap-effort-enum** (P2), **validator-accepts-max** (P3),
+**lift-pr-summary-bullet-cap** (P4, not an effort patch: the PR-summary
+`"<1-3 bullet points>"` cap that upstream moved into JS), and
+**uncap-concurrent-subagents** (P5, not an effort patch: changes the
+`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` default of 20 to `Infinity`; anchored on
+the env var's name, since the minified getter and variable names change every
+release).
 
 | Result per patch | Meaning |
 |---|---|
