@@ -1,9 +1,9 @@
 <!--
 name: 'Tool Result: Workflow cached results caveat'
 description: >-
-  Warns that completed agents replay cached results which may themselves be
-  empty, so journal.jsonl must be inspected before assuming there is something
-  to recover.
-ccVersion: 2.1.219
+  Warns that agent() calls replay cached results up to the first failed,
+  changed, or unstarted call and that cached results may be empty, so
+  journal.jsonl must be inspected.
+ccVersion: 2.1.329
 -->
-"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+"}) — agent() calls return cached results up to the first one that failed, no longer matches (edited, added, removed, or in a different call order) or never started. Cached results may themselves be empty: inspect journal.jsonl before assuming there is something to recover.

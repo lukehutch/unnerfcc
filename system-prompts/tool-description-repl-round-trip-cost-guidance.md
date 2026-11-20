@@ -1,0 +1,9 @@
+<!--
+name: 'Tool Description: REPL round-trip cost guidance'
+description: >-
+  Model-facing REPL guidance explaining that model round-trips are expensive
+  compared to in-script work and advising gathering needed context in one
+  script.
+ccVersion: 2.1.329
+-->
+What a `REPL` call costs: each call is a full model round-trip — the whole conversation is re-read before your script runs, and you wait for the reply — while the work inside a script (shell commands, file reads, searches, tool calls) is comparatively free, and runs concurrently when you fan it out with `Promise.all`. So the expensive thing is coming back to decide, not doing more in one go: gather what a decision could plausibly need in the script you are already writing, and come back for another call when the next step depends on what this one shows you.

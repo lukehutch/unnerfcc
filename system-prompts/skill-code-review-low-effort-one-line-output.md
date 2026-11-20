@@ -1,13 +1,9 @@
 <!--
 name: 'Skill: Code Review low effort one-line text output'
 description: >-
-  Instructs emitting low-effort review findings as one-line text entries without
-  calling tools.
-ccVersion: 2.1.292
-variables:
-  - REPORT_FINDINGS_TOOL_NAME
+  Instructs emitting low-effort review findings as one-line text entries ordered
+  most-severe first.
+ccVersion: 2.1.329
 -->
-, most-severe first, one line each:
-`path/to/file.ext:123 — what's wrong and the concrete failure`. If nothing
-qualifies, output exactly `(none)`. Do not call the
-${REPORT_FINDINGS_TOOL_NAME} tool even if it is available.
+, most-severe first, giving each finding the detail it needs, starting with:
+`path/to/file.ext:123 — 

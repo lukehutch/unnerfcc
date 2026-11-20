@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Description: ProposeGoal summary'
 description: >-
-  One-line action description — propose a session goal condition that keeps
-  Claude working until a separate evaluator confirms it is met.
-ccVersion: 2.1.231
+  One-line action description — set a session goal condition that keeps Claude
+  working until a separate evaluator confirms it is met.
+ccVersion: 2.1.329
 -->
-Propose a session goal condition, with one-keypress user approval; once set, Claude keeps working until a separate evaluator confirms it is met
+Set a session goal, a stop check that keeps Claude working until a separate evaluator confirms it is met, asking the user first unless their own words stated it

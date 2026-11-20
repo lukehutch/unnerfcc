@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Description: Workflow resume returns cached agents'
 description: >-
-  Resume note telling the model that re-running with the prior run id returns
-  cached results for completed agents.
-ccVersion: 2.1.321
+  Resume note telling the model that agent() calls return cached results up to
+  the first call that failed, changed, or never started.
+ccVersion: 2.1.329
 -->
- — completed agents return cached results.
+ — agent() calls return cached results up to the first one that failed, no longer matches or never started.

@@ -1,6 +1,6 @@
 <!--
 name: 'System Reminder: Project thread turn missing terminal reply (middle)'
 description: Middle connector clause prompting for terminal project thread reply tool call.
-ccVersion: 2.1.310
+ccVersion: 2.1.329
 -->
-` now with what the thread should see, `
+` now with what the thread should see, 

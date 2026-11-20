@@ -365,7 +365,9 @@ RULES: dict[str, list[Rule]] = {
     # -------------------------------------------------------------------------
     # system-prompt-agent-thread-notes.md — include code snippets generously
     # -------------------------------------------------------------------------
-    "system-prompt-agent-thread-notes.md": [
+    # v2.1.329 dropped the system-prompt-agent-thread-notes variant; the stock
+    # sentence survives verbatim in the -2 variant, so the key moved there.
+    "system-prompt-agent-thread-notes-2.md": [
         Rule(
             stock="- In your final response, share file paths (always absolute, never relative) that are relevant to the task. Include code snippets only when the exact text is load-bearing (e.g., a bug you found, a function signature the caller asked for) — do not recap code you merely read.",
             unnerf="- In your final response, share file paths (always absolute, never relative) that are relevant to the task. Include code snippets generously whenever they add useful context — bugs found, function signatures, relevant patterns, code that informs a decision, surrounding context that makes a finding clearer. Quote code verbatim when the exact text matters; the caller benefits from seeing the real code rather than a paraphrase.",
@@ -741,17 +743,13 @@ RULES: dict[str, list[Rule]] = {
             description="code-review high Phase 1: drop 6-candidate cap per finder angle",
         ),
     ],
-    "skill-code-review-effort-max.md": [
-        Rule(
-            stock='Effort-tier prompt for max and xhigh code review — 10 finder angles, up to 8\n  candidates each, recall-biased, up to 15 findings',
-            unnerf='Effort-tier prompt for max and xhigh code review — 10 finder angles, uncapped\n  candidate reporting, recall-biased, all qualifying findings',
-            description='code-review max frontmatter: drop candidate/finding caps',
-        ),
-        Rule(
-            stock='## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 8 each)',
-            unnerf='## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle)',
-            description='code-review max phase heading: drop per-angle cap',
-        ),
+    # "skill-code-review-effort-max.md": v2.1.329 split this prompt into fragments.
+    # The frontmatter-description rule is RETIRED (that text is gone from every
+    # prompt). The phase-heading cap moved to skill-code-review-max-conventions-
+    # angle-suffix.md, which the v2.1.329 bucket-analysis covers with its own
+    # rule, so that rule is RETIRED too. The finder-cap sentence survives
+    # verbatim in skill-code-review-max-spawn-finder-angles.md; key moved there.
+    "skill-code-review-max-spawn-finder-angles.md": [
         Rule(
             stock='surfaces **up to 8 candidate findings**. Do NOT let one angle\'s conclusions\nsuppress another\'s — if two angles flag the same line for different reasons,\nrecord both.',
             unnerf='surfaces every candidate finding. Do NOT let one angle\'s conclusions\nsuppress another\'s — if two angles flag the same line for different reasons,\nrecord both.',
@@ -1027,18 +1025,9 @@ RULES: dict[str, list[Rule]] = {
     # prompt layer. These rules are retired and the un-nerf is RETARGETED to the
     # code layer: see lib/apply-code-patches.mjs P4 (lift-pr-summary-bullet-cap),
     # which lifts the same cap with the same replacement text.
-    "tool-description-workflow.md": [
-        Rule(
-            # v2.1.251 renamed the slot AGENT_TOOL_NAME -> SUBAGENT_TOOL_NAME;
-            # v2.1.325 renamed it back to AGENT_TOOL_NAME (verified against the
-            # file's own frontmatter variables: list).
-            # Em-dashes here are unchanged, unlike several sibling files this
-            # release that flattened theirs to hyphens — don't "fix" these too.
-            stock='For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.',
-            unnerf='For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.',
-            description='workflow: keep opt-in gate, but surface beneficial parallelism proactively',
-        ),
-    ],
+    # "tool-description-workflow.md": RETIRED in the v2.1.329 sync. Upstream split
+    # the opt-in paragraph into its own id; the identical rule now lives under
+    # "tool-description-workflow-explicit-opt-in-restriction.md".
 
     # -------------------------------------------------------------------------
     # Consistency flips found by the v2.1.185 full-prompt audit. Each mirrors an
@@ -1575,13 +1564,9 @@ RULES: dict[str, list[Rule]] = {
             description="token breakdown chart: drop brevity caps on explanation and caveats",
         ),
     ],
-    "system-prompt-token-cost-efficiency-reminder.md": [
-        Rule(
-            stock="The user pays per token for your turns, and wants the job done for what it needs and no more.\n",
-            unnerf="Do whatever the task requires thoroughly and completely, without cutting corners or withholding necessary work.\n",
-            description="token cost reminder: prioritize thoroughness and completeness over artificial frugality",
-        ),
-    ],
+    # "system-prompt-token-cost-efficiency-reminder.md": RETIRED in the v2.1.329
+    # sync. Upstream deleted the reminder ("The user pays per token for your
+    # turns..."): zero hits for "pays per token" in any v2.1.329 module.
     "skill-code-review-effort-xhigh-inline.md": [
         Rule(
             stock="## Phase 1 — Find candidates (5 correctness angles + 3 cleanup angles + 1 altitude angle + 1 conventions angle, up to 8 each)\n\nRun **10 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces **up to 8 candidate findings**.",
@@ -1599,45 +1584,17 @@ RULES: dict[str, list[Rule]] = {
     # the rule, which quoted the whole sentence, stopped matching. Re-anchored
     # onto the two short cap-bearing phrases so a reword of the surrounding
     # sentence cannot break it again (same lesson as skill-artifact-design).
-    "agent-prompt-claude-test-explorer.md": [
-        Rule(
-            stock="return ONE compact report,",
-            unnerf="return a comprehensive report,",
-            description="claude-test explorer: drop the 'compact' framing on the repo mapping report",
-        ),
-        Rule(
-            stock="(at most 40 lines, facts and file:line references",
-            unnerf="(facts and file:line references",
-            description="claude-test explorer: drop the line cap on the repo mapping report",
-        ),
-    ],
+    # "agent-prompt-claude-test-explorer.md": RETIRED in the v2.1.329 sync. Upstream removed the bundled
+    # Claude Test plugin (about 300 claude-test-* catalog ids, its text gone from
+    # every module). Nothing to retarget.
     # v2.1.310: this rule quoted all of numbered item 3, so upstream inserting a
     # sentence into it (the "§2, step 4, F3 are never said in the chat" rule) and
     # an example into the cut-list broke the match. Re-anchored onto the four
     # short brevity/withholding phrases, which leaves upstream's new mechanics in
     # place and lifts only the caps.
-    "skill-claude-test-run.md": [
-        Rule(
-            stock="**The conversation carries decisions and headlines; detail is one word away.**",
-            unnerf="**The conversation carries decisions, context, and the reasoning behind them.**",
-            description="claude-test run: drop the 'headlines only' framing on the conversation",
-        ),
-        Rule(
-            stock="every message is as short as it can be while still letting them steer.",
-            unnerf="every message carries the context they need to steer.",
-            description="claude-test run: drop the as-short-as-possible cap on every message",
-        ),
-        Rule(
-            stock="repeats something already on the screen, or explains a choice they did\n   not ask about (\"A change I didn't make; reading it.\" is such a line).",
-            unnerf="repeats something already on the screen. Keep the lines that explain a choice,\n   including ones they did not ask about.",
-            description="claude-test run: keep the lines that explain a choice the person did not ask about",
-        ),
-        Rule(
-            stock="Full spec texts, file paths, per-spec reasons and caveats are shown when they ask (\"show 3\", \"why did 2\n   fail?\"), not by default.",
-            unnerf="Full spec texts, file paths, per-spec reasons and caveats are given upfront, and they\n   can ask for more (\"show 3\", \"why did 2 fail?\").",
-            description="claude-test run: give spec texts, paths, reasons and caveats upfront",
-        ),
-    ],
+    # "skill-claude-test-run.md": RETIRED in the v2.1.329 sync. Upstream removed the bundled
+    # Claude Test plugin (about 300 claude-test-* catalog ids, its text gone from
+    # every module). Nothing to retarget.
     # -------------------------------------------------------------------------
     # v2.1.310 sync (bucket-analyze.mjs, 2026-10-25): AI-proposed, mechanically
     # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
@@ -1647,13 +1604,9 @@ RULES: dict[str, list[Rule]] = {
     # REVIEWED BY HAND (v2.1.310): a numeric output limit on a sub-agent's
     # report — Part 1 "No numeric output limits", and the same lift the sibling
     # agent-prompt-claude-test-explorer.md rules make. ACCEPTED.
-    "skill-claude-test-onboarding.md": [
-        Rule(
-            stock="Return a compact map,\n   > at most 40 lines, facts and file:line references only, visible strings quoted exactly.",
-            unnerf="Return a comprehensive map,\n   > facts and file:line references only, visible strings quoted exactly.",
-            description="claude-test onboarding: drop 40-line cap on code map",
-        ),
-    ],
+    # "skill-claude-test-onboarding.md": RETIRED in the v2.1.329 sync. Upstream removed the bundled
+    # Claude Test plugin (about 300 claude-test-* catalog ids, its text gone from
+    # every module). Nothing to retarget.
     # REVIEWED BY HAND (v2.1.310): "only when you are blocked" gates a tool on
     # legitimate work, so the decision procedure falls through to item 4 (not
     # mechanics, not reference content, not user-from-hijacked-agent). Lifting
@@ -1684,7 +1637,9 @@ RULES: dict[str, list[Rule]] = {
             # settled"). Re-anchored onto the short cap-bearing phrase alone so
             # the new mechanics survive untouched and the next reflow of the
             # surrounding sentence does not break the rule again.
-            stock="In the form: up to four questions,",
+            # v2.1.329 reworded the ceiling to "two or three questions, a fourth
+            # only for a large or unusual request, never more". Re-anchored.
+            stock="In the form: two or three questions, a fourth only for a large or unusual request, never more,",
             unnerf="In the form: as many questions as the request genuinely leaves open,",
             description="artifact intake: drop the question-count cap on the elicitation form",
         ),
@@ -1782,8 +1737,11 @@ RULES: dict[str, list[Rule]] = {
             # REVIEWED BY HAND (v2.1.321): a question-count ceiling on design
             # intake, the same nerf already lifted on the elicitation form in
             # v2.1.318. Nothing parses the count. ACCEPTED.
-            stock="Ask three or four questions written for this request, those that would most change what you build, never a generic intake list or more than four, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
-            unnerf="Ask the questions written for this request that would most change what you build, asking as many as necessary to clarify the design without an arbitrary count limit, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+            # v2.1.329 reworded it to "two or three questions in all, including the
+            # look, and a fourth only for a large or unusual request". Re-anchored;
+            # the new "including the look" requirement is kept.
+            stock="Ask two or three questions in all, including the look, and a fourth only for a large or unusual request, never more: those that would most change what you build, written for this request, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
+            unnerf="Ask the questions, including the look, that would most change what you build, written for this request, asking as many as necessary to clarify the design without an arbitrary count limit, never a generic intake list, dropping what the request, the conversation, or a brand, reference or design system the user names already answers.",
             description="design artifact intake: remove 3-4 question cap",
         ),
     ],
@@ -1807,11 +1765,134 @@ RULES: dict[str, list[Rule]] = {
             description="artifact page contract: remove single-pass verification cap and one-sentence design cap",
         ),
     ],
-    "tool-description-workflow-orchestration.md": [
+    # v2.1.329 split the opt-in paragraph out of the Workflow description into
+    # its own catalog id; the stock sentence is unchanged, so the key moved.
+    "tool-description-workflow-explicit-opt-in-restriction.md": [
         Rule(
             stock="For any other task — even one that would clearly benefit from parallelism — do NOT call this tool. Use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, or briefly describe what a multi-agent workflow could do and how much it would roughly cost, and ask the user whether to run it.",
             unnerf="For any other task, do NOT call this tool without that opt-in — but when a task would clearly benefit from parallelism, surface that proactively rather than staying silent: use the ${AGENT_TOOL_NAME} tool (if available) for individual subagents, and describe what a multi-agent workflow could do for this task and how much it would roughly cost, then ask the user whether to run it.",
             description="workflow orchestration: keep opt-in gate, but surface beneficial parallelism proactively",
+        ),
+    ],
+    # -------------------------------------------------------------------------
+    # v2.1.329 sync (bucket-analyze.mjs, 2026-11-20): AI-proposed, mechanically
+    # validated (stock occurs exactly once, no new ${VAR} introduced, no overlap
+    # with an existing rule, confirmed to actually match via --dry-run). Full
+    # keep/lift review (every KEEP decision and why too): data/bucket-analysis-2.1.329.json
+    # -------------------------------------------------------------------------
+    "skill-code-review-phase-2-dedup-and-self-check.md": [
+        Rule(
+            stock="## Phase 2 — Dedup and self-check (no subagent verify)\n\nDedup near-duplicates (same defect, same location, same reason → keep one).\nRe-check each remaining candidate yourself against the diff before keeping it.",
+            unnerf="## Phase 2 — Dedup and verify\n\nDedup near-duplicates (same defect, same location, same reason → keep one).\nVerify each remaining candidate against the diff before keeping it, spawning subagents when independent verification helps.",
+            description="code-review Phase 2: lift no-subagent-verify restriction",
+        ),
+    ],
+    "skill-code-review-effort-low-exclusions.md": [
+        Rule(
+            stock="Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+            unnerf="Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+            description="code-review low-effort exclusions: allow perf, missing tests, and out-of-hunk context",
+        ),
+    ],
+    "skill-code-review-effort-low-no-fixture-skip-turns-body.md": [
+        Rule(
+            stock="Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+            unnerf="Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+            description="code-review low-effort (no fixture skip): allow perf, missing tests, and out-of-hunk context",
+        ),
+        Rule(
+            stock="One tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted changes, or `git diff main...HEAD` /\nthe target passed as an argument). No subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.\nAlso flag — still from the hunk alone — new code that duplicates an existing\nhelper visible in the diff context, and dead code the diff leaves behind.",
+            unnerf="Read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD` to cover\nboth committed and uncommitted changes, or `git diff main...HEAD` / the target\npassed as an argument), and read full files or spawn subagents when surrounding\ncontext is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate. Also flag new code that duplicates an existing helper,\nand dead code the diff leaves behind.",
+            description="code-review low-effort (no fixture skip): allow full-file reads, subagents, and beyond-hunk verification",
+        ),
+    ],
+    "skill-code-review-effort-low-scaled-findings.md": [
+        Rule(
+            stock="Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+            unnerf="Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+            description="code-review low-effort (scaled): allow perf, missing tests, and out-of-hunk context",
+        ),
+        Rule(
+            stock="One tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted changes, or `git diff main...HEAD` /\nthe target passed as an argument). Skip test/fixture\nhunks (`test/`, `spec/`, `__tests__/`, `*_test.*`, `*.test.*`,\n`fixtures/`, `testdata/`) — test-file changes are not reviewed at this level.\nNo subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.\nAlso flag — still from the hunk alone — new code that duplicates an existing\nhelper visible in the diff context, and dead code the diff leaves behind.",
+            unnerf="Read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD` to cover\nboth committed and uncommitted changes, or `git diff main...HEAD` / the target\npassed as an argument), including test and fixture hunks, and read full files\nor spawn subagents when surrounding context is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate. Also flag new code that duplicates an existing helper,\nand dead code the diff leaves behind.",
+            description="code-review low-effort (scaled): include test hunks and allow full-file reads and subagents",
+        ),
+    ],
+    "system-prompt-user-work-style-check-in-bigger-changes.md": [
+        Rule(
+            stock="For those, read what you need, say your approach in a few lines, and end your turn there.",
+            unnerf="For those, read what you need, explain your approach in whatever detail the scope and risks warrant, and end your turn there.",
+            description="check-in bigger changes: drop the few-lines cap on approach explanations",
+        ),
+    ],
+    "skill-code-review-low-effort-one-line-output.md": [
+        Rule(
+            stock=", most-severe first, one line each:\n`path/to/file.ext:123 — ",
+            unnerf=", most-severe first, giving each finding the detail it needs, starting with:\n`path/to/file.ext:123 — ",
+            description="code-review low-effort output: drop one-line-per-finding cap",
+        ),
+    ],
+    "skill-code-review-output-one-line-list.md": [
+        Rule(
+            stock=", most-severe first, one line each:\n`path/to/file.ext:123 — what's wrong and the concrete failure`.",
+            unnerf=", most-severe first, giving each finding as much detail as it needs, formatted as:\n`path/to/file.ext:123 — what's wrong and the concrete failure`.",
+            description="code-review one-line output: drop one-line-per-finding cap",
+        ),
+    ],
+    "skill-code-review-effort-xhigh-6-angles-inline.md": [
+        Rule(
+            stock="## Phase 1 — Find candidates (5 correctness angles + 1 conventions angle, up to 8 each)\n\nRun **6 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces **up to 8 candidate findings**.",
+            unnerf="## Phase 1 — Find candidates (5 correctness angles + 1 conventions angle, uncapped)\n\nRun **6 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces all candidate findings.",
+            description="code-review xhigh-6-angles-inline Phase 1: drop 8-candidate cap per finder angle",
+        ),
+    ],
+    "skill-code-review-max-conventions-angle-suffix.md": [
+        Rule(
+            stock="1 conventions angle, up to 8 each)\n\nRun **",
+            unnerf="1 conventions angle, uncapped)\n\nRun **",
+            description="code-review conventions angle suffix: drop 8-candidate cap",
+        ),
+    ],
+    "skill-code-review-effort-low-turns-body.md": [
+        Rule(
+            stock="Skip test/fixture\nhunks (`test/`, `spec/`, `__tests__/`, `*_test.*`, `*.test.*`,\n`fixtures/`, `testdata/`) — test-file changes are not reviewed at this level.\nNo subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.",
+            unnerf="Include test and fixture hunks, and read full files or spawn subagents when\nsurrounding context is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate.",
+            description="code-review low-effort turns body: include test hunks and allow full-file reads and subagents",
+        ),
+    ],
+    "skill-code-review-phase-3-sweep-inline.md": [
+        Rule(
+            stock="Take one more pass (same context — no subagent) as a fresh reviewer who has the deduplicated list. Re-read\nthe diff and enclosing functions looking ONLY for defects not already listed.\nDo not re-derive or re-confirm anything already there — the job is gaps. Focus\non what the first pass tends to miss: moved/extracted code that dropped a guard\nor anchor; second-tier footguns (dataclass default evaluated once, `hash()`\nnon-determinism, lock-scope shrink, predicate methods with side effects);\nsetup/teardown asymmetry in tests; config defaults flipped.\n\nSurface **up to 8 additional candidates**, each naming a defect not already on\nthe list.",
+            unnerf="Take one more pass as a fresh reviewer who has the deduplicated list, spawning a subagent if an independent context helps. Re-read\nthe diff and enclosing functions looking ONLY for defects not already listed.\nDo not re-derive or re-confirm anything already there — the job is gaps. Focus\non what the first pass tends to miss: moved/extracted code that dropped a guard\nor anchor; second-tier footguns (dataclass default evaluated once, `hash()`\nnon-determinism, lock-scope shrink, predicate methods with side effects);\nsetup/teardown asymmetry in tests; config defaults flipped.\n\nSurface all additional candidates, each naming a defect not already on\nthe list.",
+            description="code-review Phase 3 sweep: allow subagent and drop 8-candidate cap",
+        ),
+    ],
+    "skill-code-review-effort-high-inline-2.md": [
+        Rule(
+            stock="## Phase 1 — Find candidates (3 correctness angles + 1 conventions angle, up to 6 each)\n\nRun **4 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces **up to 6 candidate findings** with `file`, `line`, a short\n`summary`, and a concrete `failure_scenario`.",
+            unnerf="## Phase 1 — Find candidates (3 correctness angles + 1 conventions angle, uncapped)\n\nRun **4 independent finder angles**, either in sequence in this context or via parallel subagents where independent coverage helps. Each\nsurfaces all candidate findings with `file`, `line`, a clear\n`summary`, and a concrete `failure_scenario`.",
+            description="code-review high-inline-2 Phase 1: drop 6-candidate cap, allow subagents, and lift short-summary cap",
+        ),
+    ],
+    "system-prompt-user-work-style-agent-newcomer-notes.md": [
+        Rule(
+            stock="Add short notes, a line or two, on what you find and why.",
+            unnerf="Add clear notes on what you find and why, in whatever detail helps them follow along.",
+            description="agent newcomer notes: drop the one-or-two-line length cap",
+        ),
+    ],
+    "skill-code-review-severity-and-summary-rules.md": [
+        Rule(
+            stock="Write each `summary` in two or three short sentences. Start with the problem as\na user of the code would see it.",
+            unnerf="Write each `summary` clearly and as concisely or thoroughly as the defect requires. Start with the problem as\na user of the code would see it.",
+            description="code-review severity and summary rules: drop two-to-three-sentence cap",
+        ),
+    ],
+    "system-prompt-suggested-task-check-in-required.md": [
+        Rule(
+            stock="This task and every later one from the list get a check-in first, even a small change you would otherwise just make: read what you need, say your approach in a few lines, and end your turn there.",
+            unnerf="This task and every later one from the list get a check-in first, even a small change you would otherwise just make: read what you need, explain your approach in whatever detail the task warrants, and end your turn there.",
+            description="suggested-task check-in: drop the few-lines cap on approach explanations",
         ),
     ],
 }

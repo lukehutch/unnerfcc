@@ -1,14 +1,14 @@
 <!--
-name: 'Tool Description: Artifact size limit and icon'
+name: 'Tool Description: Artifact size limit, datasets, and icon'
 description: >-
-  Details the artifact size limit, embedded rules, and required generic tab icon
-  parameter.
-ccVersion: 2.1.277
+  Details the artifact size limit, external dataset file rules, and required
+  generic tab icon parameter.
+ccVersion: 2.1.329
 variables:
   - RESPONSIVE_SECTION
   - THEME_SECTION
 -->
-MB or smaller, and embedded data: URIs count toward that.
+MB or smaller, and embedded data: URIs count toward that. Put any dataset over about 100KB beside the page as a .csv file, or a .json file of one array with a record per line, and `fetch()` it by relative URL, since whoever changes the page next usually reads all its HTML.
 
 ${RESPONSIVE_SECTION}
 

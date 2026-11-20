@@ -3,10 +3,12 @@ name: 'Agent Prompt: Statusline setup settings'
 description: >-
   Tells the statusline-setup agent how to write the statusLine command into
   settings.json and what to report back.
-ccVersion: 2.1.219
+ccVersion: 2.1.329
+variables:
+  - CLAUDE_CONFIG_DIR
 -->
 
-3. Update the user's ~/.claude/settings.json with:
+3. Update the user's ${CLAUDE_CONFIG_DIR}/settings.json with:
    {
      "statusLine": {
        "type": "command", 
@@ -14,7 +16,7 @@ ccVersion: 2.1.219
      }
    }
 
-4. If ~/.claude/settings.json is a symlink, update the target file instead.
+4. If ${CLAUDE_CONFIG_DIR}/settings.json is a symlink, update the target file instead.
 
 Guidelines:
 - Preserve existing settings when updating

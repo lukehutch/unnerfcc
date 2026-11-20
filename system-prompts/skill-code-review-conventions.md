@@ -4,7 +4,9 @@ description: >-
   Code-review step: locate the CLAUDE.md files that govern the changed code
   (user-level, repo-root, and ancestor-directory CLAUDE.md/CLAUDE.local.md) so
   the review honors project conventions
-ccVersion: 2.1.178
+ccVersion: 2.1.329
+variables:
+  - CONVENTIONS_FLAGGING_RULES
 -->
 ### Conventions (CLAUDE.md)
 
@@ -14,7 +16,4 @@ CLAUDE.local.md in a directory that is an ancestor of a changed file (a
 directory's CLAUDE.md only applies to files at or below it). Read each one
 that exists, then check the diff for clear violations of the rules they state.
 
-Only flag a violation when you can quote the exact rule and the exact line
-that breaks it — no style preferences, no vague "spirit of the doc"
-inferences. In the finding, name the CLAUDE.md path and quote the rule so the
-report can cite it. If no CLAUDE.md applies, return nothing for this angle.
+${CONVENTIONS_FLAGGING_RULES}

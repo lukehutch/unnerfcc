@@ -7,6 +7,6 @@ ccVersion: 2.1.292
 variables:
   - TARGET_FINDINGS_COUNT
 -->
-, most-severe first, one line each:
+, most-severe first, giving each finding as much detail as it needs, formatted as:
 `path/to/file.ext:123 — what's wrong and the concrete failure`.
 Target at least min(files_changed, ${TARGET_FINDINGS_COUNT}) findings — if you see fewer, widen to other hunks in the same diff before stopping. If fewer than ${TARGET_FINDINGS_COUNT} genuine findings exist, emit what you have.

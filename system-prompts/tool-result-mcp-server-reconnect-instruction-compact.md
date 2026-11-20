@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Result: MCP server reconnect instruction compact'
 description: >-
-  Reminds that Claude Code does not reconnect MCP servers autonomously and
-  points the user to /mcp.
-ccVersion: 2.1.321
+  Notes that the user can reconnect the MCP server with /mcp and Claude Code may
+  also reconnect it automatically.
+ccVersion: 2.1.329
 -->
- Claude Code does not reconnect the server by itself; the user can, with /mcp.
+ The user can reconnect the server with /mcp; Claude Code may also reconnect it by itself.

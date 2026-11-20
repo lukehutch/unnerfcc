@@ -1,8 +1,6 @@
 <!--
 name: 'Tool Result: Connector file downloaded and saved prefix'
-description: >-
-  Model-facing prefix stating that a connector file was downloaded and saved at
-  the quoted path.
-ccVersion: 2.1.325
+description: Model-facing prefix stating that a connector file was downloaded and saved.
+ccVersion: 2.1.329
 -->
- was downloaded and saved at "
+ was downloaded and saved 

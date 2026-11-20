@@ -3,7 +3,7 @@ name: 'Data: Streaming reference — TypeScript'
 description: >-
   TypeScript streaming reference including basic streaming and handling
   different content types
-ccVersion: 2.1.321
+ccVersion: 2.1.329
 -->
 # Streaming - TypeScript
 
@@ -102,8 +102,9 @@ let runner = client.beta.messages.toolRunner({
 // With eager input streaming the SDK parses each tool input when its block
 // closes. The runner validates it against the Zod schema and never calls
 // run() on input that fails; JSON it cannot parse at all rejects the
-// iteration. Re-issue only for that case - API errors are rethrown - with a
-// cap on consecutive failures. A consumed runner cannot be iterated again,
+// iteration. Re-issue for that case and for a connection dropped mid-stream,
+// which isn't an APIError either - API errors are rethrown - with a cap on
+// consecutive failures. A consumed runner cannot be iterated again,
 // so the retry builds a new one from runner.params, which holds the
 // conversation so far (the failed turn was never appended), so completed
 // tool calls are not re-run.
@@ -151,7 +152,7 @@ for (let attempt = 0; ; attempt++) {
     if (err instanceof Anthropic.APIError || err instanceof TruncatedToolInput || attempt >= 2) {
       throw err;
     }
-    console.error("tool input was not parseable JSON, re-issuing the turn");
+    console.error("tool input unparseable or connection dropped, re-issuing the turn");
     runner = client.beta.messages.toolRunner({ ...runner.params });
   }
 }

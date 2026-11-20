@@ -1,0 +1,8 @@
+<!--
+name: 'Tool Description: REPL output token cost guidance'
+description: >-
+  Model-facing REPL guidance advising minimizing returned output (printing
+  ranges, summarizing logs, using git diff --stat) to avoid context bloat.
+ccVersion: 2.1.329
+-->
+What a `REPL` call costs: mostly what it returns, which stays in your context for every later step. About 150 lines of output cost as much as one more call. So search first and print ranges of long files, summarise data files and logs inside the script (counts, shapes, the odd rows), and after an edit return the failing tests and `git diff --stat` unless you mean to review the diff. This is about how much you print, not how much you check: write and run tests as you otherwise would.

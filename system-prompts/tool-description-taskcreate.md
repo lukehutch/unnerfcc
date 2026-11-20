@@ -1,10 +1,14 @@
 <!--
 name: 'Tool Description: TaskCreate'
 description: Tool description for TaskCreate tool
-ccVersion: 2.1.219
+ccVersion: 2.1.329
 variables:
-  - CONDITIONAL_TEAMMATES_NOTE
-  - CONDITIONAL_TASK_NOTES
+  - COMPLEXITY_EXAMPLE
+  - SUBJECT_DESCRIPTION
+  - DESCRIPTION_BULLET
+  - ACTIVE_FORM_DESCRIPTION
+  - DETAIL_AND_OWNERSHIP_TIPS
+  - ADDITIONAL_TIP_PREFIX
 -->
 Use this tool to create a structured task list for your current coding session. This helps you track progress, organize complex tasks, and demonstrate thoroughness to the user.
 It also helps the user understand the progress of the task and overall progress of their requests.
@@ -14,7 +18,7 @@ It also helps the user understand the progress of the task and overall progress 
 Use this tool proactively in these scenarios:
 
 - Complex multi-step tasks - When a task requires 3 or more distinct steps or actions
-- Non-trivial and complex tasks - Tasks that require careful planning or multiple operations${CONDITIONAL_TEAMMATES_NOTE}
+- Non-trivial and complex tasks - Tasks that require careful planning or multiple operations${COMPLEXITY_EXAMPLE}
 - Plan mode - When using plan mode, create a task list to track the work
 - User explicitly requests todo list - When the user directly asks you to use the todo list
 - User provides multiple tasks - When users provide a list of things to be done (numbered or comma-separated)
@@ -34,14 +38,14 @@ NOTE that you should not use this tool if there is only one trivial task to do. 
 
 ## Task Fields
 
-- **subject**: A brief, actionable title in imperative form (e.g., "Fix authentication bug in login flow")
-- **description**: What needs to be done
-- **activeForm** (optional): Present continuous form shown in the spinner when the task is in_progress (e.g., "Fixing authentication bug"). If omitted, the spinner shows the subject instead.
+- **subject**: ${SUBJECT_DESCRIPTION}
+- ${DESCRIPTION_BULLET}
+- **activeForm** (optional): ${ACTIVE_FORM_DESCRIPTION}
 
 All tasks are created with status `pending`.
 
 ## Tips
 
-- Create tasks with clear, specific subjects that describe the outcome
+- ${DETAIL_AND_OWNERSHIP_TIPS}
 - After creating tasks, use TaskUpdate to set up dependencies (blocks/blockedBy) if needed
-${CONDITIONAL_TASK_NOTES}- Check TaskList first to avoid creating duplicate tasks
+${ADDITIONAL_TIP_PREFIX}- Check TaskList first to avoid creating duplicate tasks

@@ -1,12 +1,13 @@
 <!--
 name: 'Tool Description: PowerShell execution guidance'
 description: >-
-  Body of the PowerShell tool description appended after the timeout note —
-  directory verification, quoting, PowerShell syntax notes, Unix-command
-  equivalents, here-string/stop-parsing guidance, and the usage notes.
-ccVersion: 2.1.219
+  Body of the PowerShell tool description covering directory verification,
+  quoting, PowerShell syntax notes, Unix-command equivalents,
+  here-string/stop-parsing guidance, and usage notes.
+ccVersion: 2.1.329
 variables:
   - POWERSHELL_TIMEOUT_NOTE
+  - POWERSHELL_ALIAS_NOTE
 -->
 
 ${POWERSHELL_TIMEOUT_NOTE}
@@ -24,6 +25,7 @@ PowerShell Syntax Notes:
    - Escape character is backtick (`), not backslash
    - Use Verb-Noun cmdlet naming: Get-ChildItem, Set-Location, New-Item, Remove-Item
    - Common aliases: ls (Get-ChildItem), cd (Set-Location), cat (Get-Content), rm (Remove-Item)
+   - ${POWERSHELL_ALIAS_NOTE}
    - Pipe operator | works similarly to bash but passes objects, not text
    - Use Select-Object, Where-Object, ForEach-Object for filtering and transformation
    - String interpolation: "Hello $name" or "Hello $($obj.Property)"

@@ -1,6 +1,6 @@
 {
  "from": "2.1.325",
- "to": "2.1.326",
+ "to": "2.1.329",
  "changes": [
   {
    "id": "data-tool-use-reference-csharp",
@@ -73,6 +73,46 @@
    "sample": "# Tool Use - TypeScript\n\nFor conceptual overview (tool definitions, tool choice, tips), see [shared/tool-use-concepts.md](../../shared/tool-use-concepts.md).\n\n## When to offer Managed Agents\n\nThis off"
   },
   {
+   "id": "skill-code-review-applying-fixes",
+   "name": "Skill: Code Review (--fix applying fixes)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "b7d48e987e7c",
+   "newHash": "54f7ea76ff7b",
+   "sample": "\n\n## Applying fixes (--fix)\n\nThe `--fix` flag was passed. After producing the findings list, apply the\nfindings to the working tree instead of stopping at the report: fix each one\ndirectly"
+  },
+  {
+   "id": "skill-code-review-effort-low-tool-call",
+   "name": "Skill: Code Review low effort tool call reporting",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "6708cc80ce09",
+   "newHash": "1db227275721",
+   "sample": ", most-severe first, in one\n${REPORT_FINDINGS_TOOL_NAME} call with `{level, findings}` — each entry has\n`file`, `line`, `summary`, `short_summary` (≤60 characters), "
+  },
+  {
+   "id": "skill-code-review-effort-max",
+   "name": "Skill: Code Review (max / xhigh effort stance)",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "8c344c712505",
+   "newHash": "d5e90dd953cf",
+   "sample": " effort: catch every real bug. At\nthis level, catching real bugs matters more than avoiding false positives — a\nmissed bug ships. Err on the side of surfacing.\n\n"
+  },
+  {
+   "id": "skill-code-review-findings-entry-schema",
+   "name": "Skill: Code Review findings entry schema",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "314b5c6b28c4",
+   "newHash": "7265fc388f33",
+   "sample": " ranked\nmost-severe first; each entry has `file`, `line`, `summary`,\n`short_summary` — the claim compressed to ≤60 characters, no rationale\nor consequence clause — `failure_scenario`, "
+  },
+  {
    "id": "skill-generate-permission-allowlist-from-transcripts",
    "name": "Skill: Generate permission allowlist from transcripts",
    "was": true,
@@ -111,6 +151,76 @@
    "oldHash": "fb1536bb13fc",
    "newHash": "ee4adb51ccf4",
    "sample": "; use 'low' for cheap mechanical stages and higher tiers only for the hardest verify/judge stages. opts.isolation: 'worktree' runs the agent in a fresh git worktree — EXPENSIVE (~200-500ms setup + dis"
+  },
+  {
+   "id": "system-prompt-artifact-intake-elicitation-questionnaire",
+   "name": "System Prompt: Artifact intake elicitation questionnaire",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "678e2b7894d5",
+   "newHash": "60ed5ac79d49",
+   "sample": "Before you create anything there is one step: ask the user a few questions, because audience, scope and look shape every ${ARTIFACT_TYPE} and a wrong guess means a rebuild. Ask even when the request i"
+  },
+  {
+   "id": "system-reminder-artifact-design-intake-questions-prompt-prefix",
+   "name": "System Reminder: Artifact design intake questions prompt prefix",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "c0da459e5a99",
+   "newHash": "2c0a8172f912",
+   "sample": "Before you create a new slide deck or a new design as an artifact, ask the user with ${ASK_USER_TOOL_NAME}: one call, your first tool call for that request, for a short request and for a detailed one,"
+  },
+  {
+   "id": "system-reminder-auto-attached-context-account-workspace",
+   "name": "System Reminder: Auto-attached context account workspace",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "0075ff10ca2b",
+   "newHash": "4dfd38cf6274",
+   "sample": "${CONTEXT_CONTENT}\n\nClaude Code attached this context automatically; it isn't part of the user's message. It describes the user's own account and workspace, so they don't need it reported back."
+  },
+  {
+   "id": "tool-description-designsync-methods",
+   "name": "Tool Description: DesignSync methods and workflow",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "818472696a06",
+   "newHash": "cbc1c5869601",
+   "sample": "\n\n${PREAMBLE_NOTE} If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop, unless /design-sync's own t"
+  },
+  {
+   "id": "tool-description-workflow",
+   "name": "Tool Description: Workflow",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "8f24c3075927",
+   "newHash": "d8f6ae528e91",
+   "sample": "Execute a workflow script that orchestrates multiple subagents deterministically. Workflows run in the background — this tool returns immediately with a task ID, and a <task-notification> arrives when"
+  },
+  {
+   "id": "tool-result-claude-in-chrome-switched-off",
+   "name": "Tool Result: Claude in Chrome switched off for chat",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "5749b0222499",
+   "newHash": "ad8415cc3c62",
+   "sample": "Claude in Chrome is switched off for this chat, and no tool here can switch it on. Tell the user so in one or two plain sentences, in their language and without tool names. For example: \"I can't use C"
+  },
+  {
+   "id": "tool-result-claude-in-chrome-switched-off-chat-unlinked",
+   "name": "Tool Result: Claude in Chrome switched off and chat unlinked",
+   "was": true,
+   "now": false,
+   "direction": "REMOVED nerf",
+   "oldHash": "4ae4b9b6bb9c",
+   "newHash": "81e6b2ca33d7",
+   "sample": "Claude in Chrome is switched off for this chat, and this chat isn't linked to a computer right now. No tool here can change either, including ${TOOL_NAME} and the tools whose names start with enable__"
   },
   {
    "id": "tool-result-goal-proposal-awaiting-approval",

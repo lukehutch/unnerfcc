@@ -1,8 +1,10 @@
 <!--
-name: 'Tool Result: ProposeGoal cannot clear a goal'
+name: 'Tool Result: Goal tool cannot clear a goal'
 description: >-
-  Tells the model ProposeGoal only proposes a new goal and that clearing an
-  active one is the user's /goal clear.
-ccVersion: 2.1.231
+  Tells the model the goal tool cannot clear an active goal and that the user
+  can end it with /goal clear.
+ccVersion: 2.1.329
+variables:
+  - TOOL_NAME
 -->
-ProposeGoal only proposes a new goal; it cannot clear one. The user can clear an active goal with /goal clear.
+${TOOL_NAME} cannot clear a goal. The user can end it with /goal clear.

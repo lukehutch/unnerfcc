@@ -4,7 +4,7 @@ description: >-
   Reference documentation for the Admin API covering organization management,
   members, invites, workspaces, API keys, rate limits, usage and cost analytics,
   service accounts, WIF, and CMEK.
-ccVersion: 2.1.325
+ccVersion: 2.1.329
 -->
 # Admin API (Organization Management)
 
@@ -41,7 +41,7 @@ export ANTHROPIC_AUTH_TOKEN=$(ant auth print-credentials --profile admin --acces
 ```bash
 export ANTHROPIC_FEDERATION_RULE_ID=fdrl_...       # the org:admin rule
 export ANTHROPIC_ORGANIZATION_ID=<org-uuid>
-export ANTHROPIC_SERVICE_ACCOUNT_ID=svac_...       # the rule's target service account
+export ANTHROPIC_SERVICE_ACCOUNT_ID=svac_...       # optional: the rule's target service account
 export ANTHROPIC_IDENTITY_TOKEN_FILE=/path/to/jwt  # or ANTHROPIC_IDENTITY_TOKEN
 ```
 

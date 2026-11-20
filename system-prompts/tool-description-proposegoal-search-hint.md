@@ -1,8 +1,8 @@
 <!--
 name: 'Tool Description: ProposeGoal search hint'
 description: >-
-  Search hint for the ProposeGoal tool — propose a session goal condition the
-  user approves with one keypress.
-ccVersion: 2.1.231
+  Search hint for the SetGoal tool — set a session goal stop check when the user
+  asks.
+ccVersion: 2.1.329
 -->
-propose a session goal condition for the user to approve with one keypress
+Set a session goal, a stop check that keeps you working until it is met, when the user asks you to set one (such as by naming /goal or set_goal)

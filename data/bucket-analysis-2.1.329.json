@@ -1,0 +1,244 @@
+{
+  "ccVersion": "2.1.329",
+  "generatedBy": "bucket-analyze.mjs",
+  "report": [
+    {
+      "file": "skill-code-review-phase-2-dedup-and-self-check.md",
+      "verdict": "lift",
+      "reasoning": "Forbidding subagent verification in Phase 2 is a process shortcut that forces all re-checking into the same context rather than allowing independent verification when helpful.",
+      "rule": {
+        "stock": "## Phase 2 — Dedup and self-check (no subagent verify)\n\nDedup near-duplicates (same defect, same location, same reason → keep one).\nRe-check each remaining candidate yourself against the diff before keeping it.",
+        "unnerf": "## Phase 2 — Dedup and verify\n\nDedup near-duplicates (same defect, same location, same reason → keep one).\nVerify each remaining candidate against the diff before keeping it, spawning subagents when independent verification helps.",
+        "description": "code-review Phase 2: lift no-subagent-verify restriction"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-low-exclusions.md",
+      "verdict": "lift",
+      "reasoning": "A blanket ban on flagging performance issues, missing tests, or anything outside the diff hunk holds back real defect detection even when surrounding context or test gaps are directly relevant.",
+      "rule": {
+        "stock": "Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+        "unnerf": "Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+        "description": "code-review low-effort exclusions: allow perf, missing tests, and out-of-hunk context"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-low-no-fixture-skip-turns-body.md",
+      "verdict": "lift",
+      "reasoning": "Forbidding performance, missing-test, and out-of-hunk findings suppresses genuine issues visible from broader context or missing coverage.",
+      "rule": {
+        "stock": "Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+        "unnerf": "Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+        "description": "code-review low-effort (no fixture skip): allow perf, missing tests, and out-of-hunk context"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-low-scaled-findings.md",
+      "verdict": "lift",
+      "reasoning": "Forbidding performance, missing-test, and out-of-hunk findings suppresses genuine issues visible from broader context or missing coverage.",
+      "rule": {
+        "stock": "Do **not** flag style, naming, perf, missing tests, or anything outside the\nhunk.",
+        "unnerf": "Focus on runtime correctness and real defects; include performance issues, missing tests, or context outside the hunk when they reveal a genuine problem, and skip pure style or naming nitpicks unless they obscure intent.",
+        "description": "code-review low-effort (scaled): allow perf, missing tests, and out-of-hunk context"
+      }
+    },
+    {
+      "file": "system-prompt-user-work-style-check-in-bigger-changes.md",
+      "verdict": "lift",
+      "reasoning": "The user's preference to check in before multi-file or risky changes should be respected, but capping the approach explanation to 'in a few lines' artificially truncates necessary detail for risky work.",
+      "rule": {
+        "stock": "For those, read what you need, say your approach in a few lines, and end your turn there.",
+        "unnerf": "For those, read what you need, explain your approach in whatever detail the scope and risks warrant, and end your turn there.",
+        "description": "check-in bigger changes: drop the few-lines cap on approach explanations"
+      }
+    },
+    {
+      "file": "skill-code-review-low-effort-one-line-output.md",
+      "verdict": "lift",
+      "reasoning": "Forcing every code review finding into a single line is a substantive length cap that prevents explaining non-trivial bugs clearly.",
+      "rule": {
+        "stock": ", most-severe first, one line each:\n`path/to/file.ext:123 — ",
+        "unnerf": ", most-severe first, giving each finding the detail it needs, starting with:\n`path/to/file.ext:123 — ",
+        "description": "code-review low-effort output: drop one-line-per-finding cap"
+      }
+    },
+    {
+      "file": "skill-code-review-output-one-line-list.md",
+      "verdict": "lift",
+      "reasoning": "Forcing every code review finding into one line caps substantive explanation of the defect and concrete failure.",
+      "rule": {
+        "stock": ", most-severe first, one line each:\n`path/to/file.ext:123 — what's wrong and the concrete failure`.",
+        "unnerf": ", most-severe first, giving each finding as much detail as it needs, formatted as:\n`path/to/file.ext:123 — what's wrong and the concrete failure`.",
+        "description": "code-review one-line output: drop one-line-per-finding cap"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-6-angles-inline.md",
+      "verdict": "lift",
+      "reasoning": "Capping each finder angle at 8 candidate findings artificially truncates recall in an extra-high-effort review.",
+      "rule": {
+        "stock": "## Phase 1 — Find candidates (5 correctness angles + 1 conventions angle, up to 8 each)\n\nRun **6 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces **up to 8 candidate findings**.",
+        "unnerf": "## Phase 1 — Find candidates (5 correctness angles + 1 conventions angle, uncapped)\n\nRun **6 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces all candidate findings.",
+        "description": "code-review xhigh-6-angles-inline Phase 1: drop 8-candidate cap per finder angle"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-inline.md",
+      "verdict": "keep",
+      "reasoning": "The 8-candidate cap per finder angle in this file is already lifted by an existing rule in existingRules."
+    },
+    {
+      "file": "skill-code-review-max-conventions-angle-suffix.md",
+      "verdict": "lift",
+      "reasoning": "This header suffix fragment imposes an artificial 'up to 8 each' cap on candidate findings per angle.",
+      "rule": {
+        "stock": "1 conventions angle, up to 8 each)\n\nRun **",
+        "unnerf": "1 conventions angle, uncapped)\n\nRun **",
+        "description": "code-review conventions angle suffix: drop 8-candidate cap"
+      }
+    },
+    {
+      "file": "agent-prompt-web-fetch-specialist.md",
+      "verdict": "keep",
+      "reasoning": "The reporting focus restriction is already handled by existingRules, and limiting recursive same-site link-following to about five pages while naming remaining links in the report is a reasonable context-budget safeguard against unbounded crawling."
+    },
+    {
+      "file": "skill-code-review-effort-low-no-fixture-skip-turns-body.md",
+      "verdict": "lift",
+      "reasoning": "Forbidding subagents and full-file reads and restricting analysis to 'from the hunk alone' prevents verifying whether a bug or missing guard is real in surrounding code.",
+      "rule": {
+        "stock": "One tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted changes, or `git diff main...HEAD` /\nthe target passed as an argument). No subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.\nAlso flag — still from the hunk alone — new code that duplicates an existing\nhelper visible in the diff context, and dead code the diff leaves behind.",
+        "unnerf": "Read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD` to cover\nboth committed and uncommitted changes, or `git diff main...HEAD` / the target\npassed as an argument), and read full files or spawn subagents when surrounding\ncontext is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate. Also flag new code that duplicates an existing helper,\nand dead code the diff leaves behind.",
+        "description": "code-review low-effort (no fixture skip): allow full-file reads, subagents, and beyond-hunk verification"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-low-scaled-findings.md",
+      "verdict": "lift",
+      "reasoning": "Skipping test/fixture hunks, forbidding full-file reads and subagents, and restricting findings to the hunk alone are process shortcuts that miss bugs in tests and callers.",
+      "rule": {
+        "stock": "One tool call: read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD`\nto cover both committed and uncommitted changes, or `git diff main...HEAD` /\nthe target passed as an argument). Skip test/fixture\nhunks (`test/`, `spec/`, `__tests__/`, `*_test.*`, `*.test.*`,\n`fixtures/`, `testdata/`) — test-file changes are not reviewed at this level.\nNo subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.\nAlso flag — still from the hunk alone — new code that duplicates an existing\nhelper visible in the diff context, and dead code the diff leaves behind.",
+        "unnerf": "Read the unified diff (`git diff @{upstream}...HEAD; git diff HEAD` to cover\nboth committed and uncommitted changes, or `git diff main...HEAD` / the target\npassed as an argument), including test and fixture hunks, and read full files\nor spawn subagents when surrounding context is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate. Also flag new code that duplicates an existing helper,\nand dead code the diff leaves behind.",
+        "description": "code-review low-effort (scaled): include test hunks and allow full-file reads and subagents"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-low-turns-body.md",
+      "verdict": "lift",
+      "reasoning": "Skipping test/fixture hunks, forbidding full-file reads and subagents, and restricting analysis to the hunk alone are process shortcuts that weaken bug detection.",
+      "rule": {
+        "stock": "Skip test/fixture\nhunks (`test/`, `spec/`, `__tests__/`, `*_test.*`, `*.test.*`,\n`fixtures/`, `testdata/`) — test-file changes are not reviewed at this level.\nNo subagents, no full-file reads.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs visible from the hunk alone: inverted/wrong\ncondition, off-by-one, null/undefined deref where adjacent lines show the value\ncan be absent, removed guard, falsy-zero check, missing `await`,\nwrong-variable copy-paste, error swallowed in a catch that should propagate.",
+        "unnerf": "Include test and fixture hunks, and read full files or spawn subagents when\nsurrounding context is needed to verify a bug.\n\n## Turn 2 — findings\n\nFlag runtime-correctness bugs: inverted/wrong condition, off-by-one,\nnull/undefined deref where the value can be absent, removed guard, falsy-zero\ncheck, missing `await`, wrong-variable copy-paste, error swallowed in a catch\nthat should propagate.",
+        "description": "code-review low-effort turns body: include test hunks and allow full-file reads and subagents"
+      }
+    },
+    {
+      "file": "skill-code-review-phase-3-sweep-inline.md",
+      "verdict": "lift",
+      "reasoning": "Both the 'no subagent' restriction and the 'up to 8 additional candidates' cap limit gap-sweep thoroughness.",
+      "rule": {
+        "stock": "Take one more pass (same context — no subagent) as a fresh reviewer who has the deduplicated list. Re-read\nthe diff and enclosing functions looking ONLY for defects not already listed.\nDo not re-derive or re-confirm anything already there — the job is gaps. Focus\non what the first pass tends to miss: moved/extracted code that dropped a guard\nor anchor; second-tier footguns (dataclass default evaluated once, `hash()`\nnon-determinism, lock-scope shrink, predicate methods with side effects);\nsetup/teardown asymmetry in tests; config defaults flipped.\n\nSurface **up to 8 additional candidates**, each naming a defect not already on\nthe list.",
+        "unnerf": "Take one more pass as a fresh reviewer who has the deduplicated list, spawning a subagent if an independent context helps. Re-read\nthe diff and enclosing functions looking ONLY for defects not already listed.\nDo not re-derive or re-confirm anything already there — the job is gaps. Focus\non what the first pass tends to miss: moved/extracted code that dropped a guard\nor anchor; second-tier footguns (dataclass default evaluated once, `hash()`\nnon-determinism, lock-scope shrink, predicate methods with side effects);\nsetup/teardown asymmetry in tests; config defaults flipped.\n\nSurface all additional candidates, each naming a defect not already on\nthe list.",
+        "description": "code-review Phase 3 sweep: allow subagent and drop 8-candidate cap"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-high-inline-2.md",
+      "verdict": "lift",
+      "reasoning": "Capping each finder angle at 6 candidate findings, forbidding subagents, and restricting summaries to 'short' hold back recall and explanation quality in a high-effort review.",
+      "rule": {
+        "stock": "## Phase 1 — Find candidates (3 correctness angles + 1 conventions angle, up to 6 each)\n\nRun **4 independent finder angles** in sequence yourself, in THIS context — do NOT spawn subagents for them. Each\nsurfaces **up to 6 candidate findings** with `file`, `line`, a short\n`summary`, and a concrete `failure_scenario`.",
+        "unnerf": "## Phase 1 — Find candidates (3 correctness angles + 1 conventions angle, uncapped)\n\nRun **4 independent finder angles**, either in sequence in this context or via parallel subagents where independent coverage helps. Each\nsurfaces all candidate findings with `file`, `line`, a clear\n`summary`, and a concrete `failure_scenario`.",
+        "description": "code-review high-inline-2 Phase 1: drop 6-candidate cap, allow subagents, and lift short-summary cap"
+      }
+    },
+    {
+      "file": "skill-code-review-effort-high.md",
+      "verdict": "keep",
+      "reasoning": "The candidate and finding caps in this file are already lifted by two existing rules in existingRules, and the prompt already uses subagents via AGENT_TOOL_NAME."
+    },
+    {
+      "file": "system-prompt-user-work-style-agent-newcomer-notes.md",
+      "verdict": "lift",
+      "reasoning": "While adding explanatory notes for newcomers is a helpful user preference, capping them to 'short notes, a line or two' can truncate explanations of non-trivial findings.",
+      "rule": {
+        "stock": "Add short notes, a line or two, on what you find and why.",
+        "unnerf": "Add clear notes on what you find and why, in whatever detail helps them follow along.",
+        "description": "agent newcomer notes: drop the one-or-two-line length cap"
+      }
+    },
+    {
+      "file": "skill-code-review-severity-and-summary-rules.md",
+      "verdict": "lift",
+      "reasoning": "Restricting each finding summary to 'two or three short sentences' caps substantive explanation of complex defects and their fixes.",
+      "rule": {
+        "stock": "Write each `summary` in two or three short sentences. Start with the problem as\na user of the code would see it.",
+        "unnerf": "Write each `summary` clearly and as concisely or thoroughly as the defect requires. Start with the problem as\na user of the code would see it.",
+        "description": "code-review severity and summary rules: drop two-to-three-sentence cap"
+      }
+    },
+    {
+      "file": "system-prompt-agent-loop-batching-guidance.md",
+      "verdict": "keep",
+      "reasoning": "Batching items across agents rather than spawning one agent per item in a loop prevents unbounded agent fan-out and resource exhaustion, and the prompt explicitly defers to user or skill instructions on how to split or check work."
+    },
+    {
+      "file": "tool-description-agent-explicit-spawn-restriction.md",
+      "verdict": "keep",
+      "reasoning": "This explicit-spawn restriction is already completely replaced by an existing rule in existingRules."
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-6-angles-inline.md",
+      "verdict": "keep",
+      "reasoning": "The 8-candidate cap in this file is already handled by sibling candidate ref 7, and running inline without subagents is the defining structure of the -inline effort variant (matching existingRules on skill-code-review-effort-xhigh-inline.md)."
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-inline.md",
+      "verdict": "keep",
+      "reasoning": "The 8-candidate cap in this file is already lifted by an existing rule in existingRules, which preserves inline execution for the -inline variant."
+    },
+    {
+      "file": "skill-artifact-page-contract.md",
+      "verdict": "keep",
+      "reasoning": "The single-pass verification cap and one-sentence design cap are already lifted by an existing rule in existingRules."
+    },
+    {
+      "file": "system-prompt-suggested-task-check-in-required.md",
+      "verdict": "lift",
+      "reasoning": "Requiring a check-in before acting on one-click suggested tasks is appropriate UX, but capping the approach explanation to 'in a few lines' artificially limits clarity on complex tasks.",
+      "rule": {
+        "stock": "This task and every later one from the list get a check-in first, even a small change you would otherwise just make: read what you need, say your approach in a few lines, and end your turn there.",
+        "unnerf": "This task and every later one from the list get a check-in first, even a small change you would otherwise just make: read what you need, explain your approach in whatever detail the task warrants, and end your turn there.",
+        "description": "suggested-task check-in: drop the few-lines cap on approach explanations"
+      }
+    },
+    {
+      "file": "system-reminder-scheduled-prompt-builtin-skill-skipped.md",
+      "verdict": "keep",
+      "reasoning": "This instructs a one-line notice when a scheduled timer is skipped because its name is reserved for a built-in skill and no work was run. Keeping an unrequested background-timer error/status notice to one line is appropriate UX rather than holding back substantive user-requested work."
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-6-angles-inline.md",
+      "verdict": "rejected",
+      "reasoning": "The 'up to 8 candidate findings' limit per finder angle artificially caps recall in an xhigh-effort code review, while 'do NOT spawn subagents' is the defining architectural constraint of the inline variant (matching the existing rule on the 10-angle inline sibling).",
+      "problems": [
+        "overlaps another rule proposed in this same run: \"code-review xhigh-6-angles-inline Phase 1: drop 8-candidate cap per finder angle\""
+      ]
+    },
+    {
+      "file": "skill-code-review-effort-xhigh-inline.md",
+      "verdict": "keep",
+      "reasoning": "The 8-candidate cap per finder angle is already lifted by the existing rule on this file, and 'do NOT spawn subagents for them' is the intentional inline-execution design of this variant rather than a hold-back nerf."
+    },
+    {
+      "file": "skill-code-review-summary-placeholder-short.md",
+      "verdict": "keep",
+      "reasoning": "This is a model-facing JSON schema placeholder for a short summary field ('one-sentence statement of the bug'), which constrains the shape of a structured output channel rather than holding back Claude's underlying analysis."
+    },
+    {
+      "file": "tool-description-workflow-explicit-opt-in-restriction.md",
+      "verdict": "keep",
+      "reasoning": "Both the proactive parallelism surfacing and the 'briefly describe' brevity cap are already addressed by the existing rule on this file, while the explicit opt-in gate for spawning dozens of workflow agents is intentionally preserved."
+    }
+  ]
+}

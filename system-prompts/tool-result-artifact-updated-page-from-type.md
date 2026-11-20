@@ -1,8 +1,10 @@
 <!--
 name: 'Tool Result: Updated Artifact page comes from type'
 description: >-
-  Artifact tool result fragment noting that unlisted files were preserved and
-  the page comes from the Artifact type.
-ccVersion: 2.1.292
+  Artifact tool result fragment noting that the page comes from the Artifact
+  type.
+ccVersion: 2.1.329
+variables:
+  - LEADING_PREFIX
 -->
-Its page comes from the Artifact type 
+${LEADING_PREFIX}Its page comes from the Artifact type 

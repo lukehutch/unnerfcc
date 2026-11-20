@@ -1,6 +1,8 @@
 <!--
-name: 'Data: Artifact publish cover slide path'
-description: Specifies referencing the cover slide by its project path.
-ccVersion: 2.1.292
+name: 'Data: Artifact publish deck CSS and cover slide path'
+description: >-
+  Specifies referencing project/deck.css and the cover slide's file by their
+  project/ paths.
+ccVersion: 2.1.329
 -->
-the cover slide's file by its `project/…` path
+`project/deck.css` and the cover slide's file by their `project/…` paths

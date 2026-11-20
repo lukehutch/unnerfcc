@@ -1,10 +1,10 @@
 <!--
-name: 'Tool Result: Connector file upload arguments changed post approval'
+name: 'Tool Result: Connector file upload arguments changed post check'
 description: >-
-  Rejects a file upload call whose arguments changed after receiving user
-  approval.
-ccVersion: 2.1.321
+  Rejects a file upload call whose arguments changed after being checked and
+  instructs making the call again.
+ccVersion: 2.1.329
 variables:
-  - INSTRUCTION_CLAUSE
+  - CALL_STATUS_NOTE
 -->
-The arguments of this call changed after it was approved, and the approval was for the arguments the prompt showed. ${INSTRUCTION_CLAUSE}
+The arguments of this call changed after it was checked, so no file was sent. Make the call again. ${CALL_STATUS_NOTE}
