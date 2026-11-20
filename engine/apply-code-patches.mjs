@@ -145,8 +145,11 @@ export function posture(js) {
       xhigh: count(/default_effort:"xhigh"/g),
       max: count(/default_effort:"max"/g),
     },
-    // the persisted-effort setting enum, capped (no "max") vs uncapped
-    effortEnumCapped: count(/\["low","medium","high","xhigh"\]/g),
+    // the persisted-effort setting enum, capped (no "max") vs uncapped. Capped
+    // counts only the `effortLevel:`-keyed schema sites P2 patches: v2.1.329
+    // also ships an unkeyed `["low",...,"xhigh"].includes(h)` migration filter
+    // that is not the setting and must not keep "verify" failing.
+    effortEnumCapped: count(/effortLevel:(?:\(\)\s*=>\s*)?[$\w]+\(\["low","medium","high","xhigh"\]/g),
     effortEnumUncapped: count(/\["low","medium","high","xhigh","max"\]/g),
     // the /effort validator chain, capped vs accepting "max"
     validatorCapped: count(/==="low"\|\|[$\w]+==="medium"\|\|[$\w]+==="high"\|\|[$\w]+==="xhigh"\)return/g),
@@ -382,37 +385,42 @@ function p2_uncapEffortEnum(js) {
     const capped = '["low","medium","high","xhigh"]';
     const uncapped = '["low","medium","high","xhigh","max"]';
     const nCapped = js.split(capped).length - 1;
-    if (nCapped === 0) {
-      const hasUncapped = js.includes(uncapped);
-      return {
-        js, status: hasUncapped ? "already" : "failed",
-        detail: hasUncapped
-          ? `effort enum already includes "max"`
-          : `anchor MISSING: capped enum ["low","medium","high","xhigh"] not found — the /effort setting schema likely changed; enum uncap NOT applied`,
-      };
-    }
-    if (nCapped > 1) {
-      // Both spellings are the persisted /effort schema field: the eager
-      // `effortLevel:W([...])` and the lazy `effortLevel:()=>W([...])` Bun emits
-      // for a deferred schema. v2.1.292 ships one of each in the same chunk, and
-      // the narrower anchor matched only the eager one, so allKeyed went false and
-      // P2 refused BOTH -- leaving the persisted /effort setting capped at xhigh in
-      // the shipped binary, which is the exact nerf this patch exists to lift.
-      const KEY_BEFORE = /effortLevel:(?:\(\)\s*=>\s*)?[$\w]+\($/;
-      let idx = -1, allKeyed = true;
-      while ((idx = js.indexOf(capped, idx + 1)) !== -1) {
-        if (!KEY_BEFORE.test(js.slice(Math.max(0, idx - 40), idx))) { allKeyed = false; break; }
+    // The persisted /effort schema field is keyed `effortLevel:`, eager
+    // `effortLevel:W([...])` or lazy `effortLevel:()=>W([...])`. "effortLevel"
+    // is the on-disk settings key, so the minifier cannot rename it.
+    //  - v2.1.251 shipped the field twice in one chunk (duplicated schema).
+    //  - v2.1.292 shipped one eager and one lazy copy; an anchor that matched
+    //    only the eager one made P2 refuse both, leaving the setting capped.
+    //  - v2.1.329 added an unkeyed `["low",...,"xhigh"].includes(h)` filter in
+    //    a settings migration (legacy maxEffortLevel key). It is not the
+    //    setting, and refusing the chunk over it left the setting capped.
+    // So patch exactly the keyed sites and never touch an unkeyed one. The one
+    // exception is a chunk whose only capped literal is unkeyed and which has
+    // no keyed site at all: the pre-v2.1.251 single-site case, patched as before.
+    const KEY_BEFORE = /effortLevel:(?:\(\)\s*=>\s*)?[$\w]+\($/;
+    const keyed = (at) => KEY_BEFORE.test(js.slice(Math.max(0, at - 40), at));
+    const keyedAt = [];
+    for (let idx = js.indexOf(capped); idx !== -1; idx = js.indexOf(capped, idx + 1)) if (keyed(idx)) keyedAt.push(idx);
+    let keyedUncapped = false;
+    for (let idx = js.indexOf(uncapped); idx !== -1; idx = js.indexOf(uncapped, idx + 1)) if (keyed(idx)) { keyedUncapped = true; break; }
+    if (keyedAt.length === 0) {
+      if (keyedUncapped || (nCapped === 0 && js.includes(uncapped))) {
+        return { js, status: "already", detail: `effort enum already includes "max"` };
       }
-      if (!allKeyed) {
-        return { js, status: "failed", detail: `ambiguous: ${nCapped} capped effort enums found (expected 1) — refusing to guess which is the /effort setting; enum uncap NOT applied` };
+      if (nCapped === 0) {
+        return { js, status: "failed", detail: `anchor MISSING: capped enum ["low","medium","high","xhigh"] not found — the /effort setting schema likely changed; enum uncap NOT applied` };
       }
-      const out = js.replaceAll(capped, uncapped);
-      if (out.includes(capped)) return { js, status: "failed", detail: `verify failed: capped enum still present after replace` };
-      return { js: out, status: "applied", detail: `added "max" to the persisted /effort enum (${nCapped}× duplicate "effortLevel" schema sites in this chunk, all keyed the same, all patched)` };
+      if (nCapped > 1) {
+        return { js, status: "failed", detail: `ambiguous: ${nCapped} capped effort enums found, none keyed "effortLevel:" — refusing to guess which is the /effort setting; enum uncap NOT applied` };
+      }
+      keyedAt.push(js.indexOf(capped)); // legacy single unkeyed site
     }
-    const out = js.replace(capped, uncapped);
-    if ((out.split(capped).length - 1) !== 0) return { js, status: "failed", detail: `verify failed: capped enum still present after replace` };
-    return { js: out, status: "applied", detail: `added "max" to the persisted /effort enum (was capped at xhigh)` };
+    let out = "", last = 0;
+    for (const at of keyedAt) { out += js.slice(last, at) + uncapped; last = at + capped.length; }
+    out += js.slice(last);
+    const left = out.split(capped).length - 1;
+    if (left !== nCapped - keyedAt.length) return { js, status: "failed", detail: `verify failed: expected ${nCapped - keyedAt.length} capped enum(s) left, found ${left}` };
+    return { js: out, status: "applied", detail: `added "max" to the persisted /effort enum (${keyedAt.length} site(s) patched${left ? `; ${left} unkeyed occurrence(s) left untouched` : ""})` };
   } catch (e) {
     return { js, status: "failed", detail: `P2 threw: ${e.message}` };
   }
