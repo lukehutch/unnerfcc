@@ -97,6 +97,9 @@ const MH_MAGIC_64 = 0xfeedfacf;
 const LC_SEGMENT_64 = 0x19;
 const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
 const MANIFEST_NAME = "manifest.json";
+// Module record encoding byte: 0 and 1 hold single-byte text (all ASCII on
+// every build seen), 2 holds UTF-16LE text with no BOM.
+const ENCODING_UTF16 = 2;
 
 function isZstd(buf) {
   return buf.length >= 4 && buf.subarray(0, 4).equals(ZSTD_MAGIC);
@@ -371,14 +374,22 @@ export function unpackToDir(binaryPath, outDir) {
     const m = meta.modules[i];
     const raw = rawModuleContent(meta, i);
     const compressed = isZstd(raw);
-    const content = compressed ? zstdDecompressSync(raw) : raw;
+    let content = compressed ? zstdDecompressSync(raw) : raw;
     if (compressed) zstdCount++;
+    // Encoding 2 modules hold UTF-16LE text with no BOM (12 in v2.1.329: the
+    // markdown assets with non-Latin-1 characters, e.g. the design, slides and
+    // dataviz skill references). Every reader downstream treats a module file
+    // as UTF-8, so these were read as text with a NUL after every character
+    // and catalogued garbled. Write them as UTF-8 and mark them in the
+    // manifest; repackFromDir() encodes them back to UTF-16LE.
+    const utf16 = m.encoding === ENCODING_UTF16;
+    if (utf16) content = Buffer.from(content.toString("utf16le"), "utf8");
     totalBytes += content.length;
     const relPath = moduleRelPath(m.name);
     const outPath = join(outDir, relPath);
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, content);
-    manifest.modules.push({ index: i, name: m.name, relPath, wasZstd: compressed, size: content.length });
+    manifest.modules.push({ index: i, name: m.name, relPath, wasZstd: compressed, ...(utf16 && { utf16: true }), size: content.length });
   }
   writeFileSync(join(outDir, MANIFEST_NAME), JSON.stringify(manifest, null, 1));
   const entryJs = moduleContent(meta, meta.offsets.entryPointId);
@@ -588,7 +599,8 @@ export async function repackFromDir(binaryPath, inDir, outPath) {
   for (const entry of manifest.modules) {
     const filePath = join(inDir, entry.relPath);
     if (!existsSync(filePath)) continue; // untouched module — keep original bytes
-    const newContent = readFileSync(filePath);
+    let newContent = readFileSync(filePath);
+    if (entry.utf16) newContent = Buffer.from(newContent.toString("utf8"), "utf16le");
     replacements.set(entry.index, entry.wasZstd ? zstdCompressSync(newContent) : newContent);
   }
 
